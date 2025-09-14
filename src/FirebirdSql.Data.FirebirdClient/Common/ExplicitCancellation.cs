@@ -42,20 +42,15 @@ internal static class ExplicitCancellation
 	}
 
 	[StructLayout(LayoutKind.Auto)]
-	internal readonly struct ExplicitCancel : IDisposable
+	internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable
 	{
-		readonly CancellationTokenRegistration _cancellationTokenRegistration;
+		readonly CancellationTokenRegistration _cancellationTokenRegistration = cancellationTokenRegistration;
 
-		public ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration)
-		{
-			_cancellationTokenRegistration = cancellationTokenRegistration;
-		}
-
-		public void Dispose()
+				public void Dispose()
 		{
 			ExitExplicitCancel(_cancellationTokenRegistration);
 		}
 
-		public readonly CancellationToken CancellationToken => CancellationToken.None;
+		public static CancellationToken CancellationToken => CancellationToken.None;
 	}
 }

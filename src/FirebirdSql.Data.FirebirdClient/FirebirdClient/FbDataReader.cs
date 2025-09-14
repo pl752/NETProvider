@@ -47,7 +47,7 @@ public sealed class FbDataReader : DbDataReader
 	private FbConnection _connection;
 	private DbValue[] _row;
 	private Descriptor _fields;
-	private CommandBehavior _commandBehavior;
+	private readonly CommandBehavior _commandBehavior;
 	private bool _eof;
 	private bool _isClosed;
 	private int _position;
@@ -265,7 +265,7 @@ public sealed class FbDataReader : DbDataReader
 		{
 			using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel))
 			{
-				_row = await _command.FetchAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				_row = await _command.FetchAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				if (_row != null)
 				{
 					_position++;
@@ -322,9 +322,9 @@ public sealed class FbDataReader : DbDataReader
 				{
 					if (reader.Read())
 					{
-						isReadOnly = (IsReadOnly(reader) || IsExpression(reader)) ? true : false;
-						isKeyColumn = (reader.GetInt32(2) == 1) ? true : false;
-						isUnique = (reader.GetInt32(3) == 1) ? true : false;
+						isReadOnly = (IsReadOnly(reader) || IsExpression(reader));
+						isKeyColumn = (reader.GetInt32(2) == 1);
+						isUnique = (reader.GetInt32(3) == 1);
 						precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
 						isExpression = IsExpression(reader);
 					}
@@ -844,11 +844,9 @@ public sealed class FbDataReader : DbDataReader
 		CheckState();
 		CheckPosition();
 		CheckIndex(i);
+				var realLength = length;
 
-		var bytesRead = 0;
-		var realLength = length;
-
-		if (buffer == null)
+				if (buffer == null)
 		{
 			if (IsDBNull(i))
 			{
@@ -870,16 +868,16 @@ public sealed class FbDataReader : DbDataReader
 
 			Array.Copy(byteArray, (int)dataIndex, buffer, bufferIndex, realLength);
 
-			if ((byteArray.Length - dataIndex) < length)
-			{
-				bytesRead = byteArray.Length - (int)dataIndex;
-			}
-			else
-			{
-				bytesRead = length;
-			}
 
-			return bytesRead;
+						int bytesRead;
+						if ((byteArray.Length - dataIndex) < length) {
+								bytesRead = byteArray.Length - (int)dataIndex;
+						}
+						else {
+								bytesRead = length;
+						}
+
+						return bytesRead;
 		}
 	}
 
@@ -909,11 +907,9 @@ public sealed class FbDataReader : DbDataReader
 		{
 
 			var charArray = GetFieldValue<string>(i).ToCharArray();
+						var realLength = length;
 
-			var charsRead = 0;
-			var realLength = length;
-
-			if (length > (charArray.Length - dataIndex))
+						if (length > (charArray.Length - dataIndex))
 			{
 				realLength = charArray.Length - (int)dataIndex;
 			}
@@ -921,16 +917,16 @@ public sealed class FbDataReader : DbDataReader
 			Array.Copy(charArray, (int)dataIndex, buffer,
 				bufferIndex, realLength);
 
-			if ((charArray.Length - dataIndex) < length)
-			{
-				charsRead = charArray.Length - (int)dataIndex;
-			}
-			else
-			{
-				charsRead = length;
-			}
 
-			return charsRead;
+						int charsRead;
+						if ((charArray.Length - dataIndex) < length) {
+								charsRead = charArray.Length - (int)dataIndex;
+						}
+						else {
+								charsRead = length;
+						}
+
+						return charsRead;
 		}
 	}
 
@@ -1070,11 +1066,9 @@ public sealed class FbDataReader : DbDataReader
 		for (var i = 0; i < _fields.Count; i++)
 		{
 			var fieldName = _fields[i].Alias;
-			if (!_columnsIndexesOrdinal.ContainsKey(fieldName))
-				_columnsIndexesOrdinal.Add(fieldName, i);
-			if (!_columnsIndexesOrdinalCI.ContainsKey(fieldName))
-				_columnsIndexesOrdinalCI.Add(fieldName, i);
-		}
+			_columnsIndexesOrdinal.TryAdd(fieldName, i);
+						_columnsIndexesOrdinalCI.TryAdd(fieldName, i);
+				}
 	}
 
 	private int GetColumnIndex(string name)

@@ -28,7 +28,7 @@ internal sealed class Srp256Client : SrpClientBase
 	{
 		using (var hash = SHA256.Create())
 		{
-			return hash.ComputeHash(ba.SelectMany(x => x).ToArray());
+			return hash.ComputeHash([.. ba.SelectMany(x => x)]);
 		}
 	}
 }

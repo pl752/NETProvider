@@ -23,15 +23,11 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version12;
 
-internal class GdsDatabase : Version11.GdsDatabase
+internal class GdsDatabase(GdsConnection connection) : Version11.GdsDatabase(connection)
 {
 	public override bool UseUtf8ParameterBuffer => true;
 
-	public GdsDatabase(GdsConnection connection)
-		: base(connection)
-	{ }
-
-	public override StatementBase CreateStatement()
+		public override StatementBase CreateStatement()
 	{
 		return new GdsStatement(this);
 	}

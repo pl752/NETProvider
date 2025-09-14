@@ -198,7 +198,7 @@ internal class GdsStatement : Version10.GdsStatement
 					rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
 				}
 
-				ProcessExecuteResponse(executeResponse);
+								ProcessExecuteResponse(executeResponse);
 				if (readRowsAffectedResponse)
 				{
 					RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse(rowsAffectedResponse));

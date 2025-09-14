@@ -23,38 +23,28 @@ using System.Text;
 
 namespace FirebirdSql.Data.Isql;
 
-class SqlStringParser
-{
-	string _source;
-	int _sourceLength;
-	string[] _tokens;
+class SqlStringParser(string targetString) {
+		readonly string _source = targetString;
+		readonly int _sourceLength = targetString.Length;
+	string[] _tokens = [" "];
 
 	public string[] Tokens
 	{
 		get { return _tokens; }
 		set
 		{
-			if (value == null)
-				throw new ArgumentNullException();
-			foreach (var item in value)
+						ArgumentNullException.ThrowIfNull(value);
+						foreach (var item in value)
 			{
-				if (value == null)
-					throw new ArgumentNullException();
-				if (string.IsNullOrEmpty(item))
+								ArgumentNullException.ThrowIfNull(value);
+								if (string.IsNullOrEmpty(item))
 					throw new ArgumentException();
 			}
 			_tokens = value;
 		}
 	}
 
-	public SqlStringParser(string targetString)
-	{
-		_tokens = new[] { " " };
-		_source = targetString;
-		_sourceLength = targetString.Length;
-	}
-
-	public IEnumerable<FbStatement> Parse()
+		public IEnumerable<FbStatement> Parse()
 	{
 		var lastYield = 0;
 		var index = 0;
@@ -110,20 +100,18 @@ class SqlStringParser
 
 		if (index >= _sourceLength)
 		{
-			var parsed = _source.Substring(lastYield);
+			var parsed = _source[lastYield..];
 			if (parsed.Trim() == string.Empty)
 			{
 				yield break;
 			}
 			yield return new FbStatement(parsed, rawResult.ToString());
-			lastYield = _sourceLength;
-			rawResult.Clear();
+						rawResult.Clear();
 		}
 		else
 		{
-			yield return new FbStatement(_source.Substring(lastYield, index - lastYield), rawResult.ToString());
-			lastYield = index;
-			rawResult.Clear();
+			yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
+						rawResult.Clear();
 		}
 	}
 

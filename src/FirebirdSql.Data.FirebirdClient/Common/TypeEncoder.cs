@@ -29,29 +29,15 @@ internal static class TypeEncoder
 	{
 		var shift = scale < 0 ? -scale : scale;
 
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return (short)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_LONG:
-				return (int)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return (long)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return (double)d;
-
-			case IscCodes.SQL_INT128:
-				return (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_LONG => (int)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double)d,
+						IscCodes.SQL_INT128 => (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 		}
-	}
 
 	public static int EncodeTime(TimeSpan t)
 	{
@@ -98,7 +84,12 @@ internal static class TypeEncoder
 
 	public static byte[] EncodeBoolean(bool value)
 	{
-		return new[] { (byte)(value ? 1 : 0) };
+		return [(byte)(value ? 1 : 0)];
+	}
+
+	public static void EncodeBoolean(bool value, Span<byte> destination)
+	{
+		destination[0] = (byte)(value ? 1 : 0);
 	}
 
 	public static byte[] EncodeGuid(Guid value)
@@ -107,13 +98,32 @@ internal static class TypeEncoder
 		var a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
 		var b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
 		var c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
-		return new[]
-		{
+		return
+		[
 			a[0], a[1], a[2], a[3],
 			b[0], b[1],
 			c[0], c[1],
 			data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]
-		};
+		];
+	}
+
+	public static void EncodeGuid(Guid value, Span<byte> destination)
+	{
+		Span<byte> data = stackalloc byte[16];
+		value.TryWriteBytes(data);
+		
+		Span<byte> a = stackalloc byte[4];
+		Span<byte> b = stackalloc byte[2];
+		Span<byte> c = stackalloc byte[2];
+		
+		BitConverter.TryWriteBytes(a, IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data[..4])));
+		BitConverter.TryWriteBytes(b, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(4, 2))));
+		BitConverter.TryWriteBytes(c, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(6, 2))));
+		
+		a.CopyTo(destination[..4]);
+		b.CopyTo(destination.Slice(4, 2));
+		c.CopyTo(destination.Slice(6, 2));
+		data.Slice(8, 8).CopyTo(destination[8..]);
 	}
 
 	public static byte[] EncodeInt32(int value)
@@ -121,9 +131,19 @@ internal static class TypeEncoder
 		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
 	}
 
+	public static void EncodeInt32(int value, Span<byte> destination)
+	{
+		BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
+	}
+
 	public static byte[] EncodeInt64(long value)
 	{
 		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
+	}
+
+	public static void EncodeInt64(long value, Span<byte> destination)
+	{
+		BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
 	}
 
 	public static byte[] EncodeDec16(FbDecFloat value)

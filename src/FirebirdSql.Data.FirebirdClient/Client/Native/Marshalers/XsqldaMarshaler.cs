@@ -25,8 +25,8 @@ namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 internal static class XsqldaMarshaler
 {
-	private static int SizeOfXSQLDA = Marshal.SizeOf<XSQLDA>();
-	private static int SizeOfXSQLVAR = Marshal.SizeOf<XSQLVAR>();
+	private static readonly int SizeOfXSQLDA = Marshal.SizeOf<XSQLDA>();
+	private static readonly int SizeOfXSQLVAR = Marshal.SizeOf<XSQLVAR>();
 
 	public static void CleanUpNativeData(ref IntPtr pNativeData)
 	{

@@ -19,20 +19,11 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version16;
 
-internal class BatchCompletionStateResponse : IResponse
+internal class BatchCompletionStateResponse(short statementHandle, int processedMessages, int[] updatedRecordsPerMessage, (int, IscException)[] detailedErrors, int[] errorsPerMessage) : IResponse
 {
-	public short StatementHandle { get; }
-	public int ProcessedMessages { get; }
-	public int[] UpdatedRecordsPerMessage { get; }
-	public (int, IscException)[] DetailedErrors { get; }
-	public int[] AdditionalErrorsPerMessage { get; }
-
-	public BatchCompletionStateResponse(short statementHandle, int processedMessages, int[] updatedRecordsPerMessage, (int, IscException)[] detailedErrors, int[] errorsPerMessage)
-	{
-		StatementHandle = statementHandle;
-		ProcessedMessages = processedMessages;
-		UpdatedRecordsPerMessage = updatedRecordsPerMessage;
-		DetailedErrors = detailedErrors;
-		AdditionalErrorsPerMessage = errorsPerMessage;
-	}
+		public short StatementHandle { get; } = statementHandle;
+		public int ProcessedMessages { get; } = processedMessages;
+		public int[] UpdatedRecordsPerMessage { get; } = updatedRecordsPerMessage;
+		public (int, IscException)[] DetailedErrors { get; } = detailedErrors;
+		public int[] AdditionalErrorsPerMessage { get; } = errorsPerMessage;
 }

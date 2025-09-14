@@ -20,12 +20,7 @@ using System.ComponentModel;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbRemoteEventErrorEventArgs : EventArgs
+public sealed class FbRemoteEventErrorEventArgs(Exception error) : EventArgs
 {
-	public Exception Error { get; }
-
-	public FbRemoteEventErrorEventArgs(Exception error)
-	{
-		Error = error;
-	}
+		public Exception Error { get; } = error;
 }

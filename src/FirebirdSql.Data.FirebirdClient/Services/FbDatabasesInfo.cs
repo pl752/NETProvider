@@ -24,7 +24,7 @@ public class FbDatabasesInfo
 {
 	public int ConnectionCount { get; internal set; }
 
-	private List<string> _databases;
+	private readonly List<string> _databases;
 	public IReadOnlyList<string> Databases
 	{
 		get

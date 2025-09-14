@@ -20,12 +20,7 @@ using FirebirdSql.Data.Client.Managed;
 
 namespace FirebirdSql.Data.Client.Managed.Version11;
 
-internal class AuthResponse : IResponse
+internal class AuthResponse(byte[] data) : IResponse
 {
-	public byte[] Data { get; }
-
-	public AuthResponse(byte[] data)
-	{
-		Data = data;
-	}
+		public byte[] Data { get; } = data;
 }

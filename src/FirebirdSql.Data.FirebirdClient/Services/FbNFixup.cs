@@ -23,13 +23,9 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNFixup : FbService
+public sealed class FbNFixup(string connectionString = null) : FbService(connectionString)
 {
-	public FbNFixup(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

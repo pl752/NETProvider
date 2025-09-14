@@ -24,18 +24,18 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class FirebirdNetworkHandlingWrapper : IDataProvider, ITracksIOFailure
+sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataProvider, ITracksIOFailure
 {
 	public const string CompressionName = "zlib";
 	public const string EncryptionName = "Arc4";
 
 	const int PreferredBufferSize = 32 * 1024;
 
-	readonly IDataProvider _dataProvider;
+	readonly IDataProvider _dataProvider = dataProvider;
 
-	readonly Queue<byte> _outputBuffer;
-	readonly Queue<byte> _inputBuffer;
-	readonly byte[] _readBuffer;
+	readonly Queue<byte> _outputBuffer = new Queue<byte>(PreferredBufferSize);
+	readonly Queue<byte> _inputBuffer = new Queue<byte>(PreferredBufferSize);
+	readonly byte[] _readBuffer = new byte[PreferredBufferSize];
 
 	byte[] _compressionBuffer;
 	Ionic.Zlib.ZlibCodec _compressor;
@@ -44,16 +44,7 @@ sealed class FirebirdNetworkHandlingWrapper : IDataProvider, ITracksIOFailure
 	Org.BouncyCastle.Crypto.Engines.RC4Engine _decryptor;
 	Org.BouncyCastle.Crypto.Engines.RC4Engine _encryptor;
 
-	public FirebirdNetworkHandlingWrapper(IDataProvider dataProvider)
-	{
-		_dataProvider = dataProvider;
-
-		_outputBuffer = new Queue<byte>(PreferredBufferSize);
-		_inputBuffer = new Queue<byte>(PreferredBufferSize);
-		_readBuffer = new byte[PreferredBufferSize];
-	}
-
-	public bool IOFailed { get; set; }
+		public bool IOFailed { get; set; }
 
 	public int Read(byte[] buffer, int offset, int count)
 	{
@@ -78,6 +69,32 @@ sealed class FirebirdNetworkHandlingWrapper : IDataProvider, ITracksIOFailure
 				}
 				if (_decompressor != null)
 				{
+					read = HandleDecompression(readBuffer, read);
+					readBuffer = _compressionBuffer;
+				}
+				WriteToInputBuffer(readBuffer, read);
+			}
+		}
+		var dataLength = ReadFromInputBuffer(buffer, offset, count);
+		return dataLength;
+	}
+
+	public int Read(Span<byte> buffer, int offset, int count) {
+		if (_inputBuffer.Count < count) {
+			var readBuffer = _readBuffer;
+			int read;
+			try {
+				read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
+			}
+			catch (IOException) {
+				IOFailed = true;
+				throw;
+			}
+			if (read != 0) {
+				if (_decryptor != null) {
+					_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+				}
+				if (_decompressor != null) {
 					read = HandleDecompression(readBuffer, read);
 					readBuffer = _compressionBuffer;
 				}
@@ -120,15 +137,40 @@ sealed class FirebirdNetworkHandlingWrapper : IDataProvider, ITracksIOFailure
 		return dataLength;
 	}
 
+    public async ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
+    {
+        var rented = new byte[count];
+        try
+        {
+            var read = await ReadAsync(rented, 0, count, cancellationToken).ConfigureAwait(false);
+            rented.AsSpan(0, read).CopyTo(buffer.Span.Slice(offset, read));
+            return read;
+        }
+        finally { }
+    }
+
+	public void Write(ReadOnlySpan<byte> buffer) {
+		foreach (var b in buffer)
+			_outputBuffer.Enqueue(b);
+	}
+
 	public void Write(byte[] buffer, int offset, int count)
 	{
 		for (var i = offset; i < count; i++)
-			_outputBuffer.Enqueue(buffer[offset + i]);
+			_outputBuffer.Enqueue(buffer[i]);
 	}
 	public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 	{
 		for (var i = offset; i < count; i++)
-			_outputBuffer.Enqueue(buffer[offset + i]);
+			_outputBuffer.Enqueue(buffer[i]);
+		return ValueTask2.CompletedTask;
+	}
+
+	public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
+	{
+		var span = buffer.Span.Slice(offset, count);
+		foreach (var b in span)
+			_outputBuffer.Enqueue(b);
 		return ValueTask2.CompletedTask;
 	}
 
@@ -202,6 +244,14 @@ sealed class FirebirdNetworkHandlingWrapper : IDataProvider, ITracksIOFailure
 		for (var i = 0; i < read; i++)
 		{
 			buffer[offset + i] = _inputBuffer.Dequeue();
+		}
+		return read;
+	}
+
+	int ReadFromInputBuffer(Span<byte> buffer, int offset, int count) {
+		var read = Math.Min(count, _inputBuffer.Count);
+		for (var i = 0; i < read; i++) {
+			buffer[offset+i] = _inputBuffer.Dequeue();
 		}
 		return read;
 	}

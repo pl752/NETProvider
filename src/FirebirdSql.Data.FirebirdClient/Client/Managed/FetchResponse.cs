@@ -20,14 +20,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-internal class FetchResponse : IResponse
+internal class FetchResponse(int status, int count) : IResponse
 {
-	public int Status { get; }
-	public int Count { get; }
-
-	public FetchResponse(int status, int count)
-	{
-		Status = status;
-		Count = count;
-	}
+		public int Status { get; } = status;
+		public int Count { get; } = count;
 }

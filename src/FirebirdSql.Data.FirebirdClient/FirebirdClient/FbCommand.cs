@@ -137,10 +137,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		get
 		{
-			if (_parameters == null)
-			{
-				_parameters = new FbParameterCollection();
-			}
+			_parameters ??= new FbParameterCollection();
 			return _parameters;
 		}
 	}
@@ -451,7 +448,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		_connection.CancelCommand();
 	}
 
-	public new FbParameter CreateParameter()
+	public new static FbParameter CreateParameter()
 	{
 		return new FbParameter();
 	}
@@ -490,16 +487,16 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		{
 			try
 			{
-				await PrepareAsync(false, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await PrepareAsync(false, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -550,23 +547,23 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		{
 			try
 			{
-				await ExecuteCommandAsync(CommandBehavior.Default, false, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await ExecuteCommandAsync(CommandBehavior.Default, false, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 
 				if (_statement.StatementType == DbStatementType.StoredProcedure)
 				{
-					await SetOutputParametersAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+					await SetOutputParametersAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				}
 
-				await CommitImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await CommitImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -618,16 +615,16 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		{
 			try
 			{
-				await ExecuteCommandAsync(behavior, true, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await ExecuteCommandAsync(behavior, true, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -694,36 +691,36 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		{
 			try
 			{
-				await ExecuteCommandAsync(CommandBehavior.Default, false, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await ExecuteCommandAsync(CommandBehavior.Default, false, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 
 				// Gets	only the values	of the first row or
 				// the output parameters values if command is an Stored Procedure
 				if (_statement.StatementType == DbStatementType.StoredProcedure)
 				{
 					values = _statement.GetOutputParameters();
-					await SetOutputParametersAsync(values, explicitCancellation.CancellationToken).ConfigureAwait(false);
+					await SetOutputParametersAsync(values, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				}
 				else
 				{
-					values = await _statement.FetchAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+					values = await _statement.FetchAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				}
 
 				// Get the return value
 				if (values != null && values.Length > 0)
 				{
-					val = await values[0].GetValueAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+					val = await values[0].GetValueAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				}
 
-				await CommitImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await CommitImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -1360,10 +1357,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		}
 
 		// Check if	we have	a valid	statement handle
-		if (_statement == null)
-		{
-			_statement = innerConn.Database.CreateStatement(_transaction.Transaction);
-		}
+		_statement ??= innerConn.Database.CreateStatement(_transaction.Transaction);
 
 		// Prepare the statement if	needed
 		if (!_statement.IsPrepared)
@@ -1429,10 +1423,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		}
 
 		// Check if	we have	a valid	statement handle
-		if (_statement == null)
-		{
-			_statement = innerConn.Database.CreateStatement(_transaction.Transaction);
-		}
+		_statement ??= innerConn.Database.CreateStatement(_transaction.Transaction);
 
 		// Prepare the statement if	needed
 		if (!_statement.IsPrepared)

@@ -19,13 +19,9 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version11;
 
-internal class GdsServiceManager : Version10.GdsServiceManager
+internal class GdsServiceManager(GdsConnection connection) : Version10.GdsServiceManager(connection)
 {
-	public GdsServiceManager(GdsConnection connection)
-		: base(connection)
-	{ }
-
-	protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection)
+		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection)
 	{
 		return new GdsDatabase(connection);
 	}

@@ -30,40 +30,25 @@ sealed class FbConnectionPoolManager : IDisposable
 {
 	internal static FbConnectionPoolManager Instance { get; private set; }
 
-	sealed class Item
-	{
-		public long Created { get; private set; }
-		public FbConnectionInternal Connection { get; private set; }
+	sealed class Item(long created, FbConnectionInternal connection) {
+				public long Created { get; private set; } = created;
+				public FbConnectionInternal Connection { get; private set; } = connection;
 
-		public Item(long created, FbConnectionInternal connection)
-		{
-			Created = created;
-			Connection = connection;
-		}
-
-		public void Release()
+				public void Release()
 		{
 			Connection.Disconnect();
 		}
 	}
 
-	sealed class Pool : IDisposable
+	sealed class Pool(ConnectionString connectionString) : IDisposable
 	{
 		bool _disposed;
-		object _syncRoot;
-		ConnectionString _connectionString;
-		Stack<Item> _available;
-		List<FbConnectionInternal> _busy;
+				readonly object _syncRoot = new object();
+				readonly ConnectionString _connectionString = connectionString;
+		Stack<Item> _available = new Stack<Item>();
+				readonly List<FbConnectionInternal> _busy = new List<FbConnectionInternal>();
 
-		public Pool(ConnectionString connectionString)
-		{
-			_syncRoot = new object();
-			_connectionString = connectionString;
-			_available = new Stack<Item>();
-			_busy = new List<FbConnectionInternal>();
-		}
-
-		public void Dispose()
+				public void Dispose()
 		{
 			lock (_syncRoot)
 			{
@@ -115,7 +100,7 @@ sealed class FbConnectionPoolManager : IDisposable
 				var keepCount = keep.Count;
 				if (keepCount < _connectionString.MinPoolSize)
 				{
-					keep = keep.Concat(available.Except(keep).OrderByDescending(x => x.Created).Take(_connectionString.MinPoolSize - keepCount)).ToList();
+					keep = [.. keep, .. available.Except(keep).OrderByDescending(x => x.Created).Take(_connectionString.MinPoolSize - keepCount)];
 				}
 				var release = available.Except(keep).ToList();
 				Parallel.ForEach(release, x => x.Release());
@@ -170,8 +155,8 @@ sealed class FbConnectionPoolManager : IDisposable
 	}
 
 	int _disposed;
-	ConcurrentDictionary<string, Pool> _pools;
-	Timer _cleanupTimer;
+		readonly ConcurrentDictionary<string, Pool> _pools;
+		readonly Timer _cleanupTimer;
 
 	static FbConnectionPoolManager()
 	{

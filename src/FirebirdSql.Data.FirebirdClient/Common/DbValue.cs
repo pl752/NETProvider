@@ -21,18 +21,17 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class DbValue
+internal struct DbValue
 {
-	private StatementBase _statement;
-	private DbField _field;
+	private readonly StatementBase _statement;
+	private readonly DbField _field;
 	private object _value;
 
-	public DbField Field
+	public readonly DbField Field
 	{
 		get { return _field; }
 	}
@@ -50,7 +49,7 @@ internal sealed class DbValue
 		_value = value ?? DBNull.Value;
 	}
 
-	public bool IsDBNull()
+	public readonly bool IsDBNull()
 	{
 		return TypeHelper.IsDBNull(_value);
 	}
@@ -174,17 +173,17 @@ internal sealed class DbValue
 		return _value.ToString();
 	}
 
-	public char GetChar()
+	public readonly char GetChar()
 	{
 		return Convert.ToChar(_value, CultureInfo.CurrentCulture);
 	}
 
-	public bool GetBoolean()
+	public readonly bool GetBoolean()
 	{
 		return Convert.ToBoolean(_value, CultureInfo.InvariantCulture);
 	}
 
-	public byte GetByte()
+	public readonly byte GetByte()
 	{
 		return _value switch
 		{
@@ -193,7 +192,7 @@ internal sealed class DbValue
 		};
 	}
 
-	public short GetInt16()
+	public readonly short GetInt16()
 	{
 		return _value switch
 		{
@@ -202,7 +201,7 @@ internal sealed class DbValue
 		};
 	}
 
-	public int GetInt32()
+	public readonly int GetInt32()
 	{
 		return _value switch
 		{
@@ -211,7 +210,7 @@ internal sealed class DbValue
 		};
 	}
 
-	public long GetInt64()
+	public readonly long GetInt64()
 	{
 		return _value switch
 		{
@@ -220,17 +219,17 @@ internal sealed class DbValue
 		};
 	}
 
-	public decimal GetDecimal()
+	public readonly decimal GetDecimal()
 	{
 		return Convert.ToDecimal(_value, CultureInfo.InvariantCulture);
 	}
 
-	public float GetFloat()
+	public readonly float GetFloat()
 	{
 		return Convert.ToSingle(_value, CultureInfo.InvariantCulture);
 	}
 
-	public Guid GetGuid()
+	public readonly Guid GetGuid()
 	{
 		return _value switch
 		{
@@ -240,12 +239,12 @@ internal sealed class DbValue
 		};
 	}
 
-	public double GetDouble()
+	public readonly double GetDouble()
 	{
 		return Convert.ToDouble(_value, CultureInfo.InvariantCulture);
 	}
 
-	public DateTime GetDateTime()
+	public readonly DateTime GetDateTime()
 	{
 		return _value switch
 		{
@@ -255,17 +254,17 @@ internal sealed class DbValue
 		};
 	}
 
-	public TimeSpan GetTimeSpan()
+	public readonly TimeSpan GetTimeSpan()
 	{
 		return (TimeSpan)_value;
 	}
 
-	public FbDecFloat GetDecFloat()
+	public readonly FbDecFloat GetDecFloat()
 	{
 		return (FbDecFloat)_value;
 	}
 
-	public BigInteger GetInt128()
+	public readonly BigInteger GetInt128()
 	{
 		return _value switch
 		{
@@ -277,12 +276,12 @@ internal sealed class DbValue
 		};
 	}
 
-	public FbZonedDateTime GetZonedDateTime()
+	public readonly FbZonedDateTime GetZonedDateTime()
 	{
 		return (FbZonedDateTime)_value;
 	}
 
-	public FbZonedTime GetZonedTime()
+	public readonly FbZonedTime GetZonedTime()
 	{
 		return (FbZonedTime)_value;
 	}
@@ -333,14 +332,14 @@ internal sealed class DbValue
 		return (byte[])_value;
 	}
 
-	public BlobStream GetBinaryStream()
+	public readonly BlobStream GetBinaryStream()
 	{
 		if (_value is not long l)
 			throw new NotSupportedException();
 
 		return GetBlobStream(l);
 	}
-	public ValueTask<BlobStream> GetBinaryStreamAsync(CancellationToken cancellationToken = default)
+	public readonly ValueTask<BlobStream> GetBinaryStreamAsync(CancellationToken cancellationToken = default)
 	{
 		if (_value is not long l)
 			throw new NotSupportedException();
@@ -348,7 +347,7 @@ internal sealed class DbValue
 		return GetBlobStreamAsync(l, cancellationToken);
 	}
 
-	public int GetDate()
+	public readonly int GetDate()
 	{
 		return _value switch
 		{
@@ -359,7 +358,7 @@ internal sealed class DbValue
 		};
 	}
 
-	public int GetTime()
+	public readonly int GetTime()
 	{
 		return _value switch
 		{
@@ -372,7 +371,7 @@ internal sealed class DbValue
 		};
 	}
 
-	public ushort GetTimeZoneId()
+	public readonly ushort GetTimeZoneId()
 	{
 		{
 			if (_value is FbZonedDateTime zdt && TimeZoneMapping.TryGetByName(zdt.TimeZone, out var id))
@@ -421,16 +420,16 @@ internal sealed class DbValue
 						var bvalue = Field.Charset.GetBytes(GetString());
 						if (bvalue.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = bvalue;
 					}
 					else
 					{
 						var svalue = GetString();
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunesEx().Count() > Field.CharCount)
+						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = Field.Charset.GetBytes(svalue);
 					}
@@ -457,16 +456,16 @@ internal sealed class DbValue
 						var bvalue = Field.Charset.GetBytes(GetString());
 						if (bvalue.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = bvalue;
 					}
 					else
 					{
 						var svalue = GetString();
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunesEx().Count() > Field.CharCount)
+						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = Field.Charset.GetBytes(svalue);
 					}
@@ -636,16 +635,16 @@ internal sealed class DbValue
 						var bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
 						if (bvalue.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = bvalue;
 					}
 					else
 					{
 						var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunesEx().Count() > Field.CharCount)
+						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = Field.Charset.GetBytes(svalue);
 					}
@@ -672,16 +671,16 @@ internal sealed class DbValue
 						var bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
 						if (bvalue.Length > Field.Length)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = bvalue;
 					}
 					else
 					{
 						var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunesEx().Count() > Field.CharCount)
+						if ((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount)
 						{
-							throw IscException.ForErrorCodes(new[] { IscCodes.isc_arith_except, IscCodes.isc_string_truncation });
+							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
 						bytes = Field.Charset.GetBytes(svalue);
 					}
@@ -820,74 +819,57 @@ internal sealed class DbValue
 		}
 	}
 
-	private byte[] GetNumericBytes()
+	private readonly byte[] GetNumericBytes()
 	{
 		var value = GetDecimal();
 		var numeric = TypeEncoder.EncodeDecimal(value, Field.NumericScale, Field.DataType);
 
-		switch (_field.SqlType)
-		{
-			case IscCodes.SQL_SHORT:
-				return BitConverter.GetBytes((short)numeric);
-
-			case IscCodes.SQL_LONG:
-				return BitConverter.GetBytes((int)numeric);
-
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return BitConverter.GetBytes((long)numeric);
-
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return BitConverter.GetBytes((double)numeric);
-
-			case IscCodes.SQL_INT128:
-				return Int128Helper.GetBytes((BigInteger)numeric);
-
-			default:
-				return null;
+				return _field.SqlType switch {
+						IscCodes.SQL_SHORT => BitConverter.GetBytes((short)numeric),
+						IscCodes.SQL_LONG => BitConverter.GetBytes((int)numeric),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => BitConverter.GetBytes((long)numeric),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => BitConverter.GetBytes((double)numeric),
+						IscCodes.SQL_INT128 => Int128Helper.GetBytes((BigInteger)numeric),
+						_ => null,
+				};
 		}
-	}
 
-	private string GetClobData(long blobId)
+	private readonly string GetClobData(long blobId)
 	{
 		var clob = _statement.CreateBlob(blobId);
 		return clob.ReadString();
 	}
-	private ValueTask<string> GetClobDataAsync(long blobId, CancellationToken cancellationToken = default)
+	private readonly ValueTask<string> GetClobDataAsync(long blobId, CancellationToken cancellationToken = default)
 	{
 		var clob = _statement.CreateBlob(blobId);
 		return clob.ReadStringAsync(cancellationToken);
 	}
 
-	private byte[] GetBlobData(long blobId)
+	private readonly byte[] GetBlobData(long blobId)
 	{
 		var blob = _statement.CreateBlob(blobId);
 		return blob.Read();
 	}
-	private ValueTask<byte[]> GetBlobDataAsync(long blobId, CancellationToken cancellationToken = default)
+	private readonly ValueTask<byte[]> GetBlobDataAsync(long blobId, CancellationToken cancellationToken = default)
 	{
 		var blob = _statement.CreateBlob(blobId);
 		return blob.ReadAsync(cancellationToken);
 	}
 
-	private BlobStream GetBlobStream(long blobId)
+	private readonly BlobStream GetBlobStream(long blobId)
 	{
 		var blob = _statement.CreateBlob(blobId);
 		return new BlobStream(blob);
 	}
-	private ValueTask<BlobStream> GetBlobStreamAsync(long blobId, CancellationToken cancellationToken = default)
+	private readonly ValueTask<BlobStream> GetBlobStreamAsync(long blobId, CancellationToken cancellationToken = default)
 	{
 		var blob = _statement.CreateBlob(blobId);
 		return ValueTask2.FromResult(new BlobStream(blob));
 	}
 
-	private Array GetArrayData(long handle)
+	private readonly Array GetArrayData(long handle)
 	{
-		if (_field.ArrayHandle == null)
-		{
-			_field.ArrayHandle = _statement.CreateArray(handle, Field.Relation, Field.Name);
-		}
+		_field.ArrayHandle ??= _statement.CreateArray(handle, Field.Relation, Field.Name);
 
 		var gdsArray = _statement.CreateArray(_field.ArrayHandle.Descriptor);
 		gdsArray.Handle = handle;
@@ -895,12 +877,9 @@ internal sealed class DbValue
 		gdsArray.Transaction = _statement.Transaction;
 		return gdsArray.Read();
 	}
-	private async ValueTask<Array> GetArrayDataAsync(long handle, CancellationToken cancellationToken = default)
+	private async readonly ValueTask<Array> GetArrayDataAsync(long handle, CancellationToken cancellationToken = default)
 	{
-		if (_field.ArrayHandle == null)
-		{
-			_field.ArrayHandle = await _statement.CreateArrayAsync(handle, Field.Relation, Field.Name, cancellationToken).ConfigureAwait(false);
-		}
+		_field.ArrayHandle ??= await _statement.CreateArrayAsync(handle, Field.Relation, Field.Name, cancellationToken).ConfigureAwait(false);
 
 		var gdsArray = await _statement.CreateArrayAsync(_field.ArrayHandle.Descriptor, cancellationToken).ConfigureAwait(false);
 		gdsArray.Handle = handle;

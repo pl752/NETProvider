@@ -23,7 +23,7 @@ namespace FirebirdSql.Data.Common;
 [Serializable]
 internal sealed class IscError
 {
-	private string _strParam;
+	private readonly string _strParam;
 
 	public string Message { get; set; }
 	public int ErrorCode { get; }
@@ -33,39 +33,23 @@ internal sealed class IscError
 	{
 		get
 		{
-			switch (Type)
-			{
-				case IscCodes.isc_arg_interpreted:
-				case IscCodes.isc_arg_string:
-				case IscCodes.isc_arg_cstring:
-				case IscCodes.isc_arg_sql_state:
-					return _strParam;
-
-				case IscCodes.isc_arg_number:
-					return ErrorCode.ToString(CultureInfo.InvariantCulture);
-
-				default:
-					return string.Empty;
-			}
-		}
+						return Type switch {
+								IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_sql_state => _strParam,
+								IscCodes.isc_arg_number => ErrorCode.ToString(CultureInfo.InvariantCulture),
+								_ => string.Empty,
+						};
+				}
 	}
 
 	public bool IsArgument
 	{
 		get
 		{
-			switch (Type)
-			{
-				case IscCodes.isc_arg_interpreted:
-				case IscCodes.isc_arg_string:
-				case IscCodes.isc_arg_cstring:
-				case IscCodes.isc_arg_number:
-					return true;
-
-				default:
-					return false;
-			}
-		}
+						return Type switch {
+								IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_number => true,
+								_ => false,
+						};
+				}
 	}
 
 	public bool IsWarning

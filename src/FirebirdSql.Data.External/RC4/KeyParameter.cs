@@ -12,10 +12,9 @@ namespace Org.BouncyCastle.Crypto.Parameters
 		public KeyParameter(
 			byte[] key)
 		{
-			if (key == null)
-				throw new ArgumentNullException("key");
+						ArgumentNullException.ThrowIfNull(key);
 
-			this.key = (byte[]) key.Clone();
+						this.key = (byte[]) key.Clone();
 		}
 
 		public KeyParameter(
@@ -23,9 +22,8 @@ namespace Org.BouncyCastle.Crypto.Parameters
             int		keyOff,
             int		keyLen)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
-			if (keyOff < 0 || keyOff > key.Length)
+						ArgumentNullException.ThrowIfNull(key);
+						if (keyOff < 0 || keyOff > key.Length)
 				throw new ArgumentOutOfRangeException("keyOff");
             if (keyLen < 0 || keyLen > (key.Length - keyOff))
 				throw new ArgumentOutOfRangeException("keyLen");

@@ -23,12 +23,12 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbRemoteEvent : IDisposable
+public sealed class FbRemoteEvent(string connectionString) : IDisposable
 #if !(NET48 || NETSTANDARD2_0)
 		, IAsyncDisposable
 #endif
 {
-	private FbConnectionInternal _connection;
+	private readonly FbConnectionInternal _connection = new FbConnectionInternal(new ConnectionString(connectionString));
 	private RemoteEvent _revent;
 	private SynchronizationContext _synchronizationContext;
 
@@ -38,12 +38,7 @@ public sealed class FbRemoteEvent : IDisposable
 	public string this[int index] => _revent != null ? _revent.Events[index] : throw new InvalidOperationException();
 	public int RemoteEventId => _revent != null ? _revent.RemoteId : throw new InvalidOperationException();
 
-	public FbRemoteEvent(string connectionString)
-	{
-		_connection = new FbConnectionInternal(new ConnectionString(connectionString));
-	}
-
-	public void Open()
+		public void Open()
 	{
 		if (_revent != null)
 			throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");

@@ -28,29 +28,15 @@ internal static class TypeDecoder
 	{
 		var shift = scale < 0 ? -scale : scale;
 
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift);
-
-			case IscCodes.SQL_LONG:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift);
-
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift);
-
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return (decimal)(double)value;
-
-			case IscCodes.SQL_INT128:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift);
-
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift),
+						IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal)(double)value,
+						IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 		}
-	}
 
 	public static TimeSpan DecodeTime(int sqlTime)
 	{
@@ -98,13 +84,16 @@ internal static class TypeDecoder
 		return value[0] != 0;
 	}
 
+	public static bool DecodeBoolean(ReadOnlySpan<byte> value) {
+		return value[0] != 0;
+	}
+
 	public static Guid DecodeGuid(byte[] value)
 	{
 		var a = IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
 		var b = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 4));
 		var c = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 6));
-		var d = new[] { value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15] };
-		return new Guid(a, b, c, d);
+		return new Guid(a, b, c, value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15]);
 	}
 
 	public static int DecodeInt32(byte[] value)

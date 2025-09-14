@@ -24,8 +24,8 @@ public sealed class FbInfoMessageEventArgs : EventArgs
 {
 	#region Fields
 
-	private FbErrorCollection _errors;
-	private string _message;
+	private readonly FbErrorCollection _errors;
+	private readonly string _message;
 
 	#endregion
 

@@ -22,7 +22,7 @@ namespace FirebirdSql.Data.Common;
 internal class TimeZoneMapping
 {
 	// select '{ ' || rdb$time_zone_id || ', "' || trim(rdb$time_zone_name) || '" },' from rdb$time_zones order by rdb$time_zone_id desc;
-	static Dictionary<ushort, string> _idToName = new Dictionary<ushort, string>()
+	static readonly Dictionary<ushort, string> _idToName = new Dictionary<ushort, string>()
 		{
 { 65535, "GMT" },
 { 65534, "ACT" },
@@ -664,7 +664,7 @@ internal class TimeZoneMapping
 		};
 
 	// select '{ "' || trim(rdb$time_zone_name) || '", ' || rdb$time_zone_id || ' },' from rdb$time_zones order by rdb$time_zone_id desc;
-	static Dictionary<string, ushort> _nameToId = new Dictionary<string, ushort>()
+	static readonly Dictionary<string, ushort> _nameToId = new Dictionary<string, ushort>()
 		{
 { "GMT", 65535 },
 { "ACT", 65534 },

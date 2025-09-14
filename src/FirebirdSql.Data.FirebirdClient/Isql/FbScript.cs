@@ -31,8 +31,8 @@ public class FbScript
 {
 	public event EventHandler<UnknownStatementEventArgs> UnknownStatement;
 
-	SqlStringParser _parser;
-	FbStatementCollection _results;
+		readonly SqlStringParser _parser;
+		readonly FbStatementCollection _results;
 
 	/// <summary>
 	/// Returns a FbStatementCollection containing all the SQL statements (without comments) present on the file.
@@ -53,12 +53,11 @@ public class FbScript
 
 	public FbScript(string script)
 	{
-		if (script == null)
-			throw new ArgumentNullException();
+				ArgumentNullException.ThrowIfNull(script);
 
-		_results = new FbStatementCollection();
+				_results = new FbStatementCollection();
 		_parser = new SqlStringParser(script);
-		_parser.Tokens = new[] { ";" };
+		_parser.Tokens = [";"];
 	}
 
 	/// <summary>
@@ -72,7 +71,7 @@ public class FbScript
 		{
 			if (IsSetTermStatement(statement.CleanText, out var newParserToken))
 			{
-				_parser.Tokens = new[] { newParserToken };
+				_parser.Tokens = [newParserToken];
 				continue;
 			}
 
@@ -118,7 +117,7 @@ public class FbScript
 	{
 		if (statement.StartsWith("SET TERM", StringComparison.OrdinalIgnoreCase))
 		{
-			newTerm = statement.Substring(8).Trim();
+			newTerm = statement[8..].Trim();
 			return true;
 		}
 

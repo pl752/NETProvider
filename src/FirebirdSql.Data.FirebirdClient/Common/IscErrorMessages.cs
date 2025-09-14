@@ -21,7 +21,7 @@ namespace FirebirdSql.Data.Common;
 
 internal static class IscErrorMessages
 {
-	static Dictionary<int, string> _messages = new Dictionary<int, string>()
+	static readonly Dictionary<int, string> _messages = new Dictionary<int, string>()
 		{
 	{335544320, ""},
 	{335544321, "arithmetic exception, numeric overflow, or string truncation"},		/* arith_except */

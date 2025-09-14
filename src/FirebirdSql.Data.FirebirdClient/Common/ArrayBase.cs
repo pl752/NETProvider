@@ -28,8 +28,8 @@ internal abstract class ArrayBase
 	#region Fields
 
 	private ArrayDesc _descriptor;
-	private string _tableName;
-	private string _fieldName;
+	private readonly string _tableName;
+	private readonly string _fieldName;
 	private string _rdbFieldName;
 
 	#endregion

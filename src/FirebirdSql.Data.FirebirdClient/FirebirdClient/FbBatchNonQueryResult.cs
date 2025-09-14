@@ -39,12 +39,12 @@ public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultIte
 
 	internal FbBatchNonQueryResult(ExecuteResultItem[] result)
 	{
-		_items = result.Select(x => new FbBatchNonQueryResultItem()
+		_items = [.. result.Select(x => new FbBatchNonQueryResultItem()
 		{
 			RecordsAffected = x.RecordsAffected,
 			IsSuccess = !x.IsError,
 			Exception = x.Exception != null ? (FbException)FbException.Create(x.Exception) : null,
-		}).ToList();
+		})];
 	}
 
 	public FbBatchNonQueryResultItem this[int index] => _items[index];

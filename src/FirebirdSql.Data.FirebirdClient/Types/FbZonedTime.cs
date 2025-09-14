@@ -29,9 +29,8 @@ public readonly struct FbZonedTime : IEquatable<FbZonedTime>, IConvertible
 
 	internal FbZonedTime(TimeSpan time, string timeZone, TimeSpan? offset)
 	{
-		if (timeZone == null)
-			throw new ArgumentNullException(nameof(timeZone));
-		if (string.IsNullOrWhiteSpace(timeZone))
+				ArgumentNullException.ThrowIfNull(timeZone);
+				if (string.IsNullOrWhiteSpace(timeZone))
 			throw new ArgumentException(nameof(timeZone));
 
 		Time = time;

@@ -24,13 +24,9 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version15;
 
-internal class GdsDatabase : Version13.GdsDatabase
+internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(connection)
 {
-	public GdsDatabase(GdsConnection connection)
-		: base(connection)
-	{ }
-
-	protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
+		protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
 	{
 		while (response is CryptKeyCallbackResponse cryptKeyCallbackResponse)
 		{

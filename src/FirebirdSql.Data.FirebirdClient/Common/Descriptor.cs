@@ -31,10 +31,10 @@ internal sealed class Descriptor
 {
 	#region Fields
 
-	private short _version;
-	private short _count;
+	private readonly short _version;
+	private readonly short _count;
 	private short _actualCount;
-	private DbField[] _fields;
+	private readonly DbField[] _fields;
 
 	#endregion
 
@@ -78,7 +78,7 @@ internal sealed class Descriptor
 		_version = IscCodes.SQLDA_VERSION1;
 		_count = n;
 		_actualCount = n;
-		_fields = new DbField[n];
+		_fields = n > 0 ? new DbField[n] : [];
 
 		for (var i = 0; i < n; i++)
 		{
@@ -98,17 +98,10 @@ internal sealed class Descriptor
 		}
 	}
 
-	internal sealed class BlrData
-	{
-		public byte[] Data { get; }
-		public int Length { get; }
-
-		public BlrData(byte[] data, int length)
-		{
-			Data = data;
-			Length = length;
+	internal sealed class BlrData(byte[] data, int length) {
+				public byte[] Data { get; } = data;
+				public int Length { get; } = length;
 		}
-	}
 	public BlrData ToBlr()
 	{
 		using (var blr = new MemoryStream(256))

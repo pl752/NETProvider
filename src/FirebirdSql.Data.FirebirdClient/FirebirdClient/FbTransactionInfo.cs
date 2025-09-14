@@ -23,17 +23,16 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbTransactionInfo
-{
-	#region Properties
+public sealed class FbTransactionInfo(FbTransaction transaction = null) {
+		#region Properties
 
-	public FbTransaction Transaction { get; set; }
+		public FbTransaction Transaction { get; set; } = transaction;
 
-	#endregion
+		#endregion
 
-	#region Methods
+		#region Methods
 
-	public long GetTransactionSnapshotNumber()
+		public long GetTransactionSnapshotNumber()
 	{
 		return GetValue<long>(IscCodes.fb_info_tra_snapshot_number);
 	}
@@ -42,20 +41,14 @@ public sealed class FbTransactionInfo
 		return GetValueAsync<long>(IscCodes.fb_info_tra_snapshot_number, cancellationToken);
 	}
 
-	#endregion
+		#endregion
+		#region Constructors
 
-	#region Constructors
+		#endregion
 
-	public FbTransactionInfo(FbTransaction transaction = null)
-	{
-		Transaction = transaction;
-	}
+		#region Private Methods
 
-	#endregion
-
-	#region Private Methods
-
-	private T GetValue<T>(byte item)
+		private T GetValue<T>(byte item)
 	{
 		FbTransaction.EnsureActive(Transaction);
 
@@ -90,7 +83,7 @@ public sealed class FbTransactionInfo
 			IscCodes.isc_info_end
 		};
 
-		return (Transaction.Transaction.GetTransactionInfo(items)).Select(InfoValuesHelper.ConvertValue<T>).ToList();
+		return [.. (Transaction.Transaction.GetTransactionInfo(items)).Select(InfoValuesHelper.ConvertValue<T>)];
 	}
 	private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default)
 	{
@@ -102,7 +95,7 @@ public sealed class FbTransactionInfo
 			IscCodes.isc_info_end
 		};
 
-		return (await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>).ToList();
+		return [.. (await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>)];
 	}
 
 	#endregion

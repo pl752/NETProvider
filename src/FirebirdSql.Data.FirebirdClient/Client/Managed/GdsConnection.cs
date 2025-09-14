@@ -27,24 +27,23 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-internal sealed class GdsConnection
-{
+internal sealed class GdsConnection(string user, string password, string dataSource, int portNumber, int timeout, int packetSize, Charset charset, short dialect, bool compression, Version13.WireCryptOption wireCrypt, byte[] cryptKey) {
 	private NetworkStream _networkStream;
 	private FirebirdNetworkHandlingWrapper _firebirdNetworkHandlingWrapper;
 
-	public string User { get; private set; }
-	public string Password { get; private set; }
-	public string DataSource { get; private set; }
-	public int PortNumber { get; private set; }
-	public int Timeout { get; private set; }
-	public int PacketSize { get; private set; }
-	public Charset Charset { get; private set; }
-	public short Dialect { get; private set; }
-	public bool Compression { get; private set; }
-	public Version13.WireCryptOption WireCrypt { get; private set; }
-	public byte[] CryptKey { get; private set; }
+		public string User { get; private set; } = user;
+		public string Password { get; private set; } = password;
+		public string DataSource { get; private set; } = dataSource;
+		public int PortNumber { get; private set; } = portNumber;
+		public int Timeout { get; private set; } = timeout;
+		public int PacketSize { get; private set; } = packetSize;
+		public Charset Charset { get; private set; } = charset;
+		public short Dialect { get; private set; } = dialect;
+		public bool Compression { get; private set; } = compression;
+		public Version13.WireCryptOption WireCrypt { get; private set; } = wireCrypt;
+		public byte[] CryptKey { get; private set; } = cryptKey;
 
-	public int ProtocolVersion { get; private set; }
+		public int ProtocolVersion { get; private set; }
 	public int ProtocolArchitecture { get; private set; }
 	public int ProtocolMinimunType { get; private set; }
 	public bool ConnectionBroken => _firebirdNetworkHandlingWrapper?.IOFailed ?? false;
@@ -58,22 +57,7 @@ internal sealed class GdsConnection
 		: this(null, null, dataSource, port, timeout, 8192, Charset.DefaultCharset, 3, false, Version13.WireCryptOption.Enabled, null)
 	{ }
 
-	public GdsConnection(string user, string password, string dataSource, int portNumber, int timeout, int packetSize, Charset charset, short dialect, bool compression, Version13.WireCryptOption wireCrypt, byte[] cryptKey)
-	{
-		User = user;
-		Password = password;
-		DataSource = dataSource;
-		PortNumber = portNumber;
-		Timeout = timeout;
-		PacketSize = packetSize;
-		Charset = charset;
-		Dialect = dialect;
-		Compression = compression;
-		WireCrypt = wireCrypt;
-		CryptKey = cryptKey;
-	}
-
-	public void Connect()
+		public void Connect()
 	{
 		try
 		{
@@ -145,7 +129,7 @@ internal sealed class GdsConnection
 			Xdr.Write(database);
 
 			var protocols = ProtocolsSupported.Get(Compression);
-			Xdr.Write(protocols.Count());
+			Xdr.Write(protocols.Count);
 
 			AuthBlock = new AuthBlock(this, User, Password, WireCrypt);
 
@@ -221,7 +205,7 @@ internal sealed class GdsConnection
 							break;
 						}
 
-						if (AuthBlock.ServerKeys.Any())
+						if (AuthBlock.ServerKeys.Length != 0)
 						{
 							AuthBlock.SendWireCryptToBuffer();
 							Xdr.Flush();
@@ -259,7 +243,7 @@ internal sealed class GdsConnection
 			await Xdr.WriteAsync(database, cancellationToken).ConfigureAwait(false);
 
 			var protocols = ProtocolsSupported.Get(Compression);
-			await Xdr.WriteAsync(protocols.Count(), cancellationToken).ConfigureAwait(false);
+			await Xdr.WriteAsync(protocols.Count, cancellationToken).ConfigureAwait(false);
 
 			AuthBlock = new AuthBlock(this, User, Password, WireCrypt);
 
@@ -335,7 +319,7 @@ internal sealed class GdsConnection
 							break;
 						}
 
-						if (AuthBlock.ServerKeys.Any())
+						if (AuthBlock.ServerKeys.Length != 0)
 						{
 							await AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
 							await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);

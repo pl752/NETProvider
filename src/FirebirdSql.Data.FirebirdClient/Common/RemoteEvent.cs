@@ -24,20 +24,19 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal class RemoteEvent
-{
+internal class RemoteEvent(DatabaseBase database) {
 	const int MaxEventNameLength = 255;
 	const int MaxEpbLength = 65535;
 
-	List<string> _events;
-	DatabaseBase _database;
+		readonly List<string> _events = new List<string>();
+		readonly DatabaseBase _database = database;
 	int[] _previousCounts;
 	int[] _currentCounts;
 	int _running;
 
-	public int LocalId { get; set; }
-	public int RemoteId { get; set; }
-	public Action<string, int> EventCountsCallback { get; set; }
+		public int LocalId { get; set; } = 0;
+		public int RemoteId { get; set; } = 0;
+		public Action<string, int> EventCountsCallback { get; set; }
 	public Action<Exception> EventErrorCallback { get; set; }
 
 	public List<string> Events
@@ -50,15 +49,7 @@ internal class RemoteEvent
 		get { return _database; }
 	}
 
-	public RemoteEvent(DatabaseBase database)
-	{
-		LocalId = 0;
-		RemoteId = 0;
-		_events = new List<string>();
-		_database = database;
-	}
-
-	public void QueueEvents(ICollection<string> events)
+		public void QueueEvents(ICollection<string> events)
 	{
 		EnsureNotRunning();
 		EnsureEventsCollection(events);
@@ -152,13 +143,12 @@ internal class RemoteEvent
 
 	void EnsureEventsCollection(ICollection<string> events)
 	{
-		if (events == null)
-			throw new ArgumentNullException(nameof(events));
-		if (events.Count == 0)
+				ArgumentNullException.ThrowIfNull(events);
+				if (events.Count == 0)
 			throw new ArgumentOutOfRangeException(nameof(events), "Need to provide at least one event.");
 		if (events.Any(x => x.Length > MaxEventNameLength))
 			throw new ArgumentOutOfRangeException(nameof(events), $"Some events are longer than {MaxEventNameLength}.");
-		if (BuildEpb(events.ToList(), _ => default).ToArray().Length > MaxEpbLength)
+		if (BuildEpb([.. events], _ => default).ToArray().Length > MaxEpbLength)
 			throw new ArgumentOutOfRangeException(nameof(events), $"Whole events buffer is bigger than {MaxEpbLength}.");
 	}
 }

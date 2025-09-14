@@ -40,18 +40,16 @@ public sealed class FbConnection : DbConnection, ICloneable
 
 	public static void ClearPool(FbConnection connection)
 	{
-		if (connection == null)
-			throw new ArgumentNullException(nameof(connection));
+				ArgumentNullException.ThrowIfNull(connection);
 
-		FbConnectionPoolManager.Instance.ClearPool(connection.ConnectionOptions);
+				FbConnectionPoolManager.Instance.ClearPool(connection.ConnectionOptions);
 	}
 
 	public static void ClearPool(string connectionString)
 	{
-		if (connectionString == null)
-			throw new ArgumentNullException(nameof(connectionString));
+				ArgumentNullException.ThrowIfNull(connectionString);
 
-		FbConnectionPoolManager.Instance.ClearPool(new ConnectionString(connectionString));
+				FbConnectionPoolManager.Instance.ClearPool(new ConnectionString(connectionString));
 	}
 
 	#endregion
@@ -181,10 +179,7 @@ public sealed class FbConnection : DbConnection, ICloneable
 		{
 			if (_state == ConnectionState.Closed)
 			{
-				if (value == null)
-				{
-					value = string.Empty;
-				}
+				value ??= string.Empty;
 
 				_options = new ConnectionString(value);
 				_options.Validate();

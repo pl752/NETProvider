@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Isql;
 
 public sealed class FbBatchExecution
 {
-	private static readonly string[] StandardParseTokens = new[] { " ", "\r\n", "\n", "\r" };
+	private static readonly string[] StandardParseTokens = [" ", "\r\n", "\n", "\r"];
 
 	/// <summary>
 	/// The event trigged before a SQL statement goes for execution.
@@ -37,10 +37,10 @@ public sealed class FbBatchExecution
 	/// </summary>
 	public event EventHandler<CommandExecutedEventArgs> CommandExecuted;
 
-	FbStatementCollection _statements;
+		readonly FbStatementCollection _statements;
 	FbConnection _sqlConnection;
 	FbTransaction _sqlTransaction;
-	FbConnectionStringBuilder _connectionString;
+		readonly FbConnectionStringBuilder _connectionString;
 	FbCommand _sqlCommand;
 
 	// control fields
@@ -283,7 +283,7 @@ public sealed class FbBatchExecution
 					case SqlStatementType.SetAutoDDL:
 						OnCommandExecuting(null, statement.StatementType);
 
-						SetAutoDdl(statement.CleanText, ref autoCommit);
+												SetAutoDdl(statement.CleanText, ref autoCommit);
 						_requiresNewConnection = false;
 
 						OnCommandExecuted(null, statement.Text, statement.StatementType, -1);
@@ -534,7 +534,7 @@ public sealed class FbBatchExecution
 					case SqlStatementType.SetAutoDDL:
 						OnCommandExecuting(null, statement.StatementType);
 
-						SetAutoDdl(statement.CleanText, ref autoCommit);
+												SetAutoDdl(statement.CleanText, ref autoCommit);
 						_requiresNewConnection = false;
 
 						OnCommandExecuted(null, statement.Text, statement.StatementType, -1);
@@ -834,7 +834,7 @@ public sealed class FbBatchExecution
 	/// Parses the isql statement SET AUTODDL and sets the character set to current connection string.
 	/// </summary>
 	/// <param name="setAutoDdlStatement">The set names statement.</param>
-	private void SetAutoDdl(string setAutoDdlStatement, ref bool autoCommit)
+	private static void SetAutoDdl(string setAutoDdlStatement, ref bool autoCommit)
 	{
 		// SET AUTODDL [ON | OFF]
 		var parser = new SqlStringParser(setAutoDdlStatement);
@@ -918,10 +918,7 @@ public sealed class FbBatchExecution
 
 	private FbCommand ProvideCommand()
 	{
-		if (_sqlCommand == null)
-		{
-			_sqlCommand = new FbCommand();
-		}
+		_sqlCommand ??= new FbCommand();
 
 		_sqlCommand.Connection = ProvideConnection();
 
@@ -929,10 +926,7 @@ public sealed class FbBatchExecution
 	}
 	private async Task<FbCommand> ProvideCommandAsync(CancellationToken cancellationToken = default)
 	{
-		if (_sqlCommand == null)
-		{
-			_sqlCommand = new FbCommand();
-		}
+		_sqlCommand ??= new FbCommand();
 
 		_sqlCommand.Connection = await ProvideConnectionAsync(cancellationToken).ConfigureAwait(false);
 

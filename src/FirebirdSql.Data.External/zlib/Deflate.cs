@@ -132,7 +132,7 @@ namespace Ionic.Zlib
 
             static Config()
             {
-                Table = new Config[] {
+                Table = [
                     new Config(0, 0, 0, 0, DeflateFlavor.Store),
                     new Config(4, 4, 8, 4, DeflateFlavor.Fast),
                     new Config(4, 5, 16, 8, DeflateFlavor.Fast),
@@ -144,7 +144,7 @@ namespace Ionic.Zlib
                     new Config(8, 32, 128, 256, DeflateFlavor.Slow),
                     new Config(32, 128, 258, 1024, DeflateFlavor.Slow),
                     new Config(32, 258, 258, 4096, DeflateFlavor.Slow),
-                };
+                ];
             }
 
             private static readonly Config[] Table;
@@ -153,9 +153,9 @@ namespace Ionic.Zlib
 
         private CompressFunc DeflateFunction;
 
-        private static readonly System.String[] _ErrorMessage = new System.String[]
-        {
-            "need dictionary",
+        private static readonly System.String[] _ErrorMessage =
+				[
+						"need dictionary",
             "stream end",
             "",
             "file error",
@@ -165,7 +165,7 @@ namespace Ionic.Zlib
             "buffer error",
             "incompatible version",
             ""
-        };
+        ];
 
         // preset dictionary flag in zlib header
         private static readonly int PRESET_DICT = 0x20;

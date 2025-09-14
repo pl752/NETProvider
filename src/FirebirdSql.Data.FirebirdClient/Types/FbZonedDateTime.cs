@@ -31,9 +31,8 @@ public readonly struct FbZonedDateTime : IEquatable<FbZonedDateTime>, IConvertib
 	{
 		if (dateTime.Kind != DateTimeKind.Utc)
 			throw new ArgumentException("Value must be in UTC.", nameof(dateTime));
-		if (timeZone == null)
-			throw new ArgumentNullException(nameof(timeZone));
-		if (string.IsNullOrWhiteSpace(timeZone))
+				ArgumentNullException.ThrowIfNull(timeZone);
+				if (string.IsNullOrWhiteSpace(timeZone))
 			throw new ArgumentException(nameof(timeZone));
 
 		DateTime = dateTime;

@@ -112,10 +112,7 @@ namespace Org.BouncyCastle.Crypto.Engines
             x = 0;
             y = 0;
 
-            if (engineState == null)
-            {
-                engineState = new byte[STATE_LENGTH];
-            }
+            engineState ??= new byte[STATE_LENGTH];
 
             // reset the state of the engine
             for (int i=0; i < STATE_LENGTH; i++)

@@ -26,13 +26,9 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbServerProperties : FbService
+public sealed class FbServerProperties(string connectionString = null) : FbService(connectionString)
 {
-	public FbServerProperties(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public int GetVersion()
+		public int GetVersion()
 	{
 		return GetInt32(IscCodes.isc_info_svc_version);
 	}
@@ -124,11 +120,11 @@ public sealed class FbServerProperties : FbService
 
 	private List<object> GetInfo(int item)
 	{
-		return GetInfo(new byte[] { (byte)item });
+		return GetInfo([(byte)item]);
 	}
 	private Task<List<object>> GetInfoAsync(int item, CancellationToken cancellationToken = default)
 	{
-		return GetInfoAsync(new byte[] { (byte)item }, cancellationToken);
+		return GetInfoAsync([(byte)item], cancellationToken);
 	}
 
 	private List<object> GetInfo(byte[] items)
