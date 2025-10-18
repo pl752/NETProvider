@@ -15,13 +15,10 @@
 
 //$Authors = Carlos Guzman Alvarez
 
-using System;
-
 namespace FirebirdSql.Data.Common;
 
-internal enum TransactionState
-{
-	NoTransaction,
-	Active,
-	Prepared
+internal enum TransactionState {
+		NoTransaction,
+		Active,
+		Prepared
 }

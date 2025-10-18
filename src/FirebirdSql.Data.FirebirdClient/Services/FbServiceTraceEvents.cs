@@ -20,11 +20,10 @@ using System;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbServiceTraceEvents
-{
-	Services = 0x01,
-	ServiceQuery = 0x02,
-	Errors = 0x04,
-	Warnings = 0x08,
-	InitFini = 0x10,
+public enum FbServiceTraceEvents {
+		Services = 0x01,
+		ServiceQuery = 0x02,
+		Errors = 0x04,
+		Warnings = 0x08,
+		InitFini = 0x10,
 }

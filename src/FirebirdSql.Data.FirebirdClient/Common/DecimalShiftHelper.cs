@@ -17,23 +17,18 @@
 
 namespace FirebirdSql.Data.Common;
 
-internal static class DecimalShiftHelper
-{
-	public static decimal ShiftDecimalLeft(decimal d, int shift)
-	{
-		while (shift-- > 0)
-		{
-			d /= 10;
+internal static class DecimalShiftHelper {
+		public static decimal ShiftDecimalLeft(decimal d, int shift) {
+				while(shift-- > 0) {
+						d /= 10;
+				}
+				return d;
 		}
-		return d;
-	}
 
-	public static decimal ShiftDecimalRight(decimal d, int shift)
-	{
-		while (shift-- > 0)
-		{
-			d *= 10;
+		public static decimal ShiftDecimalRight(decimal d, int shift) {
+				while(shift-- > 0) {
+						d *= 10;
+				}
+				return d;
 		}
-		return d;
-	}
 }

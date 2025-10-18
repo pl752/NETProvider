@@ -16,114 +16,98 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
-using System.Threading;
 using System.Transactions;
-using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal sealed class FbEnlistmentNotification : IEnlistmentNotification
-{
-	#region Events
+internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
+		#region Events
 
-	public event EventHandler Completed;
+		public event EventHandler Completed;
 
-	#endregion
+		#endregion
 
-	#region Fields
+		#region Fields
 
-	private FbConnectionInternal _connection;
-	private FbTransaction _transaction;
-	private Transaction _systemTransaction;
+		private FbConnectionInternal _connection;
+		private FbTransaction _transaction;
+		private Transaction _systemTransaction;
 
-	#endregion
+		#endregion
 
-	#region Properties
+		#region Properties
 
-	public bool IsCompleted
-	{
-		get { return (_transaction == null); }
-	}
-
-	public Transaction SystemTransaction
-	{
-		get { return _systemTransaction; }
-	}
-
-	#endregion
-
-	#region Constructors
-
-	public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction)
-	{
-		_connection = connection;
-		_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
-		_systemTransaction = systemTransaction;
-
-		_systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
-	}
-
-	#endregion
-
-	#region IEnlistmentNotification Members
-
-	public void Commit(Enlistment enlistment)
-	{
-		if (_transaction != null && !_transaction.IsCompleted)
-		{
-			_transaction.Commit();
-			_transaction = null;
-
-			Completed?.Invoke(this, new EventArgs());
-
-			if (_connection != null)
-			{
-				if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
-				{
-					_connection.Disconnect();
-				}
-			}
-			_connection = null;
-			_systemTransaction = null;
-
-			// Declare done on the enlistment
-			enlistment.Done();
+		public bool IsCompleted {
+				get { return (_transaction == null); }
 		}
-	}
 
-	public void InDoubt(Enlistment enlistment)
-	{
-		throw new NotSupportedException("In Doubt transactions are not supported");
-	}
-
-	public void Prepare(PreparingEnlistment preparingEnlistment)
-	{
-		preparingEnlistment.Prepared();
-	}
-
-	public void Rollback(Enlistment enlistment)
-	{
-		if (_transaction != null && !_transaction.IsCompleted)
-		{
-			_transaction.Rollback();
-			_transaction = null;
-
-			Completed?.Invoke(this, new EventArgs());
-
-			if (_connection != null)
-			{
-				if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
-				{
-					_connection.Disconnect();
-				}
-			}
-			_connection = null;
-			_systemTransaction = null;
-
-			// Declare done on the enlistment
-			enlistment.Done();
+		public Transaction SystemTransaction {
+				get { return _systemTransaction; }
 		}
-	}
 
-	#endregion
+		#endregion
+
+		#region Constructors
+
+		public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction) {
+				_connection = connection;
+				_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
+				_systemTransaction = systemTransaction;
+
+				_systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
+		}
+
+		#endregion
+
+		#region IEnlistmentNotification Members
+
+		public void Commit(Enlistment enlistment) {
+				if(_transaction != null && !_transaction.IsCompleted) {
+						_transaction.Commit();
+						_transaction = null;
+
+						Completed?.Invoke(this, new EventArgs());
+
+						if(_connection != null) {
+								if(!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed)) {
+										_connection.Disconnect();
+								}
+						}
+						_connection = null;
+						_systemTransaction = null;
+
+						// Declare done on the enlistment
+						enlistment.Done();
+				}
+		}
+
+		public void InDoubt(Enlistment enlistment) {
+				throw new NotSupportedException("In Doubt transactions are not supported");
+		}
+
+		public void Prepare(PreparingEnlistment preparingEnlistment) {
+				preparingEnlistment.Prepared();
+		}
+
+		public void Rollback(Enlistment enlistment) {
+				if(_transaction != null && !_transaction.IsCompleted) {
+						_transaction.Rollback();
+						_transaction = null;
+
+						Completed?.Invoke(this, new EventArgs());
+
+						if(_connection != null) {
+								if(!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed)) {
+										_connection.Disconnect();
+								}
+						}
+						_connection = null;
+						_systemTransaction = null;
+
+						// Declare done on the enlistment
+						enlistment.Done();
+				}
+		}
+
+		#endregion
 }

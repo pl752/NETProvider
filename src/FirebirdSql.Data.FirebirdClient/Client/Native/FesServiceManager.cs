@@ -22,204 +22,191 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesServiceManager : ServiceManagerBase
-{
-	#region Fields
+internal sealed class FesServiceManager : ServiceManagerBase {
+		#region Fields
 
-	private static readonly Version Version30 = new Version(3, 0);
+		private static readonly Version Version30 = new Version(3, 0);
 
-	private readonly IFbClient _fbClient;
-	private readonly Version _fbClientVersion;
-	private readonly IntPtr[] _statusVector;
+		private readonly IFbClient _fbClient;
+		private readonly Version _fbClientVersion;
+		private readonly IntPtr[] _statusVector;
 
-	#endregion
+		#endregion
 
-	#region Properties
+		#region Properties
 
-	public override bool UseUtf8ParameterBuffer => _fbClientVersion >= Version30;
+		public override bool UseUtf8ParameterBuffer => _fbClientVersion >= Version30;
 
-	#endregion
+		#endregion
 
-	#region Constructors
+		#region Constructors
 
-	public FesServiceManager(string dllName, Charset charset)
-		: base(charset)
-	{
-		_fbClient = FbClientFactory.Create(dllName);
-		_fbClientVersion = FesConnection.GetClientVersion(_fbClient);
-		_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
-	}
+		public FesServiceManager(string dllName, Charset charset)
+			: base(charset) {
+				_fbClient = FbClientFactory.Create(dllName);
+				_fbClientVersion = FesConnection.GetClientVersion(_fbClient);
+				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+		}
 
-	#endregion
+		#endregion
 
-	#region Methods
+		#region Methods
 
-	public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
-	{
-		FesDatabase.CheckCryptKeyForSupport(cryptKey);
+		public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey) {
+				FesDatabase.CheckCryptKeyForSupport(cryptKey);
 
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
+				var svcHandle = Handle;
 
-		_fbClient.isc_service_attach(
-			_statusVector,
-			(short)service.Length,
-			service,
-			ref svcHandle,
-			spb.Length,
-			spb.ToArray());
+				_fbClient.isc_service_attach(
+					_statusVector,
+					(short)service.Length,
+					service,
+					ref svcHandle,
+					spb.Length,
+					spb.ToArray());
 
-		ProcessStatusVector(Charset.DefaultCharset);
+				ProcessStatusVector(Charset.DefaultCharset);
 
-		Handle = svcHandle;
-	}
-	public override ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default)
-	{
-		FesDatabase.CheckCryptKeyForSupport(cryptKey);
+				Handle = svcHandle;
+		}
+		public override ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default) {
+				FesDatabase.CheckCryptKeyForSupport(cryptKey);
 
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
+				var svcHandle = Handle;
 
-		_fbClient.isc_service_attach(
-			_statusVector,
-			(short)service.Length,
-			service,
-			ref svcHandle,
-			spb.Length,
-			spb.ToArray());
+				_fbClient.isc_service_attach(
+					_statusVector,
+					(short)service.Length,
+					service,
+					ref svcHandle,
+					spb.Length,
+					spb.ToArray());
 
-		ProcessStatusVector(Charset.DefaultCharset);
+				ProcessStatusVector(Charset.DefaultCharset);
 
-		Handle = svcHandle;
+				Handle = svcHandle;
 
-		return ValueTask2.CompletedTask;
-	}
+				return ValueTask2.CompletedTask;
+		}
 
-	public override void Detach()
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+		public override void Detach() {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
+				var svcHandle = Handle;
 
-		_fbClient.isc_service_detach(_statusVector, ref svcHandle);
+				_fbClient.isc_service_detach(_statusVector, ref svcHandle);
 
-		ProcessStatusVector();
+				ProcessStatusVector();
 
-		Handle = svcHandle;
-	}
-	public override ValueTask DetachAsync(CancellationToken cancellationToken = default)
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+				Handle = svcHandle;
+		}
+		public override ValueTask DetachAsync(CancellationToken cancellationToken = default) {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
+				var svcHandle = Handle;
 
-		_fbClient.isc_service_detach(_statusVector, ref svcHandle);
+				_fbClient.isc_service_detach(_statusVector, ref svcHandle);
 
-		ProcessStatusVector();
+				ProcessStatusVector();
 
-		Handle = svcHandle;
+				Handle = svcHandle;
 
-		return ValueTask2.CompletedTask;
-	}
+				return ValueTask2.CompletedTask;
+		}
 
-	public override void Start(ServiceParameterBufferBase spb)
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+		public override void Start(ServiceParameterBufferBase spb) {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
-		var reserved = 0;
+				var svcHandle = Handle;
+				var reserved = 0;
 
-		_fbClient.isc_service_start(
-			_statusVector,
-			ref svcHandle,
-			ref reserved,
-			spb.Length,
-			spb.ToArray());
+				_fbClient.isc_service_start(
+					_statusVector,
+					ref svcHandle,
+					ref reserved,
+					spb.Length,
+					spb.ToArray());
 
-		ProcessStatusVector();
-	}
-	public override ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+				ProcessStatusVector();
+		}
+		public override ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
-		var reserved = 0;
+				var svcHandle = Handle;
+				var reserved = 0;
 
-		_fbClient.isc_service_start(
-			_statusVector,
-			ref svcHandle,
-			ref reserved,
-			spb.Length,
-			spb.ToArray());
+				_fbClient.isc_service_start(
+					_statusVector,
+					ref svcHandle,
+					ref reserved,
+					spb.Length,
+					spb.ToArray());
 
-		ProcessStatusVector();
+				ProcessStatusVector();
 
-		return ValueTask2.CompletedTask;
-	}
+				return ValueTask2.CompletedTask;
+		}
 
-	public override void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer)
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+		public override void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer) {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
-		var reserved = 0;
+				var svcHandle = Handle;
+				var reserved = 0;
 
-		_fbClient.isc_service_query(
-			_statusVector,
-			ref svcHandle,
-			ref reserved,
-			spb.Length,
-			spb.ToArray(),
-			(short)requestLength,
-			requestBuffer,
-			(short)buffer.Length,
-			buffer);
+				_fbClient.isc_service_query(
+					_statusVector,
+					ref svcHandle,
+					ref reserved,
+					spb.Length,
+					spb.ToArray(),
+					(short)requestLength,
+					requestBuffer,
+					(short)buffer.Length,
+					buffer);
 
-		ProcessStatusVector();
-	}
-	public override ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default)
-	{
-		StatusVectorHelper.ClearStatusVector(_statusVector);
+				ProcessStatusVector();
+		}
+		public override ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default) {
+				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-		var svcHandle = Handle;
-		var reserved = 0;
+				var svcHandle = Handle;
+				var reserved = 0;
 
-		_fbClient.isc_service_query(
-			_statusVector,
-			ref svcHandle,
-			ref reserved,
-			spb.Length,
-			spb.ToArray(),
-			(short)requestLength,
-			requestBuffer,
-			(short)buffer.Length,
-			buffer);
+				_fbClient.isc_service_query(
+					_statusVector,
+					ref svcHandle,
+					ref reserved,
+					spb.Length,
+					spb.ToArray(),
+					(short)requestLength,
+					requestBuffer,
+					(short)buffer.Length,
+					buffer);
 
-		ProcessStatusVector();
+				ProcessStatusVector();
 
-		return ValueTask2.CompletedTask;
-	}
+				return ValueTask2.CompletedTask;
+		}
 
-	public override ServiceParameterBufferBase CreateServiceParameterBuffer()
-	{
-		return new ServiceParameterBuffer2(ParameterBufferEncoding);
-	}
+		public override ServiceParameterBufferBase CreateServiceParameterBuffer() {
+				return new ServiceParameterBuffer2(ParameterBufferEncoding);
+		}
 
-	#endregion
+		#endregion
 
-	#region Private Methods
+		#region Private Methods
 
-	private void ProcessStatusVector()
-	{
-		StatusVectorHelper.ProcessStatusVector(_statusVector, Charset, WarningMessage);
-	}
+		private void ProcessStatusVector() {
+				StatusVectorHelper.ProcessStatusVector(_statusVector, Charset, WarningMessage);
+		}
 
-	private void ProcessStatusVector(Charset charset)
-	{
-		StatusVectorHelper.ProcessStatusVector(_statusVector, charset, WarningMessage);
-	}
+		private void ProcessStatusVector(Charset charset) {
+				StatusVectorHelper.ProcessStatusVector(_statusVector, charset, WarningMessage);
+		}
 
-	#endregion
+		#endregion
 }

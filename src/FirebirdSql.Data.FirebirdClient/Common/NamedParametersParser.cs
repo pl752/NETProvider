@@ -21,68 +21,56 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class NamedParametersParser
-{
-	public static (string sql, IReadOnlyList<string> parameters) Parse(string sql)
-	{
-		var sqlBuilder = new StringBuilder(sql.Length);
-		var paramBuilder = new StringBuilder();
+internal static class NamedParametersParser {
+		public static (string sql, IReadOnlyList<string> parameters) Parse(string sql) {
+				var sqlBuilder = new StringBuilder(sql.Length);
+				var paramBuilder = new StringBuilder();
 
-		if (sql.IndexOf('@') == -1)
-		{
-			return (sql, Array.Empty<string>());
+				if(sql.IndexOf('@') == -1) {
+						return (sql, Array.Empty<string>());
+				}
+
+				var namedParameters = new List<string>();
+				var inSingleQuotes = false;
+				var inDoubleQuotes = false;
+				var inParam = false;
+				for(var i = 0; i < sql.Length; i++) {
+						var sym = sql[i];
+
+						if(inParam) {
+								if(char.IsLetterOrDigit(sym) || sym == '_' || sym == '$') {
+										paramBuilder.Append(sym);
+								}
+								else {
+										namedParameters.Add(paramBuilder.ToString());
+										paramBuilder.Length = 0;
+										sqlBuilder.Append('?');
+										sqlBuilder.Append(sym);
+										inParam = false;
+								}
+						}
+						else {
+								if(sym == '\'' && !inDoubleQuotes) {
+										inSingleQuotes = !inSingleQuotes;
+								}
+								else if(sym == '\"' && !inSingleQuotes) {
+										inDoubleQuotes = !inDoubleQuotes;
+								}
+								else if(!(inSingleQuotes || inDoubleQuotes) && sym == '@') {
+										inParam = true;
+										paramBuilder.Append(sym);
+										continue;
+								}
+
+								sqlBuilder.Append(sym);
+						}
+				}
+
+				if(inParam) {
+						namedParameters.Add(paramBuilder.ToString());
+						sqlBuilder.Append('?');
+				}
+
+				return (sqlBuilder.ToString(), namedParameters);
 		}
-
-		var namedParameters = new List<string>();
-		var inSingleQuotes = false;
-		var inDoubleQuotes = false;
-		var inParam = false;
-		for (var i = 0; i < sql.Length; i++)
-		{
-			var sym = sql[i];
-
-			if (inParam)
-			{
-				if (char.IsLetterOrDigit(sym) || sym == '_' || sym == '$')
-				{
-					paramBuilder.Append(sym);
-				}
-				else
-				{
-					namedParameters.Add(paramBuilder.ToString());
-					paramBuilder.Length = 0;
-					sqlBuilder.Append('?');
-					sqlBuilder.Append(sym);
-					inParam = false;
-				}
-			}
-			else
-			{
-				if (sym == '\'' && !inDoubleQuotes)
-				{
-					inSingleQuotes = !inSingleQuotes;
-				}
-				else if (sym == '\"' && !inSingleQuotes)
-				{
-					inDoubleQuotes = !inDoubleQuotes;
-				}
-				else if (!(inSingleQuotes || inDoubleQuotes) && sym == '@')
-				{
-					inParam = true;
-					paramBuilder.Append(sym);
-					continue;
-				}
-
-				sqlBuilder.Append(sym);
-			}
-		}
-
-		if (inParam)
-		{
-			namedParameters.Add(paramBuilder.ToString());
-			sqlBuilder.Append('?');
-		}
-
-		return (sqlBuilder.ToString(), namedParameters);
-	}
 }

@@ -15,13 +15,10 @@
 
 //$Authors = Carlos Guzman Alvarez
 
-using System;
-
 namespace FirebirdSql.Data.Services;
 
-public enum FbShutdownMode
-{
-	Forced,
-	DenyTransaction,
-	DenyConnection
+public enum FbShutdownMode {
+		Forced,
+		DenyTransaction,
+		DenyConnection
 }

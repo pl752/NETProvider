@@ -19,12 +19,11 @@ using System;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class DateTime2
-{
-	public static DateTime UnixEpoch =>
+internal static class DateTime2 {
+		public static DateTime UnixEpoch =>
 #if NET48 || NETSTANDARD2_0
 			new DateTime(621355968000000000);
 #else
-			DateTime.UnixEpoch;
+				DateTime.UnixEpoch;
 #endif
 }

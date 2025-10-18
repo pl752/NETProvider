@@ -20,10 +20,9 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal interface IFbPreparedCommand
-{
-	void Release();
-	Task ReleaseAsync(CancellationToken cancellationToken = default);
-	void TransactionCompleted();
-	Task TransactionCompletedAsync(CancellationToken cancellationToken = default);
+internal interface IFbPreparedCommand {
+		void Release();
+		Task ReleaseAsync(CancellationToken cancellationToken = default);
+		void TransactionCompleted();
+		Task TransactionCompletedAsync(CancellationToken cancellationToken = default);
 }

@@ -19,20 +19,18 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class DatabaseParameterBufferBase : ParameterBuffer
-{
-	public DatabaseParameterBufferBase(int version, Encoding encoding)
-	{
-		Encoding = encoding;
-		Append(version);
-	}
+internal abstract class DatabaseParameterBufferBase : ParameterBuffer {
+		public DatabaseParameterBufferBase(int version, Encoding encoding) {
+				Encoding = encoding;
+				Append(version);
+		}
 
-	public abstract void Append(int type, byte value);
-	public abstract void Append(int type, short value);
-	public abstract void Append(int type, int value);
-	public abstract void Append(int type, byte[] buffer);
+		public abstract void Append(int type, byte value);
+		public abstract void Append(int type, short value);
+		public abstract void Append(int type, int value);
+		public abstract void Append(int type, byte[] buffer);
 
-	public void Append(int type, string content) => Append(type, Encoding.GetBytes(content));
+		public void Append(int type, string content) => Append(type, Encoding.GetBytes(content));
 
-	public Encoding Encoding { get; }
+		public Encoding Encoding { get; }
 }

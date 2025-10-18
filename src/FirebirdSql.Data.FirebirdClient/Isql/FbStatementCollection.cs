@@ -21,8 +21,6 @@ using System.Collections.Generic;
 namespace FirebirdSql.Data.Isql;
 
 [Serializable]
-public class FbStatementCollection : List<FbStatement>
-{
-	internal FbStatementCollection()
-	{ }
+public class FbStatementCollection : List<FbStatement> {
+		internal FbStatementCollection() { }
 }

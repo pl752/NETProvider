@@ -16,11 +16,9 @@
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
 using System;
-using FirebirdSql.Data.Client.Managed;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class CryptKeyCallbackResponse(byte[] data) : IResponse
-{
-		public byte[] Data { get; } = data;
+internal class CryptKeyCallbackResponse(ReadOnlyMemory<byte> data) : IResponse {
+		public ReadOnlyMemory<byte> Data { get; } = data;
 }

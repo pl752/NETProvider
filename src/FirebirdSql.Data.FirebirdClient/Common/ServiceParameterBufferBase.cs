@@ -15,23 +15,21 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
 using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class ServiceParameterBufferBase(Encoding encoding) : ParameterBuffer
-{
+internal abstract class ServiceParameterBufferBase(Encoding encoding) : ParameterBuffer {
 		public abstract void AppendPreamble();
 
-	public abstract void Append1(int type, byte[] value);
-	public abstract void Append2(int type, byte[] value);
-	public abstract void Append(int type, byte value);
-	public abstract void Append(int type, int value);
+		public abstract void Append1(int type, byte[] value);
+		public abstract void Append2(int type, byte[] value);
+		public abstract void Append(int type, byte value);
+		public abstract void Append(int type, int value);
 
-	public void Append1(int type, string value) => Append1(type, Encoding.GetBytes(value));
+		public void Append1(int type, string value) => Append1(type, Encoding.GetBytes(value));
 
-	public void Append2(int type, string value) => Append2(type, Encoding.GetBytes(value));
+		public void Append2(int type, string value) => Append2(type, Encoding.GetBytes(value));
 
 		public Encoding Encoding { get; } = encoding;
 }

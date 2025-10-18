@@ -15,7 +15,6 @@
 
 //$Authors = Carlos Guzman Alvarez
 
-using System;
 using System.Data;
 using System.Data.Common;
 
@@ -25,14 +24,12 @@ public sealed class FbRowUpdatedEventArgs(
 	DataRow row,
 	IDbCommand command,
 	StatementType statementType,
-	DataTableMapping tableMapping) : RowUpdatedEventArgs(row, command, statementType, tableMapping)
-{
-	#region Properties
+	DataTableMapping tableMapping) : RowUpdatedEventArgs(row, command, statementType, tableMapping) {
+		#region Properties
 
-	public new FbCommand Command
-	{
-		get { return (FbCommand)base.Command; }
-	}
+		public new FbCommand Command {
+				get { return (FbCommand)base.Command; }
+		}
 
 		#endregion
 		#region Constructors

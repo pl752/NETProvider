@@ -21,41 +21,36 @@ using System.Text;
 namespace FirebirdSql.Data.Logging;
 
 [Obsolete("Use ConsoleLoggingProvider instead.")]
-public class ConsoleLoggerProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : ConsoleLoggingProvider(minimumLevel)
-{
+public class ConsoleLoggerProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : ConsoleLoggingProvider(minimumLevel) {
 }
 
-public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : IFbLoggingProvider
-{
-	readonly FbLogLevel _minimumLevel = minimumLevel;
+public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : IFbLoggingProvider {
+		readonly FbLogLevel _minimumLevel = minimumLevel;
 
 		public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
 
-	sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger
-	{
-		readonly FbLogLevel _minimumLevel = minimumLevel;
+		sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger {
+				readonly FbLogLevel _minimumLevel = minimumLevel;
 
-				public bool IsEnabled(FbLogLevel level)
-		{
-			return level >= _minimumLevel;
+				public bool IsEnabled(FbLogLevel level) {
+						return level >= _minimumLevel;
+				}
+
+				public void Log(FbLogLevel level, string msg, Exception exception = null) {
+						if(!IsEnabled(level))
+								return;
+
+						var sb = new StringBuilder();
+						sb.Append("[");
+						sb.Append(level.ToString().ToUpperInvariant());
+						sb.Append("] ");
+
+						sb.AppendLine(msg);
+
+						if(exception != null)
+								sb.AppendLine(exception.ToString());
+
+						Console.Error.Write(sb.ToString());
+				}
 		}
-
-		public void Log(FbLogLevel level, string msg, Exception exception = null)
-		{
-			if (!IsEnabled(level))
-				return;
-
-			var sb = new StringBuilder();
-			sb.Append("[");
-			sb.Append(level.ToString().ToUpperInvariant());
-			sb.Append("] ");
-
-			sb.AppendLine(msg);
-
-			if (exception != null)
-				sb.AppendLine(exception.ToString());
-
-			Console.Error.Write(sb.ToString());
-		}
-	}
 }

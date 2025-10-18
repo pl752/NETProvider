@@ -15,31 +15,25 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
 using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbDatabasesInfo
-{
-	public int ConnectionCount { get; internal set; }
+public class FbDatabasesInfo {
+		public int ConnectionCount { get; internal set; }
 
-	private readonly List<string> _databases;
-	public IReadOnlyList<string> Databases
-	{
-		get
-		{
-			return _databases.AsReadOnly();
+		private readonly List<string> _databases;
+		public IReadOnlyList<string> Databases {
+				get {
+						return _databases.AsReadOnly();
+				}
 		}
-	}
 
-	internal FbDatabasesInfo()
-	{
-		_databases = new List<string>();
-	}
+		internal FbDatabasesInfo() {
+				_databases = new List<string>();
+		}
 
-	internal void AddDatabase(string database)
-	{
-		_databases.Add(database);
-	}
+		internal void AddDatabase(string database) {
+				_databases.Add(database);
+		}
 }

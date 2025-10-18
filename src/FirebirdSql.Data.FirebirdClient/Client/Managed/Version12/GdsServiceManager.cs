@@ -15,14 +15,10 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using FirebirdSql.Data.Common;
-
 namespace FirebirdSql.Data.Client.Managed.Version12;
 
-internal class GdsServiceManager(GdsConnection connection) : Version11.GdsServiceManager(connection)
-{
-		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection)
-	{
-		return new GdsDatabase(connection);
-	}
+internal class GdsServiceManager(GdsConnection connection) : Version11.GdsServiceManager(connection) {
+		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection) {
+				return new GdsDatabase(connection);
+		}
 }

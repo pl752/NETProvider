@@ -20,30 +20,22 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IResponse
-{ }
+interface IResponse { }
 
-static class IResponseExtensions
-{
-	public static void HandleResponseException(this IResponse response)
-	{
-		if (response is GenericResponse genericResponse)
-		{
-			if (genericResponse.Exception != null && !genericResponse.Exception.IsWarning)
-			{
-				throw genericResponse.Exception;
-			}
+static class IResponseExtensions {
+		public static void HandleResponseException(this IResponse response) {
+				if(response is GenericResponse genericResponse) {
+						if(genericResponse.Exception != null && !genericResponse.Exception.IsWarning) {
+								throw genericResponse.Exception;
+						}
+				}
 		}
-	}
 
-	public static void HandleResponseWarning(this IResponse response, Action<IscException> onWarning)
-	{
-		if (response is GenericResponse genericResponse)
-		{
-			if (genericResponse.Exception != null && genericResponse.Exception.IsWarning)
-			{
-				onWarning?.Invoke(genericResponse.Exception);
-			}
+		public static void HandleResponseWarning(this IResponse response, Action<IscException> onWarning) {
+				if(response is GenericResponse genericResponse) {
+						if(genericResponse.Exception != null && genericResponse.Exception.IsWarning) {
+								onWarning?.Invoke(genericResponse.Exception);
+						}
+				}
 		}
-	}
 }

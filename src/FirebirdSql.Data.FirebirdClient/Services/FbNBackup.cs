@@ -16,7 +16,6 @@
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebirdSql.Data.Common;
@@ -24,79 +23,66 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNBackup(string connectionString = null) : FbService(connectionString)
-{
-	private int _level;
-	public int Level
-	{
-		get { return _level; }
-		set
-		{
-			if (value < 0)
-				throw new ArgumentOutOfRangeException();
-			_level = value;
+public sealed class FbNBackup(string connectionString = null) : FbService(connectionString) {
+		private int _level;
+		public int Level {
+				get { return _level; }
+				set {
+						if(value < 0)
+								throw new ArgumentOutOfRangeException();
+						_level = value;
+				}
 		}
-	}
-	public string BackupFile { get; set; }
-	public bool DirectIO { get; set; }
-	public FbNBackupFlags Options { get; set; }
+		public string BackupFile { get; set; }
+		public bool DirectIO { get; set; }
+		public FbNBackupFlags Options { get; set; }
 
-		public void Execute()
-	{
-		EnsureDatabase();
+		public void Execute() {
+				EnsureDatabase();
 
-		try
-		{
-			try
-			{
-				Open();
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_nbak);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_nbk_level, _level);
-				startSpb.Append2(IscCodes.isc_spb_nbk_file, BackupFile);
-				startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
-				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-				StartTask(startSpb);
-				ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-			}
-			finally
-			{
-				Close();
-			}
+				try {
+						try {
+								Open();
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_nbak);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								startSpb.Append(IscCodes.isc_spb_nbk_level, _level);
+								startSpb.Append2(IscCodes.isc_spb_nbk_file, BackupFile);
+								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
+								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								StartTask(startSpb);
+								ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+						}
+						finally {
+								Close();
+						}
+				}
+				catch(Exception ex) {
+						throw FbException.Create(ex);
+				}
 		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
-		}
-	}
-	public async Task ExecuteAsync(CancellationToken cancellationToken = default)
-	{
-		EnsureDatabase();
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+				EnsureDatabase();
 
-		try
-		{
-			try
-			{
-				await OpenAsync(cancellationToken).ConfigureAwait(false);
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_nbak);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_nbk_level, _level);
-				startSpb.Append2(IscCodes.isc_spb_nbk_file, BackupFile);
-				startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
-				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-				await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				await CloseAsync(cancellationToken).ConfigureAwait(false);
-			}
+				try {
+						try {
+								await OpenAsync(cancellationToken).ConfigureAwait(false);
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_nbak);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								startSpb.Append(IscCodes.isc_spb_nbk_level, _level);
+								startSpb.Append2(IscCodes.isc_spb_nbk_file, BackupFile);
+								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
+								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
+								await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+						}
+						finally {
+								await CloseAsync(cancellationToken).ConfigureAwait(false);
+						}
+				}
+				catch(Exception ex) {
+						throw FbException.Create(ex);
+				}
 		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
-		}
-	}
 }

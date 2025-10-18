@@ -20,27 +20,21 @@ using System.Collections.Concurrent;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class NativeHelpers
-{
-	private static readonly ConcurrentDictionary<string, bool> _cache = new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
+internal static class NativeHelpers {
+		private static readonly ConcurrentDictionary<string, bool> _cache = new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
 
-	public static void CallIfExists(string actionId, Action action)
-	{
-		if (!_cache.TryGetValue(actionId, out var executionAllowed))
-		{
-			try
-			{
-				action();
-				_cache.TryAdd(actionId, true);
-			}
-			catch (EntryPointNotFoundException)
-			{
-				_cache.TryAdd(actionId, false);
-			}
+		public static void CallIfExists(string actionId, Action action) {
+				if(!_cache.TryGetValue(actionId, out var executionAllowed)) {
+						try {
+								action();
+								_cache.TryAdd(actionId, true);
+						}
+						catch(EntryPointNotFoundException) {
+								_cache.TryAdd(actionId, false);
+						}
+				}
+				else if(executionAllowed) {
+						action();
+				}
 		}
-		else if (executionAllowed)
-		{
-			action();
-		}
-	}
 }

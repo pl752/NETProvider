@@ -20,8 +20,7 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ArrayBoundMarshal
-{
-	public short LowerBound;
-	public short UpperBound;
+internal struct ArrayBoundMarshal {
+		public short LowerBound;
+		public short UpperBound;
 }

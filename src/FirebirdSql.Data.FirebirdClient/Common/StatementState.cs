@@ -20,12 +20,11 @@ using System;
 namespace FirebirdSql.Data.Common;
 
 [Serializable]
-internal enum StatementState
-{
-	Deallocated,
-	Allocated,
-	Prepared,
-	Executed,
-	Closed,
-	Error
+internal enum StatementState {
+		Deallocated,
+		Allocated,
+		Prepared,
+		Executed,
+		Closed,
+		Error
 }

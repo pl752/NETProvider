@@ -15,13 +15,9 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
-using FirebirdSql.Data.Common;
-
 namespace FirebirdSql.Data.Client.Managed;
 
-internal class FetchResponse(int status, int count) : IResponse
-{
+internal class FetchResponse(int status, int count) : IResponse {
 		public int Status { get; } = status;
 		public int Count { get; } = count;
 }

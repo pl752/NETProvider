@@ -15,42 +15,34 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version16;
 
-internal class GdsStatement : Version15.GdsStatement
-{
-	public GdsStatement(GdsDatabase database)
-		: base(database)
-	{ }
+internal class GdsStatement : Version15.GdsStatement {
+		public GdsStatement(GdsDatabase database)
+			: base(database) { }
 
-	public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
-		: base(database, transaction)
-	{ }
+		public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
+			: base(database, transaction) { }
 
-	protected override void SendExecuteToBuffer(int timeout, IDescriptorFiller descriptorFiller)
-	{
-		base.SendExecuteToBuffer(timeout, descriptorFiller);
-		_database.Xdr.Write(timeout);
-	}
+		protected override void SendExecuteToBuffer(int timeout, IDescriptorFiller descriptorFiller) {
+				base.SendExecuteToBuffer(timeout, descriptorFiller);
+				_database.Xdr.Write(timeout);
+		}
 
-	protected override async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
-	{
-		await base.SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
-		await _database.Xdr.WriteAsync(timeout, cancellationToken).ConfigureAwait(false);
-	}
+		protected override async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
+				await base.SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
+				await _database.Xdr.WriteAsync(timeout, cancellationToken).ConfigureAwait(false);
+		}
 
-	public override BatchBase CreateBatch()
-	{
-		return new GdsBatch(this);
-	}
+		public override BatchBase CreateBatch() {
+				return new GdsBatch(this);
+		}
 
-	public override BatchParameterBuffer CreateBatchParameterBuffer()
-	{
-		return new BatchParameterBuffer(Database.Charset.Encoding);
-	}
+		public override BatchParameterBuffer CreateBatchParameterBuffer() {
+				return new BatchParameterBuffer(Database.Charset.Encoding);
+		}
 }

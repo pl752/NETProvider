@@ -15,12 +15,9 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Services;
 
-public enum FbServiceState
-{
-	Closed = 0,
-	Open = 1
+public enum FbServiceState {
+		Closed = 0,
+		Open = 1
 }

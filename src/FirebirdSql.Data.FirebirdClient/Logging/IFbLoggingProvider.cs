@@ -17,7 +17,6 @@
 
 namespace FirebirdSql.Data.Logging;
 
-public interface IFbLoggingProvider
-{
-	IFbLogger CreateLogger(string name);
+public interface IFbLoggingProvider {
+		IFbLogger CreateLogger(string name);
 }

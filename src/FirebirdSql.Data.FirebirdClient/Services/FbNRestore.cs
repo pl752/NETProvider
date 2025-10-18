@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebirdSql.Data.Common;
@@ -25,69 +24,56 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNRestore(string connectionString = null) : FbService(connectionString)
-{
-	public IEnumerable<string> BackupFiles { get; set; }
-	public bool DirectIO { get; set; }
+public sealed class FbNRestore(string connectionString = null) : FbService(connectionString) {
+		public IEnumerable<string> BackupFiles { get; set; }
+		public bool DirectIO { get; set; }
 
-		public void Execute()
-	{
-		EnsureDatabase();
+		public void Execute() {
+				EnsureDatabase();
 
-		try
-		{
-			try
-			{
-				Open();
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_nrest);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				foreach (var file in BackupFiles)
-				{
-					startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
+				try {
+						try {
+								Open();
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_nrest);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								foreach(var file in BackupFiles) {
+										startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
+								}
+								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
+								StartTask(startSpb);
+								ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+						}
+						finally {
+								Close();
+						}
 				}
-				startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
-				StartTask(startSpb);
-				ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-			}
-			finally
-			{
-				Close();
-			}
-		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
-		}
-	}
-	public async Task ExecuteAsync(CancellationToken cancellationToken = default)
-	{
-		EnsureDatabase();
-
-		try
-		{
-			try
-			{
-				await OpenAsync(cancellationToken).ConfigureAwait(false);
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_nrest);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				foreach (var file in BackupFiles)
-				{
-					startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
+				catch(Exception ex) {
+						throw FbException.Create(ex);
 				}
-				startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
-				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-				await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				await CloseAsync(cancellationToken).ConfigureAwait(false);
-			}
 		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+				EnsureDatabase();
+
+				try {
+						try {
+								await OpenAsync(cancellationToken).ConfigureAwait(false);
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_nrest);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								foreach(var file in BackupFiles) {
+										startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
+								}
+								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
+								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
+								await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+						}
+						finally {
+								await CloseAsync(cancellationToken).ConfigureAwait(false);
+						}
+				}
+				catch(Exception ex) {
+						throw FbException.Create(ex);
+				}
 		}
-	}
 }

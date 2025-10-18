@@ -22,23 +22,20 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Client.Native.Handles;
 
 // public visibility added, because auto-generated assembly can't work with internal types
-public class StatementHandle : FirebirdHandle
-{
-	protected override bool ReleaseHandle()
-	{
-		Contract.Requires(FbClient != null);
+public class StatementHandle : FirebirdHandle {
+		protected override bool ReleaseHandle() {
+				Contract.Requires(FbClient != null);
 
-		if (IsClosed)
-		{
-			return true;
+				if(IsClosed) {
+						return true;
+				}
+
+				var statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+				var @ref = this;
+				FbClient.isc_dsql_free_statement(statusVector, ref @ref, IscCodes.DSQL_drop);
+				handle = @ref.handle;
+
+				var exception = StatusVectorHelper.ParseStatusVector(statusVector, Charset.DefaultCharset);
+				return exception == null || exception.IsWarning;
 		}
-
-		var statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
-		var @ref = this;
-		FbClient.isc_dsql_free_statement(statusVector, ref @ref, IscCodes.DSQL_drop);
-		handle = @ref.handle;
-
-		var exception = StatusVectorHelper.ParseStatusVector(statusVector, Charset.DefaultCharset);
-		return exception == null || exception.IsWarning;
-	}
 }

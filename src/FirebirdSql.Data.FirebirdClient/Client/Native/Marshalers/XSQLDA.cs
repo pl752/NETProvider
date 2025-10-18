@@ -20,12 +20,11 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct XSQLDA
-{
-	public short version;
-	[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 8)]
-	public string sqldaid;
-	public int sqldabc;
-	public short sqln;
-	public short sqld;
+internal struct XSQLDA {
+		public short version;
+		[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 8)]
+		public string sqldaid;
+		public int sqldabc;
+		public short sqln;
+		public short sqld;
 }

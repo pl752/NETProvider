@@ -23,64 +23,53 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbValidation(string connectionString = null) : FbService(connectionString)
-{
-	public FbValidationFlags Options { get; set; }
+public sealed class FbValidation(string connectionString = null) : FbService(connectionString) {
+		public FbValidationFlags Options { get; set; }
 
-		public void Execute()
-	{
-		EnsureDatabase();
+		public void Execute() {
+				EnsureDatabase();
 
-		try
-		{
-			try
-			{
-				Open();
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_repair);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-				if (ConnectionStringOptions.ParallelWorkers > 0)
-					startSpb.Append(IscCodes.isc_spb_rpr_par_workers, ConnectionStringOptions.ParallelWorkers);
-				StartTask(startSpb);
-				ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-			}
-			finally
-			{
-				Close();
-			}
+				try {
+						try {
+								Open();
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_repair);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								if(ConnectionStringOptions.ParallelWorkers > 0)
+										startSpb.Append(IscCodes.isc_spb_rpr_par_workers, ConnectionStringOptions.ParallelWorkers);
+								StartTask(startSpb);
+								ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+						}
+						finally {
+								Close();
+						}
+				}
+				catch(Exception ex) {
+						throw FbException.Create(ex);
+				}
 		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
-		}
-	}
-	public async Task ExecuteAsync(CancellationToken cancellationToken = default)
-	{
-		EnsureDatabase();
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+				EnsureDatabase();
 
-		try
-		{
-			try
-			{
-				await OpenAsync(cancellationToken).ConfigureAwait(false);
-				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-				startSpb.Append(IscCodes.isc_action_svc_repair);
-				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-				if (ConnectionStringOptions.ParallelWorkers > 0)
-					startSpb.Append(IscCodes.isc_spb_rpr_par_workers, ConnectionStringOptions.ParallelWorkers);
-				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-				await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				await CloseAsync(cancellationToken).ConfigureAwait(false);
-			}
+				try {
+						try {
+								await OpenAsync(cancellationToken).ConfigureAwait(false);
+								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+								startSpb.Append(IscCodes.isc_action_svc_repair);
+								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								if(ConnectionStringOptions.ParallelWorkers > 0)
+										startSpb.Append(IscCodes.isc_spb_rpr_par_workers, ConnectionStringOptions.ParallelWorkers);
+								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
+								await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+						}
+						finally {
+								await CloseAsync(cancellationToken).ConfigureAwait(false);
+						}
+				}
+				catch(Exception ex) {
+						throw FbException.Create(ex);
+				}
 		}
-		catch (Exception ex)
-		{
-			throw FbException.Create(ex);
-		}
-	}
 }

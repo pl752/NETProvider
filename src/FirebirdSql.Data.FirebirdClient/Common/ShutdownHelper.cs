@@ -20,39 +20,33 @@ using System.Collections.Concurrent;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class ShutdownHelper
-{
-	static readonly ConcurrentBag<Action> _pools;
-	static readonly ConcurrentBag<Action> _fbClients;
+internal static class ShutdownHelper {
+		static readonly ConcurrentBag<Action> _pools;
+		static readonly ConcurrentBag<Action> _fbClients;
 
-	static ShutdownHelper()
-	{
-		_pools = new ConcurrentBag<Action>();
-		_fbClients = new ConcurrentBag<Action>();
-		AppDomain.CurrentDomain.DomainUnload += (sender, e) => HandleDomainUnload();
-		AppDomain.CurrentDomain.ProcessExit += (sender, e) => HandleProcessShutdown();
-	}
+		static ShutdownHelper() {
+				_pools = new ConcurrentBag<Action>();
+				_fbClients = new ConcurrentBag<Action>();
+				AppDomain.CurrentDomain.DomainUnload += (sender, e) => HandleDomainUnload();
+				AppDomain.CurrentDomain.ProcessExit += (sender, e) => HandleProcessShutdown();
+		}
 
-	internal static void RegisterPoolCleanup(Action item)
-	{
-		_pools.Add(item);
-	}
+		internal static void RegisterPoolCleanup(Action item) {
+				_pools.Add(item);
+		}
 
-	internal static void RegisterFbClientShutdown(Action item)
-	{
-		_fbClients.Add(item);
-	}
+		internal static void RegisterFbClientShutdown(Action item) {
+				_fbClients.Add(item);
+		}
 
-	static void HandleDomainUnload()
-	{
-		while (_pools.TryTake(out var item))
-			item();
-	}
+		static void HandleDomainUnload() {
+				while(_pools.TryTake(out var item))
+						item();
+		}
 
-	static void HandleProcessShutdown()
-	{
-		HandleDomainUnload();
-		while (_fbClients.TryTake(out var item))
-			item();
-	}
+		static void HandleProcessShutdown() {
+				HandleDomainUnload();
+				while(_fbClients.TryTake(out var item))
+						item();
+		}
 }

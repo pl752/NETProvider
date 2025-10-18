@@ -19,68 +19,57 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using FirebirdSql.Data.Common;
 using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Schema;
 
-internal sealed class FbSchemaFactory
-{
-	#region Static Members
+internal sealed class FbSchemaFactory {
+		#region Static Members
 
-	private static readonly string ResourceName = "FirebirdSql.Data.Schema.FbMetaData.xml";
+		private static readonly string ResourceName = "FirebirdSql.Data.Schema.FbMetaData.xml";
 
-	#endregion
+		#endregion
 
-	#region Constructors
+		#region Constructors
 
-	private FbSchemaFactory()
-	{ }
+		private FbSchemaFactory() { }
 
-	#endregion
+		#endregion
 
-	#region Methods
+		#region Methods
 
-	public static DataTable GetSchema(FbConnection connection, string collectionName, string[] restrictions)
-	{
-		var filter = string.Format("CollectionName = '{0}'", collectionName);
-		var ds = new DataSet();
-		using (var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName))
-		{
-			var oldCulture = Thread.CurrentThread.CurrentCulture;
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-				// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
-				// that's the reason for temporarily changing culture
-				ds.ReadXml(xmlStream);
-			}
-			finally
-			{
-				Thread.CurrentThread.CurrentCulture = oldCulture;
-			}
-		}
+		public static DataTable GetSchema(FbConnection connection, string collectionName, string[] restrictions) {
+				var filter = string.Format("CollectionName = '{0}'", collectionName);
+				var ds = new DataSet();
+				using(var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName)) {
+						var oldCulture = Thread.CurrentThread.CurrentCulture;
+						try {
+								Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+								// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
+								// that's the reason for temporarily changing culture
+								ds.ReadXml(xmlStream);
+						}
+						finally {
+								Thread.CurrentThread.CurrentCulture = oldCulture;
+						}
+				}
 
-		var collection = ds.Tables[DbMetaDataCollectionNames.MetaDataCollections].Select(filter);
+				var collection = ds.Tables[DbMetaDataCollectionNames.MetaDataCollections].Select(filter);
 
-		if (collection.Length != 1)
-		{
-			throw new NotSupportedException("Unsupported collection name.");
-		}
+				if(collection.Length != 1) {
+						throw new NotSupportedException("Unsupported collection name.");
+				}
 
-		if (restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"])
-		{
-			throw new InvalidOperationException("The number of specified restrictions is not valid.");
-		}
+				if(restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]) {
+						throw new InvalidOperationException("The number of specified restrictions is not valid.");
+				}
 
-		if (ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"])
-		{
-			throw new InvalidOperationException("Incorrect restriction definition.");
-		}
+				if(ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]) {
+						throw new InvalidOperationException("Incorrect restriction definition.");
+				}
 
 				return collection[0]["PopulationMechanism"].ToString() switch {
 						"PrepareCollection" => PrepareCollection(connection, collectionName, restrictions),
@@ -89,42 +78,35 @@ internal sealed class FbSchemaFactory
 						_ => throw new NotSupportedException("Unsupported population mechanism"),
 				};
 		}
-	public static Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default)
-	{
-		var filter = string.Format("CollectionName = '{0}'", collectionName);
-		var ds = new DataSet();
-		using (var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName))
-		{
-			var oldCulture = Thread.CurrentThread.CurrentCulture;
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-				// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
-				// that's the reason for temporarily changing culture
-				ds.ReadXml(xmlStream);
-			}
-			finally
-			{
-				Thread.CurrentThread.CurrentCulture = oldCulture;
-			}
-		}
+		public static Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
+				var filter = string.Format("CollectionName = '{0}'", collectionName);
+				var ds = new DataSet();
+				using(var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName)) {
+						var oldCulture = Thread.CurrentThread.CurrentCulture;
+						try {
+								Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+								// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
+								// that's the reason for temporarily changing culture
+								ds.ReadXml(xmlStream);
+						}
+						finally {
+								Thread.CurrentThread.CurrentCulture = oldCulture;
+						}
+				}
 
-		var collection = ds.Tables[DbMetaDataCollectionNames.MetaDataCollections].Select(filter);
+				var collection = ds.Tables[DbMetaDataCollectionNames.MetaDataCollections].Select(filter);
 
-		if (collection.Length != 1)
-		{
-			throw new NotSupportedException("Unsupported collection name.");
-		}
+				if(collection.Length != 1) {
+						throw new NotSupportedException("Unsupported collection name.");
+				}
 
-		if (restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"])
-		{
-			throw new InvalidOperationException("The number of specified restrictions is not valid.");
-		}
+				if(restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]) {
+						throw new InvalidOperationException("The number of specified restrictions is not valid.");
+				}
 
-		if (ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"])
-		{
-			throw new InvalidOperationException("Incorrect restriction definition.");
-		}
+				if(ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]) {
+						throw new InvalidOperationException("Incorrect restriction definition.");
+				}
 
 				return collection[0]["PopulationMechanism"].ToString() switch {
 						"PrepareCollection" => PrepareCollectionAsync(connection, collectionName, restrictions, cancellationToken),
@@ -134,91 +116,85 @@ internal sealed class FbSchemaFactory
 				};
 		}
 
-	#endregion
+		#endregion
 
-	#region Private Methods
+		#region Private Methods
 
-	private static DataTable PrepareCollection(FbConnection connection, string collectionName, string[] restrictions)
-	{
-		FbSchema returnSchema = collectionName.ToUpperInvariant() switch
-		{
-			"CHARACTERSETS" => new FbCharacterSets(),
-			"CHECKCONSTRAINTS" => new FbCheckConstraints(),
-			"CHECKCONSTRAINTSBYTABLE" => new FbChecksByTable(),
-			"COLLATIONS" => new FbCollations(),
-			"COLUMNS" => new FbColumns(),
-			"COLUMNPRIVILEGES" => new FbColumnPrivileges(),
-			"DOMAINS" => new FbDomains(),
-			"FOREIGNKEYCOLUMNS" => new FbForeignKeyColumns(),
-			"FOREIGNKEYS" => new FbForeignKeys(),
-			"FUNCTIONS" => new FbFunctions(),
-			"FUNCTIONARGUMENTS" => new FbFunctionArguments(),
-			"FUNCTIONPRIVILEGES" => new FbFunctionPrivileges(),
-			"GENERATORS" => new FbGenerators(),
-			"INDEXCOLUMNS" => new FbIndexColumns(),
-			"INDEXES" => new FbIndexes(),
-			"PRIMARYKEYS" => new FbPrimaryKeys(),
-			"PROCEDURES" => new FbProcedures(),
-			"PROCEDUREPARAMETERS" => new FbProcedureParameters(),
-			"PROCEDUREPRIVILEGES" => new FbProcedurePrivileges(),
-			"ROLES" => new FbRoles(),
-			"TABLES" => new FbTables(),
-			"TABLECONSTRAINTS" => new FbTableConstraints(),
-			"TABLEPRIVILEGES" => new FbTablePrivileges(),
-			"TRIGGERS" => new FbTriggers(),
-			"UNIQUEKEYS" => new FbUniqueKeys(),
-			"VIEWCOLUMNS" => new FbViewColumns(),
-			"VIEWS" => new FbViews(),
-			"VIEWPRIVILEGES" => new FbViewPrivileges(),
-			_ => throw new NotSupportedException("The specified metadata collection is not supported."),
-		};
-		return returnSchema.GetSchema(connection, collectionName, restrictions);
-	}
-	private static Task<DataTable> PrepareCollectionAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default)
-	{
-		FbSchema returnSchema = collectionName.ToUpperInvariant() switch
-		{
-			"CHARACTERSETS" => new FbCharacterSets(),
-			"CHECKCONSTRAINTS" => new FbCheckConstraints(),
-			"CHECKCONSTRAINTSBYTABLE" => new FbChecksByTable(),
-			"COLLATIONS" => new FbCollations(),
-			"COLUMNS" => new FbColumns(),
-			"COLUMNPRIVILEGES" => new FbColumnPrivileges(),
-			"DOMAINS" => new FbDomains(),
-			"FOREIGNKEYCOLUMNS" => new FbForeignKeyColumns(),
-			"FOREIGNKEYS" => new FbForeignKeys(),
-			"FUNCTIONS" => new FbFunctions(),
-			"FUNCTIONARGUMENTS" => new FbFunctionArguments(),
-			"FUNCTIONPRIVILEGES" => new FbFunctionPrivileges(),
-			"GENERATORS" => new FbGenerators(),
-			"INDEXCOLUMNS" => new FbIndexColumns(),
-			"INDEXES" => new FbIndexes(),
-			"PRIMARYKEYS" => new FbPrimaryKeys(),
-			"PROCEDURES" => new FbProcedures(),
-			"PROCEDUREPARAMETERS" => new FbProcedureParameters(),
-			"PROCEDUREPRIVILEGES" => new FbProcedurePrivileges(),
-			"ROLES" => new FbRoles(),
-			"TABLES" => new FbTables(),
-			"TABLECONSTRAINTS" => new FbTableConstraints(),
-			"TABLEPRIVILEGES" => new FbTablePrivileges(),
-			"TRIGGERS" => new FbTriggers(),
-			"UNIQUEKEYS" => new FbUniqueKeys(),
-			"VIEWCOLUMNS" => new FbViewColumns(),
-			"VIEWS" => new FbViews(),
-			"VIEWPRIVILEGES" => new FbViewPrivileges(),
-			_ => throw new NotSupportedException("The specified metadata collection is not supported."),
-		};
-		return returnSchema.GetSchemaAsync(connection, collectionName, restrictions, cancellationToken);
-	}
+		private static DataTable PrepareCollection(FbConnection connection, string collectionName, string[] restrictions) {
+				FbSchema returnSchema = collectionName.ToUpperInvariant() switch {
+						"CHARACTERSETS" => new FbCharacterSets(),
+						"CHECKCONSTRAINTS" => new FbCheckConstraints(),
+						"CHECKCONSTRAINTSBYTABLE" => new FbChecksByTable(),
+						"COLLATIONS" => new FbCollations(),
+						"COLUMNS" => new FbColumns(),
+						"COLUMNPRIVILEGES" => new FbColumnPrivileges(),
+						"DOMAINS" => new FbDomains(),
+						"FOREIGNKEYCOLUMNS" => new FbForeignKeyColumns(),
+						"FOREIGNKEYS" => new FbForeignKeys(),
+						"FUNCTIONS" => new FbFunctions(),
+						"FUNCTIONARGUMENTS" => new FbFunctionArguments(),
+						"FUNCTIONPRIVILEGES" => new FbFunctionPrivileges(),
+						"GENERATORS" => new FbGenerators(),
+						"INDEXCOLUMNS" => new FbIndexColumns(),
+						"INDEXES" => new FbIndexes(),
+						"PRIMARYKEYS" => new FbPrimaryKeys(),
+						"PROCEDURES" => new FbProcedures(),
+						"PROCEDUREPARAMETERS" => new FbProcedureParameters(),
+						"PROCEDUREPRIVILEGES" => new FbProcedurePrivileges(),
+						"ROLES" => new FbRoles(),
+						"TABLES" => new FbTables(),
+						"TABLECONSTRAINTS" => new FbTableConstraints(),
+						"TABLEPRIVILEGES" => new FbTablePrivileges(),
+						"TRIGGERS" => new FbTriggers(),
+						"UNIQUEKEYS" => new FbUniqueKeys(),
+						"VIEWCOLUMNS" => new FbViewColumns(),
+						"VIEWS" => new FbViews(),
+						"VIEWPRIVILEGES" => new FbViewPrivileges(),
+						_ => throw new NotSupportedException("The specified metadata collection is not supported."),
+				};
+				return returnSchema.GetSchema(connection, collectionName, restrictions);
+		}
+		private static Task<DataTable> PrepareCollectionAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
+				FbSchema returnSchema = collectionName.ToUpperInvariant() switch {
+						"CHARACTERSETS" => new FbCharacterSets(),
+						"CHECKCONSTRAINTS" => new FbCheckConstraints(),
+						"CHECKCONSTRAINTSBYTABLE" => new FbChecksByTable(),
+						"COLLATIONS" => new FbCollations(),
+						"COLUMNS" => new FbColumns(),
+						"COLUMNPRIVILEGES" => new FbColumnPrivileges(),
+						"DOMAINS" => new FbDomains(),
+						"FOREIGNKEYCOLUMNS" => new FbForeignKeyColumns(),
+						"FOREIGNKEYS" => new FbForeignKeys(),
+						"FUNCTIONS" => new FbFunctions(),
+						"FUNCTIONARGUMENTS" => new FbFunctionArguments(),
+						"FUNCTIONPRIVILEGES" => new FbFunctionPrivileges(),
+						"GENERATORS" => new FbGenerators(),
+						"INDEXCOLUMNS" => new FbIndexColumns(),
+						"INDEXES" => new FbIndexes(),
+						"PRIMARYKEYS" => new FbPrimaryKeys(),
+						"PROCEDURES" => new FbProcedures(),
+						"PROCEDUREPARAMETERS" => new FbProcedureParameters(),
+						"PROCEDUREPRIVILEGES" => new FbProcedurePrivileges(),
+						"ROLES" => new FbRoles(),
+						"TABLES" => new FbTables(),
+						"TABLECONSTRAINTS" => new FbTableConstraints(),
+						"TABLEPRIVILEGES" => new FbTablePrivileges(),
+						"TRIGGERS" => new FbTriggers(),
+						"UNIQUEKEYS" => new FbUniqueKeys(),
+						"VIEWCOLUMNS" => new FbViewColumns(),
+						"VIEWS" => new FbViews(),
+						"VIEWPRIVILEGES" => new FbViewPrivileges(),
+						_ => throw new NotSupportedException("The specified metadata collection is not supported."),
+				};
+				return returnSchema.GetSchemaAsync(connection, collectionName, restrictions, cancellationToken);
+		}
 
-	private static DataTable SqlCommandSchema(FbConnection connection, string collectionName, string[] restrictions)
-	{
-		throw new NotImplementedException();
-	}
-	private static Task<DataTable> SqlCommandSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default)
-	{
-		throw new NotImplementedException();
-	}
+		private static DataTable SqlCommandSchema(FbConnection connection, string collectionName, string[] restrictions) {
+				throw new NotImplementedException();
+		}
+		private static Task<DataTable> SqlCommandSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
+				throw new NotImplementedException();
+		}
 
-	#endregion
+		#endregion
 }

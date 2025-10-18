@@ -19,62 +19,53 @@ using System.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public class FirebirdClientFactory : DbProviderFactory
-{
-	#region Static Properties
+public class FirebirdClientFactory : DbProviderFactory {
+		#region Static Properties
 
-	public static readonly FirebirdClientFactory Instance = new FirebirdClientFactory();
+		public static readonly FirebirdClientFactory Instance = new FirebirdClientFactory();
 
-	#endregion
+		#endregion
 
-	#region Properties
+		#region Properties
 
-	public override bool CanCreateDataSourceEnumerator
-	{
-		get { return false; }
-	}
+		public override bool CanCreateDataSourceEnumerator {
+				get { return false; }
+		}
 
-	#endregion
+		#endregion
 
-	#region Constructors
+		#region Constructors
 
-	private FirebirdClientFactory()
-		: base()
-	{ }
+		private FirebirdClientFactory()
+			: base() { }
 
-	#endregion
+		#endregion
 
-	#region Methods
+		#region Methods
 
-	public override DbCommand CreateCommand()
-	{
-		return new FbCommand();
-	}
+		public override DbCommand CreateCommand() {
+				return new FbCommand();
+		}
 
-	public override DbCommandBuilder CreateCommandBuilder()
-	{
-		return new FbCommandBuilder();
-	}
+		public override DbCommandBuilder CreateCommandBuilder() {
+				return new FbCommandBuilder();
+		}
 
-	public override DbConnection CreateConnection()
-	{
-		return new FbConnection();
-	}
+		public override DbConnection CreateConnection() {
+				return new FbConnection();
+		}
 
-	public override DbConnectionStringBuilder CreateConnectionStringBuilder()
-	{
-		return new FbConnectionStringBuilder();
-	}
+		public override DbConnectionStringBuilder CreateConnectionStringBuilder() {
+				return new FbConnectionStringBuilder();
+		}
 
-	public override DbDataAdapter CreateDataAdapter()
-	{
-		return new FbDataAdapter();
-	}
+		public override DbDataAdapter CreateDataAdapter() {
+				return new FbDataAdapter();
+		}
 
-	public override DbParameter CreateParameter()
-	{
-		return new FbParameter();
-	}
+		public override DbParameter CreateParameter() {
+				return new FbParameter();
+		}
 
-	#endregion
+		#endregion
 }

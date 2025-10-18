@@ -16,11 +16,9 @@
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
 using System;
-using System.ComponentModel;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbRemoteEventErrorEventArgs(Exception error) : EventArgs
-{
+public sealed class FbRemoteEventErrorEventArgs(Exception error) : EventArgs {
 		public Exception Error { get; } = error;
 }

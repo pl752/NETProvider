@@ -19,25 +19,21 @@ using System;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class SizeHelper
-{
-	public static bool IsValidPageSize(int value)
-	{
-		return value == 1024
-			|| value == 2048
-			|| value == 4096
-			|| value == 8192
-			|| value == 16384
-			|| value == 32768;
-	}
+internal static class SizeHelper {
+		public static bool IsValidPageSize(int value) {
+				return value == 1024
+					|| value == 2048
+					|| value == 4096
+					|| value == 8192
+					|| value == 16384
+					|| value == 32768;
+		}
 
-	public static bool IsValidBatchBufferSize(int value)
-	{
-		return value >= 0 && value <= 256 * 1024 * 1024;
-	}
+		public static bool IsValidBatchBufferSize(int value) {
+				return value >= 0 && value <= 256 * 1024 * 1024;
+		}
 
-	public static Exception InvalidSizeException(string what)
-	{
-		return new InvalidOperationException($"Invalid {what} size.");
-	}
+		public static Exception InvalidSizeException(string what) {
+				return new InvalidOperationException($"Invalid {what} size.");
+		}
 }

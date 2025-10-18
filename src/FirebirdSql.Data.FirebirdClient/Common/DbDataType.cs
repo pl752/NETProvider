@@ -15,35 +15,32 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Common;
 
-internal enum DbDataType
-{
-	Array,
-	BigInt,
-	Binary,
-	Boolean,
-	Char,
-	Date,
-	Decimal,
-	Double,
-	Float,
-	Guid,
-	Integer,
-	Numeric,
-	SmallInt,
-	Text,
-	Time,
-	TimeStamp,
-	VarChar,
-	TimeStampTZ,
-	TimeStampTZEx,
-	TimeTZ,
-	TimeTZEx,
-	Dec16,
-	Dec34,
-	Int128,
-	Null,
+internal enum DbDataType {
+		Array,
+		BigInt,
+		Binary,
+		Boolean,
+		Char,
+		Date,
+		Decimal,
+		Double,
+		Float,
+		Guid,
+		Integer,
+		Numeric,
+		SmallInt,
+		Text,
+		Time,
+		TimeStamp,
+		VarChar,
+		TimeStampTZ,
+		TimeStampTZEx,
+		TimeTZ,
+		TimeTZEx,
+		Dec16,
+		Dec34,
+		Int128,
+		Null,
 }

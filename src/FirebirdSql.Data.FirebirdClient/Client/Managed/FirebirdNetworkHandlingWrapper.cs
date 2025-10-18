@@ -24,315 +24,301 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataProvider, ITracksIOFailure
-{
-	public const string CompressionName = "zlib";
-	public const string EncryptionName = "Arc4";
+sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataProvider, ITracksIOFailure {
+		public const string CompressionName = "zlib";
+		public const string EncryptionName = "Arc4";
 
-	const int PreferredBufferSize = 32 * 1024;
+		const int PreferredBufferSize = 32 * 1024;
 
-	readonly IDataProvider _dataProvider = dataProvider;
+		readonly IDataProvider _dataProvider = dataProvider;
 
-	readonly Queue<byte> _outputBuffer = new Queue<byte>(PreferredBufferSize);
-	readonly Queue<byte> _inputBuffer = new Queue<byte>(PreferredBufferSize);
-	readonly byte[] _readBuffer = new byte[PreferredBufferSize];
+		readonly Queue<byte> _outputBuffer = new Queue<byte>(PreferredBufferSize);
+		readonly Queue<byte> _inputBuffer = new Queue<byte>(PreferredBufferSize);
+		readonly byte[] _readBuffer = new byte[PreferredBufferSize];
 
-	byte[] _compressionBuffer;
-	Ionic.Zlib.ZlibCodec _compressor;
-	Ionic.Zlib.ZlibCodec _decompressor;
+		byte[] _compressionBuffer;
+		Ionic.Zlib.ZlibCodec _compressor;
+		Ionic.Zlib.ZlibCodec _decompressor;
 
-	Org.BouncyCastle.Crypto.Engines.RC4Engine _decryptor;
-	Org.BouncyCastle.Crypto.Engines.RC4Engine _encryptor;
+		Org.BouncyCastle.Crypto.Engines.RC4Engine _decryptor;
+		Org.BouncyCastle.Crypto.Engines.RC4Engine _encryptor;
 
 		public bool IOFailed { get; set; }
 
-	public int Read(byte[] buffer, int offset, int count)
-	{
-		if (_inputBuffer.Count < count)
-		{
-			var readBuffer = _readBuffer;
-			int read;
-			try
-			{
-				read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
-			}
-			catch (IOException)
-			{
-				IOFailed = true;
-				throw;
-			}
-			if (read != 0)
-			{
-				if (_decryptor != null)
-				{
-					_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+		public int Read(byte[] buffer, int offset, int count) {
+				if(_inputBuffer.Count < count) {
+						var readBuffer = _readBuffer;
+						int read;
+						try {
+								read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
+						}
+						catch(IOException) {
+								IOFailed = true;
+								throw;
+						}
+						if(read != 0) {
+								if(_decryptor != null) {
+										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+								}
+								if(_decompressor != null) {
+										read = HandleDecompression(readBuffer, read);
+										readBuffer = _compressionBuffer;
+								}
+								WriteToInputBuffer(readBuffer, read);
+						}
 				}
-				if (_decompressor != null)
-				{
-					read = HandleDecompression(readBuffer, read);
-					readBuffer = _compressionBuffer;
+				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				return dataLength;
+		}
+
+		public int Read(Span<byte> buffer, int offset, int count) {
+				if(_inputBuffer.Count < count) {
+						var readBuffer = _readBuffer;
+						int read;
+						try {
+								read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
+						}
+						catch(IOException) {
+								IOFailed = true;
+								throw;
+						}
+						if(read != 0) {
+								if(_decryptor != null) {
+										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+								}
+								if(_decompressor != null) {
+										read = HandleDecompression(readBuffer, read);
+										readBuffer = _compressionBuffer;
+								}
+								WriteToInputBuffer(readBuffer, read);
+						}
 				}
-				WriteToInputBuffer(readBuffer, read);
-			}
+				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				return dataLength;
 		}
-		var dataLength = ReadFromInputBuffer(buffer, offset, count);
-		return dataLength;
-	}
-
-	public int Read(Span<byte> buffer, int offset, int count) {
-		if (_inputBuffer.Count < count) {
-			var readBuffer = _readBuffer;
-			int read;
-			try {
-				read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
-			}
-			catch (IOException) {
-				IOFailed = true;
-				throw;
-			}
-			if (read != 0) {
-				if (_decryptor != null) {
-					_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+		public async ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
+				if(_inputBuffer.Count < count) {
+						var readBuffer = _readBuffer;
+						int read;
+						try {
+								read = await _dataProvider.ReadAsync(readBuffer, 0, readBuffer.Length, cancellationToken).ConfigureAwait(false);
+						}
+						catch(IOException) {
+								IOFailed = true;
+								throw;
+						}
+						if(read != 0) {
+								if(_decryptor != null) {
+										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+								}
+								if(_decompressor != null) {
+										read = HandleDecompression(readBuffer, read);
+										readBuffer = _compressionBuffer;
+								}
+								WriteToInputBuffer(readBuffer, read);
+						}
 				}
-				if (_decompressor != null) {
-					read = HandleDecompression(readBuffer, read);
-					readBuffer = _compressionBuffer;
+				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				return dataLength;
+		}
+
+		public async ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
+				if(_inputBuffer.Count < count) {
+						var readBuffer = _readBuffer;
+						int read;
+						try {
+								// Use IDataProvider Memory-based overload
+								read = await _dataProvider.ReadAsync(readBuffer.AsMemory(0, readBuffer.Length), 0, readBuffer.Length, cancellationToken).ConfigureAwait(false);
+						}
+						catch(IOException) {
+								IOFailed = true;
+								throw;
+						}
+						if(read != 0) {
+								if(_decryptor != null) {
+										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+								}
+								if(_decompressor != null) {
+										read = HandleDecompression(readBuffer, read);
+										readBuffer = _compressionBuffer;
+								}
+								WriteToInputBuffer(readBuffer.AsSpan(0, read));
+						}
 				}
-				WriteToInputBuffer(readBuffer, read);
-			}
+				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				return dataLength;
 		}
-		var dataLength = ReadFromInputBuffer(buffer, offset, count);
-		return dataLength;
-	}
-	public async ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
-	{
-		if (_inputBuffer.Count < count)
-		{
-			var readBuffer = _readBuffer;
-			int read;
-			try
-			{
-				read = await _dataProvider.ReadAsync(readBuffer, 0, readBuffer.Length, cancellationToken).ConfigureAwait(false);
-			}
-			catch (IOException)
-			{
-				IOFailed = true;
-				throw;
-			}
-			if (read != 0)
-			{
-				if (_decryptor != null)
-				{
-					_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
+
+		public void Write(ReadOnlySpan<byte> buffer) {
+				foreach(var b in buffer)
+						_outputBuffer.Enqueue(b);
+		}
+
+		public void Write(byte[] buffer, int offset, int count) {
+				for(var i = offset; i < count; i++)
+						_outputBuffer.Enqueue(buffer[i]);
+		}
+		public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
+				for(var i = offset; i < count; i++)
+						_outputBuffer.Enqueue(buffer[i]);
+				return ValueTask2.CompletedTask;
+		}
+
+		public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
+				var span = buffer.Span.Slice(offset, count);
+				foreach(var b in span)
+						_outputBuffer.Enqueue(b);
+				return ValueTask2.CompletedTask;
+		}
+
+		public void Flush() {
+				var buffer = _outputBuffer.ToArray();
+				_outputBuffer.Clear();
+				var count = buffer.Length;
+				if(_compressor != null) {
+						count = HandleCompression(buffer, count);
+						buffer = _compressionBuffer;
 				}
-				if (_decompressor != null)
-				{
-					read = HandleDecompression(readBuffer, read);
-					readBuffer = _compressionBuffer;
+				if(_encryptor != null) {
+						_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
 				}
-				WriteToInputBuffer(readBuffer, read);
-			}
+				try {
+						_dataProvider.Write(buffer, 0, count);
+						_dataProvider.Flush();
+				}
+				catch(IOException) {
+						IOFailed = true;
+						throw;
+				}
 		}
-		var dataLength = ReadFromInputBuffer(buffer, offset, count);
-		return dataLength;
-	}
+		public async ValueTask FlushAsync(CancellationToken cancellationToken = default) {
+				var buffer = _outputBuffer.ToArray();
+				_outputBuffer.Clear();
+				var count = buffer.Length;
+				if(_compressor != null) {
+						count = HandleCompression(buffer, count);
+						buffer = _compressionBuffer;
+				}
+				if(_encryptor != null) {
+						_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
+				}
+				try {
+						await _dataProvider.WriteAsync(buffer, 0, count, cancellationToken).ConfigureAwait(false);
+						await _dataProvider.FlushAsync(cancellationToken).ConfigureAwait(false);
+				}
+				catch(IOException) {
+						IOFailed = true;
+						throw;
+				}
+		}
 
-    public async ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
-    {
-        var rented = new byte[count];
-        try
-        {
-            var read = await ReadAsync(rented, 0, count, cancellationToken).ConfigureAwait(false);
-            rented.AsSpan(0, read).CopyTo(buffer.Span.Slice(offset, read));
-            return read;
-        }
-        finally { }
-    }
+		public void StartCompression() {
+				_compressionBuffer = new byte[PreferredBufferSize];
+				_compressor = new Ionic.Zlib.ZlibCodec(Ionic.Zlib.CompressionMode.Compress);
+				_decompressor = new Ionic.Zlib.ZlibCodec(Ionic.Zlib.CompressionMode.Decompress);
+		}
 
-	public void Write(ReadOnlySpan<byte> buffer) {
-		foreach (var b in buffer)
-			_outputBuffer.Enqueue(b);
-	}
+		public void StartEncryption(byte[] key) {
+				_encryptor = CreateCipher(key);
+				_decryptor = CreateCipher(key);
+		}
 
-	public void Write(byte[] buffer, int offset, int count)
-	{
-		for (var i = offset; i < count; i++)
-			_outputBuffer.Enqueue(buffer[i]);
-	}
-	public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
-	{
-		for (var i = offset; i < count; i++)
-			_outputBuffer.Enqueue(buffer[i]);
-		return ValueTask2.CompletedTask;
-	}
+		int ReadFromInputBuffer(byte[] buffer, int offset, int count) {
+				var read = Math.Min(count, _inputBuffer.Count);
+				for(var i = 0; i < read; i++) {
+						buffer[offset + i] = _inputBuffer.Dequeue();
+				}
+				return read;
+		}
 
-	public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
-	{
-		var span = buffer.Span.Slice(offset, count);
-		foreach (var b in span)
-			_outputBuffer.Enqueue(b);
-		return ValueTask2.CompletedTask;
-	}
+		int ReadFromInputBuffer(Span<byte> buffer, int offset, int count) {
+				var read = Math.Min(count, _inputBuffer.Count);
+				for(var i = 0; i < read; i++) {
+						buffer[offset + i] = _inputBuffer.Dequeue();
+				}
+				return read;
+		}
 
-	public void Flush()
-	{
-		var buffer = _outputBuffer.ToArray();
-		_outputBuffer.Clear();
-		var count = buffer.Length;
-		if (_compressor != null)
-		{
-			count = HandleCompression(buffer, count);
-			buffer = _compressionBuffer;
+		int ReadFromInputBuffer(Memory<byte> buffer, int offset, int count) {
+				var span = buffer.Span;
+				var read = Math.Min(count, _inputBuffer.Count);
+				for(var i = 0; i < read; i++) {
+						span[offset + i] = _inputBuffer.Dequeue();
+				}
+				return read;
 		}
-		if (_encryptor != null)
-		{
-			_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
-		}
-		try
-		{
-			_dataProvider.Write(buffer, 0, count);
-			_dataProvider.Flush();
-		}
-		catch (IOException)
-		{
-			IOFailed = true;
-			throw;
-		}
-	}
-	public async ValueTask FlushAsync(CancellationToken cancellationToken = default)
-	{
-		var buffer = _outputBuffer.ToArray();
-		_outputBuffer.Clear();
-		var count = buffer.Length;
-		if (_compressor != null)
-		{
-			count = HandleCompression(buffer, count);
-			buffer = _compressionBuffer;
-		}
-		if (_encryptor != null)
-		{
-			_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
-		}
-		try
-		{
-			await _dataProvider.WriteAsync(buffer, 0, count, cancellationToken).ConfigureAwait(false);
-			await _dataProvider.FlushAsync(cancellationToken).ConfigureAwait(false);
-		}
-		catch (IOException)
-		{
-			IOFailed = true;
-			throw;
-		}
-	}
 
-	public void StartCompression()
-	{
-		_compressionBuffer = new byte[PreferredBufferSize];
-		_compressor = new Ionic.Zlib.ZlibCodec(Ionic.Zlib.CompressionMode.Compress);
-		_decompressor = new Ionic.Zlib.ZlibCodec(Ionic.Zlib.CompressionMode.Decompress);
-	}
-
-	public void StartEncryption(byte[] key)
-	{
-		_encryptor = CreateCipher(key);
-		_decryptor = CreateCipher(key);
-	}
-
-	int ReadFromInputBuffer(byte[] buffer, int offset, int count)
-	{
-		var read = Math.Min(count, _inputBuffer.Count);
-		for (var i = 0; i < read; i++)
-		{
-			buffer[offset + i] = _inputBuffer.Dequeue();
+		void WriteToInputBuffer(byte[] data, int count) {
+				for(var i = 0; i < count; i++) {
+						_inputBuffer.Enqueue(data[i]);
+				}
 		}
-		return read;
-	}
 
-	int ReadFromInputBuffer(Span<byte> buffer, int offset, int count) {
-		var read = Math.Min(count, _inputBuffer.Count);
-		for (var i = 0; i < read; i++) {
-			buffer[offset+i] = _inputBuffer.Dequeue();
+		void WriteToInputBuffer(ReadOnlySpan<byte> data) {
+				for(var i = 0; i < data.Length; i++) {
+						_inputBuffer.Enqueue(data[i]);
+				}
 		}
-		return read;
-	}
 
-	void WriteToInputBuffer(byte[] data, int count)
-	{
-		for (var i = 0; i < count; i++)
-		{
-			_inputBuffer.Enqueue(data[i]);
+		int HandleDecompression(byte[] buffer, int count) {
+				_decompressor.InputBuffer = buffer;
+				_decompressor.NextOut = 0;
+				_decompressor.NextIn = 0;
+				_decompressor.AvailableBytesIn = count;
+				while(true) {
+						_decompressor.OutputBuffer = _compressionBuffer;
+						_decompressor.AvailableBytesOut = _compressionBuffer.Length - _decompressor.NextOut;
+						var rc = _decompressor.Inflate(Ionic.Zlib.FlushType.None);
+						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
+								throw new IOException($"Error '{rc}' while decompressing the data.");
+						if(_decompressor.AvailableBytesIn > 0 || _decompressor.AvailableBytesOut == 0) {
+								ResizeBuffer(ref _compressionBuffer);
+								continue;
+						}
+						break;
+				}
+				return _decompressor.NextOut;
 		}
-	}
 
-	int HandleDecompression(byte[] buffer, int count)
-	{
-		_decompressor.InputBuffer = buffer;
-		_decompressor.NextOut = 0;
-		_decompressor.NextIn = 0;
-		_decompressor.AvailableBytesIn = count;
-		while (true)
-		{
-			_decompressor.OutputBuffer = _compressionBuffer;
-			_decompressor.AvailableBytesOut = _compressionBuffer.Length - _decompressor.NextOut;
-			var rc = _decompressor.Inflate(Ionic.Zlib.FlushType.None);
-			if (rc != Ionic.Zlib.ZlibConstants.Z_OK)
-				throw new IOException($"Error '{rc}' while decompressing the data.");
-			if (_decompressor.AvailableBytesIn > 0 || _decompressor.AvailableBytesOut == 0)
-			{
-				ResizeBuffer(ref _compressionBuffer);
-				continue;
-			}
-			break;
+		int HandleCompression(byte[] buffer, int count) {
+				_compressor.InputBuffer = buffer;
+				_compressor.NextOut = 0;
+				_compressor.NextIn = 0;
+				_compressor.AvailableBytesIn = count;
+				while(true) {
+						_compressor.OutputBuffer = _compressionBuffer;
+						_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
+						var rc = _compressor.Deflate(Ionic.Zlib.FlushType.None);
+						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
+								throw new IOException($"Error '{rc}' while compressing the data.");
+						if(_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0) {
+								ResizeBuffer(ref _compressionBuffer);
+								continue;
+						}
+						break;
+				}
+				while(true) {
+						_compressor.OutputBuffer = _compressionBuffer;
+						_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
+						var rc = _compressor.Deflate(Ionic.Zlib.FlushType.Sync);
+						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
+								throw new IOException($"Error '{rc}' while compressing the data.");
+						if(_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0) {
+								ResizeBuffer(ref _compressionBuffer);
+								continue;
+						}
+						break;
+				}
+				return _compressor.NextOut;
 		}
-		return _decompressor.NextOut;
-	}
 
-	int HandleCompression(byte[] buffer, int count)
-	{
-		_compressor.InputBuffer = buffer;
-		_compressor.NextOut = 0;
-		_compressor.NextIn = 0;
-		_compressor.AvailableBytesIn = count;
-		while (true)
-		{
-			_compressor.OutputBuffer = _compressionBuffer;
-			_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
-			var rc = _compressor.Deflate(Ionic.Zlib.FlushType.None);
-			if (rc != Ionic.Zlib.ZlibConstants.Z_OK)
-				throw new IOException($"Error '{rc}' while compressing the data.");
-			if (_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0)
-			{
-				ResizeBuffer(ref _compressionBuffer);
-				continue;
-			}
-			break;
+		static void ResizeBuffer(ref byte[] buffer) {
+				Array.Resize(ref buffer, buffer.Length * 2);
 		}
-		while (true)
-		{
-			_compressor.OutputBuffer = _compressionBuffer;
-			_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
-			var rc = _compressor.Deflate(Ionic.Zlib.FlushType.Sync);
-			if (rc != Ionic.Zlib.ZlibConstants.Z_OK)
-				throw new IOException($"Error '{rc}' while compressing the data.");
-			if (_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0)
-			{
-				ResizeBuffer(ref _compressionBuffer);
-				continue;
-			}
-			break;
+
+		static Org.BouncyCastle.Crypto.Engines.RC4Engine CreateCipher(byte[] key) {
+				var cipher = new Org.BouncyCastle.Crypto.Engines.RC4Engine();
+				cipher.Init(default, new Org.BouncyCastle.Crypto.Parameters.KeyParameter(key));
+				return cipher;
 		}
-		return _compressor.NextOut;
-	}
-
-	static void ResizeBuffer(ref byte[] buffer)
-	{
-		Array.Resize(ref buffer, buffer.Length * 2);
-	}
-
-	static Org.BouncyCastle.Crypto.Engines.RC4Engine CreateCipher(byte[] key)
-	{
-		var cipher = new Org.BouncyCastle.Crypto.Engines.RC4Engine();
-		cipher.Init(default, new Org.BouncyCastle.Crypto.Parameters.KeyParameter(key));
-		return cipher;
-	}
 }

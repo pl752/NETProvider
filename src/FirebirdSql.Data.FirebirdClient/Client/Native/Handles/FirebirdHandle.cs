@@ -22,25 +22,22 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Client.Native.Handles;
 
 // public visibility added, because auto-generated assembly can't work with internal types
-public abstract class FirebirdHandle : SafeHandle, IFirebirdHandle
-{
-	private IFbClient _fbClient;
+public abstract class FirebirdHandle : SafeHandle, IFirebirdHandle {
+		private IFbClient _fbClient;
 
-	protected FirebirdHandle()
-		: base(IntPtr.Zero, true)
-	{ }
+		protected FirebirdHandle()
+			: base(IntPtr.Zero, true) { }
 
-	// Method added because we can't inject IFbClient in ctor
-	public void SetClient(IFbClient fbClient)
-	{
-		Contract.Requires(_fbClient == null);
-		Contract.Requires(fbClient != null);
-		Contract.Ensures(_fbClient != null);
+		// Method added because we can't inject IFbClient in ctor
+		public void SetClient(IFbClient fbClient) {
+				Contract.Requires(_fbClient == null);
+				Contract.Requires(fbClient != null);
+				Contract.Ensures(_fbClient != null);
 
-		_fbClient = fbClient;
-	}
+				_fbClient = fbClient;
+		}
 
-	public IFbClient FbClient => _fbClient;
+		public IFbClient FbClient => _fbClient;
 
-	public override bool IsInvalid => handle == IntPtr.Zero;
+		public override bool IsInvalid => handle == IntPtr.Zero;
 }

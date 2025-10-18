@@ -15,22 +15,12 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
-using System.Collections;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using FirebirdSql.Data.Common;
-
 namespace FirebirdSql.Data.Client.Managed.Version15;
 
-internal class GdsStatement : Version13.GdsStatement
-{
-	public GdsStatement(GdsDatabase database)
-		: base(database)
-	{ }
+internal class GdsStatement : Version13.GdsStatement {
+		public GdsStatement(GdsDatabase database)
+			: base(database) { }
 
-	public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
-		: base(database, transaction)
-	{ }
+		public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
+			: base(database, transaction) { }
 }

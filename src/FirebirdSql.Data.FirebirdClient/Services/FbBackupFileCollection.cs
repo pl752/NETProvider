@@ -15,10 +15,8 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
 using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbBackupFileCollection : List<FbBackupFile>
-{ }
+public class FbBackupFileCollection : List<FbBackupFile> { }

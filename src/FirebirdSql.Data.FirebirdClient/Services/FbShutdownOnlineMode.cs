@@ -15,14 +15,11 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Services;
 
-public enum FbShutdownOnlineMode
-{
-	Normal,
-	Multi,
-	Single,
-	Full,
+public enum FbShutdownOnlineMode {
+		Normal,
+		Multi,
+		Single,
+		Full,
 }

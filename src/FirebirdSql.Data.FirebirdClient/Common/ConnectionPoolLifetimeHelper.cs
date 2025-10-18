@@ -15,16 +15,12 @@
 
 //$Authors = @realic, Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Common;
 
-internal static class ConnectionPoolLifetimeHelper
-{
-	internal static bool IsAlive(long connectionLifetime, long created, long now)
-	{
-		if (connectionLifetime == 0)
-			return true;
-		return (now - created) < (connectionLifetime * 1000);
-	}
+internal static class ConnectionPoolLifetimeHelper {
+		internal static bool IsAlive(long connectionLifetime, long created, long now) {
+				if(connectionLifetime == 0)
+						return true;
+				return (now - created) < (connectionLifetime * 1000);
+		}
 }

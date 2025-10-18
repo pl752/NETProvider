@@ -15,13 +15,10 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Services;
 
-public enum FbShutdownType
-{
-	ForceShutdown,
-	AttachmentsShutdown,
-	TransactionsShutdown,
+public enum FbShutdownType {
+		ForceShutdown,
+		AttachmentsShutdown,
+		TransactionsShutdown,
 }

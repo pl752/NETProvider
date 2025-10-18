@@ -23,41 +23,37 @@ using static FirebirdSql.Data.FirebirdClient.FbBatchNonQueryResult;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultItem>
-{
-	public sealed class FbBatchNonQueryResultItem
-	{
-		public int RecordsAffected { get; internal set; }
-		public bool IsSuccess { get; internal set; }
-		public FbException Exception { get; internal set; }
-	}
+public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultItem> {
+		public sealed class FbBatchNonQueryResultItem {
+				public int RecordsAffected { get; internal set; }
+				public bool IsSuccess { get; internal set; }
+				public FbException Exception { get; internal set; }
+		}
 
-	readonly List<FbBatchNonQueryResultItem> _items;
+		readonly List<FbBatchNonQueryResultItem> _items;
 
-	public bool AllSuccess => _items.TrueForAll(x => x.IsSuccess);
-	public int Count => _items.Count;
+		public bool AllSuccess => _items.TrueForAll(x => x.IsSuccess);
+		public int Count => _items.Count;
 
-	internal FbBatchNonQueryResult(ExecuteResultItem[] result)
-	{
-		_items = [.. result.Select(x => new FbBatchNonQueryResultItem()
+		internal FbBatchNonQueryResult(ExecuteResultItem[] result) {
+				_items = [.. result.Select(x => new FbBatchNonQueryResultItem()
 		{
 			RecordsAffected = x.RecordsAffected,
 			IsSuccess = !x.IsError,
 			Exception = x.Exception != null ? (FbException)FbException.Create(x.Exception) : null,
 		})];
-	}
+		}
 
-	public FbBatchNonQueryResultItem this[int index] => _items[index];
+		public FbBatchNonQueryResultItem this[int index] => _items[index];
 
-	public void EnsureSuccess()
-	{
-		var indexes = _items.Select((e, i) => new { Element = e, Index = i }).Where(x => !x.Element.IsSuccess).Select(x => x.Index).ToList();
-		if (indexes.Count == 0)
-			return;
-		throw FbException.Create($"Indexes {string.Join(", ", indexes)} failed in batch.");
-	}
+		public void EnsureSuccess() {
+				var indexes = _items.Select((e, i) => new { Element = e, Index = i }).Where(x => !x.Element.IsSuccess).Select(x => x.Index).ToList();
+				if(indexes.Count == 0)
+						return;
+				throw FbException.Create($"Indexes {string.Join(", ", indexes)} failed in batch.");
+		}
 
-	public IEnumerator<FbBatchNonQueryResultItem> GetEnumerator() => _items.GetEnumerator();
+		public IEnumerator<FbBatchNonQueryResultItem> GetEnumerator() => _items.GetEnumerator();
 
-	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

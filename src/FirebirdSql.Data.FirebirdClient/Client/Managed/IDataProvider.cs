@@ -21,18 +21,17 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IDataProvider
-{
-	int Read(byte[] buffer, int offset, int count);
-	int Read(Span<byte> buffer, int offset, int count);
-	ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
-	ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default);
+interface IDataProvider {
+		int Read(byte[] buffer, int offset, int count);
+		int Read(Span<byte> buffer, int offset, int count);
+		ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
+		ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default);
 
-	void Write(ReadOnlySpan<byte> buffer);
-	void Write(byte[] buffer, int offset, int count);
-	ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
-	ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default);
+		void Write(ReadOnlySpan<byte> buffer);
+		void Write(byte[] buffer, int offset, int count);
+		ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
+		ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default);
 
-	void Flush();
-	ValueTask FlushAsync(CancellationToken cancellationToken = default);
+		void Flush();
+		ValueTask FlushAsync(CancellationToken cancellationToken = default);
 }

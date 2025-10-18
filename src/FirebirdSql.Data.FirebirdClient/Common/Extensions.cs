@@ -19,66 +19,56 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class Extensions
-{
-	public static int AsInt(this IntPtr ptr)
-	{
-		return (int)ptr.ToInt64();
-	}
+internal static class Extensions {
+		public static int AsInt(this IntPtr ptr) {
+				return (int)ptr.ToInt64();
+		}
 
-	public static IntPtr ReadIntPtr(this BinaryReader self)
-	{
-		if (IntPtr.Size == sizeof(int))
-		{
-			return new IntPtr(self.ReadInt32());
+		public static IntPtr ReadIntPtr(this BinaryReader self) {
+				if(IntPtr.Size == sizeof(int)) {
+						return new IntPtr(self.ReadInt32());
+				}
+				else if(IntPtr.Size == sizeof(long)) {
+						return new IntPtr(self.ReadInt64());
+				}
+				else {
+						throw new NotSupportedException();
+				}
 		}
-		else if (IntPtr.Size == sizeof(long))
-		{
-			return new IntPtr(self.ReadInt64());
-		}
-		else
-		{
-			throw new NotSupportedException();
-		}
-	}
 
-	public static string ToHexString(this byte[] b)
-	{
+		public static string ToHexString(this byte[] b) {
 #if NET5_0_OR_GREATER
-		return Convert.ToHexString(b);
+				return Convert.ToHexString(b);
 #else
 		return BitConverter.ToString(b).Replace("-", string.Empty);
 #endif
-	}
-
-	public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
-	{
-		for (var i = 0; i < (float)array.Length / size; i++)
-		{
-			yield return array.Skip(i * size).Take(size);
 		}
-	}
+
+		public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size) {
+				for(var i = 0; i < (float)array.Length / size; i++) {
+						yield return array.Skip(i * size).Take(size);
+				}
+		}
 
 #if NETSTANDARD2_0
 	public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new HashSet<T>(source);
 #endif
 
-	public static IEnumerable<char>	RunesToChars(this IEnumerable<Rune> s) {
-		char[] chars = new char[2];
-		foreach (var rune in s) {
-			int n = rune.EncodeToUtf16(chars);
-			yield return chars[0];
-			if(n > 1) yield return chars[1];
+		public static IEnumerable<char> RunesToChars(this IEnumerable<Rune> s) {
+				char[] chars = new char[2];
+				foreach(var rune in s) {
+						int n = rune.EncodeToUtf16(chars);
+						yield return chars[0];
+						if(n > 1)
+								yield return chars[1];
+				}
 		}
-	}
 
-	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
-	{
+		public static IEnumerable<char[]> EnumerateRunesEx(this string s) {
 				ArgumentNullException.ThrowIfNull(s);
 
 #if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
@@ -96,12 +86,11 @@ internal static class Extensions
 		}
 
 #else
-				return s.EnumerateRunes().Select(r =>
-		{
-			var result = new char[r.Utf16SequenceLength];
-			r.EncodeToUtf16(result);
-			return result;
-		});
+				return s.EnumerateRunes().Select(r => {
+						var result = new char[r.Utf16SequenceLength];
+						r.EncodeToUtf16(result);
+						return result;
+				});
 #endif
-	}
+		}
 }

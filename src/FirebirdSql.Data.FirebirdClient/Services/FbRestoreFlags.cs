@@ -22,14 +22,13 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbRestoreFlags
-{
-	DeactivateIndexes = IscCodes.isc_spb_res_deactivate_idx,
-	NoShadow = IscCodes.isc_spb_res_no_shadow,
-	NoValidity = IscCodes.isc_spb_res_no_validity,
-	IndividualCommit = IscCodes.isc_spb_res_one_at_a_time,
-	Replace = IscCodes.isc_spb_res_replace,
-	Create = IscCodes.isc_spb_res_create,
-	UseAllSpace = IscCodes.isc_spb_res_use_all_space,
-	MetaDataOnly = IscCodes.isc_spb_res_metadata_only,
+public enum FbRestoreFlags {
+		DeactivateIndexes = IscCodes.isc_spb_res_deactivate_idx,
+		NoShadow = IscCodes.isc_spb_res_no_shadow,
+		NoValidity = IscCodes.isc_spb_res_no_validity,
+		IndividualCommit = IscCodes.isc_spb_res_one_at_a_time,
+		Replace = IscCodes.isc_spb_res_replace,
+		Create = IscCodes.isc_spb_res_create,
+		UseAllSpace = IscCodes.isc_spb_res_use_all_space,
+		MetaDataOnly = IscCodes.isc_spb_res_metadata_only,
 }

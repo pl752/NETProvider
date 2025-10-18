@@ -23,11 +23,9 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class TypeEncoder
-{
-	public static object EncodeDecimal(decimal d, int scale, int type)
-	{
-		var shift = scale < 0 ? -scale : scale;
+internal static class TypeEncoder {
+		public static object EncodeDecimal(decimal d, int scale, int type) {
+				var shift = scale < 0 ? -scale : scale;
 
 				return (type & ~1) switch {
 						IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
@@ -39,140 +37,119 @@ internal static class TypeEncoder
 				};
 		}
 
-	public static int EncodeTime(TimeSpan t)
-	{
-		return (int)(t.Ticks / 1000L);
-	}
+		public static int EncodeTime(TimeSpan t) {
+				return (int)(t.Ticks / 1000L);
+		}
 #if NET6_0_OR_GREATER
-	public static int EncodeTime(TimeOnly t)
-	{
-		return (int)(t.Ticks / 1000L);
-	}
+		public static int EncodeTime(TimeOnly t) {
+				return (int)(t.Ticks / 1000L);
+		}
 #endif
 
-	public static int EncodeDate(DateTime d)
-	{
-		var calendar = new GregorianCalendar();
-		var day = calendar.GetDayOfMonth(d);
-		var month = calendar.GetMonth(d);
-		var year = calendar.GetYear(d);
-		return EncodeDateImpl(year, month, day);
-	}
+		public static int EncodeDate(DateTime d) {
+				var calendar = new GregorianCalendar();
+				var day = calendar.GetDayOfMonth(d);
+				var month = calendar.GetMonth(d);
+				var year = calendar.GetYear(d);
+				return EncodeDateImpl(year, month, day);
+		}
 #if NET6_0_OR_GREATER
-	public static int EncodeDate(DateOnly d)
-	{
-		return EncodeDateImpl(d.Year, d.Month, d.Day);
-	}
+		public static int EncodeDate(DateOnly d) {
+				return EncodeDateImpl(d.Year, d.Month, d.Day);
+		}
 #endif
-	static int EncodeDateImpl(int year, int month, int day)
-	{
-		if (month > 2)
-		{
-			month -= 3;
+		static int EncodeDateImpl(int year, int month, int day) {
+				if(month > 2) {
+						month -= 3;
+				}
+				else {
+						month += 9;
+						year -= 1;
+				}
+
+				var c = year / 100;
+				var ya = year - 100 * c;
+
+				return ((146097 * c) / 4 + (1461 * ya) / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001);
 		}
-		else
-		{
-			month += 9;
-			year -= 1;
+
+		public static byte[] EncodeBoolean(bool value) {
+				return [(byte)(value ? 1 : 0)];
 		}
 
-		var c = year / 100;
-		var ya = year - 100 * c;
+		public static void EncodeBoolean(bool value, Span<byte> destination) {
+				destination[0] = (byte)(value ? 1 : 0);
+		}
 
-		return ((146097 * c) / 4 + (1461 * ya) / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001);
-	}
-
-	public static byte[] EncodeBoolean(bool value)
-	{
-		return [(byte)(value ? 1 : 0)];
-	}
-
-	public static void EncodeBoolean(bool value, Span<byte> destination)
-	{
-		destination[0] = (byte)(value ? 1 : 0);
-	}
-
-	public static byte[] EncodeGuid(Guid value)
-	{
-		var data = value.ToByteArray();
-		var a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
-		var b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
-		var c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
-		return
-		[
-			a[0], a[1], a[2], a[3],
+		public static byte[] EncodeGuid(Guid value) {
+				var data = value.ToByteArray();
+				var a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
+				var b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
+				var c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
+				return
+				[
+					a[0], a[1], a[2], a[3],
 			b[0], b[1],
 			c[0], c[1],
 			data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]
-		];
-	}
-
-	public static void EncodeGuid(Guid value, Span<byte> destination)
-	{
-		Span<byte> data = stackalloc byte[16];
-		value.TryWriteBytes(data);
-		
-		Span<byte> a = stackalloc byte[4];
-		Span<byte> b = stackalloc byte[2];
-		Span<byte> c = stackalloc byte[2];
-		
-		BitConverter.TryWriteBytes(a, IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data[..4])));
-		BitConverter.TryWriteBytes(b, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(4, 2))));
-		BitConverter.TryWriteBytes(c, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(6, 2))));
-		
-		a.CopyTo(destination[..4]);
-		b.CopyTo(destination.Slice(4, 2));
-		c.CopyTo(destination.Slice(6, 2));
-		data.Slice(8, 8).CopyTo(destination[8..]);
-	}
-
-	public static byte[] EncodeInt32(int value)
-	{
-		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
-	}
-
-	public static void EncodeInt32(int value, Span<byte> destination)
-	{
-		BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
-	}
-
-	public static byte[] EncodeInt64(long value)
-	{
-		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
-	}
-
-	public static void EncodeInt64(long value, Span<byte> destination)
-	{
-		BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
-	}
-
-	public static byte[] EncodeDec16(FbDecFloat value)
-	{
-		var result = DecimalCodec.DecFloat16.EncodeDecimal(value);
-		if (BitConverter.IsLittleEndian)
-		{
-			Array.Reverse(result);
+				];
 		}
-		return result;
-	}
 
-	public static byte[] EncodeDec34(FbDecFloat value)
-	{
-		var result = DecimalCodec.DecFloat34.EncodeDecimal(value);
-		if (BitConverter.IsLittleEndian)
-		{
-			Array.Reverse(result);
-		}
-		return result;
-	}
+		public static void EncodeGuid(Guid value, Span<byte> destination) {
+				Span<byte> data = stackalloc byte[16];
+				value.TryWriteBytes(data);
 
-	public static byte[] EncodeInt128(BigInteger value)
-	{
-		var result = Int128Helper.GetBytes(value);
-		if (BitConverter.IsLittleEndian)
-		{
-			Array.Reverse(result);
+				Span<byte> a = stackalloc byte[4];
+				Span<byte> b = stackalloc byte[2];
+				Span<byte> c = stackalloc byte[2];
+
+				BitConverter.TryWriteBytes(a, IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data[..4])));
+				BitConverter.TryWriteBytes(b, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(4, 2))));
+				BitConverter.TryWriteBytes(c, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(6, 2))));
+
+				a.CopyTo(destination[..4]);
+				b.CopyTo(destination.Slice(4, 2));
+				c.CopyTo(destination.Slice(6, 2));
+				data.Slice(8, 8).CopyTo(destination[8..]);
 		}
-		return result;
-	}
+
+		public static byte[] EncodeInt32(int value) {
+				return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
+		}
+
+		public static void EncodeInt32(int value, Span<byte> destination) {
+				BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
+		}
+
+		public static byte[] EncodeInt64(long value) {
+				return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
+		}
+
+		public static void EncodeInt64(long value, Span<byte> destination) {
+				BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
+		}
+
+		public static byte[] EncodeDec16(FbDecFloat value) {
+				var result = DecimalCodec.DecFloat16.EncodeDecimal(value);
+				if(BitConverter.IsLittleEndian) {
+						Array.Reverse(result);
+				}
+				return result;
+		}
+
+		public static byte[] EncodeDec34(FbDecFloat value) {
+				var result = DecimalCodec.DecFloat34.EncodeDecimal(value);
+				if(BitConverter.IsLittleEndian) {
+						Array.Reverse(result);
+				}
+				return result;
+		}
+
+		public static byte[] EncodeInt128(BigInteger value) {
+				var result = Int128Helper.GetBytes(value);
+				if(BitConverter.IsLittleEndian) {
+						Array.Reverse(result);
+				}
+				return result;
+		}
 }

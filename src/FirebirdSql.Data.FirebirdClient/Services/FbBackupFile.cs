@@ -15,8 +15,6 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
-
 namespace FirebirdSql.Data.Services;
 
 public class FbBackupFile(string fileName, int? fileLength = null) {

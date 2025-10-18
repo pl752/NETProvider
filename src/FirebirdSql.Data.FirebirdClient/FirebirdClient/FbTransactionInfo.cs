@@ -32,14 +32,12 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 
 		#region Methods
 
-		public long GetTransactionSnapshotNumber()
-	{
-		return GetValue<long>(IscCodes.fb_info_tra_snapshot_number);
-	}
-	public Task<long> GetTransactionSnapshotNumberAsync(CancellationToken cancellationToken = default)
-	{
-		return GetValueAsync<long>(IscCodes.fb_info_tra_snapshot_number, cancellationToken);
-	}
+		public long GetTransactionSnapshotNumber() {
+				return GetValue<long>(IscCodes.fb_info_tra_snapshot_number);
+		}
+		public Task<long> GetTransactionSnapshotNumberAsync(CancellationToken cancellationToken = default) {
+				return GetValueAsync<long>(IscCodes.fb_info_tra_snapshot_number, cancellationToken);
+		}
 
 		#endregion
 		#region Constructors
@@ -48,55 +46,51 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 
 		#region Private Methods
 
-		private T GetValue<T>(byte item)
-	{
-		FbTransaction.EnsureActive(Transaction);
+		private T GetValue<T>(byte item) {
+				FbTransaction.EnsureActive(Transaction);
 
-		var items = new byte[]
-		{
+				var items = new byte[]
+				{
 			item,
 			IscCodes.isc_info_end
-		};
-		var info = Transaction.Transaction.GetTransactionInfo(items);
-		return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
-	}
-	private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default)
-	{
-		FbTransaction.EnsureActive(Transaction);
+				};
+				var info = Transaction.Transaction.GetTransactionInfo(items);
+				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
+		}
+		private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default) {
+				FbTransaction.EnsureActive(Transaction);
 
-		var items = new byte[]
-		{
+				var items = new byte[]
+				{
 			item,
 			IscCodes.isc_info_end
-		};
-		var info = await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false);
-		return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
-	}
+				};
+				var info = await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false);
+				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
+		}
 
-	private List<T> GetList<T>(byte item)
-	{
-		FbTransaction.EnsureActive(Transaction);
+		private List<T> GetList<T>(byte item) {
+				FbTransaction.EnsureActive(Transaction);
 
-		var items = new byte[]
-		{
+				var items = new byte[]
+				{
 			item,
 			IscCodes.isc_info_end
-		};
+				};
 
-		return [.. (Transaction.Transaction.GetTransactionInfo(items)).Select(InfoValuesHelper.ConvertValue<T>)];
-	}
-	private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default)
-	{
-		FbTransaction.EnsureActive(Transaction);
+				return [.. (Transaction.Transaction.GetTransactionInfo(items)).Select(InfoValuesHelper.ConvertValue<T>)];
+		}
+		private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default) {
+				FbTransaction.EnsureActive(Transaction);
 
-		var items = new byte[]
-		{
+				var items = new byte[]
+				{
 			item,
 			IscCodes.isc_info_end
-		};
+				};
 
-		return [.. (await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>)];
-	}
+				return [.. (await Transaction.Transaction.GetTransactionInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>)];
+		}
 
-	#endregion
+		#endregion
 }

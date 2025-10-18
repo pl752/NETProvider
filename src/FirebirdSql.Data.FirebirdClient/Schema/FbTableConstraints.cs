@@ -15,24 +15,19 @@
 
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
-using System;
-using System.Data;
-using System.Globalization;
 using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbTableConstraints : FbSchema
-{
-	#region Protected Methods
+internal class FbTableConstraints : FbSchema {
+		#region Protected Methods
 
-	protected override StringBuilder GetCommandText(string[] restrictions)
-	{
-		var sql = new StringBuilder();
-		var where = new StringBuilder();
+		protected override StringBuilder GetCommandText(string[] restrictions) {
+				var sql = new StringBuilder();
+				var where = new StringBuilder();
 
-		sql.Append(
-			@"SELECT
+				sql.Append(
+					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
 					rc.rdb$constraint_name AS CONSTRAINT_NAME,
@@ -44,105 +39,89 @@ internal class FbTableConstraints : FbSchema
 				    rc.rdb$initially_deferred AS INITIALLY_DEFERRED
 				FROM rdb$relation_constraints rc");
 
-		if (restrictions != null)
-		{
-			var index = 0;
+				if(restrictions != null) {
+						var index = 0;
 
-			/* CONSTRAINT_CATALOG */
-			if (restrictions.Length >= 1 && restrictions[0] != null)
-			{
-			}
+						/* CONSTRAINT_CATALOG */
+						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						}
 
-			/* CONSTRAINT_SCHEMA */
-			if (restrictions.Length >= 2 && restrictions[1] != null)
-			{
-			}
+						/* CONSTRAINT_SCHEMA */
+						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						}
 
-			/* CONSTRAINT_NAME */
-			if (restrictions.Length >= 3 && restrictions[2] != null)
-			{
-				if (where.Length > 0)
-				{
-					where.Append(" AND ");
+						/* CONSTRAINT_NAME */
+						if(restrictions.Length >= 3 && restrictions[2] != null) {
+								if(where.Length > 0) {
+										where.Append(" AND ");
+								}
+
+								where.AppendFormat("rc.rdb$constraint_name = @p{0}", index++);
+						}
+
+						/* TABLE_CATALOG */
+						if(restrictions.Length >= 4 && restrictions[3] != null) {
+						}
+
+						/* TABLE_SCHEMA */
+						if(restrictions.Length >= 5 && restrictions[4] != null) {
+						}
+
+						/* TABLE_NAME */
+						if(restrictions.Length >= 6 && restrictions[5] != null) {
+								if(where.Length > 0) {
+										where.Append(" AND ");
+								}
+
+								where.AppendFormat("rc.rdb$relation_name = @p{0}", index++);
+						}
+
+						/* CONSTRAINT_TYPE */
+						if(restrictions.Length >= 7 && restrictions[6] != null) {
+								if(where.Length > 0) {
+										where.Append(" AND ");
+								}
+
+								where.AppendFormat("rc.rdb$constraint_type = @p{0}", index++);
+						}
 				}
 
-				where.AppendFormat("rc.rdb$constraint_name = @p{0}", index++);
-			}
-
-			/* TABLE_CATALOG */
-			if (restrictions.Length >= 4 && restrictions[3] != null)
-			{
-			}
-
-			/* TABLE_SCHEMA */
-			if (restrictions.Length >= 5 && restrictions[4] != null)
-			{
-			}
-
-			/* TABLE_NAME */
-			if (restrictions.Length >= 6 && restrictions[5] != null)
-			{
-				if (where.Length > 0)
-				{
-					where.Append(" AND ");
+				if(where.Length > 0) {
+						sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				where.AppendFormat("rc.rdb$relation_name = @p{0}", index++);
-			}
+				sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
 
-			/* CONSTRAINT_TYPE */
-			if (restrictions.Length >= 7 && restrictions[6] != null)
-			{
-				if (where.Length > 0)
-				{
-					where.Append(" AND ");
-				}
-
-				where.AppendFormat("rc.rdb$constraint_type = @p{0}", index++);
-			}
+				return sql;
 		}
 
-		if (where.Length > 0)
-		{
-			sql.AppendFormat(" WHERE {0} ", where.ToString());
-		}
+		protected override string[] ParseRestrictions(string[] restrictions) {
+				var parsed = restrictions;
 
-		sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
+				if(parsed != null) {
+						if(parsed.Length == 7 && parsed[6] != null) {
+								switch(parsed[6].ToString().ToUpperInvariant()) {
+										case "UNIQUE":
+												parsed[3] = "u";
+												break;
 
-		return sql;
-	}
+										case "PRIMARY KEY":
+												parsed[3] = "p";
+												break;
 
-	protected override string[] ParseRestrictions(string[] restrictions)
-	{
-		var parsed = restrictions;
+										case "FOREIGN KEY":
+												parsed[3] = "f";
+												break;
 
-		if (parsed != null)
-		{
-			if (parsed.Length == 7 && parsed[6] != null)
-			{
-				switch (parsed[6].ToString().ToUpperInvariant())
-				{
-					case "UNIQUE":
-						parsed[3] = "u";
-						break;
-
-					case "PRIMARY KEY":
-						parsed[3] = "p";
-						break;
-
-					case "FOREIGN KEY":
-						parsed[3] = "f";
-						break;
-
-					case "CHECK":
-						parsed[3] = "c";
-						break;
+										case "CHECK":
+												parsed[3] = "c";
+												break;
+								}
+						}
 				}
-			}
+
+				return parsed;
 		}
 
-		return parsed;
-	}
-
-	#endregion
+		#endregion
 }

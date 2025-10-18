@@ -20,9 +20,8 @@ using System;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
-public enum FbWireCrypt
-{
-	Disabled,
-	Enabled,
-	Required,
+public enum FbWireCrypt {
+		Disabled,
+		Enabled,
+		Required,
 }

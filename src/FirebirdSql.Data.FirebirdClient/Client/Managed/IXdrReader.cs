@@ -24,86 +24,85 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IXdrReader
-{
-	byte[] ReadBytes(byte[] buffer, int count);
-	void ReadBytes(Span<byte> buffer, int count);
-	ValueTask ReadBytesAsync(Memory<byte> buffer, int count, CancellationToken cancellationToken = default);
-	ValueTask<byte[]> ReadBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default);
+interface IXdrReader {
+		byte[] ReadBytes(byte[] buffer, int count);
+		void ReadBytes(Span<byte> buffer, int count);
+		ValueTask ReadBytesAsync(Memory<byte> buffer, int count, CancellationToken cancellationToken = default);
+		ValueTask<byte[]> ReadBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default);
 
-	byte[] ReadOpaque(int length);
-	void ReadOpaque(Span<byte> buffer, int length);
-	ValueTask ReadOpaqueAsync(Memory<byte> buffer, int length, CancellationToken cancellationToken = default);
-	ValueTask<byte[]> ReadOpaqueAsync(int length, CancellationToken cancellationToken = default);
+		byte[] ReadOpaque(int length);
+		void ReadOpaque(Span<byte> buffer, int length);
+		ValueTask ReadOpaqueAsync(Memory<byte> buffer, int length, CancellationToken cancellationToken = default);
+		ValueTask<byte[]> ReadOpaqueAsync(int length, CancellationToken cancellationToken = default);
 
-	byte[] ReadBuffer();
-	void ReadBuffer(Span<byte> buffer);
-	ValueTask ReadBufferAsync(Memory<byte> buffer, CancellationToken cancellationToken = default);
-	ValueTask<byte[]> ReadBufferAsync(CancellationToken cancellationToken = default);
+		byte[] ReadBuffer();
+		void ReadBuffer(Span<byte> buffer);
+		ValueTask ReadBufferAsync(Memory<byte> buffer, CancellationToken cancellationToken = default);
+		ValueTask<byte[]> ReadBufferAsync(CancellationToken cancellationToken = default);
 
-	string ReadString();
-	ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default);
+		string ReadString();
+		ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default);
 
-	string ReadString(int length);
-	ValueTask<string> ReadStringAsync(int length, CancellationToken cancellationToken = default);
+		string ReadString(int length);
+		ValueTask<string> ReadStringAsync(int length, CancellationToken cancellationToken = default);
 
-	string ReadString(Charset charset);
-	ValueTask<string> ReadStringAsync(Charset charset, CancellationToken cancellationToken = default);
+		string ReadString(Charset charset);
+		ValueTask<string> ReadStringAsync(Charset charset, CancellationToken cancellationToken = default);
 
-	string ReadString(Charset charset, int length);
-	ValueTask<string> ReadStringAsync(Charset charset, int length, CancellationToken cancellationToken = default);
+		string ReadString(Charset charset, int length);
+		ValueTask<string> ReadStringAsync(Charset charset, int length, CancellationToken cancellationToken = default);
 
-	short ReadInt16();
-	ValueTask<short> ReadInt16Async(CancellationToken cancellationToken = default);
+		short ReadInt16();
+		ValueTask<short> ReadInt16Async(CancellationToken cancellationToken = default);
 
-	int ReadInt32();
-	ValueTask<int> ReadInt32Async(CancellationToken cancellationToken = default);
+		int ReadInt32();
+		ValueTask<int> ReadInt32Async(CancellationToken cancellationToken = default);
 
-	long ReadInt64();
-	ValueTask<long> ReadInt64Async(CancellationToken cancellationToken = default);
+		long ReadInt64();
+		ValueTask<long> ReadInt64Async(CancellationToken cancellationToken = default);
 
-	Guid ReadGuid(int sqlType);
-	ValueTask<Guid> ReadGuidAsync(int sqlType, CancellationToken cancellationToken = default);
+		Guid ReadGuid(int sqlType);
+		ValueTask<Guid> ReadGuidAsync(int sqlType, CancellationToken cancellationToken = default);
 
-	float ReadSingle();
-	ValueTask<float> ReadSingleAsync(CancellationToken cancellationToken = default);
+		float ReadSingle();
+		ValueTask<float> ReadSingleAsync(CancellationToken cancellationToken = default);
 
-	double ReadDouble();
-	ValueTask<double> ReadDoubleAsync(CancellationToken cancellationToken = default);
+		double ReadDouble();
+		ValueTask<double> ReadDoubleAsync(CancellationToken cancellationToken = default);
 
-	DateTime ReadDateTime();
-	ValueTask<DateTime> ReadDateTimeAsync(CancellationToken cancellationToken = default);
+		DateTime ReadDateTime();
+		ValueTask<DateTime> ReadDateTimeAsync(CancellationToken cancellationToken = default);
 
-	DateTime ReadDate();
-	ValueTask<DateTime> ReadDateAsync(CancellationToken cancellationToken = default);
+		DateTime ReadDate();
+		ValueTask<DateTime> ReadDateAsync(CancellationToken cancellationToken = default);
 
-	TimeSpan ReadTime();
-	ValueTask<TimeSpan> ReadTimeAsync(CancellationToken cancellationToken = default);
+		TimeSpan ReadTime();
+		ValueTask<TimeSpan> ReadTimeAsync(CancellationToken cancellationToken = default);
 
-	decimal ReadDecimal(int type, int scale);
-	ValueTask<decimal> ReadDecimalAsync(int type, int scale, CancellationToken cancellationToken = default);
+		decimal ReadDecimal(int type, int scale);
+		ValueTask<decimal> ReadDecimalAsync(int type, int scale, CancellationToken cancellationToken = default);
 
-	bool ReadBoolean();
-	ValueTask<bool> ReadBooleanAsync(CancellationToken cancellationToken = default);
+		bool ReadBoolean();
+		ValueTask<bool> ReadBooleanAsync(CancellationToken cancellationToken = default);
 
-	FbZonedDateTime ReadZonedDateTime(bool isExtended);
-	ValueTask<FbZonedDateTime> ReadZonedDateTimeAsync(bool isExtended, CancellationToken cancellationToken = default);
+		FbZonedDateTime ReadZonedDateTime(bool isExtended);
+		ValueTask<FbZonedDateTime> ReadZonedDateTimeAsync(bool isExtended, CancellationToken cancellationToken = default);
 
-	FbZonedTime ReadZonedTime(bool isExtended);
-	ValueTask<FbZonedTime> ReadZonedTimeAsync(bool isExtended, CancellationToken cancellationToken = default);
+		FbZonedTime ReadZonedTime(bool isExtended);
+		ValueTask<FbZonedTime> ReadZonedTimeAsync(bool isExtended, CancellationToken cancellationToken = default);
 
-	FbDecFloat ReadDec16();
-	ValueTask<FbDecFloat> ReadDec16Async(CancellationToken cancellationToken = default);
+		FbDecFloat ReadDec16();
+		ValueTask<FbDecFloat> ReadDec16Async(CancellationToken cancellationToken = default);
 
-	FbDecFloat ReadDec34();
-	ValueTask<FbDecFloat> ReadDec34Async(CancellationToken cancellationToken = default);
+		FbDecFloat ReadDec34();
+		ValueTask<FbDecFloat> ReadDec34Async(CancellationToken cancellationToken = default);
 
-	BigInteger ReadInt128();
-	ValueTask<BigInteger> ReadInt128Async(CancellationToken cancellationToken = default);
+		BigInteger ReadInt128();
+		ValueTask<BigInteger> ReadInt128Async(CancellationToken cancellationToken = default);
 
-	IscException ReadStatusVector();
-	ValueTask<IscException> ReadStatusVectorAsync(CancellationToken cancellationToken = default);
+		IscException ReadStatusVector();
+		ValueTask<IscException> ReadStatusVectorAsync(CancellationToken cancellationToken = default);
 
-	int ReadOperation();
-	ValueTask<int> ReadOperationAsync(CancellationToken cancellationToken = default);
+		int ReadOperation();
+		ValueTask<int> ReadOperationAsync(CancellationToken cancellationToken = default);
 }

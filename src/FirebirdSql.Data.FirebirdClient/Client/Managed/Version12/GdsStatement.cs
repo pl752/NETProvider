@@ -15,7 +15,6 @@
 
 //$Authors = Jiri Cincura (jiri@cincura.net)
 
-using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,148 +22,127 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version12;
 
-internal class GdsStatement : Version11.GdsStatement
-{
-	#region Constructors
+internal class GdsStatement : Version11.GdsStatement {
+		#region Constructors
 
-	public GdsStatement(GdsDatabase database)
-		: base(database)
-	{ }
+		public GdsStatement(GdsDatabase database)
+			: base(database) { }
 
-	public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
-		: base(database, transaction)
-	{ }
+		public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
+			: base(database, transaction) { }
 
-	#endregion
+		#endregion
 
-	#region Overriden Methods
+		#region Overriden Methods
 
-	public override void Execute(int timeout, IDescriptorFiller descriptorFiller)
-	{
-		EnsureNotDeallocated();
+		public override void Execute(int timeout, IDescriptorFiller descriptorFiller) {
+				EnsureNotDeallocated();
 
-		Clear();
+				Clear();
 
-		try
-		{
-			RecordsAffected = -1;
+				try {
+						RecordsAffected = -1;
 
-			SendExecuteToBuffer(timeout, descriptorFiller);
+						SendExecuteToBuffer(timeout, descriptorFiller);
 
-			_database.Xdr.Flush();
+						_database.Xdr.Flush();
 
-			var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
-			try
-			{
-				SqlResponse sqlStoredProcedureResponse = null;
-				if (StatementType == DbStatementType.StoredProcedure)
-				{
-					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse)_database.ReadResponse();
-					ProcessStoredProcedureExecuteResponse(sqlStoredProcedureResponse);
-				}
+						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
+						try {
+								SqlResponse sqlStoredProcedureResponse = null;
+								if(StatementType == DbStatementType.StoredProcedure) {
+										numberOfResponses--;
+										sqlStoredProcedureResponse = (SqlResponse)_database.ReadResponse();
+										ProcessStoredProcedureExecuteResponse(sqlStoredProcedureResponse);
+								}
 
-				numberOfResponses--;
-				var executeResponse = (GenericResponse)_database.ReadResponse();
+								numberOfResponses--;
+								var executeResponse = (GenericResponse)_database.ReadResponse();
 								ProcessExecuteResponse(executeResponse);
-			}
-			finally
-			{
-				(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
-			}
+						}
+						finally {
+								(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
+						}
 
-			// we need to split this in two, to allow server handle op_cancel properly
+						// we need to split this in two, to allow server handle op_cancel properly
 
-			if (DoRecordsAffected)
-			{
-				SendInfoSqlToBuffer(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
+						if(DoRecordsAffected) {
+								SendInfoSqlToBuffer(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
 
-				_database.Xdr.Flush();
+								_database.Xdr.Flush();
 
-				numberOfResponses = 1;
-				try
-				{
-					numberOfResponses--;
-					var rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
-					RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse(rowsAffectedResponse));
+								numberOfResponses = 1;
+								try {
+										numberOfResponses--;
+										var rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
+										RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse(rowsAffectedResponse));
+								}
+								finally {
+										(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
+								}
+						}
+
+						State = StatementState.Executed;
 				}
-				finally
-				{
-					(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
+				catch(IOException ex) {
+						State = StatementState.Error;
+						throw IscException.ForIOException(ex);
 				}
-			}
-
-			State = StatementState.Executed;
 		}
-		catch (IOException ex)
-		{
-			State = StatementState.Error;
-			throw IscException.ForIOException(ex);
-		}
-	}
-	public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
-	{
-		EnsureNotDeallocated();
+		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
+				EnsureNotDeallocated();
 
-		Clear();
+				Clear();
 
-		try
-		{
-			RecordsAffected = -1;
+				try {
+						RecordsAffected = -1;
 
-			await SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
+						await SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
 
-			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
-			try
-			{
-				SqlResponse sqlStoredProcedureResponse = null;
-				if (StatementType == DbStatementType.StoredProcedure)
-				{
-					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-					await ProcessStoredProcedureExecuteResponseAsync(sqlStoredProcedureResponse, cancellationToken).ConfigureAwait(false);
+						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
+						try {
+								SqlResponse sqlStoredProcedureResponse = null;
+								if(StatementType == DbStatementType.StoredProcedure) {
+										numberOfResponses--;
+										sqlStoredProcedureResponse = (SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+										await ProcessStoredProcedureExecuteResponseAsync(sqlStoredProcedureResponse, cancellationToken).ConfigureAwait(false);
+								}
+
+								numberOfResponses--;
+								var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+								await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);
+						}
+						finally {
+								await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
+						}
+
+						// we need to split this in two, to allow server handle op_cancel properly
+
+						if(DoRecordsAffected) {
+								await SendInfoSqlToBufferAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
+
+								await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+								numberOfResponses = 1;
+								try {
+										numberOfResponses--;
+										var rowsAffectedResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+										RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync(rowsAffectedResponse, cancellationToken).ConfigureAwait(false));
+								}
+								finally {
+										await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
+								}
+						}
+
+						State = StatementState.Executed;
 				}
-
-				numberOfResponses--;
-				var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-				await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
-			}
-
-			// we need to split this in two, to allow server handle op_cancel properly
-
-			if (DoRecordsAffected)
-			{
-				await SendInfoSqlToBufferAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
-
-				await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-
-				numberOfResponses = 1;
-				try
-				{
-					numberOfResponses--;
-					var rowsAffectedResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-					RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync(rowsAffectedResponse, cancellationToken).ConfigureAwait(false));
+				catch(IOException ex) {
+						State = StatementState.Error;
+						throw IscException.ForIOException(ex);
 				}
-				finally
-				{
-					await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
-				}
-			}
-
-			State = StatementState.Executed;
 		}
-		catch (IOException ex)
-		{
-			State = StatementState.Error;
-			throw IscException.ForIOException(ex);
-		}
-	}
 
-	#endregion
+		#endregion
 }
