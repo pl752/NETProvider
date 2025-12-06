@@ -24,102 +24,102 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServiceManager(connection)
 {
-		public override bool UseUtf8ParameterBuffer => true;
+	public override bool UseUtf8ParameterBuffer => true;
 
-		public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
+	public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
+	{
+		try
 		{
-				try
+			SendAttachToBuffer(spb, service);
+			Database.Xdr.Flush();
+			var response = Database.ReadResponse();
+			if (response is ContAuthResponse)
+			{
+				while (response is ContAuthResponse contAuthResponse)
 				{
-						SendAttachToBuffer(spb, service);
-						Database.Xdr.Flush();
-						var response = Database.ReadResponse();
-						if (response is ContAuthResponse)
-						{
-								while (response is ContAuthResponse contAuthResponse)
-								{
-										Connection.AuthBlock.Start(contAuthResponse.ServerData, contAuthResponse.AcceptPluginName, contAuthResponse.IsAuthenticated, contAuthResponse.ServerKeys);
+					Connection.AuthBlock.Start(contAuthResponse.ServerData, contAuthResponse.AcceptPluginName, contAuthResponse.IsAuthenticated, contAuthResponse.ServerKeys);
 
-										Connection.AuthBlock.SendContAuthToBuffer();
-										Database.Xdr.Flush();
-										response = Connection.AuthBlock.ProcessContAuthResponse();
-										response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
-								}
-								var genericResponse = (GenericResponse) response;
-								base.ProcessAttachResponse(genericResponse);
+					Connection.AuthBlock.SendContAuthToBuffer();
+					Database.Xdr.Flush();
+					response = Connection.AuthBlock.ProcessContAuthResponse();
+					response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
+				}
+				var genericResponse = (GenericResponse) response;
+				base.ProcessAttachResponse(genericResponse);
 
-								if (genericResponse.Data.Length != 0)
-								{
-										Database.AuthBlock.SendWireCryptToBuffer();
-										Database.Xdr.Flush();
-										Database.AuthBlock.ProcessWireCryptResponse();
-								}
-						}
-						else
-						{
-								response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
-								ProcessAttachResponse((GenericResponse) response);
-								Database.AuthBlock.Complete();
-						}
-				}
-				catch (IscException)
+				if (genericResponse.Data.Length != 0)
 				{
-						Database.SafelyDetach();
-						throw;
+					Database.AuthBlock.SendWireCryptToBuffer();
+					Database.Xdr.Flush();
+					Database.AuthBlock.ProcessWireCryptResponse();
 				}
-				catch (IOException ex)
-				{
-						Database.SafelyDetach();
-						throw IscException.ForIOException(ex);
-				}
+			}
+			else
+			{
+				response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
+				ProcessAttachResponse((GenericResponse) response);
+				Database.AuthBlock.Complete();
+			}
 		}
-		public override async ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default)
+		catch (IscException)
 		{
-				try
-				{
-						await SendAttachToBufferAsync(spb, service, cancellationToken).ConfigureAwait(false);
-						await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						var response = await Database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-						if (response is ContAuthResponse)
-						{
-								while (response is ContAuthResponse contAuthResponse)
-								{
-										Connection.AuthBlock.Start(contAuthResponse.ServerData, contAuthResponse.AcceptPluginName, contAuthResponse.IsAuthenticated, contAuthResponse.ServerKeys);
-
-										await Connection.AuthBlock.SendContAuthToBufferAsync(cancellationToken).ConfigureAwait(false);
-										await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-										response = await Connection.AuthBlock.ProcessContAuthResponseAsync(cancellationToken).ConfigureAwait(false);
-										response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
-								}
-								var genericResponse = (GenericResponse) response;
-								await base.ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
-
-								if (genericResponse.Data.Length != 0)
-								{
-										await Database.AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
-										await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-										await Database.AuthBlock.ProcessWireCryptResponseAsync(cancellationToken).ConfigureAwait(false);
-								}
-						}
-						else
-						{
-								response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
-								await ProcessAttachResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
-								Database.AuthBlock.Complete();
-						}
-				}
-				catch (IscException)
-				{
-						await Database.SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
-						throw;
-				}
-				catch (IOException ex)
-				{
-						await Database.SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
-						throw IscException.ForIOException(ex);
-				}
+			Database.SafelyDetach();
+			throw;
 		}
+		catch (IOException ex)
+		{
+			Database.SafelyDetach();
+			throw IscException.ForIOException(ex);
+		}
+	}
+	public override async ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			await SendAttachToBufferAsync(spb, service, cancellationToken).ConfigureAwait(false);
+			await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+			var response = await Database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			if (response is ContAuthResponse)
+			{
+				while (response is ContAuthResponse contAuthResponse)
+				{
+					Connection.AuthBlock.Start(contAuthResponse.ServerData, contAuthResponse.AcceptPluginName, contAuthResponse.IsAuthenticated, contAuthResponse.ServerKeys);
 
-		public override ServiceParameterBufferBase CreateServiceParameterBuffer() => new ServiceParameterBuffer3(Database.ParameterBufferEncoding);
+					await Connection.AuthBlock.SendContAuthToBufferAsync(cancellationToken).ConfigureAwait(false);
+					await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+					response = await Connection.AuthBlock.ProcessContAuthResponseAsync(cancellationToken).ConfigureAwait(false);
+					response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
+				}
+				var genericResponse = (GenericResponse) response;
+				await base.ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
-		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection) => new GdsDatabase(connection);
+				if (genericResponse.Data.Length != 0)
+				{
+					await Database.AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
+					await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+					await Database.AuthBlock.ProcessWireCryptResponseAsync(cancellationToken).ConfigureAwait(false);
+				}
+			}
+			else
+			{
+				response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
+				await ProcessAttachResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+				Database.AuthBlock.Complete();
+			}
+		}
+		catch (IscException)
+		{
+			await Database.SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
+			throw;
+		}
+		catch (IOException ex)
+		{
+			await Database.SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
+			throw IscException.ForIOException(ex);
+		}
+	}
+
+	public override ServiceParameterBufferBase CreateServiceParameterBuffer() => new ServiceParameterBuffer3(Database.ParameterBufferEncoding);
+
+	protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection) => new GdsDatabase(connection);
 }

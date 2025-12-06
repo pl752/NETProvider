@@ -19,8 +19,8 @@ namespace FirebirdSql.Data.Services;
 
 public enum FbShutdownOnlineMode
 {
-		Normal,
-		Multi,
-		Single,
-		Full,
+	Normal,
+	Multi,
+	Single,
+	Full,
 }

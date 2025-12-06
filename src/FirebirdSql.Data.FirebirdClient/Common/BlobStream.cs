@@ -7,214 +7,214 @@ namespace FirebirdSql.Data.Common;
 
 public sealed class BlobStream : Stream
 {
-		private readonly BlobBase _blobHandle;
-		private int _position;
+	private readonly BlobBase _blobHandle;
+	private int _position;
 
-		private byte[] _currentSegment;
-		private int _segmentPosition;
+	private byte[] _currentSegment;
+	private int _segmentPosition;
 
-		private int Available => _currentSegment?.Length - _segmentPosition ?? 0;
+	private int Available => _currentSegment?.Length - _segmentPosition ?? 0;
 
-		internal BlobStream(BlobBase blob)
+	internal BlobStream(BlobBase blob)
+	{
+		_blobHandle = blob;
+		_position = 0;
+	}
+
+	public override long Position
+	{
+		get => _position;
+		set => Seek(value, SeekOrigin.Begin);
+	}
+
+	public override long Length
+	{
+		get
 		{
-				_blobHandle = blob;
-				_position = 0;
+			if (!_blobHandle.IsOpen)
+				_blobHandle.Open();
+
+			return _blobHandle.GetLength();
 		}
+	}
 
-		public override long Position
-		{
-				get => _position;
-				set => Seek(value, SeekOrigin.Begin);
-		}
+	public override void Flush()
+	{
+	}
 
-		public override long Length
+	public override int Read(byte[] buffer, int offset, int count)
+	{
+		ValidateBufferSize(buffer, offset, count);
+
+		if (!_blobHandle.IsOpen)
+			_blobHandle.Open();
+
+		int copied = 0;
+		int remainingBufferSize = buffer.Length - offset;
+		do
 		{
-				get
+			if (remainingBufferSize == 0)
+				break;
+
+			if (Available > 0)
+			{
+				int toCopy = Math.Min(Available, remainingBufferSize);
+				Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
+				copied += toCopy;
+				_segmentPosition += toCopy;
+				remainingBufferSize -= toCopy;
+				_position += toCopy;
+			}
+
+			if (_blobHandle.EOF)
+				break;
+
+			if (Available == 0)
+			{
+				_currentSegment = _blobHandle.GetSegment();
+				_segmentPosition = 0;
+			}
+		} while (copied < count);
+
+		return copied;
+	}
+	public override async Task<int> ReadAsync(byte[] buffer, int offset, int count,
+		CancellationToken cancellationToken)
+	{
+		ValidateBufferSize(buffer, offset, count);
+
+		if (!_blobHandle.IsOpen)
+			await _blobHandle.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+		int copied = 0;
+		int remainingBufferSize = buffer.Length - offset;
+		do
+		{
+			if (remainingBufferSize == 0)
+				break;
+
+			if (Available > 0)
+			{
+				int toCopy = Math.Min(Available, remainingBufferSize);
+				Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
+				copied += toCopy;
+				_segmentPosition += toCopy;
+				remainingBufferSize -= toCopy;
+				_position += toCopy;
+			}
+
+			if (_blobHandle.EOF)
+				break;
+
+			if (Available == 0)
+			{
+				_currentSegment = await _blobHandle.GetSegmentAsync(cancellationToken).ConfigureAwait(false);
+				_segmentPosition = 0;
+			}
+		} while (copied < count);
+
+		return copied;
+	}
+
+	public override long Seek(long offset, SeekOrigin origin)
+	{
+		if (!_blobHandle.IsOpen)
+			_blobHandle.Open();
+
+		int seekMode = origin switch
+		{
+			SeekOrigin.Begin => IscCodes.isc_blb_seek_from_head,
+			SeekOrigin.Current => IscCodes.isc_blb_seek_relative,
+			SeekOrigin.End => IscCodes.isc_blb_seek_from_tail,
+			_ => throw new ArgumentOutOfRangeException(nameof(origin))
+		};
+
+		_blobHandle.Seek((int) offset, seekMode);
+		return _position = _blobHandle.Position;
+	}
+
+	public override void SetLength(long value) => throw new NotSupportedException();
+
+	public override void Write(byte[] buffer, int offset, int count)
+	{
+		try
+		{
+			if (!_blobHandle.IsOpen)
+				_blobHandle.Create();
+
+			int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
+			byte[] tmpBuffer = new byte[chunk];
+
+			while (count > 0)
+			{
+				if (chunk > count)
 				{
-						if (!_blobHandle.IsOpen)
-								_blobHandle.Open();
-
-						return _blobHandle.GetLength();
+					chunk = count;
+					tmpBuffer = new byte[chunk];
 				}
+
+				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
+				_blobHandle.PutSegment(tmpBuffer);
+
+				offset += chunk;
+				count -= chunk;
+				_position += chunk;
+			}
 		}
-
-		public override void Flush()
+		catch
 		{
+			_blobHandle.Cancel();
+			throw;
 		}
-
-		public override int Read(byte[] buffer, int offset, int count)
+	}
+	public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+	{
+		try
 		{
-				ValidateBufferSize(buffer, offset, count);
+			if (!_blobHandle.IsOpen)
+				await _blobHandle.CreateAsync(cancellationToken).ConfigureAwait(false);
 
-				if (!_blobHandle.IsOpen)
-						_blobHandle.Open();
+			int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
+			byte[] tmpBuffer = new byte[chunk];
 
-				int copied = 0;
-				int remainingBufferSize = buffer.Length - offset;
-				do
+			while (count > 0)
+			{
+				if (chunk > count)
 				{
-						if (remainingBufferSize == 0)
-								break;
-
-						if (Available > 0)
-						{
-								int toCopy = Math.Min(Available, remainingBufferSize);
-								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
-								copied += toCopy;
-								_segmentPosition += toCopy;
-								remainingBufferSize -= toCopy;
-								_position += toCopy;
-						}
-
-						if (_blobHandle.EOF)
-								break;
-
-						if (Available == 0)
-						{
-								_currentSegment = _blobHandle.GetSegment();
-								_segmentPosition = 0;
-						}
-				} while (copied < count);
-
-				return copied;
-		}
-		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count,
-			CancellationToken cancellationToken)
-		{
-				ValidateBufferSize(buffer, offset, count);
-
-				if (!_blobHandle.IsOpen)
-						await _blobHandle.OpenAsync(cancellationToken).ConfigureAwait(false);
-
-				int copied = 0;
-				int remainingBufferSize = buffer.Length - offset;
-				do
-				{
-						if (remainingBufferSize == 0)
-								break;
-
-						if (Available > 0)
-						{
-								int toCopy = Math.Min(Available, remainingBufferSize);
-								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
-								copied += toCopy;
-								_segmentPosition += toCopy;
-								remainingBufferSize -= toCopy;
-								_position += toCopy;
-						}
-
-						if (_blobHandle.EOF)
-								break;
-
-						if (Available == 0)
-						{
-								_currentSegment = await _blobHandle.GetSegmentAsync(cancellationToken).ConfigureAwait(false);
-								_segmentPosition = 0;
-						}
-				} while (copied < count);
-
-				return copied;
-		}
-
-		public override long Seek(long offset, SeekOrigin origin)
-		{
-				if (!_blobHandle.IsOpen)
-						_blobHandle.Open();
-
-				int seekMode = origin switch
-				{
-						SeekOrigin.Begin => IscCodes.isc_blb_seek_from_head,
-						SeekOrigin.Current => IscCodes.isc_blb_seek_relative,
-						SeekOrigin.End => IscCodes.isc_blb_seek_from_tail,
-						_ => throw new ArgumentOutOfRangeException(nameof(origin))
-				};
-
-				_blobHandle.Seek((int) offset, seekMode);
-				return _position = _blobHandle.Position;
-		}
-
-		public override void SetLength(long value) => throw new NotSupportedException();
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-				try
-				{
-						if (!_blobHandle.IsOpen)
-								_blobHandle.Create();
-
-						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
-						byte[] tmpBuffer = new byte[chunk];
-
-						while (count > 0)
-						{
-								if (chunk > count)
-								{
-										chunk = count;
-										tmpBuffer = new byte[chunk];
-								}
-
-								Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-								_blobHandle.PutSegment(tmpBuffer);
-
-								offset += chunk;
-								count -= chunk;
-								_position += chunk;
-						}
+					chunk = count;
+					tmpBuffer = new byte[chunk];
 				}
-				catch
-				{
-						_blobHandle.Cancel();
-						throw;
-				}
+
+				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
+				await _blobHandle.PutSegmentAsync(tmpBuffer, cancellationToken).ConfigureAwait(false);
+
+				offset += chunk;
+				count -= chunk;
+				_position += chunk;
+			}
 		}
-		public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		catch
 		{
-				try
-				{
-						if (!_blobHandle.IsOpen)
-								await _blobHandle.CreateAsync(cancellationToken).ConfigureAwait(false);
-
-						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
-						byte[] tmpBuffer = new byte[chunk];
-
-						while (count > 0)
-						{
-								if (chunk > count)
-								{
-										chunk = count;
-										tmpBuffer = new byte[chunk];
-								}
-
-								Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-								await _blobHandle.PutSegmentAsync(tmpBuffer, cancellationToken).ConfigureAwait(false);
-
-								offset += chunk;
-								count -= chunk;
-								_position += chunk;
-						}
-				}
-				catch
-				{
-						await _blobHandle.CancelAsync(cancellationToken).ConfigureAwait(false);
-						throw;
-				}
+			await _blobHandle.CancelAsync(cancellationToken).ConfigureAwait(false);
+			throw;
 		}
+	}
 
-		public override bool CanRead => true;
-		public override bool CanSeek => true;
-		public override bool CanWrite => true;
+	public override bool CanRead => true;
+	public override bool CanSeek => true;
+	public override bool CanWrite => true;
 
-		protected override void Dispose(bool disposing) => _blobHandle.Close();
+	protected override void Dispose(bool disposing) => _blobHandle.Close();
 
 #if !(NET48 || NETSTANDARD2_0)
-		public override ValueTask DisposeAsync() => _blobHandle.CloseAsync();
+	public override ValueTask DisposeAsync() => _blobHandle.CloseAsync();
 #endif
 
-		private static void ValidateBufferSize(byte[] buffer, int offset, int count)
-		{
-				ArgumentNullException.ThrowIfNull(buffer);
+	private static void ValidateBufferSize(byte[] buffer, int offset, int count)
+	{
+		ArgumentNullException.ThrowIfNull(buffer);
 
-				if (buffer.Length < offset + count)
-						throw new InvalidOperationException();
-		}
+		if (buffer.Length < offset + count)
+			throw new InvalidOperationException();
+	}
 }

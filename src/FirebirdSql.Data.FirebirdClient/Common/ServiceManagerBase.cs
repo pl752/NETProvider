@@ -24,25 +24,25 @@ namespace FirebirdSql.Data.Common;
 
 internal abstract class ServiceManagerBase(Charset charset)
 {
-		public Action<IscException> WarningMessage { get; set; }
+	public Action<IscException> WarningMessage { get; set; }
 
-		public abstract bool UseUtf8ParameterBuffer { get; }
-		public Encoding ParameterBufferEncoding => UseUtf8ParameterBuffer ? Encoding.UTF8 : Encoding2.Default;
+	public abstract bool UseUtf8ParameterBuffer { get; }
+	public Encoding ParameterBufferEncoding => UseUtf8ParameterBuffer ? Encoding.UTF8 : Encoding2.Default;
 
-		public int Handle { get; protected set; }
-		public Charset Charset { get; } = charset;
+	public int Handle { get; protected set; }
+	public Charset Charset { get; } = charset;
 
-		public abstract void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey);
-		public abstract ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default);
+	public abstract void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey);
+	public abstract ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default);
 
-		public abstract void Detach();
-		public abstract ValueTask DetachAsync(CancellationToken cancellationToken = default);
+	public abstract void Detach();
+	public abstract ValueTask DetachAsync(CancellationToken cancellationToken = default);
 
-		public abstract void Start(ServiceParameterBufferBase spb);
-		public abstract ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default);
+	public abstract void Start(ServiceParameterBufferBase spb);
+	public abstract ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default);
 
-		public abstract void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer);
-		public abstract ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default);
+	public abstract void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer);
+	public abstract ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default);
 
-		public abstract ServiceParameterBufferBase CreateServiceParameterBuffer();
+	public abstract ServiceParameterBufferBase CreateServiceParameterBuffer();
 }

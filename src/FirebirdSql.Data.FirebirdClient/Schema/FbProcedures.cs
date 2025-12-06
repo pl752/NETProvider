@@ -24,15 +24,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbProcedures : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.AppendFormat(
-					@"SELECT
+		_ = sql.AppendFormat(
+			@"SELECT
 					null AS PROCEDURE_CATALOG,
 					null AS PROCEDURE_SCHEMA,
 					rdb$procedure_name AS PROCEDURE_NAME,
@@ -43,62 +43,62 @@ internal class FbProcedures : FbSchema
 					rdb$description AS DESCRIPTION,
 					{0} AS PACKAGE_NAME
 				FROM rdb$procedures",
-					MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
+			MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
 
-				if (restrictions != null)
-				{
-						int index = 0;
-
-						/* PROCEDURE_CATALOG */
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
-
-						/* PROCEDURE_SCHEMA */
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
-
-						/* PROCEDURE_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat("rdb$procedure_name = @p{0}", index++);
-						}
-				}
-
-				if (where.Length > 0)
-				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
-				}
-
-				_ = sql.Append(" ORDER BY PACKAGE_NAME, PROCEDURE_NAME");
-
-				return sql;
-		}
-
-		protected override void ProcessResult(DataTable schema)
+		if (restrictions != null)
 		{
-				schema.BeginLoadData();
+			int index = 0;
 
-				foreach (DataRow row in schema.Rows)
-				{
-						if (row["INPUTS"] == DBNull.Value)
-						{
-								row["INPUTS"] = 0;
-						}
-						if (row["OUTPUTS"] == DBNull.Value)
-						{
-								row["OUTPUTS"] = 0;
-						}
-						row["IS_SYSTEM_PROCEDURE"] = row["IS_SYSTEM_PROCEDURE"] == DBNull.Value ||
-							Convert.ToInt32(row["IS_SYSTEM_PROCEDURE"], CultureInfo.InvariantCulture) == 0
-								? false
-								: true;
-				}
+			/* PROCEDURE_CATALOG */
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-				schema.EndLoadData();
-				schema.AcceptChanges();
+			/* PROCEDURE_SCHEMA */
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
+
+			/* PROCEDURE_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat("rdb$procedure_name = @p{0}", index++);
+			}
 		}
 
-		#endregion
+		if (where.Length > 0)
+		{
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+		}
+
+		_ = sql.Append(" ORDER BY PACKAGE_NAME, PROCEDURE_NAME");
+
+		return sql;
+	}
+
+	protected override void ProcessResult(DataTable schema)
+	{
+		schema.BeginLoadData();
+
+		foreach (DataRow row in schema.Rows)
+		{
+			if (row["INPUTS"] == DBNull.Value)
+			{
+				row["INPUTS"] = 0;
+			}
+			if (row["OUTPUTS"] == DBNull.Value)
+			{
+				row["OUTPUTS"] = 0;
+			}
+			row["IS_SYSTEM_PROCEDURE"] = row["IS_SYSTEM_PROCEDURE"] == DBNull.Value ||
+				Convert.ToInt32(row["IS_SYSTEM_PROCEDURE"], CultureInfo.InvariantCulture) == 0
+					? false
+					: true;
+		}
+
+		schema.EndLoadData();
+		schema.AcceptChanges();
+	}
+
+	#endregion
 }

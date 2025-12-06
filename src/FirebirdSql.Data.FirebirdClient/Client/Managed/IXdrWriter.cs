@@ -25,80 +25,80 @@ namespace FirebirdSql.Data.Client.Managed;
 
 interface IXdrWriter
 {
-		void Flush();
-		ValueTask FlushAsync(CancellationToken cancellationToken = default);
+	void Flush();
+	ValueTask FlushAsync(CancellationToken cancellationToken = default);
 
-		void WriteBytes(ReadOnlySpan<byte> buffer);
-		void WriteBytes(byte[] buffer, int count);
-		ValueTask WriteBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default);
+	void WriteBytes(ReadOnlySpan<byte> buffer);
+	void WriteBytes(byte[] buffer, int count);
+	ValueTask WriteBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default);
 
-		void WriteOpaque(byte[] buffer);
-		void WriteOpaque(ReadOnlySpan<byte> buffer);
-		ValueTask WriteOpaqueAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
-		ValueTask WriteOpaqueAsync(byte[] buffer, CancellationToken cancellationToken = default);
+	void WriteOpaque(byte[] buffer);
+	void WriteOpaque(ReadOnlySpan<byte> buffer);
+	ValueTask WriteOpaqueAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
+	ValueTask WriteOpaqueAsync(byte[] buffer, CancellationToken cancellationToken = default);
 
-		void WriteOpaque(byte[] buffer, int length);
-		void WriteOpaque(ReadOnlySpan<byte> buffer, int length);
-		ValueTask WriteOpaqueAsync(byte[] buffer, int length, CancellationToken cancellationToken = default);
-		ValueTask WriteOpaqueAsync(ReadOnlyMemory<byte> buffer, int length, CancellationToken cancellationToken = default);
+	void WriteOpaque(byte[] buffer, int length);
+	void WriteOpaque(ReadOnlySpan<byte> buffer, int length);
+	ValueTask WriteOpaqueAsync(byte[] buffer, int length, CancellationToken cancellationToken = default);
+	ValueTask WriteOpaqueAsync(ReadOnlyMemory<byte> buffer, int length, CancellationToken cancellationToken = default);
 
-		void WriteBuffer(byte[] buffer);
-		void WriteBuffer(ReadOnlySpan<byte> buffer);
-		ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
-		ValueTask WriteBufferAsync(byte[] buffer, CancellationToken cancellationToken = default);
+	void WriteBuffer(byte[] buffer);
+	void WriteBuffer(ReadOnlySpan<byte> buffer);
+	ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
+	ValueTask WriteBufferAsync(byte[] buffer, CancellationToken cancellationToken = default);
 
-		void WriteBuffer(byte[] buffer, int length);
-		ValueTask WriteBufferAsync(byte[] buffer, int length, CancellationToken cancellationToken = default);
+	void WriteBuffer(byte[] buffer, int length);
+	ValueTask WriteBufferAsync(byte[] buffer, int length, CancellationToken cancellationToken = default);
 
-		void WriteBlobBuffer(byte[] buffer);
-		void WriteBlobBuffer(ReadOnlySpan<byte> buffer);
-		ValueTask WriteBlobBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
-		ValueTask WriteBlobBufferAsync(byte[] buffer, CancellationToken cancellationToken = default);
+	void WriteBlobBuffer(byte[] buffer);
+	void WriteBlobBuffer(ReadOnlySpan<byte> buffer);
+	ValueTask WriteBlobBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
+	ValueTask WriteBlobBufferAsync(byte[] buffer, CancellationToken cancellationToken = default);
 
-		void WriteTyped(int type, byte[] buffer);
-		void WriteTyped(int type, ReadOnlySpan<byte> buffer);
-		ValueTask WriteTypedAsync(int type, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
-		ValueTask WriteTypedAsync(int type, byte[] buffer, CancellationToken cancellationToken = default);
+	void WriteTyped(int type, byte[] buffer);
+	void WriteTyped(int type, ReadOnlySpan<byte> buffer);
+	ValueTask WriteTypedAsync(int type, ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default);
+	ValueTask WriteTypedAsync(int type, byte[] buffer, CancellationToken cancellationToken = default);
 
-		void Write(string value);
-		ValueTask WriteAsync(string value, CancellationToken cancellationToken = default);
+	void Write(string value);
+	ValueTask WriteAsync(string value, CancellationToken cancellationToken = default);
 
-		void Write(short value);
-		ValueTask WriteAsync(short value, CancellationToken cancellationToken = default);
+	void Write(short value);
+	ValueTask WriteAsync(short value, CancellationToken cancellationToken = default);
 
-		void Write(int value);
-		ValueTask WriteAsync(int value, CancellationToken cancellationToken = default);
+	void Write(int value);
+	ValueTask WriteAsync(int value, CancellationToken cancellationToken = default);
 
-		void Write(long value);
-		ValueTask WriteAsync(long value, CancellationToken cancellationToken = default);
+	void Write(long value);
+	ValueTask WriteAsync(long value, CancellationToken cancellationToken = default);
 
-		void Write(float value);
-		ValueTask WriteAsync(float value, CancellationToken cancellationToken = default);
+	void Write(float value);
+	ValueTask WriteAsync(float value, CancellationToken cancellationToken = default);
 
-		void Write(double value);
-		ValueTask WriteAsync(double value, CancellationToken cancellationToken = default);
+	void Write(double value);
+	ValueTask WriteAsync(double value, CancellationToken cancellationToken = default);
 
-		void Write(decimal value, int type, int scale);
-		ValueTask WriteAsync(decimal value, int type, int scale, CancellationToken cancellationToken = default);
+	void Write(decimal value, int type, int scale);
+	ValueTask WriteAsync(decimal value, int type, int scale, CancellationToken cancellationToken = default);
 
-		void Write(bool value);
-		ValueTask WriteAsync(bool value, CancellationToken cancellationToken = default);
+	void Write(bool value);
+	ValueTask WriteAsync(bool value, CancellationToken cancellationToken = default);
 
-		void Write(DateTime value);
-		ValueTask WriteAsync(DateTime value, CancellationToken cancellationToken = default);
+	void Write(DateTime value);
+	ValueTask WriteAsync(DateTime value, CancellationToken cancellationToken = default);
 
-		void Write(Guid value, int sqlType);
-		ValueTask WriteAsync(Guid value, int sqlType, CancellationToken cancellationToken = default);
+	void Write(Guid value, int sqlType);
+	ValueTask WriteAsync(Guid value, int sqlType, CancellationToken cancellationToken = default);
 
-		void Write(FbDecFloat value, int size);
-		ValueTask WriteAsync(FbDecFloat value, int size, CancellationToken cancellationToken = default);
+	void Write(FbDecFloat value, int size);
+	ValueTask WriteAsync(FbDecFloat value, int size, CancellationToken cancellationToken = default);
 
-		void Write(BigInteger value);
-		ValueTask WriteAsync(BigInteger value, CancellationToken cancellationToken = default);
+	void Write(BigInteger value);
+	ValueTask WriteAsync(BigInteger value, CancellationToken cancellationToken = default);
 
-		void WriteDate(DateTime value);
-		ValueTask WriteDateAsync(DateTime value, CancellationToken cancellationToken = default);
+	void WriteDate(DateTime value);
+	ValueTask WriteDateAsync(DateTime value, CancellationToken cancellationToken = default);
 
-		void WriteTime(TimeSpan value);
-		ValueTask WriteTimeAsync(TimeSpan value, CancellationToken cancellationToken = default);
+	void WriteTime(TimeSpan value);
+	ValueTask WriteTimeAsync(TimeSpan value, CancellationToken cancellationToken = default);
 }

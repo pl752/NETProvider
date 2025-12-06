@@ -22,6 +22,6 @@ namespace FirebirdSql.Data.FirebirdClient;
 [Serializable]
 public enum FbServerType
 {
-		Default = 0,
-		Embedded = 1,
+	Default = 0,
+	Embedded = 1,
 }

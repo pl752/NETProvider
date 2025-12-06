@@ -22,94 +22,94 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 internal sealed class FbEnlistmentNotification : IEnlistmentNotification
 {
-		#region Events
+	#region Events
 
-		public event EventHandler Completed;
+	public event EventHandler Completed;
 
-		#endregion
+	#endregion
 
-		#region Fields
+	#region Fields
 
-		private FbConnectionInternal _connection;
-		private FbTransaction _transaction;
-		private Transaction _systemTransaction;
+	private FbConnectionInternal _connection;
+	private FbTransaction _transaction;
+	private Transaction _systemTransaction;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public bool IsCompleted => _transaction == null;
+	public bool IsCompleted => _transaction == null;
 
-		public Transaction SystemTransaction => _systemTransaction;
+	public Transaction SystemTransaction => _systemTransaction;
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction)
+	public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction)
+	{
+		_connection = connection;
+		_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
+		_systemTransaction = systemTransaction;
+
+		_ = _systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
+	}
+
+	#endregion
+
+	#region IEnlistmentNotification Members
+
+	public void Commit(Enlistment enlistment)
+	{
+		if (_transaction != null && !_transaction.IsCompleted)
 		{
-				_connection = connection;
-				_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
-				_systemTransaction = systemTransaction;
+			_transaction.Commit();
+			_transaction = null;
 
-				_ = _systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
-		}
+			Completed?.Invoke(this, new EventArgs());
 
-		#endregion
-
-		#region IEnlistmentNotification Members
-
-		public void Commit(Enlistment enlistment)
-		{
-				if (_transaction != null && !_transaction.IsCompleted)
+			if (_connection != null)
+			{
+				if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
 				{
-						_transaction.Commit();
-						_transaction = null;
-
-						Completed?.Invoke(this, new EventArgs());
-
-						if (_connection != null)
-						{
-								if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
-								{
-										_connection.Disconnect();
-								}
-						}
-						_connection = null;
-						_systemTransaction = null;
-
-						// Declare done on the enlistment
-						enlistment.Done();
+					_connection.Disconnect();
 				}
+			}
+			_connection = null;
+			_systemTransaction = null;
+
+			// Declare done on the enlistment
+			enlistment.Done();
 		}
+	}
 
-		public void InDoubt(Enlistment enlistment) => throw new NotSupportedException("In Doubt transactions are not supported");
+	public void InDoubt(Enlistment enlistment) => throw new NotSupportedException("In Doubt transactions are not supported");
 
-		public void Prepare(PreparingEnlistment preparingEnlistment) => preparingEnlistment.Prepared();
+	public void Prepare(PreparingEnlistment preparingEnlistment) => preparingEnlistment.Prepared();
 
-		public void Rollback(Enlistment enlistment)
+	public void Rollback(Enlistment enlistment)
+	{
+		if (_transaction != null && !_transaction.IsCompleted)
 		{
-				if (_transaction != null && !_transaction.IsCompleted)
+			_transaction.Rollback();
+			_transaction = null;
+
+			Completed?.Invoke(this, new EventArgs());
+
+			if (_connection != null)
+			{
+				if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
 				{
-						_transaction.Rollback();
-						_transaction = null;
-
-						Completed?.Invoke(this, new EventArgs());
-
-						if (_connection != null)
-						{
-								if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
-								{
-										_connection.Disconnect();
-								}
-						}
-						_connection = null;
-						_systemTransaction = null;
-
-						// Declare done on the enlistment
-						enlistment.Done();
+					_connection.Disconnect();
 				}
-		}
+			}
+			_connection = null;
+			_systemTransaction = null;
 
-		#endregion
+			// Declare done on the enlistment
+			enlistment.Done();
+		}
+	}
+
+	#endregion
 }

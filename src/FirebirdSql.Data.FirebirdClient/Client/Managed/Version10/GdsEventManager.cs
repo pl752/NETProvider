@@ -26,75 +26,75 @@ namespace FirebirdSql.Data.Client.Managed.Version10;
 
 internal class GdsEventManager(int handle, string ipAddress, int portNumber, int timeout)
 {
-		bool _closing = false;
-		readonly int _handle = handle;
-		readonly string _ipAddress = ipAddress;
-		readonly int _portNumber = portNumber;
-		readonly int _timeout = timeout;
-		GdsDatabase _database;
+	bool _closing = false;
+	readonly int _handle = handle;
+	readonly string _ipAddress = ipAddress;
+	readonly int _portNumber = portNumber;
+	readonly int _timeout = timeout;
+	GdsDatabase _database;
 
-		public void Open()
-		{
-				var connection = new GdsConnection(_ipAddress, _portNumber, _timeout);
-				connection.Connect();
-				_database = new GdsDatabase(connection);
-		}
-		public async ValueTask OpenAsync(CancellationToken cancellationToken = default)
-		{
-				var connection = new GdsConnection(_ipAddress, _portNumber, _timeout);
-				await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-				_database = new GdsDatabase(connection);
-		}
+	public void Open()
+	{
+		var connection = new GdsConnection(_ipAddress, _portNumber, _timeout);
+		connection.Connect();
+		_database = new GdsDatabase(connection);
+	}
+	public async ValueTask OpenAsync(CancellationToken cancellationToken = default)
+	{
+		var connection = new GdsConnection(_ipAddress, _portNumber, _timeout);
+		await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
+		_database = new GdsDatabase(connection);
+	}
 
-		// this is a special method that's not awaited
-		public async Task StartWaitingForEvents(RemoteEvent remoteEvent)
+	// this is a special method that's not awaited
+	public async Task StartWaitingForEvents(RemoteEvent remoteEvent)
+	{
+		while (true)
 		{
-				while (true)
+			try
+			{
+				int operation = await _database.ReadOperationAsync(CancellationToken.None).ConfigureAwait(false);
+
+				switch (operation)
 				{
-						try
-						{
-								int operation = await _database.ReadOperationAsync(CancellationToken.None).ConfigureAwait(false);
+					case IscCodes.op_event:
+						int dbHandle = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
+						byte[] buffer = await _database.Xdr.ReadBufferAsync(CancellationToken.None).ConfigureAwait(false);
+						byte[] ast = new byte[8];
+						_ = await _database.Xdr.ReadBytesAsync(ast, 8, CancellationToken.None).ConfigureAwait(false);
+						int eventId = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
 
-								switch (operation)
-								{
-										case IscCodes.op_event:
-												int dbHandle = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
-												byte[] buffer = await _database.Xdr.ReadBufferAsync(CancellationToken.None).ConfigureAwait(false);
-												byte[] ast = new byte[8];
-												_ = await _database.Xdr.ReadBytesAsync(ast, 8, CancellationToken.None).ConfigureAwait(false);
-												int eventId = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
+						remoteEvent.EventCounts(buffer);
 
-												remoteEvent.EventCounts(buffer);
+						await remoteEvent.Database.QueueEventsAsync(remoteEvent, CancellationToken.None).ConfigureAwait(false);
 
-												await remoteEvent.Database.QueueEventsAsync(remoteEvent, CancellationToken.None).ConfigureAwait(false);
+						break;
 
-												break;
-
-										default:
-												Debug.Assert(false);
-												break;
-								}
-						}
-						catch (Exception) when (Volatile.Read(ref _closing))
-						{
-								return;
-						}
-						catch (Exception ex)
-						{
-								remoteEvent.EventError(ex);
-								break;
-						}
+					default:
+						Debug.Assert(false);
+						break;
 				}
+			}
+			catch (Exception) when (Volatile.Read(ref _closing))
+			{
+				return;
+			}
+			catch (Exception ex)
+			{
+				remoteEvent.EventError(ex);
+				break;
+			}
 		}
+	}
 
-		public void Close()
-		{
-				Volatile.Write(ref _closing, true);
-				_database.CloseConnection();
-		}
-		public ValueTask CloseAsync(CancellationToken cancellationToken = default)
-		{
-				Volatile.Write(ref _closing, true);
-				return _database.CloseConnectionAsync(cancellationToken);
-		}
+	public void Close()
+	{
+		Volatile.Write(ref _closing, true);
+		_database.CloseConnection();
+	}
+	public ValueTask CloseAsync(CancellationToken cancellationToken = default)
+	{
+		Volatile.Write(ref _closing, true);
+		return _database.CloseConnectionAsync(cancellationToken);
+	}
 }

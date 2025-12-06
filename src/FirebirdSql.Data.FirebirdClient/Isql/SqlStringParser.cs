@@ -23,156 +23,156 @@ namespace FirebirdSql.Data.Isql;
 
 class SqlStringParser(string targetString)
 {
-		readonly string _source = targetString;
-		readonly int _sourceLength = targetString.Length;
-		string[] _tokens = [" "];
+	readonly string _source = targetString;
+	readonly int _sourceLength = targetString.Length;
+	string[] _tokens = [" "];
 
-		public string[] Tokens
+	public string[] Tokens
+	{
+		get => _tokens;
+		set
 		{
-				get => _tokens;
-				set
+			ArgumentNullException.ThrowIfNull(value);
+			foreach (string item in value)
+			{
+				ArgumentNullException.ThrowIfNull(value);
+				if (string.IsNullOrEmpty(item))
+					throw new ArgumentException();
+			}
+			_tokens = value;
+		}
+	}
+
+	public IEnumerable<FbStatement> Parse()
+	{
+		int lastYield = 0;
+		int index = 0;
+		var rawResult = new StringBuilder();
+		while (true)
+		{
+		Continue:
+			{ }
+			if (index >= _sourceLength)
+			{
+				break;
+			}
+			if (GetChar(index) == '\'')
+			{
+				_ = rawResult.Append(GetChar(index));
+				index++;
+				_ = rawResult.Append(ProcessLiteral(ref index));
+				_ = rawResult.Append(GetChar(index));
+				index++;
+			}
+			else if (GetChar(index) == '-' && GetNextChar(index) == '-')
+			{
+				index++;
+				ProcessSinglelineComment(ref index);
+				index++;
+			}
+			else if (GetChar(index) == '/' && GetNextChar(index) == '*')
+			{
+				index++;
+				ProcessMultilineComment(ref index);
+				index++;
+			}
+			else
+			{
+				foreach (string token in Tokens)
 				{
-						ArgumentNullException.ThrowIfNull(value);
-						foreach (string item in value)
-						{
-								ArgumentNullException.ThrowIfNull(value);
-								if (string.IsNullOrEmpty(item))
-										throw new ArgumentException();
-						}
-						_tokens = value;
+					if (string.Compare(_source, index, token, 0, token.Length, StringComparison.Ordinal) == 0)
+					{
+						index += token.Length;
+						yield return new FbStatement(_source.Substring(lastYield, index - lastYield - token.Length), rawResult.ToString());
+						lastYield = index;
+						_ = rawResult.Clear();
+						goto Continue;
+					}
 				}
+				if (!(rawResult.Length == 0 && char.IsWhiteSpace(GetChar(index))))
+				{
+					_ = rawResult.Append(GetChar(index));
+				}
+				index++;
+			}
 		}
 
-		public IEnumerable<FbStatement> Parse()
+		if (index >= _sourceLength)
 		{
-				int lastYield = 0;
-				int index = 0;
-				var rawResult = new StringBuilder();
-				while (true)
-				{
-				Continue:
-						{ }
-						if (index >= _sourceLength)
-						{
-								break;
-						}
-						if (GetChar(index) == '\'')
-						{
-								_ = rawResult.Append(GetChar(index));
-								index++;
-								_ = rawResult.Append(ProcessLiteral(ref index));
-								_ = rawResult.Append(GetChar(index));
-								index++;
-						}
-						else if (GetChar(index) == '-' && GetNextChar(index) == '-')
-						{
-								index++;
-								ProcessSinglelineComment(ref index);
-								index++;
-						}
-						else if (GetChar(index) == '/' && GetNextChar(index) == '*')
-						{
-								index++;
-								ProcessMultilineComment(ref index);
-								index++;
-						}
-						else
-						{
-								foreach (string token in Tokens)
-								{
-										if (string.Compare(_source, index, token, 0, token.Length, StringComparison.Ordinal) == 0)
-										{
-												index += token.Length;
-												yield return new FbStatement(_source.Substring(lastYield, index - lastYield - token.Length), rawResult.ToString());
-												lastYield = index;
-												_ = rawResult.Clear();
-												goto Continue;
-										}
-								}
-								if (!(rawResult.Length == 0 && char.IsWhiteSpace(GetChar(index))))
-								{
-										_ = rawResult.Append(GetChar(index));
-								}
-								index++;
-						}
-				}
+			string parsed = _source[lastYield..];
+			if (parsed.Trim() == string.Empty)
+			{
+				yield break;
+			}
+			yield return new FbStatement(parsed, rawResult.ToString());
+			_ = rawResult.Clear();
+		}
+		else
+		{
+			yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
+			_ = rawResult.Clear();
+		}
+	}
 
-				if (index >= _sourceLength)
+	string ProcessLiteral(ref int index)
+	{
+		var sb = new StringBuilder();
+		while (index < _sourceLength)
+		{
+			if (GetChar(index) == '\'')
+			{
+				if (GetNextChar(index) == '\'')
 				{
-						string parsed = _source[lastYield..];
-						if (parsed.Trim() == string.Empty)
-						{
-								yield break;
-						}
-						yield return new FbStatement(parsed, rawResult.ToString());
-						_ = rawResult.Clear();
+					_ = sb.Append(GetChar(index));
+					index++;
 				}
 				else
 				{
-						yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
-						_ = rawResult.Clear();
+					break;
 				}
+			}
+			_ = sb.Append(GetChar(index));
+			index++;
 		}
+		return sb.ToString();
+	}
 
-		string ProcessLiteral(ref int index)
+	void ProcessMultilineComment(ref int index)
+	{
+		while (index < _sourceLength)
 		{
-				var sb = new StringBuilder();
-				while (index < _sourceLength)
-				{
-						if (GetChar(index) == '\'')
-						{
-								if (GetNextChar(index) == '\'')
-								{
-										_ = sb.Append(GetChar(index));
-										index++;
-								}
-								else
-								{
-										break;
-								}
-						}
-						_ = sb.Append(GetChar(index));
-						index++;
-				}
-				return sb.ToString();
+			if (GetChar(index) == '*' && GetNextChar(index) == '/')
+			{
+				index++;
+				break;
+			}
+			index++;
 		}
+	}
 
-		void ProcessMultilineComment(ref int index)
+	void ProcessSinglelineComment(ref int index)
+	{
+		while (index < _sourceLength)
 		{
-				while (index < _sourceLength)
+			if (GetChar(index) == '\n')
+			{
+				break;
+			}
+			if (GetChar(index) == '\r')
+			{
+				if (GetNextChar(index) == '\n')
 				{
-						if (GetChar(index) == '*' && GetNextChar(index) == '/')
-						{
-								index++;
-								break;
-						}
-						index++;
+					index++;
 				}
+				break;
+			}
+			index++;
 		}
+	}
 
-		void ProcessSinglelineComment(ref int index)
-		{
-				while (index < _sourceLength)
-				{
-						if (GetChar(index) == '\n')
-						{
-								break;
-						}
-						if (GetChar(index) == '\r')
-						{
-								if (GetNextChar(index) == '\n')
-								{
-										index++;
-								}
-								break;
-						}
-						index++;
-				}
-		}
+	char GetChar(int index) => _source[index];
 
-		char GetChar(int index) => _source[index];
-
-		char? GetNextChar(int index) => index + 1 < _sourceLength
-					? _source[index + 1]
-					: (char?) null;
+	char? GetNextChar(int index) => index + 1 < _sourceLength
+				? _source[index + 1]
+				: (char?) null;
 }

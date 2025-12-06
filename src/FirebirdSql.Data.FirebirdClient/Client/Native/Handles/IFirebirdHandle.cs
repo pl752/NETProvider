@@ -20,5 +20,5 @@ namespace FirebirdSql.Data.Client.Native.Handles;
 // public visibility added, because auto-generated assembly can't work with internal types
 public interface IFirebirdHandle
 {
-		void SetClient(IFbClient fbClient);
+	void SetClient(IFbClient fbClient);
 }

@@ -23,5 +23,5 @@ namespace FirebirdSql.Data.Isql;
 [Serializable]
 public class FbStatementCollection : List<FbStatement>
 {
-		internal FbStatementCollection() { }
+	internal FbStatementCollection() { }
 }

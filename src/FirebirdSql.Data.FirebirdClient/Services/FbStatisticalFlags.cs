@@ -25,33 +25,33 @@ namespace FirebirdSql.Data.Services;
 [Flags]
 public enum FbStatisticalFlags
 {
-		/// <summary>
-		/// analyze data pages
-		/// </summary>
-		DataPages = 0x01,
+	/// <summary>
+	/// analyze data pages
+	/// </summary>
+	DataPages = 0x01,
 
-		/// <summary>
-		/// DatabaseLog - no longer used by firebird
-		/// </summary>
-		DatabaseLog = 0x02,
+	/// <summary>
+	/// DatabaseLog - no longer used by firebird
+	/// </summary>
+	DatabaseLog = 0x02,
 
-		/// <summary>
-		/// analyze header page ONLY
-		/// </summary>
-		HeaderPages = 0x04,
+	/// <summary>
+	/// analyze header page ONLY
+	/// </summary>
+	HeaderPages = 0x04,
 
-		/// <summary>
-		/// analyze index leaf pages
-		/// </summary>
-		IndexPages = 0x08,
+	/// <summary>
+	/// analyze index leaf pages
+	/// </summary>
+	IndexPages = 0x08,
 
-		/// <summary>
-		/// analyze system relations in addition to user tables
-		/// </summary>
-		SystemTablesRelations = 0x10,
+	/// <summary>
+	/// analyze system relations in addition to user tables
+	/// </summary>
+	SystemTablesRelations = 0x10,
 
-		/// <summary>
-		/// analyze average record and version length
-		/// </summary>
-		RecordVersionStatistics = 0x20,
+	/// <summary>
+	/// analyze average record and version length
+	/// </summary>
+	RecordVersionStatistics = 0x20,
 }

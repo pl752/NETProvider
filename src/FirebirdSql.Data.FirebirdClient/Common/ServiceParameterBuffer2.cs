@@ -21,35 +21,35 @@ namespace FirebirdSql.Data.Common;
 
 internal sealed class ServiceParameterBuffer2(Encoding encoding) : ServiceParameterBufferBase(encoding)
 {
-		public override void AppendPreamble()
-		{
-				Append(IscCodes.isc_spb_version);
-				Append(IscCodes.isc_spb_current_version);
-		}
+	public override void AppendPreamble()
+	{
+		Append(IscCodes.isc_spb_version);
+		Append(IscCodes.isc_spb_current_version);
+	}
 
-		public override void Append1(int type, byte[] value)
-		{
-				WriteByte(type);
-				WriteByte((byte) value.Length);
-				Write(value);
-		}
+	public override void Append1(int type, byte[] value)
+	{
+		WriteByte(type);
+		WriteByte((byte) value.Length);
+		Write(value);
+	}
 
-		public override void Append2(int type, byte[] value)
-		{
-				WriteByte(type);
-				Write((short) value.Length);
-				Write(value);
-		}
+	public override void Append2(int type, byte[] value)
+	{
+		WriteByte(type);
+		Write((short) value.Length);
+		Write(value);
+	}
 
-		public override void Append(int type, byte value)
-		{
-				WriteByte(type);
-				WriteByte(value);
-		}
+	public override void Append(int type, byte value)
+	{
+		WriteByte(type);
+		WriteByte(value);
+	}
 
-		public override void Append(int type, int value)
-		{
-				WriteByte(type);
-				Write(value);
-		}
+	public override void Append(int type, int value)
+	{
+		WriteByte(type);
+		Write(value);
+	}
 }

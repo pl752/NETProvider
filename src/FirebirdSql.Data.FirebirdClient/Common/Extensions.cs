@@ -25,47 +25,47 @@ namespace FirebirdSql.Data.Common;
 
 internal static class Extensions
 {
-		public static int AsInt(this IntPtr ptr) => (int) ptr.ToInt64();
+	public static int AsInt(this IntPtr ptr) => (int) ptr.ToInt64();
 
-		public static IntPtr ReadIntPtr(this BinaryReader self) => IntPtr.Size == sizeof(int)
-						? new IntPtr(self.ReadInt32())
-						: IntPtr.Size == sizeof(long) ? new IntPtr(self.ReadInt64()) : throw new NotSupportedException();
+	public static IntPtr ReadIntPtr(this BinaryReader self) => IntPtr.Size == sizeof(int)
+					? new IntPtr(self.ReadInt32())
+					: IntPtr.Size == sizeof(long) ? new IntPtr(self.ReadInt64()) : throw new NotSupportedException();
 
-		public static string ToHexString(this byte[] b) =>
+	public static string ToHexString(this byte[] b) =>
 #if NET5_0_OR_GREATER
-				Convert.ToHexString(b);
+			Convert.ToHexString(b);
 #else
 		return BitConverter.ToString(b).Replace("-", string.Empty);
 #endif
 
 
-		public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
+	public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
+	{
+		for (int i = 0; i < (float) array.Length / size; i++)
 		{
-				for (int i = 0; i < (float) array.Length / size; i++)
-				{
-						yield return array.Skip(i * size).Take(size);
-				}
+			yield return array.Skip(i * size).Take(size);
 		}
+	}
 
 #if NETSTANDARD2_0
 	public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new HashSet<T>(source);
 #endif
 
-		public static IEnumerable<char> RunesToChars(this IEnumerable<Rune> s)
+	public static IEnumerable<char> RunesToChars(this IEnumerable<Rune> s)
+	{
+		char[] chars = new char[2];
+		foreach (var rune in s)
 		{
-				char[] chars = new char[2];
-				foreach (var rune in s)
-				{
-						int n = rune.EncodeToUtf16(chars);
-						yield return chars[0];
-						if (n > 1)
-								yield return chars[1];
-				}
+			int n = rune.EncodeToUtf16(chars);
+			yield return chars[0];
+			if (n > 1)
+				yield return chars[1];
 		}
+	}
 
-		public static IEnumerable<char[]> EnumerateRunesEx(this string s)
-		{
-				ArgumentNullException.ThrowIfNull(s);
+	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
+	{
+		ArgumentNullException.ThrowIfNull(s);
 
 #if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
 		for (var i = 0; i < s.Length; i++)
@@ -82,12 +82,12 @@ internal static class Extensions
 		}
 
 #else
-				return s.EnumerateRunes().Select(r =>
-				{
-						char[] result = new char[r.Utf16SequenceLength];
-						r.EncodeToUtf16(result);
-						return result;
-				});
+		return s.EnumerateRunes().Select(r =>
+		{
+			char[] result = new char[r.Utf16SequenceLength];
+			r.EncodeToUtf16(result);
+			return result;
+		});
 #endif
-		}
+	}
 }

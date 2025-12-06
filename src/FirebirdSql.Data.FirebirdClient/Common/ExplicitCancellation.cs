@@ -24,27 +24,27 @@ namespace FirebirdSql.Data.Common;
 
 internal static class ExplicitCancellation
 {
-		public static ExplicitCancel Enter(CancellationToken cancellationToken, Action explicitCancel)
+	public static ExplicitCancel Enter(CancellationToken cancellationToken, Action explicitCancel)
+	{
+		if (cancellationToken.IsCancellationRequested)
 		{
-				if (cancellationToken.IsCancellationRequested)
-				{
-						explicitCancel();
-						throw new OperationCanceledException(cancellationToken);
-				}
-				var ctr = cancellationToken.Register(explicitCancel);
-				return new ExplicitCancel(ctr);
+			explicitCancel();
+			throw new OperationCanceledException(cancellationToken);
 		}
+		var ctr = cancellationToken.Register(explicitCancel);
+		return new ExplicitCancel(ctr);
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void ExitExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) => cancellationTokenRegistration.Dispose();
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static void ExitExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) => cancellationTokenRegistration.Dispose();
 
-		[StructLayout(LayoutKind.Auto)]
-		internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable
-		{
-				readonly CancellationTokenRegistration _cancellationTokenRegistration = cancellationTokenRegistration;
+	[StructLayout(LayoutKind.Auto)]
+	internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable
+	{
+		readonly CancellationTokenRegistration _cancellationTokenRegistration = cancellationTokenRegistration;
 
-				public void Dispose() => ExitExplicitCancel(_cancellationTokenRegistration);
+		public void Dispose() => ExitExplicitCancel(_cancellationTokenRegistration);
 
-				public static CancellationToken CancellationToken => CancellationToken.None;
-		}
+		public static CancellationToken CancellationToken => CancellationToken.None;
+	}
 }

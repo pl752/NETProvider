@@ -24,40 +24,40 @@ namespace FirebirdSql.Data.FirebirdClient;
 [ListBindable(false)]
 public sealed class FbBatchParameterCollection : IList<FbParameterCollection>
 {
-		readonly List<FbParameterCollection> _inner;
+	readonly List<FbParameterCollection> _inner;
 
-		internal FbBatchParameterCollection()
-		{
-				_inner = [];
-		}
+	internal FbBatchParameterCollection()
+	{
+		_inner = [];
+	}
 
-		public FbParameterCollection this[int index]
-		{
-				get => _inner[index];
-				set => _inner[index] = value;
-		}
+	public FbParameterCollection this[int index]
+	{
+		get => _inner[index];
+		set => _inner[index] = value;
+	}
 
-		public int Count => _inner.Count;
+	public int Count => _inner.Count;
 
-		public bool IsReadOnly => false;
+	public bool IsReadOnly => false;
 
-		public void Add(FbParameterCollection item) => _inner.Add(item);
+	public void Add(FbParameterCollection item) => _inner.Add(item);
 
-		public void Clear() => _inner.Clear();
+	public void Clear() => _inner.Clear();
 
-		public bool Contains(FbParameterCollection item) => _inner.Contains(item);
+	public bool Contains(FbParameterCollection item) => _inner.Contains(item);
 
-		public void CopyTo(FbParameterCollection[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
+	public void CopyTo(FbParameterCollection[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
 
-		public IEnumerator<FbParameterCollection> GetEnumerator() => _inner.GetEnumerator();
+	public IEnumerator<FbParameterCollection> GetEnumerator() => _inner.GetEnumerator();
 
-		public int IndexOf(FbParameterCollection item) => _inner.IndexOf(item);
+	public int IndexOf(FbParameterCollection item) => _inner.IndexOf(item);
 
-		public void Insert(int index, FbParameterCollection item) => _inner.Insert(index, item);
+	public void Insert(int index, FbParameterCollection item) => _inner.Insert(index, item);
 
-		public bool Remove(FbParameterCollection item) => _inner.Remove(item);
+	public bool Remove(FbParameterCollection item) => _inner.Remove(item);
 
-		public void RemoveAt(int index) => _inner.RemoveAt(index);
+	public void RemoveAt(int index) => _inner.RemoveAt(index);
 
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -22,15 +22,15 @@ namespace FirebirdSql.Data.Isql;
 [Serializable]
 public class FbStatement
 {
-		public string Text { get; private set; }
-		internal string CleanText { get; private set; }
-		public SqlStatementType StatementType { get; private set; }
+	public string Text { get; private set; }
+	internal string CleanText { get; private set; }
+	public SqlStatementType StatementType { get; private set; }
 
-		internal FbStatement(string text, string cleanText)
-		{
-				Text = text;
-				CleanText = cleanText;
-		}
+	internal FbStatement(string text, string cleanText)
+	{
+		Text = text;
+		CleanText = cleanText;
+	}
 
-		internal void SetStatementType(SqlStatementType statementType) => StatementType = statementType;
+	internal void SetStatementType(SqlStatementType statementType) => StatementType = statementType;
 }

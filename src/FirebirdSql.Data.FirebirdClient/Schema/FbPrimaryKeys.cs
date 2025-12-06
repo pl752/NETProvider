@@ -21,15 +21,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbPrimaryKeys : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.Append(
-					@"SELECT
+		_ = sql.Append(
+			@"SELECT
 					null AS TABLE_CATALOG,
 					null AS TABLE_SCHEMA,
 					rel.rdb$relation_name AS TABLE_NAME,
@@ -40,38 +40,38 @@ internal class FbPrimaryKeys : FbSchema
 					LEFT JOIN rdb$indices idx ON rel.rdb$index_name = idx.rdb$index_name
 					LEFT JOIN rdb$index_segments seg ON idx.rdb$index_name = seg.rdb$index_name");
 
-				_ = where.Append("rel.rdb$constraint_type = 'PRIMARY KEY'");
+		_ = where.Append("rel.rdb$constraint_type = 'PRIMARY KEY'");
 
-				if (restrictions != null)
-				{
-						int index = 0;
+		if (restrictions != null)
+		{
+			int index = 0;
 
-						/* TABLE_CATALOG */
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
+			/* TABLE_CATALOG */
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-						/* TABLE_SCHEMA	*/
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
+			/* TABLE_SCHEMA	*/
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
 
-						/* TABLE_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
-						}
-				}
-
-				if (where.Length > 0)
-				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
-				}
-
-				_ = sql.Append(" ORDER BY TABLE_NAME, PK_NAME, ORDINAL_POSITION");
-
-				return sql;
+			/* TABLE_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
+			}
 		}
 
-		#endregion
+		if (where.Length > 0)
+		{
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+		}
+
+		_ = sql.Append(" ORDER BY TABLE_NAME, PK_NAME, ORDINAL_POSITION");
+
+		return sql;
+	}
+
+	#endregion
 }

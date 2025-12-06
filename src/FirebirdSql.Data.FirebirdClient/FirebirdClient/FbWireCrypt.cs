@@ -22,7 +22,7 @@ namespace FirebirdSql.Data.FirebirdClient;
 [Serializable]
 public enum FbWireCrypt
 {
-		Disabled,
-		Enabled,
-		Required,
+	Disabled,
+	Enabled,
+	Required,
 }

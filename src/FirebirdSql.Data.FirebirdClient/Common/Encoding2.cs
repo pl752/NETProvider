@@ -23,21 +23,21 @@ namespace FirebirdSql.Data.Common;
 
 internal static class Encoding2
 {
-		public static Encoding Default { get; } = GetANSIEncoding();
+	public static Encoding Default { get; } = GetANSIEncoding();
 
-		private static Encoding GetANSIEncoding()
-		{
+	private static Encoding GetANSIEncoding()
+	{
 #if NET48
 		return Encoding.Default;
 #else
-				try
-				{
-						return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
-				}
-				catch (Exception)
-				{
-						return Encoding.Default;
-				}
-#endif
+		try
+		{
+			return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
 		}
+		catch (Exception)
+		{
+			return Encoding.Default;
+		}
+#endif
+	}
 }

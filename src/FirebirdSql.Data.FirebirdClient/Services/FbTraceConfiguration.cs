@@ -21,19 +21,19 @@ namespace FirebirdSql.Data.Services;
 
 public abstract class FbTraceConfiguration
 {
-		protected static string WriteBoolValue(bool b) => b ? "true" : "false";
+	protected static string WriteBoolValue(bool b) => b ? "true" : "false";
 
-		protected static string WriteString(string s)
-		{
-				s = s
-					.Replace("{", "{{")
-					.Replace("}", "}}")
-					.Replace(@"\", @"\\")
-					.Replace("\"", "\\\"");
-				return string.Format("\"{0}\"", s);
-		}
+	protected static string WriteString(string s)
+	{
+		s = s
+			.Replace("{", "{{")
+			.Replace("}", "}}")
+			.Replace(@"\", @"\\")
+			.Replace("\"", "\\\"");
+		return string.Format("\"{0}\"", s);
+	}
 
-		protected static string WriteNumber(int i) => i.ToString(CultureInfo.InvariantCulture);
+	protected static string WriteNumber(int i) => i.ToString(CultureInfo.InvariantCulture);
 
-		protected static string WriteRegEx(string re) => WriteString(re);
+	protected static string WriteRegEx(string re) => WriteString(re);
 }

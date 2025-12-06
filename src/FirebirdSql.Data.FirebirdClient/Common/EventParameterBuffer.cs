@@ -21,14 +21,14 @@ namespace FirebirdSql.Data.Common;
 
 internal sealed class EventParameterBuffer(Encoding encoding) : ParameterBuffer
 {
-		public void Append(byte[] content, int actualCount)
-		{
-				WriteByte(content.Length);
-				Write(content);
-				Write(actualCount);
-		}
+	public void Append(byte[] content, int actualCount)
+	{
+		WriteByte(content.Length);
+		Write(content);
+		Write(actualCount);
+	}
 
-		public void Append(string content, int actualCount) => Append(Encoding.GetBytes(content), actualCount);
+	public void Append(string content, int actualCount) => Append(Encoding.GetBytes(content), actualCount);
 
-		public Encoding Encoding { get; } = encoding;
+	public Encoding Encoding { get; } = encoding;
 }

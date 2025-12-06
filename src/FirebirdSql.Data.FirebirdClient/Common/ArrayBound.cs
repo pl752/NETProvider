@@ -22,6 +22,6 @@ namespace FirebirdSql.Data.Common;
 [StructLayout(LayoutKind.Auto)]
 internal struct ArrayBound
 {
-		public int LowerBound { get; set; }
-		public int UpperBound { get; set; }
+	public int LowerBound { get; set; }
+	public int UpperBound { get; set; }
 }

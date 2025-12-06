@@ -24,25 +24,25 @@ interface IResponse { }
 
 static class IResponseExtensions
 {
-		public static void HandleResponseException(this IResponse response)
+	public static void HandleResponseException(this IResponse response)
+	{
+		if (response is GenericResponse genericResponse)
 		{
-				if (response is GenericResponse genericResponse)
-				{
-						if (genericResponse.Exception != null && !genericResponse.Exception.IsWarning)
-						{
-								throw genericResponse.Exception;
-						}
-				}
+			if (genericResponse.Exception != null && !genericResponse.Exception.IsWarning)
+			{
+				throw genericResponse.Exception;
+			}
 		}
+	}
 
-		public static void HandleResponseWarning(this IResponse response, Action<IscException> onWarning)
+	public static void HandleResponseWarning(this IResponse response, Action<IscException> onWarning)
+	{
+		if (response is GenericResponse genericResponse)
 		{
-				if (response is GenericResponse genericResponse)
-				{
-						if (genericResponse.Exception != null && genericResponse.Exception.IsWarning)
-						{
-								onWarning?.Invoke(genericResponse.Exception);
-						}
-				}
+			if (genericResponse.Exception != null && genericResponse.Exception.IsWarning)
+			{
+				onWarning?.Invoke(genericResponse.Exception);
+			}
 		}
+	}
 }

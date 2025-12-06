@@ -21,38 +21,38 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbRoles : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.Append(
-					@"SELECT
+		_ = sql.Append(
+			@"SELECT
 					rdb$role_name AS ROLE_NAME,
 					rdb$owner_name AS OWNER_NAME
 				FROM rdb$roles");
 
-				if (restrictions != null)
-				{
-						int index = 0;
+		if (restrictions != null)
+		{
+			int index = 0;
 
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-								_ = where.AppendFormat("rdb$role_name = @p{0}", index++);
-						}
-				}
-
-				if (where.Length > 0)
-				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
-				}
-
-				_ = sql.Append(" ORDER BY ROLE_NAME");
-
-				return sql;
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+				_ = where.AppendFormat("rdb$role_name = @p{0}", index++);
+			}
 		}
 
-		#endregion
+		if (where.Length > 0)
+		{
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+		}
+
+		_ = sql.Append(" ORDER BY ROLE_NAME");
+
+		return sql;
+	}
+
+	#endregion
 }

@@ -27,818 +27,818 @@ namespace FirebirdSql.Data.Client.Native;
 
 internal sealed class FesStatement : StatementBase
 {
-		#region Fields
+	#region Fields
 
-		private StatementHandle _handle;
-		private bool _disposed;
-		private FesDatabase _database;
-		private FesTransaction _transaction;
-		private Descriptor _parameters;
-		private Descriptor _fields;
-		private bool _allRowsFetched;
-		private IntPtr[] _statusVector;
-		private IntPtr _fetchSqlDa;
+	private StatementHandle _handle;
+	private bool _disposed;
+	private FesDatabase _database;
+	private FesTransaction _transaction;
+	private Descriptor _parameters;
+	private Descriptor _fields;
+	private bool _allRowsFetched;
+	private IntPtr[] _statusVector;
+	private IntPtr _fetchSqlDa;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public override DatabaseBase Database => _database;
+	public override DatabaseBase Database => _database;
 
-		public override TransactionBase Transaction
+	public override TransactionBase Transaction
+	{
+		get => _transaction;
+		set
 		{
-				get => _transaction;
-				set
+			if (_transaction != value)
+			{
+				if (TransactionUpdate != null && _transaction != null)
 				{
-						if (_transaction != value)
-						{
-								if (TransactionUpdate != null && _transaction != null)
-								{
-										_transaction.Update -= TransactionUpdate;
-										TransactionUpdate = null;
-								}
-
-								if (value == null)
-								{
-										_transaction = null;
-								}
-								else
-								{
-										_transaction = (FesTransaction) value;
-										TransactionUpdate = new EventHandler(TransactionUpdated);
-										_transaction.Update += TransactionUpdate;
-								}
-						}
-				}
-		}
-
-		public override Descriptor Parameters
-		{
-				get => _parameters; set => _parameters = value;
-		}
-
-		public override Descriptor Fields => _fields;
-
-		public override int FetchSize
-		{
-				get => 200;
-				set { }
-		}
-
-		#endregion
-
-		#region Constructors
-
-		public FesStatement(FesDatabase database)
-			: this(database, null)
-		{
-		}
-
-		public FesStatement(FesDatabase database, FesTransaction transaction)
-		{
-				_database = database;
-				_handle = new StatementHandle();
-				OutputParameters = new Queue<DbValue[]>();
-				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
-				_fetchSqlDa = IntPtr.Zero;
-
-				if (transaction != null)
-				{
-						Transaction = transaction;
-				}
-		}
-
-		#endregion
-
-		#region Dispose2
-
-		public override void Dispose2()
-		{
-				if (!_disposed)
-				{
-						_disposed = true;
-						Release();
-						Clear();
-						_database = null;
-						_fields = null;
-						_parameters = null;
-						_transaction = null;
-						OutputParameters = null;
-						_statusVector = null;
-						_allRowsFetched = false;
-						_handle.Dispose();
-						FetchSize = 0;
-						base.Dispose2();
-				}
-		}
-		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
-		{
-				if (!_disposed)
-				{
-						_disposed = true;
-						await ReleaseAsync(cancellationToken).ConfigureAwait(false);
-						Clear();
-						_database = null;
-						_fields = null;
-						_parameters = null;
-						_transaction = null;
-						OutputParameters = null;
-						_statusVector = null;
-						_allRowsFetched = false;
-						_handle.Dispose();
-						FetchSize = 0;
-						await base.Dispose2Async(cancellationToken).ConfigureAwait(false);
-				}
-		}
-
-		#endregion
-
-		#region Blob Creation Metods
-
-		public override BlobBase CreateBlob() => new FesBlob(_database, _transaction);
-
-		public override BlobBase CreateBlob(long blobId) => new FesBlob(_database, _transaction, blobId);
-
-		#endregion
-
-		#region Array Creation Methods
-
-		public override ArrayBase CreateArray(ArrayDesc descriptor)
-		{
-				var array = new FesArray(descriptor);
-				return array;
-		}
-		public override ValueTask<ArrayBase> CreateArrayAsync(ArrayDesc descriptor, CancellationToken cancellationToken = default)
-		{
-				var array = new FesArray(descriptor);
-				return ValueTask2.FromResult<ArrayBase>(array);
-		}
-
-		public override ArrayBase CreateArray(string tableName, string fieldName)
-		{
-				var array = new FesArray(_database, _transaction, tableName, fieldName);
-				array.Initialize();
-				return array;
-		}
-		public override async ValueTask<ArrayBase> CreateArrayAsync(string tableName, string fieldName, CancellationToken cancellationToken = default)
-		{
-				var array = new FesArray(_database, _transaction, tableName, fieldName);
-				await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
-				return array;
-		}
-
-		public override ArrayBase CreateArray(long handle, string tableName, string fieldName)
-		{
-				var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
-				array.Initialize();
-				return array;
-		}
-		public override async ValueTask<ArrayBase> CreateArrayAsync(long handle, string tableName, string fieldName, CancellationToken cancellationToken = default)
-		{
-				var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
-				await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
-				return array;
-		}
-
-		public override BatchBase CreateBatch() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
-
-		public override BatchParameterBuffer CreateBatchParameterBuffer() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
-
-		#endregion
-
-		#region Methods
-
-		public override void Release()
-		{
-				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-				base.Release();
-		}
-		public override ValueTask ReleaseAsync(CancellationToken cancellationToken = default)
-		{
-				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-				return base.ReleaseAsync(cancellationToken);
-		}
-
-		public override void Close()
-		{
-				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-				base.Close();
-		}
-		public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
-		{
-				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-				return base.CloseAsync(cancellationToken);
-		}
-
-		public override void Prepare(string commandText)
-		{
-				ClearAll();
-
-				ClearStatusVector();
-
-				if (State == StatementState.Deallocated)
-				{
-						Allocate();
+					_transaction.Update -= TransactionUpdate;
+					TransactionUpdate = null;
 				}
 
-				_fields = new Descriptor(1);
-
-				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				var trHandle = _transaction.HandlePtr;
-
-				byte[] buffer = _database.Charset.GetBytes(commandText);
-
-				_ = _database.FbClient.isc_dsql_prepare(
-					_statusVector,
-					ref trHandle,
-					ref _handle,
-					(short) buffer.Length,
-					buffer,
-					_database.Dialect,
-					sqlda);
-
-				var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
-
-				XsqldaMarshaler.CleanUpNativeData(ref sqlda);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				_fields = descriptor;
-
-				if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
+				if (value == null)
 				{
-						Describe();
+					_transaction = null;
 				}
 				else
 				{
-						if (_fields.ActualCount == 0)
-						{
-								_fields = new Descriptor(0);
-						}
+					_transaction = (FesTransaction) value;
+					TransactionUpdate = new EventHandler(TransactionUpdated);
+					_transaction.Update += TransactionUpdate;
 				}
-
-				_fields.ResetValues();
-
-				DescribeParameters();
-
-				StatementType = GetStatementType();
-
-				State = StatementState.Prepared;
+			}
 		}
-		public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default)
+	}
+
+	public override Descriptor Parameters
+	{
+		get => _parameters; set => _parameters = value;
+	}
+
+	public override Descriptor Fields => _fields;
+
+	public override int FetchSize
+	{
+		get => 200;
+		set { }
+	}
+
+	#endregion
+
+	#region Constructors
+
+	public FesStatement(FesDatabase database)
+		: this(database, null)
+	{
+	}
+
+	public FesStatement(FesDatabase database, FesTransaction transaction)
+	{
+		_database = database;
+		_handle = new StatementHandle();
+		OutputParameters = new Queue<DbValue[]>();
+		_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+		_fetchSqlDa = IntPtr.Zero;
+
+		if (transaction != null)
 		{
-				ClearAll();
+			Transaction = transaction;
+		}
+	}
 
-				ClearStatusVector();
+	#endregion
 
-				if (State == StatementState.Deallocated)
-				{
-						Allocate();
-				}
+	#region Dispose2
 
-				_fields = new Descriptor(1);
+	public override void Dispose2()
+	{
+		if (!_disposed)
+		{
+			_disposed = true;
+			Release();
+			Clear();
+			_database = null;
+			_fields = null;
+			_parameters = null;
+			_transaction = null;
+			OutputParameters = null;
+			_statusVector = null;
+			_allRowsFetched = false;
+			_handle.Dispose();
+			FetchSize = 0;
+			base.Dispose2();
+		}
+	}
+	public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
+	{
+		if (!_disposed)
+		{
+			_disposed = true;
+			await ReleaseAsync(cancellationToken).ConfigureAwait(false);
+			Clear();
+			_database = null;
+			_fields = null;
+			_parameters = null;
+			_transaction = null;
+			OutputParameters = null;
+			_statusVector = null;
+			_allRowsFetched = false;
+			_handle.Dispose();
+			FetchSize = 0;
+			await base.Dispose2Async(cancellationToken).ConfigureAwait(false);
+		}
+	}
 
-				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				var trHandle = _transaction.HandlePtr;
+	#endregion
 
-				byte[] buffer = _database.Charset.GetBytes(commandText);
+	#region Blob Creation Metods
 
-				_ = _database.FbClient.isc_dsql_prepare(
-					_statusVector,
-					ref trHandle,
-					ref _handle,
-					(short) buffer.Length,
-					buffer,
-					_database.Dialect,
-					sqlda);
+	public override BlobBase CreateBlob() => new FesBlob(_database, _transaction);
 
-				var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+	public override BlobBase CreateBlob(long blobId) => new FesBlob(_database, _transaction, blobId);
 
-				XsqldaMarshaler.CleanUpNativeData(ref sqlda);
+	#endregion
 
+	#region Array Creation Methods
+
+	public override ArrayBase CreateArray(ArrayDesc descriptor)
+	{
+		var array = new FesArray(descriptor);
+		return array;
+	}
+	public override ValueTask<ArrayBase> CreateArrayAsync(ArrayDesc descriptor, CancellationToken cancellationToken = default)
+	{
+		var array = new FesArray(descriptor);
+		return ValueTask2.FromResult<ArrayBase>(array);
+	}
+
+	public override ArrayBase CreateArray(string tableName, string fieldName)
+	{
+		var array = new FesArray(_database, _transaction, tableName, fieldName);
+		array.Initialize();
+		return array;
+	}
+	public override async ValueTask<ArrayBase> CreateArrayAsync(string tableName, string fieldName, CancellationToken cancellationToken = default)
+	{
+		var array = new FesArray(_database, _transaction, tableName, fieldName);
+		await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
+		return array;
+	}
+
+	public override ArrayBase CreateArray(long handle, string tableName, string fieldName)
+	{
+		var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
+		array.Initialize();
+		return array;
+	}
+	public override async ValueTask<ArrayBase> CreateArrayAsync(long handle, string tableName, string fieldName, CancellationToken cancellationToken = default)
+	{
+		var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
+		await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
+		return array;
+	}
+
+	public override BatchBase CreateBatch() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
+
+	public override BatchParameterBuffer CreateBatchParameterBuffer() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
+
+	#endregion
+
+	#region Methods
+
+	public override void Release()
+	{
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+		base.Release();
+	}
+	public override ValueTask ReleaseAsync(CancellationToken cancellationToken = default)
+	{
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+		return base.ReleaseAsync(cancellationToken);
+	}
+
+	public override void Close()
+	{
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+		base.Close();
+	}
+	public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
+	{
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+		return base.CloseAsync(cancellationToken);
+	}
+
+	public override void Prepare(string commandText)
+	{
+		ClearAll();
+
+		ClearStatusVector();
+
+		if (State == StatementState.Deallocated)
+		{
+			Allocate();
+		}
+
+		_fields = new Descriptor(1);
+
+		nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+		var trHandle = _transaction.HandlePtr;
+
+		byte[] buffer = _database.Charset.GetBytes(commandText);
+
+		_ = _database.FbClient.isc_dsql_prepare(
+			_statusVector,
+			ref trHandle,
+			ref _handle,
+			(short) buffer.Length,
+			buffer,
+			_database.Dialect,
+			sqlda);
+
+		var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+
+		XsqldaMarshaler.CleanUpNativeData(ref sqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_fields = descriptor;
+
+		if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
+		{
+			Describe();
+		}
+		else
+		{
+			if (_fields.ActualCount == 0)
+			{
+				_fields = new Descriptor(0);
+			}
+		}
+
+		_fields.ResetValues();
+
+		DescribeParameters();
+
+		StatementType = GetStatementType();
+
+		State = StatementState.Prepared;
+	}
+	public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default)
+	{
+		ClearAll();
+
+		ClearStatusVector();
+
+		if (State == StatementState.Deallocated)
+		{
+			Allocate();
+		}
+
+		_fields = new Descriptor(1);
+
+		nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+		var trHandle = _transaction.HandlePtr;
+
+		byte[] buffer = _database.Charset.GetBytes(commandText);
+
+		_ = _database.FbClient.isc_dsql_prepare(
+			_statusVector,
+			ref trHandle,
+			ref _handle,
+			(short) buffer.Length,
+			buffer,
+			_database.Dialect,
+			sqlda);
+
+		var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+
+		XsqldaMarshaler.CleanUpNativeData(ref sqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_fields = descriptor;
+
+		if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
+		{
+			Describe();
+		}
+		else
+		{
+			if (_fields.ActualCount == 0)
+			{
+				_fields = new Descriptor(0);
+			}
+		}
+
+		_fields.ResetValues();
+
+		DescribeParameters();
+
+		StatementType = await GetStatementTypeAsync(cancellationToken).ConfigureAwait(false);
+
+		State = StatementState.Prepared;
+	}
+
+	public override void Execute(int timeout, IDescriptorFiller descriptorFiller)
+	{
+		EnsureNotDeallocated();
+
+		descriptorFiller.Fill(_parameters, 0);
+
+		ClearStatusVector();
+		NativeHelpers.CallIfExists(
+			nameof(IFbClient.fb_dsql_set_timeout),
+			() =>
+			{
+				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
 				_database.ProcessStatusVector(_statusVector);
+			});
 
-				_fields = descriptor;
+		ClearStatusVector();
 
-				if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
-				{
-						Describe();
-				}
-				else
-				{
-						if (_fields.ActualCount == 0)
-						{
-								_fields = new Descriptor(0);
-						}
-				}
+		nint inSqlda = IntPtr.Zero;
+		nint outSqlda = IntPtr.Zero;
 
-				_fields.ResetValues();
-
-				DescribeParameters();
-
-				StatementType = await GetStatementTypeAsync(cancellationToken).ConfigureAwait(false);
-
-				State = StatementState.Prepared;
+		if (_parameters != null)
+		{
+			inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+		}
+		if (StatementType == DbStatementType.StoredProcedure)
+		{
+			Fields.ResetValues();
+			outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 		}
 
-		public override void Execute(int timeout, IDescriptorFiller descriptorFiller)
+		var trHandle = _transaction.HandlePtr;
+
+		_ = _database.FbClient.isc_dsql_execute2(
+			_statusVector,
+			ref trHandle,
+			ref _handle,
+			IscCodes.SQLDA_VERSION1,
+			inSqlda,
+			outSqlda);
+
+		if (outSqlda != IntPtr.Zero)
 		{
-				EnsureNotDeallocated();
+			var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
 
-				descriptorFiller.Fill(_parameters, 0);
+			var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
 
-				ClearStatusVector();
-				NativeHelpers.CallIfExists(
-					nameof(IFbClient.fb_dsql_set_timeout),
-					() =>
+			for (int i = 0; i < values.Length; i++)
+			{
+				var d = descriptor[i];
+				object value = d.DbValue.GetValue();
+				values[i] = new DbValue(this, d, value);
+			}
+
+			OutputParameters.Enqueue(values);
+		}
+
+		XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
+		XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		RecordsAffected = DoRecordsAffected ? GetRecordsAffected() : -1;
+
+		State = StatementState.Executed;
+	}
+	public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
+	{
+		EnsureNotDeallocated();
+
+		await descriptorFiller.FillAsync(_parameters, 0, cancellationToken).ConfigureAwait(false);
+
+		ClearStatusVector();
+		NativeHelpers.CallIfExists(
+			nameof(IFbClient.fb_dsql_set_timeout),
+			() =>
+			{
+				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
+				_database.ProcessStatusVector(_statusVector);
+			});
+
+		ClearStatusVector();
+
+		nint inSqlda = IntPtr.Zero;
+		nint outSqlda = IntPtr.Zero;
+
+		if (_parameters != null)
+		{
+			inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+		}
+		if (StatementType == DbStatementType.StoredProcedure)
+		{
+			Fields.ResetValues();
+			outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+		}
+
+		var trHandle = _transaction.HandlePtr;
+
+		_ = _database.FbClient.isc_dsql_execute2(
+			_statusVector,
+			ref trHandle,
+			ref _handle,
+			IscCodes.SQLDA_VERSION1,
+			inSqlda,
+			outSqlda);
+
+		if (outSqlda != IntPtr.Zero)
+		{
+			var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
+
+			var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
+
+			for (int i = 0; i < values.Length; i++)
+			{
+				var d = descriptor[i];
+				object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
+				values[i] = new DbValue(this, d, value);
+			}
+
+			OutputParameters.Enqueue(values);
+		}
+
+		XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
+		XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		RecordsAffected = DoRecordsAffected ? await GetRecordsAffectedAsync(cancellationToken).ConfigureAwait(false) : -1;
+
+		State = StatementState.Executed;
+	}
+
+	public override DbValue[] Fetch()
+	{
+		EnsureNotDeallocated();
+
+		if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
+		{
+			_allRowsFetched = true;
+			return GetOutputParameters();
+		}
+		else if (StatementType == DbStatementType.Insert && _allRowsFetched)
+		{
+			return null;
+		}
+		else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
+		{
+			return null;
+		}
+
+		if (_allRowsFetched)
+		{
+			return null;
+		}
+
+		_fields.ResetValues();
+
+		if (_fetchSqlDa == IntPtr.Zero)
+		{
+			_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+		}
+
+		ClearStatusVector();
+
+		nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
+		if (status == new IntPtr(100))
+		{
+			_allRowsFetched = true;
+
+			XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+			return null;
+		}
+		else
+		{
+			var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
+
+			if (_fields.Count == rowDesc.Count)
+			{
+				for (int i = 0; i < _fields.Count; i++)
+				{
+					if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
 					{
-							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
-							_database.ProcessStatusVector(_statusVector);
-					});
-
-				ClearStatusVector();
-
-				nint inSqlda = IntPtr.Zero;
-				nint outSqlda = IntPtr.Zero;
-
-				if (_parameters != null)
-				{
-						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+						rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
+					}
 				}
-				if (StatementType == DbStatementType.StoredProcedure)
-				{
-						Fields.ResetValues();
-						outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				}
+			}
 
-				var trHandle = _transaction.HandlePtr;
+			_fields = rowDesc;
 
-				_ = _database.FbClient.isc_dsql_execute2(
-					_statusVector,
-					ref trHandle,
-					ref _handle,
-					IscCodes.SQLDA_VERSION1,
-					inSqlda,
-					outSqlda);
+			_database.ProcessStatusVector(_statusVector);
 
-				if (outSqlda != IntPtr.Zero)
-				{
-						var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
-
-						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
-
-						for (int i = 0; i < values.Length; i++)
-						{
-								var d = descriptor[i];
-								object value = d.DbValue.GetValue();
-								values[i] = new DbValue(this, d, value);
-						}
-
-						OutputParameters.Enqueue(values);
-				}
-
-				XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
-				XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				RecordsAffected = DoRecordsAffected ? GetRecordsAffected() : -1;
-
-				State = StatementState.Executed;
+			var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
+			for (int i = 0; i < row.Length; i++)
+			{
+				var d = _fields[i];
+				object value = d.DbValue.GetValue();
+				row[i] = new DbValue(this, d, value);
+			}
+			return row;
 		}
-		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
+	}
+	public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureNotDeallocated();
+
+		if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
 		{
-				EnsureNotDeallocated();
+			_allRowsFetched = true;
+			return GetOutputParameters();
+		}
+		else if (StatementType == DbStatementType.Insert && _allRowsFetched)
+		{
+			return null;
+		}
+		else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
+		{
+			return null;
+		}
 
-				await descriptorFiller.FillAsync(_parameters, 0, cancellationToken).ConfigureAwait(false);
+		if (_allRowsFetched)
+		{
+			return null;
+		}
 
-				ClearStatusVector();
-				NativeHelpers.CallIfExists(
-					nameof(IFbClient.fb_dsql_set_timeout),
-					() =>
+		_fields.ResetValues();
+
+		if (_fetchSqlDa == IntPtr.Zero)
+		{
+			_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+		}
+
+		ClearStatusVector();
+
+		nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
+		if (status == new IntPtr(100))
+		{
+			_allRowsFetched = true;
+
+			XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+
+			return null;
+		}
+		else
+		{
+			var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
+
+			if (_fields.Count == rowDesc.Count)
+			{
+				for (int i = 0; i < _fields.Count; i++)
+				{
+					if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
 					{
-							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
-							_database.ProcessStatusVector(_statusVector);
-					});
-
-				ClearStatusVector();
-
-				nint inSqlda = IntPtr.Zero;
-				nint outSqlda = IntPtr.Zero;
-
-				if (_parameters != null)
-				{
-						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+						rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
+					}
 				}
-				if (StatementType == DbStatementType.StoredProcedure)
-				{
-						Fields.ResetValues();
-						outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				}
+			}
 
-				var trHandle = _transaction.HandlePtr;
+			_fields = rowDesc;
 
-				_ = _database.FbClient.isc_dsql_execute2(
-					_statusVector,
-					ref trHandle,
-					ref _handle,
-					IscCodes.SQLDA_VERSION1,
-					inSqlda,
-					outSqlda);
+			_database.ProcessStatusVector(_statusVector);
 
-				if (outSqlda != IntPtr.Zero)
-				{
-						var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
-
-						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
-
-						for (int i = 0; i < values.Length; i++)
-						{
-								var d = descriptor[i];
-								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
-								values[i] = new DbValue(this, d, value);
-						}
-
-						OutputParameters.Enqueue(values);
-				}
-
-				XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
-				XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				RecordsAffected = DoRecordsAffected ? await GetRecordsAffectedAsync(cancellationToken).ConfigureAwait(false) : -1;
-
-				State = StatementState.Executed;
+			var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
+			for (int i = 0; i < row.Length; i++)
+			{
+				var d = _fields[i];
+				object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
+				row[i] = new DbValue(this, d, value);
+			}
+			return row;
 		}
+	}
 
-		public override DbValue[] Fetch()
+	#endregion
+
+	#region Protected Methods
+
+	protected override void Free(int option)
+	{
+		// Does	not	seem to	be possible	or necessary to	close
+		// an execute procedure	statement.
+		if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
 		{
-				EnsureNotDeallocated();
-
-				if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
-				{
-						_allRowsFetched = true;
-						return GetOutputParameters();
-				}
-				else if (StatementType == DbStatementType.Insert && _allRowsFetched)
-				{
-						return null;
-				}
-				else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
-				{
-						return null;
-				}
-
-				if (_allRowsFetched)
-				{
-						return null;
-				}
-
-				_fields.ResetValues();
-
-				if (_fetchSqlDa == IntPtr.Zero)
-				{
-						_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				}
-
-				ClearStatusVector();
-
-				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
-				if (status == new IntPtr(100))
-				{
-						_allRowsFetched = true;
-
-						XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-						return null;
-				}
-				else
-				{
-						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
-
-						if (_fields.Count == rowDesc.Count)
-						{
-								for (int i = 0; i < _fields.Count; i++)
-								{
-										if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
-										{
-												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
-										}
-								}
-						}
-
-						_fields = rowDesc;
-
-						_database.ProcessStatusVector(_statusVector);
-
-						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for (int i = 0; i < row.Length; i++)
-						{
-								var d = _fields[i];
-								object value = d.DbValue.GetValue();
-								row[i] = new DbValue(this, d, value);
-						}
-						return row;
-				}
+			return;
 		}
-		public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
+
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_dsql_free_statement(
+			_statusVector,
+			ref _handle,
+			(short) option);
+
+		if (option == IscCodes.DSQL_drop)
 		{
-				EnsureNotDeallocated();
-
-				if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
-				{
-						_allRowsFetched = true;
-						return GetOutputParameters();
-				}
-				else if (StatementType == DbStatementType.Insert && _allRowsFetched)
-				{
-						return null;
-				}
-				else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
-				{
-						return null;
-				}
-
-				if (_allRowsFetched)
-				{
-						return null;
-				}
-
-				_fields.ResetValues();
-
-				if (_fetchSqlDa == IntPtr.Zero)
-				{
-						_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-				}
-
-				ClearStatusVector();
-
-				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
-				if (status == new IntPtr(100))
-				{
-						_allRowsFetched = true;
-
-						XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-						return null;
-				}
-				else
-				{
-						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
-
-						if (_fields.Count == rowDesc.Count)
-						{
-								for (int i = 0; i < _fields.Count; i++)
-								{
-										if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
-										{
-												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
-										}
-								}
-						}
-
-						_fields = rowDesc;
-
-						_database.ProcessStatusVector(_statusVector);
-
-						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for (int i = 0; i < row.Length; i++)
-						{
-								var d = _fields[i];
-								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
-								row[i] = new DbValue(this, d, value);
-						}
-						return row;
-				}
+			_parameters = null;
+			_fields = null;
 		}
 
-		#endregion
+		Clear();
+		_allRowsFetched = false;
 
-		#region Protected Methods
-
-		protected override void Free(int option)
+		_database.ProcessStatusVector(_statusVector);
+	}
+	protected override ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
+	{
+		// Does	not	seem to	be possible	or necessary to	close
+		// an execute procedure	statement.
+		if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
 		{
-				// Does	not	seem to	be possible	or necessary to	close
-				// an execute procedure	statement.
-				if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
-				{
-						return;
-				}
-
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_dsql_free_statement(
-					_statusVector,
-					ref _handle,
-					(short) option);
-
-				if (option == IscCodes.DSQL_drop)
-				{
-						_parameters = null;
-						_fields = null;
-				}
-
-				Clear();
-				_allRowsFetched = false;
-
-				_database.ProcessStatusVector(_statusVector);
+			return ValueTask2.CompletedTask;
 		}
-		protected override ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
+
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_dsql_free_statement(
+			_statusVector,
+			ref _handle,
+			(short) option);
+
+		if (option == IscCodes.DSQL_drop)
 		{
-				// Does	not	seem to	be possible	or necessary to	close
-				// an execute procedure	statement.
-				if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
-				{
-						return ValueTask2.CompletedTask;
-				}
-
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_dsql_free_statement(
-					_statusVector,
-					ref _handle,
-					(short) option);
-
-				if (option == IscCodes.DSQL_drop)
-				{
-						_parameters = null;
-						_fields = null;
-				}
-
-				Clear();
-				_allRowsFetched = false;
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.CompletedTask;
+			_parameters = null;
+			_fields = null;
 		}
 
-		protected override void TransactionUpdated(object sender, EventArgs e)
+		Clear();
+		_allRowsFetched = false;
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	protected override void TransactionUpdated(object sender, EventArgs e)
+	{
+		if (Transaction != null && TransactionUpdate != null)
 		{
-				if (Transaction != null && TransactionUpdate != null)
-				{
-						Transaction.Update -= TransactionUpdate;
-				}
-				Clear();
-				State = StatementState.Closed;
-				TransactionUpdate = null;
-				_allRowsFetched = false;
+			Transaction.Update -= TransactionUpdate;
 		}
+		Clear();
+		State = StatementState.Closed;
+		TransactionUpdate = null;
+		_allRowsFetched = false;
+	}
 
-		protected override byte[] GetSqlInfo(byte[] items, int bufferLength)
+	protected override byte[] GetSqlInfo(byte[] items, int bufferLength)
+	{
+		ClearStatusVector();
+
+		byte[] buffer = new byte[bufferLength];
+
+		_ = _database.FbClient.isc_dsql_sql_info(
+			_statusVector,
+			ref _handle,
+			(short) items.Length,
+			items,
+			(short) bufferLength,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return buffer;
+	}
+	protected override ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		byte[] buffer = new byte[bufferLength];
+
+		_ = _database.FbClient.isc_dsql_sql_info(
+			_statusVector,
+			ref _handle,
+			(short) items.Length,
+			items,
+			(short) bufferLength,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.FromResult(buffer);
+	}
+
+	#endregion
+
+	#region Private Methods
+
+	private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
+
+	private void Clear() => OutputParameters?.Clear();
+
+	private void ClearAll()
+	{
+		Clear();
+
+		_parameters = null;
+		_fields = null;
+	}
+
+	private void Allocate()
+	{
+		ClearStatusVector();
+
+		var dbHandle = _database.HandlePtr;
+
+		_ = _database.FbClient.isc_dsql_allocate_statement(
+			_statusVector,
+			ref dbHandle,
+			ref _handle);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_allRowsFetched = false;
+		State = StatementState.Allocated;
+		StatementType = DbStatementType.None;
+	}
+
+	private void Describe()
+	{
+		ClearStatusVector();
+
+		_fields = new Descriptor(_fields.ActualCount);
+
+		nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+
+		_ = _database.FbClient.isc_dsql_describe(
+			_statusVector,
+			ref _handle,
+			IscCodes.SQLDA_VERSION1,
+			sqlda);
+
+		var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+
+		XsqldaMarshaler.CleanUpNativeData(ref sqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_fields = descriptor;
+	}
+
+	private void DescribeParameters()
+	{
+		ClearStatusVector();
+
+		_parameters = new Descriptor(1);
+
+		nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+
+
+		_ = _database.FbClient.isc_dsql_describe_bind(
+			_statusVector,
+			ref _handle,
+			IscCodes.SQLDA_VERSION1,
+			sqlda);
+
+		var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		if (descriptor.ActualCount != 0 && descriptor.Count != descriptor.ActualCount)
 		{
-				ClearStatusVector();
+			short n = descriptor.ActualCount;
+			descriptor = new Descriptor(n);
 
-				byte[] buffer = new byte[bufferLength];
+			XsqldaMarshaler.CleanUpNativeData(ref sqlda);
 
-				_ = _database.FbClient.isc_dsql_sql_info(
-					_statusVector,
-					ref _handle,
-					(short) items.Length,
-					items,
-					(short) bufferLength,
-					buffer);
+			sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, descriptor);
 
-				_database.ProcessStatusVector(_statusVector);
+			_ = _database.FbClient.isc_dsql_describe_bind(
+				_statusVector,
+				ref _handle,
+				IscCodes.SQLDA_VERSION1,
+				sqlda);
 
-				return buffer;
+			descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
+
+			XsqldaMarshaler.CleanUpNativeData(ref sqlda);
+
+			_database.ProcessStatusVector(_statusVector);
 		}
-		protected override ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+		else
 		{
-				ClearStatusVector();
-
-				byte[] buffer = new byte[bufferLength];
-
-				_ = _database.FbClient.isc_dsql_sql_info(
-					_statusVector,
-					ref _handle,
-					(short) items.Length,
-					items,
-					(short) bufferLength,
-					buffer);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.FromResult(buffer);
+			if (descriptor.ActualCount == 0)
+			{
+				descriptor = new Descriptor(0);
+			}
 		}
 
-		#endregion
-
-		#region Private Methods
-
-		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
-
-		private void Clear() => OutputParameters?.Clear();
-
-		private void ClearAll()
+		if (sqlda != IntPtr.Zero)
 		{
-				Clear();
-
-				_parameters = null;
-				_fields = null;
+			XsqldaMarshaler.CleanUpNativeData(ref sqlda);
 		}
 
-		private void Allocate()
-		{
-				ClearStatusVector();
+		_parameters = descriptor;
+	}
 
-				var dbHandle = _database.HandlePtr;
-
-				_ = _database.FbClient.isc_dsql_allocate_statement(
-					_statusVector,
-					ref dbHandle,
-					ref _handle);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				_allRowsFetched = false;
-				State = StatementState.Allocated;
-				StatementType = DbStatementType.None;
-		}
-
-		private void Describe()
-		{
-				ClearStatusVector();
-
-				_fields = new Descriptor(_fields.ActualCount);
-
-				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-
-				_ = _database.FbClient.isc_dsql_describe(
-					_statusVector,
-					ref _handle,
-					IscCodes.SQLDA_VERSION1,
-					sqlda);
-
-				var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
-
-				XsqldaMarshaler.CleanUpNativeData(ref sqlda);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				_fields = descriptor;
-		}
-
-		private void DescribeParameters()
-		{
-				ClearStatusVector();
-
-				_parameters = new Descriptor(1);
-
-				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
-
-
-				_ = _database.FbClient.isc_dsql_describe_bind(
-					_statusVector,
-					ref _handle,
-					IscCodes.SQLDA_VERSION1,
-					sqlda);
-
-				var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				if (descriptor.ActualCount != 0 && descriptor.Count != descriptor.ActualCount)
-				{
-						short n = descriptor.ActualCount;
-						descriptor = new Descriptor(n);
-
-						XsqldaMarshaler.CleanUpNativeData(ref sqlda);
-
-						sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, descriptor);
-
-						_ = _database.FbClient.isc_dsql_describe_bind(
-							_statusVector,
-							ref _handle,
-							IscCodes.SQLDA_VERSION1,
-							sqlda);
-
-						descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, sqlda);
-
-						XsqldaMarshaler.CleanUpNativeData(ref sqlda);
-
-						_database.ProcessStatusVector(_statusVector);
-				}
-				else
-				{
-						if (descriptor.ActualCount == 0)
-						{
-								descriptor = new Descriptor(0);
-						}
-				}
-
-				if (sqlda != IntPtr.Zero)
-				{
-						XsqldaMarshaler.CleanUpNativeData(ref sqlda);
-				}
-
-				_parameters = descriptor;
-		}
-
-		#endregion
+	#endregion
 }

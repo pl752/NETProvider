@@ -22,32 +22,32 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 public sealed class FbInfoMessageEventArgs : EventArgs
 {
-		#region Fields
+	#region Fields
 
-		private readonly FbErrorCollection _errors;
-		private readonly string _message;
+	private readonly FbErrorCollection _errors;
+	private readonly string _message;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public FbErrorCollection Errors => _errors;
+	public FbErrorCollection Errors => _errors;
 
-		public string Message => _message;
+	public string Message => _message;
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		internal FbInfoMessageEventArgs(IscException ex)
+	internal FbInfoMessageEventArgs(IscException ex)
+	{
+		_message = ex.Message;
+		_errors = [];
+		foreach (var error in ex.Errors)
 		{
-				_message = ex.Message;
-				_errors = [];
-				foreach (var error in ex.Errors)
-				{
-						_ = _errors.Add(error.Message, error.ErrorCode);
-				}
+			_ = _errors.Add(error.Message, error.ErrorCode);
 		}
+	}
 
-		#endregion
+	#endregion
 }

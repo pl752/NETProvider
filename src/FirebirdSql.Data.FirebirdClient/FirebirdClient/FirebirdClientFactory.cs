@@ -21,38 +21,38 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 public class FirebirdClientFactory : DbProviderFactory
 {
-		#region Static Properties
+	#region Static Properties
 
-		public static readonly FirebirdClientFactory Instance = new FirebirdClientFactory();
+	public static readonly FirebirdClientFactory Instance = new FirebirdClientFactory();
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public override bool CanCreateDataSourceEnumerator => false;
+	public override bool CanCreateDataSourceEnumerator => false;
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		private FirebirdClientFactory()
-			: base() { }
+	private FirebirdClientFactory()
+		: base() { }
 
-		#endregion
+	#endregion
 
-		#region Methods
+	#region Methods
 
-		public override DbCommand CreateCommand() => new FbCommand();
+	public override DbCommand CreateCommand() => new FbCommand();
 
-		public override DbCommandBuilder CreateCommandBuilder() => new FbCommandBuilder();
+	public override DbCommandBuilder CreateCommandBuilder() => new FbCommandBuilder();
 
-		public override DbConnection CreateConnection() => new FbConnection();
+	public override DbConnection CreateConnection() => new FbConnection();
 
-		public override DbConnectionStringBuilder CreateConnectionStringBuilder() => new FbConnectionStringBuilder();
+	public override DbConnectionStringBuilder CreateConnectionStringBuilder() => new FbConnectionStringBuilder();
 
-		public override DbDataAdapter CreateDataAdapter() => new FbDataAdapter();
+	public override DbDataAdapter CreateDataAdapter() => new FbDataAdapter();
 
-		public override DbParameter CreateParameter() => new FbParameter();
+	public override DbParameter CreateParameter() => new FbParameter();
 
-		#endregion
+	#endregion
 }

@@ -22,46 +22,46 @@ namespace FirebirdSql.Data.FirebirdClient;
 [Serializable]
 public sealed class FbError
 {
-		#region Fields
+	#region Fields
 
-		private readonly byte _classError;
-		private readonly int _lineNumber;
-		private readonly string _message;
-		private readonly int _number;
+	private readonly byte _classError;
+	private readonly int _lineNumber;
+	private readonly string _message;
+	private readonly int _number;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public byte Class => _classError;
+	public byte Class => _classError;
 
-		public int LineNumber => _lineNumber;
+	public int LineNumber => _lineNumber;
 
-		public string Message => _message;
+	public string Message => _message;
 
-		public int Number => _number;
+	public int Number => _number;
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		internal FbError(string message, int number)
-			: this(0, 0, message, number)
-		{
-		}
+	internal FbError(string message, int number)
+		: this(0, 0, message, number)
+	{
+	}
 
-		internal FbError(byte classError, string message, int number)
-			: this(classError, 0, message, number)
-		{
-		}
+	internal FbError(byte classError, string message, int number)
+		: this(classError, 0, message, number)
+	{
+	}
 
-		internal FbError(byte classError, int line, string message, int number)
-		{
-				_classError = classError;
-				_lineNumber = line;
-				_number = number;
-				_message = message;
-		}
+	internal FbError(byte classError, int line, string message, int number)
+	{
+		_classError = classError;
+		_lineNumber = line;
+		_number = number;
+		_message = message;
+	}
 
-		#endregion
+	#endregion
 }

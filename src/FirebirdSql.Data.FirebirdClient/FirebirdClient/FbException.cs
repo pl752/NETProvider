@@ -28,27 +28,27 @@ namespace FirebirdSql.Data.FirebirdClient;
 #endif
 public sealed class FbException : DbException
 {
-		#region Fields
+	#region Fields
 
-		private FbErrorCollection _errors;
+	private FbErrorCollection _errors;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-		public FbErrorCollection Errors => _errors ??= [];
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+	public FbErrorCollection Errors => _errors ??= [];
 
-		public override int ErrorCode => (InnerException as IscException)?.ErrorCode ?? 0;
+	public override int ErrorCode => (InnerException as IscException)?.ErrorCode ?? 0;
 
-		public string SQLSTATE => (InnerException as IscException)?.SQLSTATE;
+	public string SQLSTATE => (InnerException as IscException)?.SQLSTATE;
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		private FbException(string message, Exception innerException)
-			: base(message, innerException) { }
+	private FbException(string message, Exception innerException)
+		: base(message, innerException) { }
 
 #if !NET8_0_OR_GREATER
 	private FbException(SerializationInfo info, StreamingContext context)
@@ -58,9 +58,9 @@ public sealed class FbException : DbException
 	}
 #endif
 
-		#endregion
+	#endregion
 
-		#region Methods
+	#region Methods
 
 #if !NET8_0_OR_GREATER
 	public override void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -71,41 +71,41 @@ public sealed class FbException : DbException
 	}
 #endif
 
-		#endregion
+	#endregion
 
-		#region Private Methods
+	#region Private Methods
 
-		private void ProcessIscExceptionErrors(IscException innerException)
+	private void ProcessIscExceptionErrors(IscException innerException)
+	{
+		foreach (var error in innerException.Errors)
 		{
-				foreach (var error in innerException.Errors)
-				{
-						_ = Errors.Add(error.Message, error.ErrorCode);
-				}
+			_ = Errors.Add(error.Message, error.ErrorCode);
 		}
+	}
 
-		#endregion
+	#endregion
 
-		internal static Exception Create(string message) => Create(message, null);
-		internal static Exception Create(Exception innerException) => Create(null, innerException);
-		internal static Exception Create(string message, Exception innerException)
+	internal static Exception Create(string message) => Create(message, null);
+	internal static Exception Create(Exception innerException) => Create(null, innerException);
+	internal static Exception Create(string message, Exception innerException)
+	{
+		message ??= innerException?.Message;
+		if (innerException is IscException iscException)
 		{
-				message ??= innerException?.Message;
-				if (innerException is IscException iscException)
-				{
-						if (iscException.ErrorCode == IscCodes.isc_cancelled)
-						{
-								return new OperationCanceledException(message, innerException);
-						}
-						else
-						{
-								var result = new FbException(message, innerException);
-								result.ProcessIscExceptionErrors(iscException);
-								return result;
-						}
-				}
-				else
-				{
-						return new FbException(message, innerException);
-				}
+			if (iscException.ErrorCode == IscCodes.isc_cancelled)
+			{
+				return new OperationCanceledException(message, innerException);
+			}
+			else
+			{
+				var result = new FbException(message, innerException);
+				result.ProcessIscExceptionErrors(iscException);
+				return result;
+			}
 		}
+		else
+		{
+			return new FbException(message, innerException);
+		}
+	}
 }

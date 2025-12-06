@@ -27,32 +27,32 @@ public class ConsoleLoggerProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : 
 
 public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : IFbLoggingProvider
 {
+	readonly FbLogLevel _minimumLevel = minimumLevel;
+
+	public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
+
+	sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger
+	{
 		readonly FbLogLevel _minimumLevel = minimumLevel;
 
-		public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
+		public bool IsEnabled(FbLogLevel level) => level >= _minimumLevel;
 
-		sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger
+		public void Log(FbLogLevel level, string msg, Exception exception = null)
 		{
-				readonly FbLogLevel _minimumLevel = minimumLevel;
+			if (!IsEnabled(level))
+				return;
 
-				public bool IsEnabled(FbLogLevel level) => level >= _minimumLevel;
+			var sb = new StringBuilder();
+			_ = sb.Append('[');
+			_ = sb.Append(level.ToString().ToUpperInvariant());
+			_ = sb.Append("] ");
 
-				public void Log(FbLogLevel level, string msg, Exception exception = null)
-				{
-						if (!IsEnabled(level))
-								return;
+			_ = sb.AppendLine(msg);
 
-						var sb = new StringBuilder();
-						_ = sb.Append('[');
-						_ = sb.Append(level.ToString().ToUpperInvariant());
-						_ = sb.Append("] ");
+			if (exception != null)
+				_ = sb.AppendLine(exception.ToString());
 
-						_ = sb.AppendLine(msg);
-
-						if (exception != null)
-								_ = sb.AppendLine(exception.ToString());
-
-						Console.Error.Write(sb.ToString());
-				}
+			Console.Error.Write(sb.ToString());
 		}
+	}
 }

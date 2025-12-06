@@ -29,270 +29,270 @@ namespace FirebirdSql.Data.FirebirdClient;
 [ListBindable(false)]
 public sealed class FbParameterCollection : DbParameterCollection
 {
-		#region Fields
+	#region Fields
 
-		private readonly List<FbParameter> _parameters;
-		private bool? _hasParameterWithNonAsciiName;
+	private readonly List<FbParameter> _parameters;
+	private bool? _hasParameterWithNonAsciiName;
 
-		#endregion
+	#endregion
 
-		#region Indexers
+	#region Indexers
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public new FbParameter this[string parameterName]
+	[Browsable(false)]
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+	public new FbParameter this[string parameterName]
+	{
+		get => this[IndexOf(parameterName)]; set => this[IndexOf(parameterName)] = value;
+	}
+
+	[Browsable(false)]
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+	public new FbParameter this[int index]
+	{
+		get => _parameters[index]; set => _parameters[index] = value;
+	}
+
+	#endregion
+
+	#region DbParameterCollection overriden properties
+
+	[Browsable(false)]
+	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+	public override int Count => _parameters.Count;
+
+	public override bool IsFixedSize => ((IList) _parameters).IsFixedSize;
+
+	public override bool IsReadOnly => ((IList) _parameters).IsReadOnly;
+
+	public override bool IsSynchronized => ((ICollection) _parameters).IsSynchronized;
+
+	public override object SyncRoot => ((ICollection) _parameters).SyncRoot;
+
+	#endregion
+
+	#region Internal properties
+
+	internal bool HasParameterWithNonAsciiName => _hasParameterWithNonAsciiName ?? (bool) (_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
+
+	#endregion
+
+	#region Constructors
+
+	internal FbParameterCollection()
+	{
+		_parameters = [];
+		_hasParameterWithNonAsciiName = null;
+	}
+
+	#endregion
+
+	#region DbParameterCollection overriden methods
+
+	public void AddRange(IEnumerable<FbParameter> values)
+	{
+		foreach (var p in values)
 		{
-				get => this[IndexOf(parameterName)]; set => this[IndexOf(parameterName)] = value;
+			_ = Add(p);
+		}
+	}
+
+	public override void AddRange(Array values) => AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter) x; }));
+
+	public FbParameter AddWithValue(string parameterName, object value) => Add(new FbParameter(parameterName, value));
+
+	public FbParameter Add(string parameterName, object value) => Add(new FbParameter(parameterName, value));
+
+	public FbParameter Add(string parameterName, FbDbType type) => Add(new FbParameter(parameterName, type));
+
+	public FbParameter Add(string parameterName, FbDbType fbType, int size) => Add(new FbParameter(parameterName, fbType, size));
+
+	public FbParameter Add(string parameterName, FbDbType fbType, int size, string sourceColumn) => Add(new FbParameter(parameterName, fbType, size, sourceColumn));
+
+	public FbParameter Add(FbParameter value)
+	{
+		EnsureFbParameterAddOrInsert(value);
+
+		AttachParameter(value);
+		_parameters.Add(value);
+		return value;
+	}
+
+	public override int Add(object value)
+	{
+		EnsureFbParameterType(value);
+
+		return IndexOf(Add((FbParameter) value));
+	}
+
+	public bool Contains(FbParameter value) => _parameters.Contains(value);
+
+	public override bool Contains(object value)
+	{
+		EnsureFbParameterType(value);
+
+		return Contains((FbParameter) value);
+	}
+
+	public override bool Contains(string parameterName) => IndexOf(parameterName) != -1;
+
+	public int IndexOf(FbParameter value) => _parameters.IndexOf(value);
+
+	public override int IndexOf(object value)
+	{
+		EnsureFbParameterType(value);
+
+		return IndexOf((FbParameter) value);
+	}
+
+	public override int IndexOf(string parameterName) => IndexOf(parameterName, -1);
+
+	internal int IndexOf(string parameterName, int luckyIndex)
+	{
+		bool isNonAsciiParameterName = FbParameter.IsNonAsciiParameterName(parameterName);
+		var usedComparison = isNonAsciiParameterName || HasParameterWithNonAsciiName
+			? StringComparison.CurrentCultureIgnoreCase
+			: StringComparison.OrdinalIgnoreCase;
+		string normalizedParameterName = FbParameter.NormalizeParameterName(parameterName);
+		if (luckyIndex != -1 && luckyIndex < _parameters.Count)
+		{
+			if (_parameters[luckyIndex].InternalParameterName.Equals(normalizedParameterName, usedComparison))
+			{
+				return luckyIndex;
+			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public new FbParameter this[int index]
+		return _parameters.FindIndex(x => x.InternalParameterName.Equals(normalizedParameterName, usedComparison));
+	}
+
+	public void Insert(int index, FbParameter value)
+	{
+		EnsureFbParameterAddOrInsert(value);
+
+		AttachParameter(value);
+		_parameters.Insert(index, value);
+	}
+
+	public override void Insert(int index, object value)
+	{
+		EnsureFbParameterType(value);
+
+		Insert(index, (FbParameter) value);
+	}
+
+	public void Remove(FbParameter value)
+	{
+		if (!_parameters.Remove(value))
 		{
-				get => _parameters[index]; set => _parameters[index] = value;
+			throw new ArgumentException("The parameter does not exist in the collection.");
 		}
 
-		#endregion
+		ReleaseParameter(value);
+	}
 
-		#region DbParameterCollection overriden properties
+	public override void Remove(object value)
+	{
+		EnsureFbParameterType(value);
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override int Count => _parameters.Count;
+		Remove((FbParameter) value);
+	}
 
-		public override bool IsFixedSize => ((IList) _parameters).IsFixedSize;
-
-		public override bool IsReadOnly => ((IList) _parameters).IsReadOnly;
-
-		public override bool IsSynchronized => ((ICollection) _parameters).IsSynchronized;
-
-		public override object SyncRoot => ((ICollection) _parameters).SyncRoot;
-
-		#endregion
-
-		#region Internal properties
-
-		internal bool HasParameterWithNonAsciiName => _hasParameterWithNonAsciiName ?? (bool) (_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
-
-		#endregion
-
-		#region Constructors
-
-		internal FbParameterCollection()
+	public override void RemoveAt(int index)
+	{
+		if (index < 0 || index > Count)
 		{
-				_parameters = [];
-				_hasParameterWithNonAsciiName = null;
+			throw new IndexOutOfRangeException("The specified index does not exist.");
 		}
 
-		#endregion
+		var parameter = this[index];
+		_parameters.RemoveAt(index);
+		ReleaseParameter(parameter);
+	}
 
-		#region DbParameterCollection overriden methods
+	public override void RemoveAt(string parameterName) => RemoveAt(IndexOf(parameterName));
 
-		public void AddRange(IEnumerable<FbParameter> values)
+	public void CopyTo(FbParameter[] array, int index) => _parameters.CopyTo(array, index);
+
+	public override void CopyTo(Array array, int index) => ((IList) _parameters).CopyTo(array, index);
+
+	public override void Clear()
+	{
+		var parameters = _parameters.ToArray();
+		_parameters.Clear();
+		foreach (var parameter in parameters)
 		{
-				foreach (var p in values)
-				{
-						_ = Add(p);
-				}
+			ReleaseParameter(parameter);
 		}
+	}
 
-		public override void AddRange(Array values) => AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter) x; }));
+	public override IEnumerator GetEnumerator() => _parameters.GetEnumerator();
 
-		public FbParameter AddWithValue(string parameterName, object value) => Add(new FbParameter(parameterName, value));
+	#endregion
 
-		public FbParameter Add(string parameterName, object value) => Add(new FbParameter(parameterName, value));
+	#region DbParameterCollection overriden protected methods
 
-		public FbParameter Add(string parameterName, FbDbType type) => Add(new FbParameter(parameterName, type));
+	protected override DbParameter GetParameter(string parameterName) => this[parameterName];
 
-		public FbParameter Add(string parameterName, FbDbType fbType, int size) => Add(new FbParameter(parameterName, fbType, size));
+	protected override DbParameter GetParameter(int index) => this[index];
 
-		public FbParameter Add(string parameterName, FbDbType fbType, int size, string sourceColumn) => Add(new FbParameter(parameterName, fbType, size, sourceColumn));
+	protected override void SetParameter(int index, DbParameter value) => this[index] = (FbParameter) value;
 
-		public FbParameter Add(FbParameter value)
+	protected override void SetParameter(string parameterName, DbParameter value) => this[parameterName] = (FbParameter) value;
+
+	#endregion
+
+	#region Internal Methods
+
+	internal void ParameterNameChanged() => _hasParameterWithNonAsciiName = null;
+
+	#endregion
+
+	#region Private Methods
+
+	private string GenerateParameterName()
+	{
+		int index = Count + 1;
+		while (true)
 		{
-				EnsureFbParameterAddOrInsert(value);
-
-				AttachParameter(value);
-				_parameters.Add(value);
-				return value;
+			string name = "Parameter" + index.ToString(CultureInfo.InvariantCulture);
+			if (!Contains(name))
+			{
+				return name;
+			}
+			index++;
 		}
+	}
 
-		public override int Add(object value)
+	private void EnsureFbParameterType(object value)
+	{
+		if (value is not FbParameter)
 		{
-				EnsureFbParameterType(value);
-
-				return IndexOf(Add((FbParameter) value));
+			throw new InvalidCastException($"The parameter passed was not a {nameof(FbParameter)}.");
 		}
+	}
 
-		public bool Contains(FbParameter value) => _parameters.Contains(value);
-
-		public override bool Contains(object value)
+	private void EnsureFbParameterAddOrInsert(FbParameter value)
+	{
+		ArgumentNullException.ThrowIfNull(value);
+		if (value.Parent != null)
 		{
-				EnsureFbParameterType(value);
-
-				return Contains((FbParameter) value);
+			throw new ArgumentException($"The {nameof(FbParameter)} specified in the value parameter is already added to this or another {nameof(FbParameterCollection)}.");
 		}
-
-		public override bool Contains(string parameterName) => IndexOf(parameterName) != -1;
-
-		public int IndexOf(FbParameter value) => _parameters.IndexOf(value);
-
-		public override int IndexOf(object value)
+		if (value.ParameterName == null || value.ParameterName.Length == 0)
 		{
-				EnsureFbParameterType(value);
-
-				return IndexOf((FbParameter) value);
+			value.ParameterName = GenerateParameterName();
 		}
-
-		public override int IndexOf(string parameterName) => IndexOf(parameterName, -1);
-
-		internal int IndexOf(string parameterName, int luckyIndex)
+		else
 		{
-				bool isNonAsciiParameterName = FbParameter.IsNonAsciiParameterName(parameterName);
-				var usedComparison = isNonAsciiParameterName || HasParameterWithNonAsciiName
-					? StringComparison.CurrentCultureIgnoreCase
-					: StringComparison.OrdinalIgnoreCase;
-				string normalizedParameterName = FbParameter.NormalizeParameterName(parameterName);
-				if (luckyIndex != -1 && luckyIndex < _parameters.Count)
-				{
-						if (_parameters[luckyIndex].InternalParameterName.Equals(normalizedParameterName, usedComparison))
-						{
-								return luckyIndex;
-						}
-				}
-
-				return _parameters.FindIndex(x => x.InternalParameterName.Equals(normalizedParameterName, usedComparison));
+			if (Contains(value.ParameterName))
+			{
+				throw new ArgumentException($"{nameof(FbParameterCollection)} already contains {nameof(FbParameter)} with {nameof(FbParameter.ParameterName)} '{value.ParameterName}'.");
+			}
 		}
+	}
 
-		public void Insert(int index, FbParameter value)
-		{
-				EnsureFbParameterAddOrInsert(value);
+	private void AttachParameter(FbParameter parameter) => parameter.Parent = this;
 
-				AttachParameter(value);
-				_parameters.Insert(index, value);
-		}
+	private static void ReleaseParameter(FbParameter parameter) => parameter.Parent = null;
 
-		public override void Insert(int index, object value)
-		{
-				EnsureFbParameterType(value);
-
-				Insert(index, (FbParameter) value);
-		}
-
-		public void Remove(FbParameter value)
-		{
-				if (!_parameters.Remove(value))
-				{
-						throw new ArgumentException("The parameter does not exist in the collection.");
-				}
-
-				ReleaseParameter(value);
-		}
-
-		public override void Remove(object value)
-		{
-				EnsureFbParameterType(value);
-
-				Remove((FbParameter) value);
-		}
-
-		public override void RemoveAt(int index)
-		{
-				if (index < 0 || index > Count)
-				{
-						throw new IndexOutOfRangeException("The specified index does not exist.");
-				}
-
-				var parameter = this[index];
-				_parameters.RemoveAt(index);
-				ReleaseParameter(parameter);
-		}
-
-		public override void RemoveAt(string parameterName) => RemoveAt(IndexOf(parameterName));
-
-		public void CopyTo(FbParameter[] array, int index) => _parameters.CopyTo(array, index);
-
-		public override void CopyTo(Array array, int index) => ((IList) _parameters).CopyTo(array, index);
-
-		public override void Clear()
-		{
-				var parameters = _parameters.ToArray();
-				_parameters.Clear();
-				foreach (var parameter in parameters)
-				{
-						ReleaseParameter(parameter);
-				}
-		}
-
-		public override IEnumerator GetEnumerator() => _parameters.GetEnumerator();
-
-		#endregion
-
-		#region DbParameterCollection overriden protected methods
-
-		protected override DbParameter GetParameter(string parameterName) => this[parameterName];
-
-		protected override DbParameter GetParameter(int index) => this[index];
-
-		protected override void SetParameter(int index, DbParameter value) => this[index] = (FbParameter) value;
-
-		protected override void SetParameter(string parameterName, DbParameter value) => this[parameterName] = (FbParameter) value;
-
-		#endregion
-
-		#region Internal Methods
-
-		internal void ParameterNameChanged() => _hasParameterWithNonAsciiName = null;
-
-		#endregion
-
-		#region Private Methods
-
-		private string GenerateParameterName()
-		{
-				int index = Count + 1;
-				while (true)
-				{
-						string name = "Parameter" + index.ToString(CultureInfo.InvariantCulture);
-						if (!Contains(name))
-						{
-								return name;
-						}
-						index++;
-				}
-		}
-
-		private void EnsureFbParameterType(object value)
-		{
-				if (value is not FbParameter)
-				{
-						throw new InvalidCastException($"The parameter passed was not a {nameof(FbParameter)}.");
-				}
-		}
-
-		private void EnsureFbParameterAddOrInsert(FbParameter value)
-		{
-				ArgumentNullException.ThrowIfNull(value);
-				if (value.Parent != null)
-				{
-						throw new ArgumentException($"The {nameof(FbParameter)} specified in the value parameter is already added to this or another {nameof(FbParameterCollection)}.");
-				}
-				if (value.ParameterName == null || value.ParameterName.Length == 0)
-				{
-						value.ParameterName = GenerateParameterName();
-				}
-				else
-				{
-						if (Contains(value.ParameterName))
-						{
-								throw new ArgumentException($"{nameof(FbParameterCollection)} already contains {nameof(FbParameter)} with {nameof(FbParameter.ParameterName)} '{value.ParameterName}'.");
-						}
-				}
-		}
-
-		private void AttachParameter(FbParameter parameter) => parameter.Parent = this;
-
-		private static void ReleaseParameter(FbParameter parameter) => parameter.Parent = null;
-
-		#endregion
+	#endregion
 }

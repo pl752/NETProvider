@@ -26,81 +26,81 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbStreamingBackup(string connectionString = null) : FbService(connectionString)
 {
-		public string SkipData { get; set; }
-		public FbBackupFlags Options { get; set; }
-		public Stream OutputStream { get; set; }
+	public string SkipData { get; set; }
+	public FbBackupFlags Options { get; set; }
+	public Stream OutputStream { get; set; }
 
-		public void Execute()
+	public void Execute()
+	{
+		EnsureDatabase();
+
+		try
 		{
-				EnsureDatabase();
-
-				try
-				{
-						try
-						{
-								Open();
-								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-								startSpb.Append(IscCodes.isc_action_svc_backup);
-								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								startSpb.Append2(IscCodes.isc_spb_bkp_file, "stdout");
-								if (!string.IsNullOrEmpty(SkipData))
-										startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
-								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
-								if (ConnectionStringOptions.ParallelWorkers > 0)
-										startSpb.Append(IscCodes.isc_spb_bkp_parallel_workers, ConnectionStringOptions.ParallelWorkers);
-								StartTask(startSpb);
-								ReadOutput();
-						}
-						finally
-						{
-								Close();
-						}
-				}
-				catch (Exception ex)
-				{
-						throw FbException.Create(ex);
-				}
+			try
+			{
+				Open();
+				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+				startSpb.Append(IscCodes.isc_action_svc_backup);
+				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+				startSpb.Append2(IscCodes.isc_spb_bkp_file, "stdout");
+				if (!string.IsNullOrEmpty(SkipData))
+					startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
+				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				if (ConnectionStringOptions.ParallelWorkers > 0)
+					startSpb.Append(IscCodes.isc_spb_bkp_parallel_workers, ConnectionStringOptions.ParallelWorkers);
+				StartTask(startSpb);
+				ReadOutput();
+			}
+			finally
+			{
+				Close();
+			}
 		}
-		public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+		catch (Exception ex)
 		{
-				EnsureDatabase();
-
-				try
-				{
-						try
-						{
-								await OpenAsync(cancellationToken).ConfigureAwait(false);
-								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
-								startSpb.Append(IscCodes.isc_action_svc_backup);
-								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								startSpb.Append2(IscCodes.isc_spb_bkp_file, "stdout");
-								if (!string.IsNullOrEmpty(SkipData))
-										startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
-								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
-								if (ConnectionStringOptions.ParallelWorkers > 0)
-										startSpb.Append(IscCodes.isc_spb_bkp_parallel_workers, ConnectionStringOptions.ParallelWorkers);
-								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-								await ReadOutputAsync(cancellationToken).ConfigureAwait(false);
-						}
-						finally
-						{
-								await CloseAsync(cancellationToken).ConfigureAwait(false);
-						}
-				}
-				catch (Exception ex)
-				{
-						throw FbException.Create(ex);
-				}
+			throw FbException.Create(ex);
 		}
+	}
+	public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureDatabase();
 
-		void ReadOutput() => Query([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) =>
+		try
 		{
-				byte[] buffer = x as byte[];
-				OutputStream.Write(buffer, 0, buffer.Length);
-		});
-		Task ReadOutputAsync(CancellationToken cancellationToken = default) => QueryAsync([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) =>
+			try
+			{
+				await OpenAsync(cancellationToken).ConfigureAwait(false);
+				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
+				startSpb.Append(IscCodes.isc_action_svc_backup);
+				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
+				startSpb.Append2(IscCodes.isc_spb_bkp_file, "stdout");
+				if (!string.IsNullOrEmpty(SkipData))
+					startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
+				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				if (ConnectionStringOptions.ParallelWorkers > 0)
+					startSpb.Append(IscCodes.isc_spb_bkp_parallel_workers, ConnectionStringOptions.ParallelWorkers);
+				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
+				await ReadOutputAsync(cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				await CloseAsync(cancellationToken).ConfigureAwait(false);
+			}
+		}
+		catch (Exception ex)
 		{
-				byte[] buffer = x as byte[];
-				await OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
-		}, cancellationToken);
+			throw FbException.Create(ex);
+		}
+	}
+
+	void ReadOutput() => Query([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) =>
+	{
+		byte[] buffer = x as byte[];
+		OutputStream.Write(buffer, 0, buffer.Length);
+	});
+	Task ReadOutputAsync(CancellationToken cancellationToken = default) => QueryAsync([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) =>
+	{
+		byte[] buffer = x as byte[];
+		await OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+	}, cancellationToken);
 }

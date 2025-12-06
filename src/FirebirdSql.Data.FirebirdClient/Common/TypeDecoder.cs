@@ -24,99 +24,99 @@ namespace FirebirdSql.Data.Common;
 
 internal static class TypeDecoder
 {
-		public static decimal DecodeDecimal(object value, int scale, int type)
-		{
-				int shift = scale < 0 ? -scale : scale;
+	public static decimal DecodeDecimal(object value, int scale, int type)
+	{
+		int shift = scale < 0 ? -scale : scale;
 
-				return (type & ~1) switch
-				{
-						IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal) (short) value, shift),
-						IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal) (int) value, shift),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (long) value, shift),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal) (double) value,
-						IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (BigInteger) value, shift),
-						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
-				};
+		return (type & ~1) switch
+		{
+			IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal) (short) value, shift),
+			IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal) (int) value, shift),
+			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (long) value, shift),
+			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal) (double) value,
+			IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (BigInteger) value, shift),
+			_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+		};
+	}
+
+	public static TimeSpan DecodeTime(int sqlTime) => TimeSpan.FromTicks(sqlTime * 1000L);
+
+	public static DateTime DecodeDate(int sqlDate)
+	{
+		var (year, month, day) = DecodeDateImpl(sqlDate);
+		var date = new DateTime(year, month, day);
+		return date.Date;
+	}
+	static (int year, int month, int day) DecodeDateImpl(int sqlDate)
+	{
+		sqlDate -= 1721119 - 2400001;
+		int century = (4 * sqlDate - 1) / 146097;
+		sqlDate = 4 * sqlDate - 1 - 146097 * century;
+		int day = sqlDate / 4;
+
+		sqlDate = (4 * day + 3) / 1461;
+		day = 4 * day + 3 - 1461 * sqlDate;
+		day = (day + 4) / 4;
+
+		int month = (5 * day - 3) / 153;
+		day = 5 * day - 3 - 153 * month;
+		day = (day + 5) / 5;
+
+		int year = 100 * century + sqlDate;
+
+		if (month < 10)
+		{
+			month += 3;
+		}
+		else
+		{
+			month -= 9;
+			year += 1;
 		}
 
-		public static TimeSpan DecodeTime(int sqlTime) => TimeSpan.FromTicks(sqlTime * 1000L);
+		return (year, month, day);
+	}
 
-		public static DateTime DecodeDate(int sqlDate)
+	public static bool DecodeBoolean(byte[] value) => value[0] != 0;
+
+	public static bool DecodeBoolean(ReadOnlySpan<byte> value) => value[0] != 0;
+
+	public static Guid DecodeGuid(byte[] value)
+	{
+		int a = IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
+		short b = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 4));
+		short c = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 6));
+		return new Guid(a, b, c, value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15]);
+	}
+
+	public static int DecodeInt32(byte[] value) => IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
+
+	public static long DecodeInt64(byte[] value) => IPAddress.HostToNetworkOrder(BitConverter.ToInt64(value, 0));
+
+	public static FbDecFloat DecodeDec16(byte[] value)
+	{
+		if (BitConverter.IsLittleEndian)
 		{
-				var (year, month, day) = DecodeDateImpl(sqlDate);
-				var date = new DateTime(year, month, day);
-				return date.Date;
+			Array.Reverse(value);
 		}
-		static (int year, int month, int day) DecodeDateImpl(int sqlDate)
+		return DecimalCodec.DecFloat16.ParseBytes(value);
+	}
+
+	public static FbDecFloat DecodeDec34(byte[] value)
+	{
+		if (BitConverter.IsLittleEndian)
 		{
-				sqlDate -= 1721119 - 2400001;
-				int century = (4 * sqlDate - 1) / 146097;
-				sqlDate = 4 * sqlDate - 1 - 146097 * century;
-				int day = sqlDate / 4;
-
-				sqlDate = (4 * day + 3) / 1461;
-				day = 4 * day + 3 - 1461 * sqlDate;
-				day = (day + 4) / 4;
-
-				int month = (5 * day - 3) / 153;
-				day = 5 * day - 3 - 153 * month;
-				day = (day + 5) / 5;
-
-				int year = 100 * century + sqlDate;
-
-				if (month < 10)
-				{
-						month += 3;
-				}
-				else
-				{
-						month -= 9;
-						year += 1;
-				}
-
-				return (year, month, day);
+			Array.Reverse(value);
 		}
+		return DecimalCodec.DecFloat34.ParseBytes(value);
+	}
 
-		public static bool DecodeBoolean(byte[] value) => value[0] != 0;
-
-		public static bool DecodeBoolean(ReadOnlySpan<byte> value) => value[0] != 0;
-
-		public static Guid DecodeGuid(byte[] value)
+	public static BigInteger DecodeInt128(byte[] value)
+	{
+		if (BitConverter.IsLittleEndian)
 		{
-				int a = IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
-				short b = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 4));
-				short c = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 6));
-				return new Guid(a, b, c, value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15]);
+			Array.Reverse(value);
 		}
-
-		public static int DecodeInt32(byte[] value) => IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
-
-		public static long DecodeInt64(byte[] value) => IPAddress.HostToNetworkOrder(BitConverter.ToInt64(value, 0));
-
-		public static FbDecFloat DecodeDec16(byte[] value)
-		{
-				if (BitConverter.IsLittleEndian)
-				{
-						Array.Reverse(value);
-				}
-				return DecimalCodec.DecFloat16.ParseBytes(value);
-		}
-
-		public static FbDecFloat DecodeDec34(byte[] value)
-		{
-				if (BitConverter.IsLittleEndian)
-				{
-						Array.Reverse(value);
-				}
-				return DecimalCodec.DecFloat34.ParseBytes(value);
-		}
-
-		public static BigInteger DecodeInt128(byte[] value)
-		{
-				if (BitConverter.IsLittleEndian)
-				{
-						Array.Reverse(value);
-				}
-				return Int128Helper.GetInt128(value);
-		}
+		return Int128Helper.GetInt128(value);
+	}
 }

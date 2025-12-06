@@ -22,6 +22,6 @@ namespace FirebirdSql.Data.Client.Native.Marshalers;
 [StructLayout(LayoutKind.Sequential)]
 internal struct ArrayBoundMarshal
 {
-		public short LowerBound;
-		public short UpperBound;
+	public short LowerBound;
+	public short UpperBound;
 }

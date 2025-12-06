@@ -22,11 +22,11 @@ namespace FirebirdSql.Data.Common;
 
 internal sealed class EmptyDescriptorFiller : IDescriptorFiller
 {
-		public static readonly EmptyDescriptorFiller Instance = new EmptyDescriptorFiller();
+	public static readonly EmptyDescriptorFiller Instance = new EmptyDescriptorFiller();
 
-		private EmptyDescriptorFiller() { }
+	private EmptyDescriptorFiller() { }
 
-		public void Fill(Descriptor descriptor, int index) { }
+	public void Fill(Descriptor descriptor, int index) { }
 
-		public ValueTask FillAsync(Descriptor descriptor, int index, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
+	public ValueTask FillAsync(Descriptor descriptor, int index, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 }

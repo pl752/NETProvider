@@ -24,58 +24,58 @@ namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 internal static class ArrayDescMarshaler
 {
-		public static void CleanUpNativeData(ref IntPtr pNativeData)
+	public static void CleanUpNativeData(ref IntPtr pNativeData)
+	{
+		if (pNativeData != IntPtr.Zero)
 		{
-				if (pNativeData != IntPtr.Zero)
-				{
-						Marshal.DestroyStructure<ArrayDescMarshal>(pNativeData);
+			Marshal.DestroyStructure<ArrayDescMarshal>(pNativeData);
 
-						for (int i = 0; i < 16; i++)
-						{
-								Marshal.DestroyStructure<ArrayBoundMarshal>(pNativeData + ArrayDescMarshal.ComputeLength(i));
-						}
+			for (int i = 0; i < 16; i++)
+			{
+				Marshal.DestroyStructure<ArrayBoundMarshal>(pNativeData + ArrayDescMarshal.ComputeLength(i));
+			}
 
-						Marshal.FreeHGlobal(pNativeData);
+			Marshal.FreeHGlobal(pNativeData);
 
-						pNativeData = IntPtr.Zero;
-				}
+			pNativeData = IntPtr.Zero;
+		}
+	}
+
+	public static IntPtr MarshalManagedToNative(ArrayDesc descriptor)
+	{
+		var arrayDesc = new ArrayDescMarshal
+		{
+			DataType = descriptor.DataType,
+			Scale = (byte) descriptor.Scale,
+			Length = descriptor.Length,
+			FieldName = descriptor.FieldName,
+			RelationName = descriptor.RelationName,
+			Dimensions = descriptor.Dimensions,
+			Flags = descriptor.Flags
+		};
+
+		var arrayBounds = new ArrayBoundMarshal[descriptor.Bounds.Length];
+
+		for (int i = 0; i < descriptor.Dimensions; i++)
+		{
+			arrayBounds[i].LowerBound = (short) descriptor.Bounds[i].LowerBound;
+			arrayBounds[i].UpperBound = (short) descriptor.Bounds[i].UpperBound;
 		}
 
-		public static IntPtr MarshalManagedToNative(ArrayDesc descriptor)
+		return MarshalManagedToNative(arrayDesc, arrayBounds);
+	}
+
+	public static IntPtr MarshalManagedToNative(ArrayDescMarshal arrayDesc, ArrayBoundMarshal[] arrayBounds)
+	{
+		int size = ArrayDescMarshal.ComputeLength(arrayBounds.Length);
+		nint ptr = Marshal.AllocHGlobal(size);
+
+		Marshal.StructureToPtr(arrayDesc, ptr, true);
+		for (int i = 0; i < arrayBounds.Length; i++)
 		{
-				var arrayDesc = new ArrayDescMarshal
-				{
-						DataType = descriptor.DataType,
-						Scale = (byte) descriptor.Scale,
-						Length = descriptor.Length,
-						FieldName = descriptor.FieldName,
-						RelationName = descriptor.RelationName,
-						Dimensions = descriptor.Dimensions,
-						Flags = descriptor.Flags
-				};
-
-				var arrayBounds = new ArrayBoundMarshal[descriptor.Bounds.Length];
-
-				for (int i = 0; i < descriptor.Dimensions; i++)
-				{
-						arrayBounds[i].LowerBound = (short) descriptor.Bounds[i].LowerBound;
-						arrayBounds[i].UpperBound = (short) descriptor.Bounds[i].UpperBound;
-				}
-
-				return MarshalManagedToNative(arrayDesc, arrayBounds);
+			Marshal.StructureToPtr(arrayBounds[i], ptr + ArrayDescMarshal.ComputeLength(i), true);
 		}
 
-		public static IntPtr MarshalManagedToNative(ArrayDescMarshal arrayDesc, ArrayBoundMarshal[] arrayBounds)
-		{
-				int size = ArrayDescMarshal.ComputeLength(arrayBounds.Length);
-				nint ptr = Marshal.AllocHGlobal(size);
-
-				Marshal.StructureToPtr(arrayDesc, ptr, true);
-				for (int i = 0; i < arrayBounds.Length; i++)
-				{
-						Marshal.StructureToPtr(arrayBounds[i], ptr + ArrayDescMarshal.ComputeLength(i), true);
-				}
-
-				return ptr;
-		}
+		return ptr;
+	}
 }

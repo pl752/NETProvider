@@ -19,6 +19,6 @@ namespace FirebirdSql.Data.Services;
 
 public enum FbServiceState
 {
-		Closed = 0,
-		Open = 1
+	Closed = 0,
+	Open = 1
 }

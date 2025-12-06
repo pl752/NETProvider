@@ -27,15 +27,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbViewColumns : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.Append(
-					@"SELECT
+		_ = sql.Append(
+			@"SELECT
 					null AS VIEW_CATALOG,
 					null AS VIEW_SCHEMA,
 					rel.rdb$relation_name AS VIEW_NAME,
@@ -66,114 +66,114 @@ internal class FbViewColumns : FbSchema
 					LEFT JOIN rdb$character_sets cs ON cs.rdb$character_set_id = fld.rdb$character_set_id
 				    LEFT JOIN rdb$collations coll ON (coll.rdb$collation_id = fld.rdb$collation_id AND coll.rdb$character_set_id = fld.rdb$character_set_id)");
 
-				_ = where.Append("rel.rdb$view_source IS NOT NULL");
+		_ = where.Append("rel.rdb$view_source IS NOT NULL");
 
-				if (restrictions != null)
-				{
-						int index = 0;
-
-						/* VIEW_CATALOG */
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
-
-						/* VIEW_SCHEMA */
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
-
-						/* VIEW_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
-						}
-
-						/* COLUMN_NAME */
-						if (restrictions.Length >= 4 && restrictions[3] != null)
-						{
-								_ = where.AppendFormat(" AND rfr.rdb$field_name = @p{0}", index++);
-						}
-				}
-
-				if (where.Length > 0)
-				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
-				}
-
-				_ = sql.Append(" ORDER BY VIEW_NAME, ORDINAL_POSITION");
-
-				return sql;
-		}
-
-		protected override void ProcessResult(DataTable schema)
+		if (restrictions != null)
 		{
-				schema.BeginLoadData();
-				_ = schema.Columns.Add("IS_NULLABLE", typeof(bool));
-				_ = schema.Columns.Add("IS_ARRAY", typeof(bool));
+			int index = 0;
 
-				foreach (DataRow row in schema.Rows)
-				{
-						int blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
+			/* VIEW_CATALOG */
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-						int subType = 0;
-						if (row["COLUMN_SUB_TYPE"] != DBNull.Value)
-						{
-								subType = Convert.ToInt32(row["COLUMN_SUB_TYPE"], CultureInfo.InvariantCulture);
-						}
+			/* VIEW_SCHEMA */
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
 
-						int scale = 0;
-						if (row["NUMERIC_SCALE"] != DBNull.Value)
-						{
-								scale = Convert.ToInt32(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
-						}
+			/* VIEW_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
+			}
 
-						row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
-						row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
-
-						var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
-						row["COLUMN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
-
-						if (dbType is FbDbType.Char or FbDbType.VarChar)
-						{
-								if (!row.IsNull("CHARACTER_MAX_LENGTH"))
-								{
-										row["COLUMN_SIZE"] = row["CHARACTER_MAX_LENGTH"];
-								}
-						}
-						else
-						{
-								row["CHARACTER_OCTET_LENGTH"] = 0;
-						}
-
-						if (dbType is FbDbType.Binary or FbDbType.Text)
-						{
-								row["COLUMN_SIZE"] = Int32.MaxValue;
-						}
-
-						if (row["NUMERIC_PRECISION"] == DBNull.Value)
-						{
-								row["NUMERIC_PRECISION"] = 0;
-						}
-
-						if ((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
-							(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0))
-						{
-								row["NUMERIC_PRECISION"] = row["COLUMN_SIZE"];
-						}
-
-						row["NUMERIC_SCALE"] = (-1) * scale;
-				}
-
-				schema.EndLoadData();
-				schema.AcceptChanges();
-
-				// Remove not more needed columns
-				schema.Columns.Remove("COLUMN_NULLABLE");
-				schema.Columns.Remove("COLUMN_ARRAY");
-				schema.Columns.Remove("FIELD_TYPE");
-				schema.Columns.Remove("CHARACTER_MAX_LENGTH");
+			/* COLUMN_NAME */
+			if (restrictions.Length >= 4 && restrictions[3] != null)
+			{
+				_ = where.AppendFormat(" AND rfr.rdb$field_name = @p{0}", index++);
+			}
 		}
 
+		if (where.Length > 0)
+		{
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+		}
 
-		#endregion
+		_ = sql.Append(" ORDER BY VIEW_NAME, ORDINAL_POSITION");
+
+		return sql;
+	}
+
+	protected override void ProcessResult(DataTable schema)
+	{
+		schema.BeginLoadData();
+		_ = schema.Columns.Add("IS_NULLABLE", typeof(bool));
+		_ = schema.Columns.Add("IS_ARRAY", typeof(bool));
+
+		foreach (DataRow row in schema.Rows)
+		{
+			int blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
+
+			int subType = 0;
+			if (row["COLUMN_SUB_TYPE"] != DBNull.Value)
+			{
+				subType = Convert.ToInt32(row["COLUMN_SUB_TYPE"], CultureInfo.InvariantCulture);
+			}
+
+			int scale = 0;
+			if (row["NUMERIC_SCALE"] != DBNull.Value)
+			{
+				scale = Convert.ToInt32(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
+			}
+
+			row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
+			row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
+
+			var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
+			row["COLUMN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
+
+			if (dbType is FbDbType.Char or FbDbType.VarChar)
+			{
+				if (!row.IsNull("CHARACTER_MAX_LENGTH"))
+				{
+					row["COLUMN_SIZE"] = row["CHARACTER_MAX_LENGTH"];
+				}
+			}
+			else
+			{
+				row["CHARACTER_OCTET_LENGTH"] = 0;
+			}
+
+			if (dbType is FbDbType.Binary or FbDbType.Text)
+			{
+				row["COLUMN_SIZE"] = Int32.MaxValue;
+			}
+
+			if (row["NUMERIC_PRECISION"] == DBNull.Value)
+			{
+				row["NUMERIC_PRECISION"] = 0;
+			}
+
+			if ((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
+				(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0))
+			{
+				row["NUMERIC_PRECISION"] = row["COLUMN_SIZE"];
+			}
+
+			row["NUMERIC_SCALE"] = (-1) * scale;
+		}
+
+		schema.EndLoadData();
+		schema.AcceptChanges();
+
+		// Remove not more needed columns
+		schema.Columns.Remove("COLUMN_NULLABLE");
+		schema.Columns.Remove("COLUMN_ARRAY");
+		schema.Columns.Remove("FIELD_TYPE");
+		schema.Columns.Remove("CHARACTER_MAX_LENGTH");
+	}
+
+
+	#endregion
 }

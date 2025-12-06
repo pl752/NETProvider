@@ -24,198 +24,198 @@ namespace FirebirdSql.Data.Common;
 
 internal abstract class BlobBase(DatabaseBase db)
 {
-		private int _rblFlags;
-		private readonly Charset _charset = db.Charset;
-		private readonly int _segmentSize = db.PacketSize;
+	private int _rblFlags;
+	private readonly Charset _charset = db.Charset;
+	private readonly int _segmentSize = db.PacketSize;
 
-		protected long _blobId;
-		protected bool _isOpen;
-		protected int _position;
-		protected TransactionBase _transaction;
+	protected long _blobId;
+	protected bool _isOpen;
+	protected int _position;
+	protected TransactionBase _transaction;
 
-		public abstract int Handle { get; }
-		public long Id => _blobId;
-		public bool EOF => (_rblFlags & IscCodes.RBL_eof_pending) != 0;
-		public bool IsOpen => _isOpen;
+	public abstract int Handle { get; }
+	public long Id => _blobId;
+	public bool EOF => (_rblFlags & IscCodes.RBL_eof_pending) != 0;
+	public bool IsOpen => _isOpen;
 
-		public int SegmentSize => _segmentSize;
-		public int Position => _position;
+	public int SegmentSize => _segmentSize;
+	public int Position => _position;
 
-		public abstract DatabaseBase Database { get; }
+	public abstract DatabaseBase Database { get; }
 
-		public string ReadString()
+	public string ReadString()
+	{
+		byte[] buffer = Read();
+		return _charset.GetString(buffer, 0, buffer.Length);
+	}
+	public async ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default)
+	{
+		byte[] buffer = await ReadAsync(cancellationToken).ConfigureAwait(false);
+		return _charset.GetString(buffer, 0, buffer.Length);
+	}
+
+	public byte[] Read()
+	{
+		using (var ms = new MemoryStream())
 		{
-				byte[] buffer = Read();
-				return _charset.GetString(buffer, 0, buffer.Length);
+			try
+			{
+				Open();
+
+				while (!EOF)
+				{
+					GetSegment(ms);
+				}
+
+				Close();
+			}
+			catch
+			{
+				// Cancel the blob and rethrow the exception
+				Cancel();
+
+				throw;
+			}
+
+			return ms.ToArray();
 		}
-		public async ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default)
+	}
+	public async ValueTask<byte[]> ReadAsync(CancellationToken cancellationToken = default)
+	{
+		using (var ms = new MemoryStream())
 		{
-				byte[] buffer = await ReadAsync(cancellationToken).ConfigureAwait(false);
-				return _charset.GetString(buffer, 0, buffer.Length);
-		}
+			try
+			{
+				await OpenAsync(cancellationToken).ConfigureAwait(false);
 
-		public byte[] Read()
+				while (!EOF)
+				{
+					await GetSegmentAsync(ms, cancellationToken).ConfigureAwait(false);
+				}
+
+				await CloseAsync(cancellationToken).ConfigureAwait(false);
+			}
+			catch
+			{
+				// Cancel the blob and rethrow the exception
+				await CancelAsync(cancellationToken).ConfigureAwait(false);
+
+				throw;
+			}
+
+			return ms.ToArray();
+		}
+	}
+
+	public void Write(string data) => Write(_charset.GetBytes(data));
+	public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default) => WriteAsync(_charset.GetBytes(data), cancellationToken);
+
+	public void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
+	public ValueTask WriteAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+
+	public void Write(byte[] buffer, int index, int count)
+	{
+		try
 		{
-				using (var ms = new MemoryStream())
+			Create();
+
+			int length = count;
+			int offset = index;
+			int chunk = length >= _segmentSize ? _segmentSize : length;
+
+			byte[] tmpBuffer = new byte[chunk];
+
+			while (length > 0)
+			{
+				if (chunk > length)
 				{
-						try
-						{
-								Open();
-
-								while (!EOF)
-								{
-										GetSegment(ms);
-								}
-
-								Close();
-						}
-						catch
-						{
-								// Cancel the blob and rethrow the exception
-								Cancel();
-
-								throw;
-						}
-
-						return ms.ToArray();
+					chunk = length;
+					tmpBuffer = new byte[chunk];
 				}
+
+				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
+				PutSegment(tmpBuffer);
+
+				offset += chunk;
+				length -= chunk;
+			}
+
+			Close();
 		}
-		public async ValueTask<byte[]> ReadAsync(CancellationToken cancellationToken = default)
+		catch
 		{
-				using (var ms = new MemoryStream())
-				{
-						try
-						{
-								await OpenAsync(cancellationToken).ConfigureAwait(false);
+			// Cancel the blob and rethrow the exception
+			Cancel();
 
-								while (!EOF)
-								{
-										await GetSegmentAsync(ms, cancellationToken).ConfigureAwait(false);
-								}
-
-								await CloseAsync(cancellationToken).ConfigureAwait(false);
-						}
-						catch
-						{
-								// Cancel the blob and rethrow the exception
-								await CancelAsync(cancellationToken).ConfigureAwait(false);
-
-								throw;
-						}
-
-						return ms.ToArray();
-				}
+			throw;
 		}
-
-		public void Write(string data) => Write(_charset.GetBytes(data));
-		public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default) => WriteAsync(_charset.GetBytes(data), cancellationToken);
-
-		public void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
-		public ValueTask WriteAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteAsync(buffer, 0, buffer.Length, cancellationToken);
-
-		public void Write(byte[] buffer, int index, int count)
+	}
+	public async ValueTask WriteAsync(byte[] buffer, int index, int count, CancellationToken cancellationToken = default)
+	{
+		try
 		{
-				try
+			await CreateAsync(cancellationToken).ConfigureAwait(false);
+
+			int length = count;
+			int offset = index;
+			int chunk = length >= _segmentSize ? _segmentSize : length;
+
+			byte[] tmpBuffer = new byte[chunk];
+
+			while (length > 0)
+			{
+				if (chunk > length)
 				{
-						Create();
-
-						int length = count;
-						int offset = index;
-						int chunk = length >= _segmentSize ? _segmentSize : length;
-
-						byte[] tmpBuffer = new byte[chunk];
-
-						while (length > 0)
-						{
-								if (chunk > length)
-								{
-										chunk = length;
-										tmpBuffer = new byte[chunk];
-								}
-
-								Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-								PutSegment(tmpBuffer);
-
-								offset += chunk;
-								length -= chunk;
-						}
-
-						Close();
+					chunk = length;
+					tmpBuffer = new byte[chunk];
 				}
-				catch
-				{
-						// Cancel the blob and rethrow the exception
-						Cancel();
 
-						throw;
-				}
+				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
+				await PutSegmentAsync(tmpBuffer, cancellationToken).ConfigureAwait(false);
+
+				offset += chunk;
+				length -= chunk;
+			}
+
+			await CloseAsync(cancellationToken).ConfigureAwait(false);
 		}
-		public async ValueTask WriteAsync(byte[] buffer, int index, int count, CancellationToken cancellationToken = default)
+		catch
 		{
-				try
-				{
-						await CreateAsync(cancellationToken).ConfigureAwait(false);
+			// Cancel the blob and rethrow the exception
+			await CancelAsync(cancellationToken).ConfigureAwait(false);
 
-						int length = count;
-						int offset = index;
-						int chunk = length >= _segmentSize ? _segmentSize : length;
-
-						byte[] tmpBuffer = new byte[chunk];
-
-						while (length > 0)
-						{
-								if (chunk > length)
-								{
-										chunk = length;
-										tmpBuffer = new byte[chunk];
-								}
-
-								Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-								await PutSegmentAsync(tmpBuffer, cancellationToken).ConfigureAwait(false);
-
-								offset += chunk;
-								length -= chunk;
-						}
-
-						await CloseAsync(cancellationToken).ConfigureAwait(false);
-				}
-				catch
-				{
-						// Cancel the blob and rethrow the exception
-						await CancelAsync(cancellationToken).ConfigureAwait(false);
-
-						throw;
-				}
+			throw;
 		}
+	}
 
-		public abstract void Create();
-		public abstract ValueTask CreateAsync(CancellationToken cancellationToken = default);
+	public abstract void Create();
+	public abstract ValueTask CreateAsync(CancellationToken cancellationToken = default);
 
-		public abstract void Open();
-		public abstract ValueTask OpenAsync(CancellationToken cancellationToken = default);
+	public abstract void Open();
+	public abstract ValueTask OpenAsync(CancellationToken cancellationToken = default);
 
-		public abstract int GetLength();
-		public abstract ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default);
+	public abstract int GetLength();
+	public abstract ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default);
 
-		public abstract byte[] GetSegment();
-		public abstract ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default);
+	public abstract byte[] GetSegment();
+	public abstract ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default);
 
-		public abstract void GetSegment(Stream stream);
-		public abstract ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default);
+	public abstract void GetSegment(Stream stream);
+	public abstract ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default);
 
-		public abstract void PutSegment(byte[] buffer);
-		public abstract ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default);
+	public abstract void PutSegment(byte[] buffer);
+	public abstract ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default);
 
-		public abstract void Seek(int offset, int seekMode);
-		public abstract ValueTask SeekAsync(int offset, int seekMode, CancellationToken cancellationToken = default);
+	public abstract void Seek(int offset, int seekMode);
+	public abstract ValueTask SeekAsync(int offset, int seekMode, CancellationToken cancellationToken = default);
 
-		public abstract void Close();
-		public abstract ValueTask CloseAsync(CancellationToken cancellationToken = default);
+	public abstract void Close();
+	public abstract ValueTask CloseAsync(CancellationToken cancellationToken = default);
 
-		public abstract void Cancel();
-		public abstract ValueTask CancelAsync(CancellationToken cancellationToken = default);
+	public abstract void Cancel();
+	public abstract ValueTask CancelAsync(CancellationToken cancellationToken = default);
 
-		protected void RblAddValue(int rblValue) => _rblFlags |= rblValue;
+	protected void RblAddValue(int rblValue) => _rblFlags |= rblValue;
 
-		protected void RblRemoveValue(int rblValue) => _rblFlags &= ~rblValue;
+	protected void RblRemoveValue(int rblValue) => _rblFlags &= ~rblValue;
 }

@@ -23,61 +23,61 @@ namespace FirebirdSql.Data.Common;
 
 internal abstract class ParameterBuffer
 {
-		private readonly List<byte> _data;
+	private readonly List<byte> _data;
 
-		public short Length => (short) _data.Count;
+	public short Length => (short) _data.Count;
 
-		protected ParameterBuffer()
+	protected ParameterBuffer()
+	{
+		_data = [];
+	}
+
+	public byte[] ToArray() => [.. _data];
+
+	public void Append(int type) => WriteByte(type);
+
+	protected void WriteByte(int value) => WriteByte((byte) value);
+
+	protected void WriteByte(byte value) => _data.Add(value);
+
+	protected void Write(byte value) => WriteByte(value);
+
+	protected void Write(short value)
+	{
+		if (!BitConverter.IsLittleEndian)
 		{
-				_data = [];
+			value = IPAddress.NetworkToHostOrder(value);
 		}
+		Span<byte> buffer = stackalloc byte[2];
+		_ = BitConverter.TryWriteBytes(buffer, value);
+		Write(buffer);
+	}
 
-		public byte[] ToArray() => [.. _data];
-
-		public void Append(int type) => WriteByte(type);
-
-		protected void WriteByte(int value) => WriteByte((byte) value);
-
-		protected void WriteByte(byte value) => _data.Add(value);
-
-		protected void Write(byte value) => WriteByte(value);
-
-		protected void Write(short value)
+	protected void Write(int value)
+	{
+		if (!BitConverter.IsLittleEndian)
 		{
-				if (!BitConverter.IsLittleEndian)
-				{
-						value = IPAddress.NetworkToHostOrder(value);
-				}
-				Span<byte> buffer = stackalloc byte[2];
-				_ = BitConverter.TryWriteBytes(buffer, value);
-				Write(buffer);
+			value = IPAddress.NetworkToHostOrder(value);
 		}
+		Span<byte> buffer = stackalloc byte[4];
+		_ = BitConverter.TryWriteBytes(buffer, value);
+		Write(buffer);
+	}
 
-		protected void Write(int value)
+	protected void Write(long value)
+	{
+		if (!BitConverter.IsLittleEndian)
 		{
-				if (!BitConverter.IsLittleEndian)
-				{
-						value = IPAddress.NetworkToHostOrder(value);
-				}
-				Span<byte> buffer = stackalloc byte[4];
-				_ = BitConverter.TryWriteBytes(buffer, value);
-				Write(buffer);
+			value = IPAddress.NetworkToHostOrder(value);
 		}
+		Span<byte> buffer = stackalloc byte[8];
+		_ = BitConverter.TryWriteBytes(buffer, value);
+		Write(buffer);
+	}
 
-		protected void Write(long value)
-		{
-				if (!BitConverter.IsLittleEndian)
-				{
-						value = IPAddress.NetworkToHostOrder(value);
-				}
-				Span<byte> buffer = stackalloc byte[8];
-				_ = BitConverter.TryWriteBytes(buffer, value);
-				Write(buffer);
-		}
+	protected void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
 
-		protected void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
+	protected void Write(ReadOnlySpan<byte> buffer) => _data.AddRange(buffer);
 
-		protected void Write(ReadOnlySpan<byte> buffer) => _data.AddRange(buffer);
-
-		protected void Write(byte[] buffer, int offset, int count) => _data.AddRange(new ArraySegment<byte>(buffer, offset, count));
+	protected void Write(byte[] buffer, int offset, int count) => _data.AddRange(new ArraySegment<byte>(buffer, offset, count));
 }

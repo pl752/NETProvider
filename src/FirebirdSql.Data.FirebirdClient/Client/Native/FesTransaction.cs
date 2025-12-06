@@ -27,375 +27,375 @@ namespace FirebirdSql.Data.Client.Native;
 
 internal sealed class FesTransaction : TransactionBase
 {
-		#region Inner Structs
+	#region Inner Structs
 
-		[StructLayout(LayoutKind.Sequential)]
-		struct IscTeb
+	[StructLayout(LayoutKind.Sequential)]
+	struct IscTeb
+	{
+		public IntPtr dbb_ptr;
+		public int tpb_len;
+		public IntPtr tpb_ptr;
+	}
+
+	#endregion
+
+	#region Fields
+
+	private TransactionHandle _handle;
+	private FesDatabase _database;
+	private bool _disposed;
+	private IntPtr[] _statusVector;
+
+	#endregion
+
+	#region Properties
+
+	public override int Handle => _handle.DangerousGetHandle().AsInt();
+
+	public TransactionHandle HandlePtr => _handle;
+
+	#endregion
+
+	#region Constructors
+
+	public FesTransaction(FesDatabase database)
+	{
+		_database = database;
+		_handle = new TransactionHandle();
+		State = TransactionState.NoTransaction;
+		_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+	}
+
+	#endregion
+
+	#region Dispose2
+
+	public override void Dispose2()
+	{
+		if (!_disposed)
 		{
-				public IntPtr dbb_ptr;
-				public int tpb_len;
-				public IntPtr tpb_ptr;
+			_disposed = true;
+			if (State != TransactionState.NoTransaction)
+			{
+				Rollback();
+			}
+			_database = null;
+			_handle.Dispose();
+			State = TransactionState.NoTransaction;
+			_statusVector = null;
+			base.Dispose2();
+		}
+	}
+	public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
+	{
+		if (!_disposed)
+		{
+			_disposed = true;
+			if (State != TransactionState.NoTransaction)
+			{
+				await RollbackAsync(cancellationToken).ConfigureAwait(false);
+			}
+			_database = null;
+			_handle.Dispose();
+			State = TransactionState.NoTransaction;
+			_statusVector = null;
+			await base.Dispose2Async(cancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	#endregion
+
+	#region Methods
+
+	public override void BeginTransaction(TransactionParameterBuffer tpb)
+	{
+		if (State != TransactionState.NoTransaction)
+		{
+			throw new InvalidOperationException();
 		}
 
-		#endregion
+		var teb = new IscTeb();
+		nint tebData = IntPtr.Zero;
 
-		#region Fields
-
-		private TransactionHandle _handle;
-		private FesDatabase _database;
-		private bool _disposed;
-		private IntPtr[] _statusVector;
-
-		#endregion
-
-		#region Properties
-
-		public override int Handle => _handle.DangerousGetHandle().AsInt();
-
-		public TransactionHandle HandlePtr => _handle;
-
-		#endregion
-
-		#region Constructors
-
-		public FesTransaction(FesDatabase database)
+		try
 		{
-				_database = database;
-				_handle = new TransactionHandle();
-				State = TransactionState.NoTransaction;
-				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+			ClearStatusVector();
+
+			teb.dbb_ptr = Marshal.AllocHGlobal(4);
+			Marshal.WriteInt32(teb.dbb_ptr, _database.Handle);
+
+			teb.tpb_len = tpb.Length;
+
+			teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
+			Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
+
+			int size = Marshal.SizeOf<IscTeb>();
+			tebData = Marshal.AllocHGlobal(size);
+
+			Marshal.StructureToPtr(teb, tebData, true);
+
+			_ = _database.FbClient.isc_start_multiple(
+				_statusVector,
+				ref _handle,
+				1,
+				tebData);
+
+			_database.ProcessStatusVector(_statusVector);
+
+			State = TransactionState.Active;
+
+			_database.TransactionCount++;
+		}
+		finally
+		{
+			if (teb.dbb_ptr != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(teb.dbb_ptr);
+			}
+			if (teb.tpb_ptr != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(teb.tpb_ptr);
+			}
+			if (tebData != IntPtr.Zero)
+			{
+				Marshal.DestroyStructure<IscTeb>(tebData);
+				Marshal.FreeHGlobal(tebData);
+			}
+		}
+	}
+	public override ValueTask BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default)
+	{
+		if (State != TransactionState.NoTransaction)
+		{
+			throw new InvalidOperationException();
 		}
 
-		#endregion
+		var teb = new IscTeb();
+		nint tebData = IntPtr.Zero;
 
-		#region Dispose2
-
-		public override void Dispose2()
+		try
 		{
-				if (!_disposed)
-				{
-						_disposed = true;
-						if (State != TransactionState.NoTransaction)
-						{
-								Rollback();
-						}
-						_database = null;
-						_handle.Dispose();
-						State = TransactionState.NoTransaction;
-						_statusVector = null;
-						base.Dispose2();
-				}
+			ClearStatusVector();
+
+			teb.dbb_ptr = Marshal.AllocHGlobal(4);
+			Marshal.WriteInt32(teb.dbb_ptr, _database.Handle);
+
+			teb.tpb_len = tpb.Length;
+
+			teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
+			Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
+
+			int size = Marshal.SizeOf<IscTeb>();
+			tebData = Marshal.AllocHGlobal(size);
+
+			Marshal.StructureToPtr(teb, tebData, true);
+
+			_ = _database.FbClient.isc_start_multiple(
+				_statusVector,
+				ref _handle,
+				1,
+				tebData);
+
+			_database.ProcessStatusVector(_statusVector);
+
+			State = TransactionState.Active;
+
+			_database.TransactionCount++;
 		}
-		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
+		finally
 		{
-				if (!_disposed)
-				{
-						_disposed = true;
-						if (State != TransactionState.NoTransaction)
-						{
-								await RollbackAsync(cancellationToken).ConfigureAwait(false);
-						}
-						_database = null;
-						_handle.Dispose();
-						State = TransactionState.NoTransaction;
-						_statusVector = null;
-						await base.Dispose2Async(cancellationToken).ConfigureAwait(false);
-				}
-		}
-
-		#endregion
-
-		#region Methods
-
-		public override void BeginTransaction(TransactionParameterBuffer tpb)
-		{
-				if (State != TransactionState.NoTransaction)
-				{
-						throw new InvalidOperationException();
-				}
-
-				var teb = new IscTeb();
-				nint tebData = IntPtr.Zero;
-
-				try
-				{
-						ClearStatusVector();
-
-						teb.dbb_ptr = Marshal.AllocHGlobal(4);
-						Marshal.WriteInt32(teb.dbb_ptr, _database.Handle);
-
-						teb.tpb_len = tpb.Length;
-
-						teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
-						Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
-
-						int size = Marshal.SizeOf<IscTeb>();
-						tebData = Marshal.AllocHGlobal(size);
-
-						Marshal.StructureToPtr(teb, tebData, true);
-
-						_ = _database.FbClient.isc_start_multiple(
-							_statusVector,
-							ref _handle,
-							1,
-							tebData);
-
-						_database.ProcessStatusVector(_statusVector);
-
-						State = TransactionState.Active;
-
-						_database.TransactionCount++;
-				}
-				finally
-				{
-						if (teb.dbb_ptr != IntPtr.Zero)
-						{
-								Marshal.FreeHGlobal(teb.dbb_ptr);
-						}
-						if (teb.tpb_ptr != IntPtr.Zero)
-						{
-								Marshal.FreeHGlobal(teb.tpb_ptr);
-						}
-						if (tebData != IntPtr.Zero)
-						{
-								Marshal.DestroyStructure<IscTeb>(tebData);
-								Marshal.FreeHGlobal(tebData);
-						}
-				}
-		}
-		public override ValueTask BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default)
-		{
-				if (State != TransactionState.NoTransaction)
-				{
-						throw new InvalidOperationException();
-				}
-
-				var teb = new IscTeb();
-				nint tebData = IntPtr.Zero;
-
-				try
-				{
-						ClearStatusVector();
-
-						teb.dbb_ptr = Marshal.AllocHGlobal(4);
-						Marshal.WriteInt32(teb.dbb_ptr, _database.Handle);
-
-						teb.tpb_len = tpb.Length;
-
-						teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
-						Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
-
-						int size = Marshal.SizeOf<IscTeb>();
-						tebData = Marshal.AllocHGlobal(size);
-
-						Marshal.StructureToPtr(teb, tebData, true);
-
-						_ = _database.FbClient.isc_start_multiple(
-							_statusVector,
-							ref _handle,
-							1,
-							tebData);
-
-						_database.ProcessStatusVector(_statusVector);
-
-						State = TransactionState.Active;
-
-						_database.TransactionCount++;
-				}
-				finally
-				{
-						if (teb.dbb_ptr != IntPtr.Zero)
-						{
-								Marshal.FreeHGlobal(teb.dbb_ptr);
-						}
-						if (teb.tpb_ptr != IntPtr.Zero)
-						{
-								Marshal.FreeHGlobal(teb.tpb_ptr);
-						}
-						if (tebData != IntPtr.Zero)
-						{
-								Marshal.DestroyStructure<IscTeb>(tebData);
-								Marshal.FreeHGlobal(tebData);
-						}
-				}
-
-				return ValueTask2.CompletedTask;
+			if (teb.dbb_ptr != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(teb.dbb_ptr);
+			}
+			if (teb.tpb_ptr != IntPtr.Zero)
+			{
+				Marshal.FreeHGlobal(teb.tpb_ptr);
+			}
+			if (tebData != IntPtr.Zero)
+			{
+				Marshal.DestroyStructure<IscTeb>(tebData);
+				Marshal.FreeHGlobal(tebData);
+			}
 		}
 
-		public override void Commit()
-		{
-				EnsureActiveTransactionState();
+		return ValueTask2.CompletedTask;
+	}
 
-				ClearStatusVector();
+	public override void Commit()
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
 
-				_database.TransactionCount--;
+		_database.ProcessStatusVector(_statusVector);
 
-				OnUpdate(EventArgs.Empty);
+		_database.TransactionCount--;
 
-				State = TransactionState.NoTransaction;
-		}
-		public override ValueTask CommitAsync(CancellationToken cancellationToken = default)
-		{
-				EnsureActiveTransactionState();
+		OnUpdate(EventArgs.Empty);
 
-				ClearStatusVector();
+		State = TransactionState.NoTransaction;
+	}
+	public override ValueTask CommitAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
 
-				_database.TransactionCount--;
+		_database.ProcessStatusVector(_statusVector);
 
-				OnUpdate(EventArgs.Empty);
+		_database.TransactionCount--;
 
-				State = TransactionState.NoTransaction;
+		OnUpdate(EventArgs.Empty);
 
-				return ValueTask2.CompletedTask;
-		}
+		State = TransactionState.NoTransaction;
 
-		public override void Rollback()
-		{
-				EnsureActiveTransactionState();
+		return ValueTask2.CompletedTask;
+	}
 
-				ClearStatusVector();
+	public override void Rollback()
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
 
-				_database.TransactionCount--;
+		_database.ProcessStatusVector(_statusVector);
 
-				OnUpdate(EventArgs.Empty);
+		_database.TransactionCount--;
 
-				State = TransactionState.NoTransaction;
-		}
-		public override ValueTask RollbackAsync(CancellationToken cancellationToken = default)
-		{
-				EnsureActiveTransactionState();
+		OnUpdate(EventArgs.Empty);
 
-				ClearStatusVector();
+		State = TransactionState.NoTransaction;
+	}
+	public override ValueTask RollbackAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
 
-				_database.TransactionCount--;
+		_database.ProcessStatusVector(_statusVector);
 
-				OnUpdate(EventArgs.Empty);
+		_database.TransactionCount--;
 
-				State = TransactionState.NoTransaction;
+		OnUpdate(EventArgs.Empty);
 
-				return ValueTask2.CompletedTask;
-		}
+		State = TransactionState.NoTransaction;
 
-		public override void CommitRetaining()
-		{
-				EnsureActiveTransactionState();
+		return ValueTask2.CompletedTask;
+	}
 
-				ClearStatusVector();
+	public override void CommitRetaining()
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
 
-				State = TransactionState.Active;
-		}
-		public override ValueTask CommitRetainingAsync(CancellationToken cancellationToken = default)
-		{
-				EnsureActiveTransactionState();
+		_database.ProcessStatusVector(_statusVector);
 
-				ClearStatusVector();
+		State = TransactionState.Active;
+	}
+	public override ValueTask CommitRetainingAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
 
-				State = TransactionState.Active;
+		_database.ProcessStatusVector(_statusVector);
 
-				return ValueTask2.CompletedTask;
-		}
+		State = TransactionState.Active;
 
-		public override void RollbackRetaining()
-		{
-				EnsureActiveTransactionState();
+		return ValueTask2.CompletedTask;
+	}
 
-				ClearStatusVector();
+	public override void RollbackRetaining()
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
 
-				State = TransactionState.Active;
-		}
-		public override ValueTask RollbackRetainingAsync(CancellationToken cancellationToken = default)
-		{
-				EnsureActiveTransactionState();
+		_database.ProcessStatusVector(_statusVector);
 
-				ClearStatusVector();
+		State = TransactionState.Active;
+	}
+	public override ValueTask RollbackRetainingAsync(CancellationToken cancellationToken = default)
+	{
+		EnsureActiveTransactionState();
 
-				_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
+		ClearStatusVector();
 
-				_database.ProcessStatusVector(_statusVector);
+		_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
 
-				State = TransactionState.Active;
+		_database.ProcessStatusVector(_statusVector);
 
-				return ValueTask2.CompletedTask;
-		}
+		State = TransactionState.Active;
 
-		public override void Prepare() { }
-		public override ValueTask PrepareAsync(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
+		return ValueTask2.CompletedTask;
+	}
 
-		public override void Prepare(byte[] buffer) { }
-		public override ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
+	public override void Prepare() { }
+	public override ValueTask PrepareAsync(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
-		public override List<object> GetTransactionInfo(byte[] items) => GetTransactionInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
-		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetTransactionInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
+	public override void Prepare(byte[] buffer) { }
+	public override ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
-		public override List<object> GetTransactionInfo(byte[] items, int bufferLength)
-		{
-				byte[] buffer = new byte[bufferLength];
+	public override List<object> GetTransactionInfo(byte[] items) => GetTransactionInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
+	public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetTransactionInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
-				TransactionInfo(items, buffer, buffer.Length);
+	public override List<object> GetTransactionInfo(byte[] items, int bufferLength)
+	{
+		byte[] buffer = new byte[bufferLength];
 
-				return IscHelper.ParseTransactionInfo(buffer, _database.Charset);
-		}
-		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
-		{
-				byte[] buffer = new byte[bufferLength];
+		TransactionInfo(items, buffer, buffer.Length);
 
-				TransactionInfo(items, buffer, buffer.Length);
+		return IscHelper.ParseTransactionInfo(buffer, _database.Charset);
+	}
+	public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+	{
+		byte[] buffer = new byte[bufferLength];
 
-				return ValueTask2.FromResult(IscHelper.ParseTransactionInfo(buffer, _database.Charset));
-		}
+		TransactionInfo(items, buffer, buffer.Length);
 
-		#endregion
+		return ValueTask2.FromResult(IscHelper.ParseTransactionInfo(buffer, _database.Charset));
+	}
 
-		#region Private Methods
+	#endregion
 
-		private void TransactionInfo(byte[] items, byte[] buffer, int bufferLength)
-		{
-				StatusVectorHelper.ClearStatusVector(_statusVector);
+	#region Private Methods
 
-				_ = _database.FbClient.isc_transaction_info(
-					_statusVector,
-					ref _handle,
-					(short) items.Length,
-					items,
-					(short) bufferLength,
-					buffer);
+	private void TransactionInfo(byte[] items, byte[] buffer, int bufferLength)
+	{
+		StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				ProcessStatusVector();
-		}
+		_ = _database.FbClient.isc_transaction_info(
+			_statusVector,
+			ref _handle,
+			(short) items.Length,
+			items,
+			(short) bufferLength,
+			buffer);
 
-		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
+		ProcessStatusVector();
+	}
 
-		private void ProcessStatusVector() => StatusVectorHelper.ProcessStatusVector(_statusVector, _database.Charset, _database.WarningMessage);
+	private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
-		private void ProcessStatusVector(Charset charset) => StatusVectorHelper.ProcessStatusVector(_statusVector, charset, _database.WarningMessage);
+	private void ProcessStatusVector() => StatusVectorHelper.ProcessStatusVector(_statusVector, _database.Charset, _database.WarningMessage);
 
-		#endregion
+	private void ProcessStatusVector(Charset charset) => StatusVectorHelper.ProcessStatusVector(_statusVector, charset, _database.WarningMessage);
+
+	#endregion
 }

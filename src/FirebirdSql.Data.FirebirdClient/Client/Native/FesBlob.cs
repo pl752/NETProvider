@@ -26,448 +26,448 @@ namespace FirebirdSql.Data.Client.Native;
 
 internal sealed class FesBlob : BlobBase
 {
-		#region Fields
+	#region Fields
 
-		private readonly FesDatabase _database;
-		private readonly IntPtr[] _statusVector;
-		private BlobHandle _blobHandle;
+	private readonly FesDatabase _database;
+	private readonly IntPtr[] _statusVector;
+	private BlobHandle _blobHandle;
 
-		#endregion
+	#endregion
 
-		#region Properties
+	#region Properties
 
-		public override DatabaseBase Database => _database;
+	public override DatabaseBase Database => _database;
 
-		public override int Handle => _blobHandle.DangerousGetHandle().AsInt();
+	public override int Handle => _blobHandle.DangerousGetHandle().AsInt();
 
-		#endregion
+	#endregion
 
-		#region Constructors
+	#region Constructors
 
-		public FesBlob(FesDatabase database, FesTransaction transaction)
-			: this(database, transaction, 0)
+	public FesBlob(FesDatabase database, FesTransaction transaction)
+		: this(database, transaction, 0)
+	{
+	}
+
+	public FesBlob(FesDatabase database, FesTransaction transaction, long blobId)
+		: base(database)
+	{
+		_database = database;
+		_transaction = transaction;
+		_position = 0;
+		_blobHandle = new BlobHandle();
+		_blobId = blobId;
+		_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+	}
+
+	#endregion
+
+	#region Protected Methods
+
+	public override void Create()
+	{
+		ClearStatusVector();
+
+		var dbHandle = _database.HandlePtr;
+		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+
+		_ = _database.FbClient.isc_create_blob2(
+			_statusVector,
+			ref dbHandle,
+			ref trHandle,
+			ref _blobHandle,
+			ref _blobId,
+			0,
+			[]);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_isOpen = true;
+
+		RblAddValue(IscCodes.RBL_create);
+	}
+	public override ValueTask CreateAsync(CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		var dbHandle = _database.HandlePtr;
+		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+
+		_ = _database.FbClient.isc_create_blob2(
+			_statusVector,
+			ref dbHandle,
+			ref trHandle,
+			ref _blobHandle,
+			ref _blobId,
+			0,
+			[]);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_isOpen = true;
+
+		RblAddValue(IscCodes.RBL_create);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override void Open()
+	{
+		ClearStatusVector();
+
+		var dbHandle = _database.HandlePtr;
+		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+
+		_ = _database.FbClient.isc_open_blob2(
+			_statusVector,
+			ref dbHandle,
+			ref trHandle,
+			ref _blobHandle,
+			ref _blobId,
+			0,
+			[]);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_isOpen = true;
+	}
+	public override ValueTask OpenAsync(CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		var dbHandle = _database.HandlePtr;
+		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+
+		_ = _database.FbClient.isc_open_blob2(
+			_statusVector,
+			ref dbHandle,
+			ref trHandle,
+			ref _blobHandle,
+			ref _blobId,
+			0,
+			[]);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		_isOpen = true;
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override int GetLength()
+	{
+		ClearStatusVector();
+
+		byte[] buffer = new byte[20];
+
+		_ = _database.FbClient.isc_blob_info(
+			_statusVector,
+			ref _blobHandle,
+			1,
+			[IscCodes.isc_info_blob_total_length],
+			(short) buffer.Length,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		long length = IscHelper.VaxInteger(buffer, 1, 2);
+		long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+
+		return (int) size;
+	}
+
+	public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		byte[] buffer = new byte[20];
+
+		_ = _database.FbClient.isc_blob_info(
+			_statusVector,
+			ref _blobHandle,
+			1,
+			[IscCodes.isc_info_blob_total_length],
+			(short) buffer.Length,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		long length = IscHelper.VaxInteger(buffer, 1, 2);
+		long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+
+		return ValueTask2.FromResult((int) size);
+	}
+
+	public override void GetSegment(Stream stream)
+	{
+		short requested = (short) SegmentSize;
+		short segmentLength = 0;
+
+		ClearStatusVector();
+
+		byte[] tmp = new byte[requested];
+
+		nint status = _database.FbClient.isc_get_segment(
+			_statusVector,
+			ref _blobHandle,
+			ref segmentLength,
+			requested,
+			tmp);
+
+		RblRemoveValue(IscCodes.RBL_segment);
+
+		if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
 		{
+			RblAddValue(IscCodes.RBL_eof_pending);
+			return;
 		}
-
-		public FesBlob(FesDatabase database, FesTransaction transaction, long blobId)
-			: base(database)
+		else
 		{
-				_database = database;
-				_transaction = transaction;
-				_position = 0;
-				_blobHandle = new BlobHandle();
-				_blobId = blobId;
-				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
-		}
-
-		#endregion
-
-		#region Protected Methods
-
-		public override void Create()
-		{
-				ClearStatusVector();
-
-				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction) _transaction).HandlePtr;
-
-				_ = _database.FbClient.isc_create_blob2(
-					_statusVector,
-					ref dbHandle,
-					ref trHandle,
-					ref _blobHandle,
-					ref _blobId,
-					0,
-					[]);
-
+			if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+			{
+				RblAddValue(IscCodes.RBL_segment);
+			}
+			else
+			{
 				_database.ProcessStatusVector(_statusVector);
-
-				_isOpen = true;
-
-				RblAddValue(IscCodes.RBL_create);
+			}
 		}
-		public override ValueTask CreateAsync(CancellationToken cancellationToken = default)
+
+		stream.Write(tmp, 0, segmentLength);
+	}
+	public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default)
+	{
+		short requested = (short) SegmentSize;
+		short segmentLength = 0;
+
+		ClearStatusVector();
+
+		byte[] tmp = new byte[requested];
+
+		nint status = _database.FbClient.isc_get_segment(
+			_statusVector,
+			ref _blobHandle,
+			ref segmentLength,
+			requested,
+			tmp);
+
+
+		RblRemoveValue(IscCodes.RBL_segment);
+
+		if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
 		{
-				ClearStatusVector();
-
-				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction) _transaction).HandlePtr;
-
-				_ = _database.FbClient.isc_create_blob2(
-					_statusVector,
-					ref dbHandle,
-					ref trHandle,
-					ref _blobHandle,
-					ref _blobId,
-					0,
-					[]);
-
+			RblAddValue(IscCodes.RBL_eof_pending);
+			return ValueTask2.CompletedTask;
+		}
+		else
+		{
+			if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+			{
+				RblAddValue(IscCodes.RBL_segment);
+			}
+			else
+			{
 				_database.ProcessStatusVector(_statusVector);
-
-				_isOpen = true;
-
-				RblAddValue(IscCodes.RBL_create);
-
-				return ValueTask2.CompletedTask;
+			}
 		}
 
-		public override void Open()
+		stream.Write(tmp, 0, segmentLength);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override byte[] GetSegment()
+	{
+		short requested = (short) (SegmentSize - 2);
+		short segmentLength = 0;
+
+		ClearStatusVector();
+
+		byte[] tmp = new byte[requested];
+
+		nint status = _database.FbClient.isc_get_segment(
+			_statusVector,
+			ref _blobHandle,
+			ref segmentLength,
+			requested,
+			tmp);
+
+
+		RblRemoveValue(IscCodes.RBL_segment);
+
+		if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
 		{
-				ClearStatusVector();
+			RblAddValue(IscCodes.RBL_eof_pending);
+			return [];
+		}
 
-				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction) _transaction).HandlePtr;
+		if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+		{
+			RblAddValue(IscCodes.RBL_segment);
+		}
+		else
+		{
+			_database.ProcessStatusVector(_statusVector);
+		}
 
-				_ = _database.FbClient.isc_open_blob2(
-					_statusVector,
-					ref dbHandle,
-					ref trHandle,
-					ref _blobHandle,
-					ref _blobId,
-					0,
-					[]);
+		byte[] actualSegment = tmp;
+		if (actualSegment.Length != segmentLength)
+		{
+			tmp = new byte[segmentLength];
+			Array.Copy(actualSegment, tmp, segmentLength);
+			actualSegment = tmp;
+		}
 
+		return actualSegment;
+	}
+	public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default)
+	{
+		short requested = (short) SegmentSize;
+		short segmentLength = 0;
+
+		ClearStatusVector();
+
+		byte[] tmp = new byte[requested];
+
+		nint status = _database.FbClient.isc_get_segment(
+			_statusVector,
+			ref _blobHandle,
+			ref segmentLength,
+			requested,
+			tmp);
+
+
+		RblRemoveValue(IscCodes.RBL_segment);
+
+		if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
+		{
+			RblAddValue(IscCodes.RBL_eof_pending);
+			return ValueTask2.FromResult(Array.Empty<byte>());
+		}
+		else
+		{
+			if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+			{
+				RblAddValue(IscCodes.RBL_segment);
+			}
+			else
+			{
 				_database.ProcessStatusVector(_statusVector);
-
-				_isOpen = true;
+			}
 		}
-		public override ValueTask OpenAsync(CancellationToken cancellationToken = default)
+
+		byte[] actualSegment = tmp;
+		if (actualSegment.Length != segmentLength)
 		{
-				ClearStatusVector();
-
-				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction) _transaction).HandlePtr;
-
-				_ = _database.FbClient.isc_open_blob2(
-					_statusVector,
-					ref dbHandle,
-					ref trHandle,
-					ref _blobHandle,
-					ref _blobId,
-					0,
-					[]);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				_isOpen = true;
-
-				return ValueTask2.CompletedTask;
+			tmp = new byte[segmentLength];
+			Array.Copy(actualSegment, tmp, segmentLength);
+			actualSegment = tmp;
 		}
 
-		public override int GetLength()
-		{
-				ClearStatusVector();
-
-				byte[] buffer = new byte[20];
-
-				_ = _database.FbClient.isc_blob_info(
-					_statusVector,
-					ref _blobHandle,
-					1,
-					[IscCodes.isc_info_blob_total_length],
-					(short) buffer.Length,
-					buffer);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				long length = IscHelper.VaxInteger(buffer, 1, 2);
-				long size = IscHelper.VaxInteger(buffer, 3, (int) length);
-
-				return (int) size;
-		}
-
-		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
-		{
-				ClearStatusVector();
-
-				byte[] buffer = new byte[20];
-
-				_ = _database.FbClient.isc_blob_info(
-					_statusVector,
-					ref _blobHandle,
-					1,
-					[IscCodes.isc_info_blob_total_length],
-					(short) buffer.Length,
-					buffer);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				long length = IscHelper.VaxInteger(buffer, 1, 2);
-				long size = IscHelper.VaxInteger(buffer, 3, (int) length);
-
-				return ValueTask2.FromResult((int) size);
-		}
-
-		public override void GetSegment(Stream stream)
-		{
-				short requested = (short) SegmentSize;
-				short segmentLength = 0;
-
-				ClearStatusVector();
-
-				byte[] tmp = new byte[requested];
-
-				nint status = _database.FbClient.isc_get_segment(
-					_statusVector,
-					ref _blobHandle,
-					ref segmentLength,
-					requested,
-					tmp);
-
-				RblRemoveValue(IscCodes.RBL_segment);
-
-				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
-				{
-						RblAddValue(IscCodes.RBL_eof_pending);
-						return;
-				}
-				else
-				{
-						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
-						{
-								RblAddValue(IscCodes.RBL_segment);
-						}
-						else
-						{
-								_database.ProcessStatusVector(_statusVector);
-						}
-				}
-
-				stream.Write(tmp, 0, segmentLength);
-		}
-		public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default)
-		{
-				short requested = (short) SegmentSize;
-				short segmentLength = 0;
-
-				ClearStatusVector();
-
-				byte[] tmp = new byte[requested];
-
-				nint status = _database.FbClient.isc_get_segment(
-					_statusVector,
-					ref _blobHandle,
-					ref segmentLength,
-					requested,
-					tmp);
-
-
-				RblRemoveValue(IscCodes.RBL_segment);
-
-				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
-				{
-						RblAddValue(IscCodes.RBL_eof_pending);
-						return ValueTask2.CompletedTask;
-				}
-				else
-				{
-						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
-						{
-								RblAddValue(IscCodes.RBL_segment);
-						}
-						else
-						{
-								_database.ProcessStatusVector(_statusVector);
-						}
-				}
-
-				stream.Write(tmp, 0, segmentLength);
-
-				return ValueTask2.CompletedTask;
-		}
-
-		public override byte[] GetSegment()
-		{
-				short requested = (short) (SegmentSize - 2);
-				short segmentLength = 0;
-
-				ClearStatusVector();
-
-				byte[] tmp = new byte[requested];
-
-				nint status = _database.FbClient.isc_get_segment(
-					_statusVector,
-					ref _blobHandle,
-					ref segmentLength,
-					requested,
-					tmp);
-
-
-				RblRemoveValue(IscCodes.RBL_segment);
-
-				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
-				{
-						RblAddValue(IscCodes.RBL_eof_pending);
-						return [];
-				}
-
-				if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
-				{
-						RblAddValue(IscCodes.RBL_segment);
-				}
-				else
-				{
-						_database.ProcessStatusVector(_statusVector);
-				}
-
-				byte[] actualSegment = tmp;
-				if (actualSegment.Length != segmentLength)
-				{
-						tmp = new byte[segmentLength];
-						Array.Copy(actualSegment, tmp, segmentLength);
-						actualSegment = tmp;
-				}
-
-				return actualSegment;
-		}
-		public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default)
-		{
-				short requested = (short) SegmentSize;
-				short segmentLength = 0;
-
-				ClearStatusVector();
-
-				byte[] tmp = new byte[requested];
-
-				nint status = _database.FbClient.isc_get_segment(
-					_statusVector,
-					ref _blobHandle,
-					ref segmentLength,
-					requested,
-					tmp);
-
-
-				RblRemoveValue(IscCodes.RBL_segment);
-
-				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
-				{
-						RblAddValue(IscCodes.RBL_eof_pending);
-						return ValueTask2.FromResult(Array.Empty<byte>());
-				}
-				else
-				{
-						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
-						{
-								RblAddValue(IscCodes.RBL_segment);
-						}
-						else
-						{
-								_database.ProcessStatusVector(_statusVector);
-						}
-				}
-
-				byte[] actualSegment = tmp;
-				if (actualSegment.Length != segmentLength)
-				{
-						tmp = new byte[segmentLength];
-						Array.Copy(actualSegment, tmp, segmentLength);
-						actualSegment = tmp;
-				}
-
-				return ValueTask2.FromResult(actualSegment);
-		}
-
-		public override void PutSegment(byte[] buffer)
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_put_segment(
-					_statusVector,
-					ref _blobHandle,
-					(short) buffer.Length,
-					buffer);
-
-				_database.ProcessStatusVector(_statusVector);
-		}
-		public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_put_segment(
-					_statusVector,
-					ref _blobHandle,
-					(short) buffer.Length,
-					buffer);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.CompletedTask;
-		}
-
-		public override void Seek(int position, int seekOperation)
-		{
-				ClearStatusVector();
-
-				int resultingPosition = 0;
-				_ = _database.FbClient.isc_seek_blob(
-					_statusVector,
-					ref _blobHandle,
-					(short) seekOperation,
-					position,
-					ref resultingPosition);
-
-				_database.ProcessStatusVector(_statusVector);
-		}
-		public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default)
-		{
-				ClearStatusVector();
-
-				int resultingPosition = 0;
-				_ = _database.FbClient.isc_seek_blob(
-					_statusVector,
-					ref _blobHandle,
-					(short) seekOperation,
-					position,
-					ref resultingPosition);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.CompletedTask;
-		}
-
-		public override void Close()
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
-
-				_database.ProcessStatusVector(_statusVector);
-		}
-		public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.CompletedTask;
-		}
-
-		public override void Cancel()
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
-
-				_database.ProcessStatusVector(_statusVector);
-		}
-		public override ValueTask CancelAsync(CancellationToken cancellationToken = default)
-		{
-				ClearStatusVector();
-
-				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
-
-				_database.ProcessStatusVector(_statusVector);
-
-				return ValueTask2.CompletedTask;
-		}
-
-		#endregion
-
-		#region Private Methods
-
-		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
-
-		#endregion
+		return ValueTask2.FromResult(actualSegment);
+	}
+
+	public override void PutSegment(byte[] buffer)
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_put_segment(
+			_statusVector,
+			ref _blobHandle,
+			(short) buffer.Length,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+	}
+	public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_put_segment(
+			_statusVector,
+			ref _blobHandle,
+			(short) buffer.Length,
+			buffer);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override void Seek(int position, int seekOperation)
+	{
+		ClearStatusVector();
+
+		int resultingPosition = 0;
+		_ = _database.FbClient.isc_seek_blob(
+			_statusVector,
+			ref _blobHandle,
+			(short) seekOperation,
+			position,
+			ref resultingPosition);
+
+		_database.ProcessStatusVector(_statusVector);
+	}
+	public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		int resultingPosition = 0;
+		_ = _database.FbClient.isc_seek_blob(
+			_statusVector,
+			ref _blobHandle,
+			(short) seekOperation,
+			position,
+			ref resultingPosition);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override void Close()
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
+
+		_database.ProcessStatusVector(_statusVector);
+	}
+	public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	public override void Cancel()
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
+
+		_database.ProcessStatusVector(_statusVector);
+	}
+	public override ValueTask CancelAsync(CancellationToken cancellationToken = default)
+	{
+		ClearStatusVector();
+
+		_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
+
+		_database.ProcessStatusVector(_statusVector);
+
+		return ValueTask2.CompletedTask;
+	}
+
+	#endregion
+
+	#region Private Methods
+
+	private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
+
+	#endregion
 }

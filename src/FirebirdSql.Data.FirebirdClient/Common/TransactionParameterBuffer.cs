@@ -21,35 +21,35 @@ namespace FirebirdSql.Data.Common;
 
 internal sealed class TransactionParameterBuffer(Encoding encoding) : ParameterBuffer
 {
-		public void Append(int type, short value)
-		{
-				WriteByte(type);
-				WriteByte(2);
-				Write(value);
-		}
+	public void Append(int type, short value)
+	{
+		WriteByte(type);
+		WriteByte(2);
+		Write(value);
+	}
 
-		public void Append(int type, int value)
-		{
-				WriteByte(type);
-				WriteByte(4);
-				Write(value);
-		}
+	public void Append(int type, int value)
+	{
+		WriteByte(type);
+		WriteByte(4);
+		Write(value);
+	}
 
-		public void Append(int type, long value)
-		{
-				WriteByte(type);
-				WriteByte(8);
-				Write(value);
-		}
+	public void Append(int type, long value)
+	{
+		WriteByte(type);
+		WriteByte(8);
+		Write(value);
+	}
 
-		public void Append(int type, byte[] buffer)
-		{
-				WriteByte(type);
-				WriteByte(buffer.Length);
-				Write(buffer);
-		}
+	public void Append(int type, byte[] buffer)
+	{
+		WriteByte(type);
+		WriteByte(buffer.Length);
+		Write(buffer);
+	}
 
-		public void Append(int type, string content) => Append(type, Encoding.GetBytes(content));
+	public void Append(int type, string content) => Append(type, Encoding.GetBytes(content));
 
-		public Encoding Encoding { get; } = encoding;
+	public Encoding Encoding { get; } = encoding;
 }

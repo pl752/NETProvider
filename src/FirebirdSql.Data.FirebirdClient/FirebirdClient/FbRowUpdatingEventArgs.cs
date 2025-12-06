@@ -26,15 +26,15 @@ public sealed class FbRowUpdatingEventArgs(
 	StatementType statementType,
 	DataTableMapping tableMapping) : RowUpdatingEventArgs(row, command, statementType, tableMapping)
 {
-		#region Properties
+	#region Properties
 
-		public new FbCommand Command
-		{
-				get => (FbCommand) base.Command; set => base.Command = value;
-		}
+	public new FbCommand Command
+	{
+		get => (FbCommand) base.Command; set => base.Command = value;
+	}
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 }

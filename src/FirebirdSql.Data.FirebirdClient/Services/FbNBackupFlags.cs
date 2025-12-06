@@ -24,5 +24,5 @@ namespace FirebirdSql.Data.Services;
 [Flags]
 public enum FbNBackupFlags
 {
-		NoDatabaseTriggers = IscCodes.isc_spb_nbk_no_triggers,
+	NoDatabaseTriggers = IscCodes.isc_spb_nbk_no_triggers,
 }

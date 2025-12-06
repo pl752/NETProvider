@@ -19,5 +19,5 @@ namespace FirebirdSql.Data.Client.Managed;
 
 interface ITracksIOFailure
 {
-		bool IOFailed { get; set; }
+	bool IOFailed { get; set; }
 }

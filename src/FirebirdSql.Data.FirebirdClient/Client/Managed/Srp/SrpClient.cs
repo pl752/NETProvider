@@ -22,13 +22,13 @@ namespace FirebirdSql.Data.Client.Managed.Srp;
 
 internal sealed class SrpClient : SrpClientBase
 {
-		public override string Name => "Srp";
+	public override string Name => "Srp";
 
-		protected override byte[] ComputeHash(params byte[][] ba)
+	protected override byte[] ComputeHash(params byte[][] ba)
+	{
+		using (var hash = SHA1.Create())
 		{
-				using (var hash = SHA1.Create())
-				{
-						return hash.ComputeHash([.. ba.SelectMany(x => x)]);
-				}
+			return hash.ComputeHash([.. ba.SelectMany(x => x)]);
 		}
+	}
 }

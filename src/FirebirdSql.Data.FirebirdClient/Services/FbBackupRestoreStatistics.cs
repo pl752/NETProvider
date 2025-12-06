@@ -23,25 +23,25 @@ namespace FirebirdSql.Data.Services;
 [Flags]
 public enum FbBackupRestoreStatistics
 {
-		TotalTime = 0b0001,
-		TimeDelta = 0b0010,
-		PageReads = 0b0100,
-		PageWrites = 0b1000,
+	TotalTime = 0b0001,
+	TimeDelta = 0b0010,
+	PageReads = 0b0100,
+	PageWrites = 0b1000,
 }
 
 internal static class FbBackupRestoreStatisticsExtensions
 {
-		public static string BuildConfiguration(this FbBackupRestoreStatistics statistics)
-		{
-				var sb = new StringBuilder();
-				if (statistics.HasFlag(FbBackupRestoreStatistics.TotalTime))
-						_ = sb.Append('T');
-				if (statistics.HasFlag(FbBackupRestoreStatistics.TimeDelta))
-						_ = sb.Append('D');
-				if (statistics.HasFlag(FbBackupRestoreStatistics.PageReads))
-						_ = sb.Append('R');
-				if (statistics.HasFlag(FbBackupRestoreStatistics.PageWrites))
-						_ = sb.Append('W');
-				return sb.ToString();
-		}
+	public static string BuildConfiguration(this FbBackupRestoreStatistics statistics)
+	{
+		var sb = new StringBuilder();
+		if (statistics.HasFlag(FbBackupRestoreStatistics.TotalTime))
+			_ = sb.Append('T');
+		if (statistics.HasFlag(FbBackupRestoreStatistics.TimeDelta))
+			_ = sb.Append('D');
+		if (statistics.HasFlag(FbBackupRestoreStatistics.PageReads))
+			_ = sb.Append('R');
+		if (statistics.HasFlag(FbBackupRestoreStatistics.PageWrites))
+			_ = sb.Append('W');
+		return sb.ToString();
+	}
 }

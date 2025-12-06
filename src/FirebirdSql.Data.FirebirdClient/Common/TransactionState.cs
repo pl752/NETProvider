@@ -19,7 +19,7 @@ namespace FirebirdSql.Data.Common;
 
 internal enum TransactionState
 {
-		NoTransaction,
-		Active,
-		Prepared
+	NoTransaction,
+	Active,
+	Prepared
 }

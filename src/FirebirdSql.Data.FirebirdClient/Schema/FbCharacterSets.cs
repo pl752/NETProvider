@@ -21,15 +21,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbCharacterSets : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.Append(
-					@"SELECT
+		_ = sql.Append(
+			@"SELECT
 					null AS CHARACTER_SET_CATALOG,
 					null AS CHARACTER_SET_SCHEMA,
 					rdb$character_set_name AS CHARACTER_SET_NAME,
@@ -39,36 +39,36 @@ internal class FbCharacterSets : FbSchema
 				    rdb$description AS DESCRIPTION
 				 FROM rdb$character_sets");
 
-				if (restrictions != null)
-				{
-						int index = 0;
+		if (restrictions != null)
+		{
+			int index = 0;
 
-						/* CHARACTER_SET_CATALOG */
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
+			/* CHARACTER_SET_CATALOG */
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-						/* CHARACTER_SET_SCHEMA */
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
+			/* CHARACTER_SET_SCHEMA */
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
 
-						/* CHARACTER_SET_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat("rdb$character_set_name = @p{0}", index++);
-						}
-				}
-
-				if (where.Length > 0)
-				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
-				}
-
-				_ = sql.Append(" ORDER BY CHARACTER_SET_NAME");
-
-				return sql;
+			/* CHARACTER_SET_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat("rdb$character_set_name = @p{0}", index++);
+			}
 		}
 
-		#endregion
+		if (where.Length > 0)
+		{
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+		}
+
+		_ = sql.Append(" ORDER BY CHARACTER_SET_NAME");
+
+		return sql;
+	}
+
+	#endregion
 }

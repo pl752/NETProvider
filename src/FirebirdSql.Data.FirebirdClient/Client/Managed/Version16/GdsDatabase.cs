@@ -23,32 +23,32 @@ namespace FirebirdSql.Data.Client.Managed.Version16;
 
 internal class GdsDatabase(GdsConnection connection) : Version15.GdsDatabase(connection)
 {
-		protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
+	protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
+	{
+		while (response is Version15.CryptKeyCallbackResponse cryptKeyCallbackResponse)
 		{
-				while (response is Version15.CryptKeyCallbackResponse cryptKeyCallbackResponse)
-				{
-						Xdr.Write(IscCodes.op_crypt_key_callback);
-						Xdr.WriteBuffer(cryptKey);
-						Xdr.Write(cryptKeyCallbackResponse.Size);
-						Xdr.Flush();
-						response = ReadResponse();
-				}
-				return response;
+			Xdr.Write(IscCodes.op_crypt_key_callback);
+			Xdr.WriteBuffer(cryptKey);
+			Xdr.Write(cryptKeyCallbackResponse.Size);
+			Xdr.Flush();
+			response = ReadResponse();
 		}
-		protected internal override async ValueTask<IResponse> ProcessCryptCallbackResponseIfNeededAsync(IResponse response, byte[] cryptKey, CancellationToken cancellationToken = default)
+		return response;
+	}
+	protected internal override async ValueTask<IResponse> ProcessCryptCallbackResponseIfNeededAsync(IResponse response, byte[] cryptKey, CancellationToken cancellationToken = default)
+	{
+		while (response is Version15.CryptKeyCallbackResponse cryptKeyCallbackResponse)
 		{
-				while (response is Version15.CryptKeyCallbackResponse cryptKeyCallbackResponse)
-				{
-						await Xdr.WriteAsync(IscCodes.op_crypt_key_callback, cancellationToken).ConfigureAwait(false);
-						await Xdr.WriteBufferAsync(cryptKey, cancellationToken).ConfigureAwait(false);
-						await Xdr.WriteAsync(cryptKeyCallbackResponse.Size).ConfigureAwait(false);
-						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						response = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-				}
-				return response;
+			await Xdr.WriteAsync(IscCodes.op_crypt_key_callback, cancellationToken).ConfigureAwait(false);
+			await Xdr.WriteBufferAsync(cryptKey, cancellationToken).ConfigureAwait(false);
+			await Xdr.WriteAsync(cryptKeyCallbackResponse.Size).ConfigureAwait(false);
+			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
+			response = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 		}
+		return response;
+	}
 
-		public override StatementBase CreateStatement() => new GdsStatement(this);
+	public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
+	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
 }

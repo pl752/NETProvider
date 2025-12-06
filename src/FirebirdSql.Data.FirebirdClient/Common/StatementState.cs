@@ -22,10 +22,10 @@ namespace FirebirdSql.Data.Common;
 [Serializable]
 internal enum StatementState
 {
-		Deallocated,
-		Allocated,
-		Prepared,
-		Executed,
-		Closed,
-		Error
+	Deallocated,
+	Allocated,
+	Prepared,
+	Executed,
+	Closed,
+	Error
 }

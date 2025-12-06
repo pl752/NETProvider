@@ -24,15 +24,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbFunctions : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.AppendFormat(
-					@"SELECT
+		_ = sql.AppendFormat(
+			@"SELECT
 					null AS FUNCTION_CATALOG,
 					null AS FUNCTION_SCHEMA,
 					rdb$function_name AS FUNCTION_NAME,
@@ -45,65 +45,65 @@ internal class FbFunctions : FbSchema
 					rdb$description AS DESCRIPTION,
 					{0} AS PACKAGE_NAME
 				FROM rdb$functions",
-					MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
+			MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
 
-				if (restrictions != null)
-				{
-						int index = 0;
+		if (restrictions != null)
+		{
+			int index = 0;
 
-						/* FUNCTION_CATALOG	*/
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
+			/* FUNCTION_CATALOG	*/
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-						/* FUNCTION_SCHEMA */
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
+			/* FUNCTION_SCHEMA */
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
 
-						/* FUNCTION_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat("rdb$function_name = @p{0}", index++);
-						}
+			/* FUNCTION_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat("rdb$function_name = @p{0}", index++);
+			}
 
-						/* IS_SYSTEM_FUNCTION */
-						if (restrictions.Length >= 4 && restrictions[3] != null)
-						{
-								if (where.Length > 0)
-								{
-										_ = where.Append(" AND ");
-								}
-
-								_ = where.AppendFormat("rdb$system_flag = @p{0}", index++);
-						}
-				}
-
+			/* IS_SYSTEM_FUNCTION */
+			if (restrictions.Length >= 4 && restrictions[3] != null)
+			{
 				if (where.Length > 0)
 				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+					_ = where.Append(" AND ");
 				}
 
-				_ = sql.Append(" ORDER BY PACKAGE_NAME, FUNCTION_NAME");
-
-				return sql;
+				_ = where.AppendFormat("rdb$system_flag = @p{0}", index++);
+			}
 		}
 
-		protected override void ProcessResult(DataTable schema)
+		if (where.Length > 0)
 		{
-				schema.BeginLoadData();
-
-				foreach (DataRow row in schema.Rows)
-				{
-						row["IS_SYSTEM_FUNCTION"] = row["IS_SYSTEM_FUNCTION"] == DBNull.Value ||
-							Convert.ToInt32(row["IS_SYSTEM_FUNCTION"], CultureInfo.InvariantCulture) == 0
-								? false
-								: true;
-				}
-
-				schema.EndLoadData();
-				schema.AcceptChanges();
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 		}
 
-		#endregion
+		_ = sql.Append(" ORDER BY PACKAGE_NAME, FUNCTION_NAME");
+
+		return sql;
+	}
+
+	protected override void ProcessResult(DataTable schema)
+	{
+		schema.BeginLoadData();
+
+		foreach (DataRow row in schema.Rows)
+		{
+			row["IS_SYSTEM_FUNCTION"] = row["IS_SYSTEM_FUNCTION"] == DBNull.Value ||
+				Convert.ToInt32(row["IS_SYSTEM_FUNCTION"], CultureInfo.InvariantCulture) == 0
+					? false
+					: true;
+		}
+
+		schema.EndLoadData();
+		schema.AcceptChanges();
+	}
+
+	#endregion
 }

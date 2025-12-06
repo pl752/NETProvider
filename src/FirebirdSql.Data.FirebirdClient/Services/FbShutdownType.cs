@@ -19,7 +19,7 @@ namespace FirebirdSql.Data.Services;
 
 public enum FbShutdownType
 {
-		ForceShutdown,
-		AttachmentsShutdown,
-		TransactionsShutdown,
+	ForceShutdown,
+	AttachmentsShutdown,
+	TransactionsShutdown,
 }

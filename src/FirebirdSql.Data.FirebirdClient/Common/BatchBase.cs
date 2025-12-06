@@ -22,22 +22,22 @@ namespace FirebirdSql.Data.Common;
 
 internal abstract class BatchBase
 {
-		public abstract StatementBase Statement { get; }
-		public bool MultiError { get; set; }
-		public int BatchBufferSize { get; set; }
+	public abstract StatementBase Statement { get; }
+	public bool MultiError { get; set; }
+	public int BatchBufferSize { get; set; }
 
-		public class ExecuteResultItem
-		{
-				public int RecordsAffected { get; set; }
-				public bool IsError { get; set; }
-				public IscException Exception { get; set; }
-		}
-		public abstract ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller);
-		public abstract ValueTask<ExecuteResultItem[]> ExecuteAsync(int count, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default);
+	public class ExecuteResultItem
+	{
+		public int RecordsAffected { get; set; }
+		public bool IsError { get; set; }
+		public IscException Exception { get; set; }
+	}
+	public abstract ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller);
+	public abstract ValueTask<ExecuteResultItem[]> ExecuteAsync(int count, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default);
 
-		public abstract int ComputeBatchSize(int count, IDescriptorFiller descriptorFiller);
-		public abstract ValueTask<int> ComputeBatchSizeAsync(int count, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default);
+	public abstract int ComputeBatchSize(int count, IDescriptorFiller descriptorFiller);
+	public abstract ValueTask<int> ComputeBatchSizeAsync(int count, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default);
 
-		public abstract void Release();
-		public abstract ValueTask ReleaseAsync(CancellationToken cancellationToken = default);
+	public abstract void Release();
+	public abstract ValueTask ReleaseAsync(CancellationToken cancellationToken = default);
 }

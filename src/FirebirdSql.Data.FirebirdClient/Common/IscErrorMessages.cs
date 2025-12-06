@@ -21,7 +21,7 @@ namespace FirebirdSql.Data.Common;
 
 internal static class IscErrorMessages
 {
-		static readonly Dictionary<int, string> _messages = new Dictionary<int, string>()
+	static readonly Dictionary<int, string> _messages = new Dictionary<int, string>()
 			{
 	{335544320, ""},
 	{335544321, "arithmetic exception, numeric overflow, or string truncation"},		/* arith_except */
@@ -2891,5 +2891,5 @@ internal static class IscErrorMessages
 	{337182760, "mandatory switch \"{0}\" is missing"},		/* trace_mandatory_switch_miss */
 		};
 
-		public static bool TryGet(int key, out string value) => _messages.TryGetValue(key, out value);
+	public static bool TryGet(int key, out string value) => _messages.TryGetValue(key, out value);
 }

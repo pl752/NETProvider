@@ -21,5 +21,5 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 public sealed class FbRemoteEventErrorEventArgs(Exception error) : EventArgs
 {
-		public Exception Error { get; } = error;
+	public Exception Error { get; } = error;
 }

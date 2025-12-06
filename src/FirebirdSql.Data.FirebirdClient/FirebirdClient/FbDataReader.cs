@@ -33,997 +33,997 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 public sealed class FbDataReader : DbDataReader
 {
-		#region Constants
+	#region Constants
 
-		private const int StartPosition = -1;
+	private const int StartPosition = -1;
 
-		#endregion
+	#endregion
 
-		#region Fields
+	#region Fields
 
-		private DataTable _schemaTable;
-		private FbCommand _command;
-		private FbConnection _connection;
-		private DbValue[] _row;
-		private Descriptor _fields;
-		private readonly CommandBehavior _commandBehavior;
-		private bool _eof;
-		private bool _isClosed;
-		private int _position;
-		private int _recordsAffected;
-		private Dictionary<string, int> _columnsIndexesOrdinal;
-		private Dictionary<string, int> _columnsIndexesOrdinalCI;
+	private DataTable _schemaTable;
+	private FbCommand _command;
+	private FbConnection _connection;
+	private DbValue[] _row;
+	private Descriptor _fields;
+	private readonly CommandBehavior _commandBehavior;
+	private bool _eof;
+	private bool _isClosed;
+	private int _position;
+	private int _recordsAffected;
+	private Dictionary<string, int> _columnsIndexesOrdinal;
+	private Dictionary<string, int> _columnsIndexesOrdinalCI;
 
-		#endregion
+	#endregion
 
-		#region DbDataReader Indexers
+	#region DbDataReader Indexers
 
-		public override object this[int i]
+	public override object this[int i]
+	{
+		get { return GetValue(i); }
+	}
+
+	public override object this[string name]
+	{
+		get { return GetValue(GetOrdinal(name)); }
+	}
+
+	#endregion
+
+	#region Constructors
+
+	internal FbDataReader()
+		: base() { }
+
+	internal FbDataReader(FbCommand command, FbConnection connection, CommandBehavior commandBehavior)
+	{
+		_position = StartPosition;
+		_command = command;
+		_connection = connection;
+		_commandBehavior = commandBehavior;
+		_fields = _command.GetFieldsDescriptor();
+
+		UpdateRecordsAffected();
+	}
+
+	#endregion
+
+	#region DbDataReader overriden Properties
+
+	public override int Depth
+	{
+		get
 		{
-				get { return GetValue(i); }
+			CheckState();
+
+			return 0;
 		}
+	}
 
-		public override object this[string name]
+	public override bool HasRows => _command.HasFields;
+
+	public override bool IsClosed => _isClosed;
+
+	public override int FieldCount
+	{
+		get
 		{
-				get { return GetValue(GetOrdinal(name)); }
+			CheckState();
+
+			return _fields.Count;
 		}
+	}
 
-		#endregion
+	public override int RecordsAffected => _recordsAffected;
 
-		#region Constructors
-
-		internal FbDataReader()
-			: base() { }
-
-		internal FbDataReader(FbCommand command, FbConnection connection, CommandBehavior commandBehavior)
+	public override int VisibleFieldCount
+	{
+		get
 		{
-				_position = StartPosition;
-				_command = command;
-				_connection = connection;
-				_commandBehavior = commandBehavior;
-				_fields = _command.GetFieldsDescriptor();
+			CheckState();
 
-				UpdateRecordsAffected();
+			return _fields.Count;
 		}
+	}
 
-		#endregion
+	#endregion
 
-		#region DbDataReader overriden Properties
+	#region DbDataReader overriden methods
 
-		public override int Depth
+	public override void Close()
+	{
+		if (!IsClosed)
 		{
-				get
+			_isClosed = true;
+			if (_command != null && !_command.IsDisposed)
+			{
+				if (_command.CommandType == CommandType.StoredProcedure)
 				{
-						CheckState();
-
-						return 0;
+					_command.SetOutputParameters();
 				}
-		}
-
-		public override bool HasRows => _command.HasFields;
-
-		public override bool IsClosed => _isClosed;
-
-		public override int FieldCount
-		{
-				get
+				if (_command.HasImplicitTransaction)
 				{
-						CheckState();
-
-						return _fields.Count;
+					_command.CommitImplicitTransaction();
 				}
+				_command.ActiveReader = null;
+			}
+			if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
+			{
+				_connection.Close();
+			}
+			_position = StartPosition;
+			_command = null;
+			_connection = null;
+			_row = null;
+			_schemaTable = null;
+			_fields = null;
 		}
-
-		public override int RecordsAffected => _recordsAffected;
-
-		public override int VisibleFieldCount
-		{
-				get
-				{
-						CheckState();
-
-						return _fields.Count;
-				}
-		}
-
-		#endregion
-
-		#region DbDataReader overriden methods
-
-		public override void Close()
-		{
-				if (!IsClosed)
-				{
-						_isClosed = true;
-						if (_command != null && !_command.IsDisposed)
-						{
-								if (_command.CommandType == CommandType.StoredProcedure)
-								{
-										_command.SetOutputParameters();
-								}
-								if (_command.HasImplicitTransaction)
-								{
-										_command.CommitImplicitTransaction();
-								}
-								_command.ActiveReader = null;
-						}
-						if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
-						{
-								_connection.Close();
-						}
-						_position = StartPosition;
-						_command = null;
-						_connection = null;
-						_row = null;
-						_schemaTable = null;
-						_fields = null;
-				}
-		}
+	}
 #if NET48 || NETSTANDARD2_0
 	public async Task CloseAsync()
 #else
-		public override async Task CloseAsync()
+	public override async Task CloseAsync()
 #endif
+	{
+		if (!IsClosed)
 		{
-				if (!IsClosed)
+			_isClosed = true;
+			if (_command != null && !_command.IsDisposed)
+			{
+				if (_command.CommandType == CommandType.StoredProcedure)
 				{
-						_isClosed = true;
-						if (_command != null && !_command.IsDisposed)
-						{
-								if (_command.CommandType == CommandType.StoredProcedure)
-								{
-										await _command.SetOutputParametersAsync(CancellationToken.None).ConfigureAwait(false);
-								}
-								if (_command.HasImplicitTransaction)
-								{
-										await _command.CommitImplicitTransactionAsync(CancellationToken.None).ConfigureAwait(false);
-								}
-								_command.ActiveReader = null;
-						}
-						if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
-						{
-								await _connection.CloseAsync().ConfigureAwait(false);
-						}
-						_position = StartPosition;
-						_command = null;
-						_connection = null;
-						_row = null;
-						_schemaTable = null;
-						_fields = null;
+					await _command.SetOutputParametersAsync(CancellationToken.None).ConfigureAwait(false);
 				}
+				if (_command.HasImplicitTransaction)
+				{
+					await _command.CommitImplicitTransactionAsync(CancellationToken.None).ConfigureAwait(false);
+				}
+				_command.ActiveReader = null;
+			}
+			if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
+			{
+				await _connection.CloseAsync().ConfigureAwait(false);
+			}
+			_position = StartPosition;
+			_command = null;
+			_connection = null;
+			_row = null;
+			_schemaTable = null;
+			_fields = null;
 		}
+	}
 
-		protected override void Dispose(bool disposing)
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
 		{
-				if (disposing)
-				{
-						Close();
-				}
+			Close();
 		}
+	}
 #if !(NET48 || NETSTANDARD2_0)
-		public override async ValueTask DisposeAsync()
-		{
-				await CloseAsync().ConfigureAwait(false);
-				await base.DisposeAsync().ConfigureAwait(false);
-		}
+	public override async ValueTask DisposeAsync()
+	{
+		await CloseAsync().ConfigureAwait(false);
+		await base.DisposeAsync().ConfigureAwait(false);
+	}
 #endif
 
-		public override bool Read()
-		{
-				CheckState();
+	public override bool Read()
+	{
+		CheckState();
 
-				if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+		if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+		{
+			return false;
+		}
+		else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
+		{
+			return false;
+		}
+		else
+		{
+			using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command.Cancel))
+			{
+				_row = _command.Fetch();
+				if (_row != null)
 				{
-						return false;
-				}
-				else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
-				{
-						return false;
+					_position++;
+					return true;
 				}
 				else
 				{
-						using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command.Cancel))
-						{
-								_row = _command.Fetch();
-								if (_row != null)
-								{
-										_position++;
-										return true;
-								}
-								else
-								{
-										_eof = true;
-										return false;
-								}
-						}
+					_eof = true;
+					return false;
 				}
+			}
 		}
-		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
-		{
-				CheckState();
+	}
+	public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
+	{
+		CheckState();
 
-				if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+		if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+		{
+			return false;
+		}
+		else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
+		{
+			return false;
+		}
+		else
+		{
+			using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel))
+			{
+				_row = await _command.FetchAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
+				if (_row != null)
 				{
-						return false;
-				}
-				else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
-				{
-						return false;
+					_position++;
+					return true;
 				}
 				else
 				{
-						using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel))
-						{
-								_row = await _command.FetchAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
-								if (_row != null)
-								{
-										_position++;
-										return true;
-								}
-								else
-								{
-										_eof = true;
-										return false;
-								}
-						}
+					_eof = true;
+					return false;
 				}
+			}
+		}
+	}
+
+	public override DataTable GetSchemaTable()
+	{
+		CheckState();
+
+		if (_schemaTable != null)
+		{
+			return _schemaTable;
 		}
 
-		public override DataTable GetSchemaTable()
+		DataRow schemaRow = null;
+		int tableCount = 0;
+		string currentTable = string.Empty;
+
+		_schemaTable = GetSchemaTableStructure();
+
+		/* Prepare statement for schema fields information	*/
+		var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
+		try
 		{
-				CheckState();
+			schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
+			schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
+			schemaCmd.Prepare();
 
-				if (_schemaTable != null)
-				{
-						return _schemaTable;
-				}
+			_schemaTable.BeginLoadData();
 
-				DataRow schemaRow = null;
-				int tableCount = 0;
-				string currentTable = string.Empty;
+			for (int i = 0; i < _fields.Count; i++)
+			{
+				bool isKeyColumn = false;
+				bool isUnique = false;
+				bool isReadOnly = false;
+				int precision = 0;
+				bool isExpression = false;
 
-				_schemaTable = GetSchemaTableStructure();
+				/* Get Schema data for the field	*/
+				schemaCmd.Parameters[0].Value = _fields[i].Relation;
+				schemaCmd.Parameters[1].Value = _fields[i].Name;
 
-				/* Prepare statement for schema fields information	*/
-				var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
+				var reader = schemaCmd.ExecuteReader(CommandBehavior.Default);
 				try
 				{
-						schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
-						schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
-						schemaCmd.Prepare();
-
-						_schemaTable.BeginLoadData();
-
-						for (int i = 0; i < _fields.Count; i++)
-						{
-								bool isKeyColumn = false;
-								bool isUnique = false;
-								bool isReadOnly = false;
-								int precision = 0;
-								bool isExpression = false;
-
-								/* Get Schema data for the field	*/
-								schemaCmd.Parameters[0].Value = _fields[i].Relation;
-								schemaCmd.Parameters[1].Value = _fields[i].Name;
-
-								var reader = schemaCmd.ExecuteReader(CommandBehavior.Default);
-								try
-								{
-										if (reader.Read())
-										{
-												isReadOnly = IsReadOnly(reader) || IsExpression(reader);
-												isKeyColumn = reader.GetInt32(2) == 1;
-												isUnique = reader.GetInt32(3) == 1;
-												precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
-												isExpression = IsExpression(reader);
-										}
-								}
-								finally
-								{
-#if NET48 || NETSTANDARD2_0
-					reader.Dispose();
-#else
-										reader.Dispose();
-#endif
-								}
-
-								/* Create new row for the Schema Table	*/
-								schemaRow = _schemaTable.NewRow();
-
-								schemaRow["ColumnName"] = GetName(i);
-								schemaRow["ColumnOrdinal"] = i;
-								schemaRow["ColumnSize"] = _fields[i].GetSize();
-								if (_fields[i].IsDecimal())
-								{
-										schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
-										if (precision > 0)
-										{
-												schemaRow["NumericPrecision"] = precision;
-										}
-										schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
-								}
-								schemaRow["DataType"] = GetFieldType(i);
-								schemaRow["ProviderType"] = GetProviderType(i);
-								schemaRow["IsLong"] = _fields[i].IsLong();
-								schemaRow["AllowDBNull"] = _fields[i].AllowDBNull();
-								schemaRow["IsRowVersion"] = false;
-								schemaRow["IsAutoIncrement"] = false;
-								schemaRow["IsReadOnly"] = isReadOnly;
-								schemaRow["IsKey"] = isKeyColumn;
-								schemaRow["IsUnique"] = isUnique;
-								schemaRow["IsAliased"] = _fields[i].IsAliased();
-								schemaRow["IsExpression"] = isExpression;
-								schemaRow["BaseSchemaName"] = DBNull.Value;
-								schemaRow["BaseCatalogName"] = DBNull.Value;
-								schemaRow["BaseTableName"] = _fields[i].Relation;
-								schemaRow["BaseColumnName"] = _fields[i].Name;
-
-								_schemaTable.Rows.Add(schemaRow);
-
-								if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
-								{
-										tableCount++;
-										currentTable = _fields[i].Relation;
-								}
-
-								schemaCmd.Close();
-						}
-
-						if (tableCount > 1)
-						{
-								foreach (DataRow row in _schemaTable.Rows)
-								{
-										row["IsKey"] = false;
-										row["IsUnique"] = false;
-								}
-						}
-
-						_schemaTable.EndLoadData();
+					if (reader.Read())
+					{
+						isReadOnly = IsReadOnly(reader) || IsExpression(reader);
+						isKeyColumn = reader.GetInt32(2) == 1;
+						isUnique = reader.GetInt32(3) == 1;
+						precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
+						isExpression = IsExpression(reader);
+					}
 				}
 				finally
 				{
 #if NET48 || NETSTANDARD2_0
-			schemaCmd.Dispose();
+					reader.Dispose();
 #else
-						schemaCmd.Dispose();
+					reader.Dispose();
 #endif
 				}
 
-				return _schemaTable;
+				/* Create new row for the Schema Table	*/
+				schemaRow = _schemaTable.NewRow();
+
+				schemaRow["ColumnName"] = GetName(i);
+				schemaRow["ColumnOrdinal"] = i;
+				schemaRow["ColumnSize"] = _fields[i].GetSize();
+				if (_fields[i].IsDecimal())
+				{
+					schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
+					if (precision > 0)
+					{
+						schemaRow["NumericPrecision"] = precision;
+					}
+					schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
+				}
+				schemaRow["DataType"] = GetFieldType(i);
+				schemaRow["ProviderType"] = GetProviderType(i);
+				schemaRow["IsLong"] = _fields[i].IsLong();
+				schemaRow["AllowDBNull"] = _fields[i].AllowDBNull();
+				schemaRow["IsRowVersion"] = false;
+				schemaRow["IsAutoIncrement"] = false;
+				schemaRow["IsReadOnly"] = isReadOnly;
+				schemaRow["IsKey"] = isKeyColumn;
+				schemaRow["IsUnique"] = isUnique;
+				schemaRow["IsAliased"] = _fields[i].IsAliased();
+				schemaRow["IsExpression"] = isExpression;
+				schemaRow["BaseSchemaName"] = DBNull.Value;
+				schemaRow["BaseCatalogName"] = DBNull.Value;
+				schemaRow["BaseTableName"] = _fields[i].Relation;
+				schemaRow["BaseColumnName"] = _fields[i].Name;
+
+				_schemaTable.Rows.Add(schemaRow);
+
+				if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
+				{
+					tableCount++;
+					currentTable = _fields[i].Relation;
+				}
+
+				schemaCmd.Close();
+			}
+
+			if (tableCount > 1)
+			{
+				foreach (DataRow row in _schemaTable.Rows)
+				{
+					row["IsKey"] = false;
+					row["IsUnique"] = false;
+				}
+			}
+
+			_schemaTable.EndLoadData();
 		}
+		finally
+		{
+#if NET48 || NETSTANDARD2_0
+			schemaCmd.Dispose();
+#else
+			schemaCmd.Dispose();
+#endif
+		}
+
+		return _schemaTable;
+	}
 #if NET48 || NETSTANDARD2_0 || NETSTANDARD2_1
 	public async Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
 #else
-		public override async Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
+	public override async Task<DataTable> GetSchemaTableAsync(CancellationToken cancellationToken = default)
 #endif
+	{
+		CheckState();
+
+		if (_schemaTable != null)
 		{
-				CheckState();
+			return _schemaTable;
+		}
 
-				if (_schemaTable != null)
-				{
-						return _schemaTable;
-				}
+		DataRow schemaRow = null;
+		int tableCount = 0;
+		string currentTable = string.Empty;
 
-				DataRow schemaRow = null;
-				int tableCount = 0;
-				string currentTable = string.Empty;
+		_schemaTable = GetSchemaTableStructure();
 
-				_schemaTable = GetSchemaTableStructure();
+		/* Prepare statement for schema fields information	*/
+		var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
+		try
+		{
+			schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
+			schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
+			await schemaCmd.PrepareAsync(cancellationToken).ConfigureAwait(false);
 
-				/* Prepare statement for schema fields information	*/
-				var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
+			_schemaTable.BeginLoadData();
+
+			for (int i = 0; i < _fields.Count; i++)
+			{
+				bool isKeyColumn = false;
+				bool isUnique = false;
+				bool isReadOnly = false;
+				int precision = 0;
+				bool isExpression = false;
+
+				/* Get Schema data for the field	*/
+				schemaCmd.Parameters[0].Value = _fields[i].Relation;
+				schemaCmd.Parameters[1].Value = _fields[i].Name;
+
+				var reader = await schemaCmd.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 				try
 				{
-						schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
-						schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
-						await schemaCmd.PrepareAsync(cancellationToken).ConfigureAwait(false);
-
-						_schemaTable.BeginLoadData();
-
-						for (int i = 0; i < _fields.Count; i++)
-						{
-								bool isKeyColumn = false;
-								bool isUnique = false;
-								bool isReadOnly = false;
-								int precision = 0;
-								bool isExpression = false;
-
-								/* Get Schema data for the field	*/
-								schemaCmd.Parameters[0].Value = _fields[i].Relation;
-								schemaCmd.Parameters[1].Value = _fields[i].Name;
-
-								var reader = await schemaCmd.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-								try
-								{
-										if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-										{
-												isReadOnly = IsReadOnly(reader) || IsExpression(reader);
-												isKeyColumn = reader.GetInt32(2) == 1;
-												isUnique = reader.GetInt32(3) == 1;
-												precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
-												isExpression = IsExpression(reader);
-										}
-								}
-								finally
-								{
-#if NET48 || NETSTANDARD2_0
-					reader.Dispose();
-#else
-										await reader.DisposeAsync().ConfigureAwait(false);
-#endif
-								}
-
-								/* Create new row for the Schema Table	*/
-								schemaRow = _schemaTable.NewRow();
-
-								schemaRow["ColumnName"] = GetName(i);
-								schemaRow["ColumnOrdinal"] = i;
-								schemaRow["ColumnSize"] = _fields[i].GetSize();
-								if (_fields[i].IsDecimal())
-								{
-										schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
-										if (precision > 0)
-										{
-												schemaRow["NumericPrecision"] = precision;
-										}
-										schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
-								}
-								schemaRow["DataType"] = GetFieldType(i);
-								schemaRow["ProviderType"] = GetProviderType(i);
-								schemaRow["IsLong"] = _fields[i].IsLong();
-								schemaRow["AllowDBNull"] = _fields[i].AllowDBNull();
-								schemaRow["IsRowVersion"] = false;
-								schemaRow["IsAutoIncrement"] = false;
-								schemaRow["IsReadOnly"] = isReadOnly;
-								schemaRow["IsKey"] = isKeyColumn;
-								schemaRow["IsUnique"] = isUnique;
-								schemaRow["IsAliased"] = _fields[i].IsAliased();
-								schemaRow["IsExpression"] = isExpression;
-								schemaRow["BaseSchemaName"] = DBNull.Value;
-								schemaRow["BaseCatalogName"] = DBNull.Value;
-								schemaRow["BaseTableName"] = _fields[i].Relation;
-								schemaRow["BaseColumnName"] = _fields[i].Name;
-
-								_schemaTable.Rows.Add(schemaRow);
-
-								if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
-								{
-										tableCount++;
-										currentTable = _fields[i].Relation;
-								}
-
-								await schemaCmd.CloseAsync().ConfigureAwait(false);
-						}
-
-						if (tableCount > 1)
-						{
-								foreach (DataRow row in _schemaTable.Rows)
-								{
-										row["IsKey"] = false;
-										row["IsUnique"] = false;
-								}
-						}
-
-						_schemaTable.EndLoadData();
+					if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+					{
+						isReadOnly = IsReadOnly(reader) || IsExpression(reader);
+						isKeyColumn = reader.GetInt32(2) == 1;
+						isUnique = reader.GetInt32(3) == 1;
+						precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
+						isExpression = IsExpression(reader);
+					}
 				}
 				finally
 				{
 #if NET48 || NETSTANDARD2_0
+					reader.Dispose();
+#else
+					await reader.DisposeAsync().ConfigureAwait(false);
+#endif
+				}
+
+				/* Create new row for the Schema Table	*/
+				schemaRow = _schemaTable.NewRow();
+
+				schemaRow["ColumnName"] = GetName(i);
+				schemaRow["ColumnOrdinal"] = i;
+				schemaRow["ColumnSize"] = _fields[i].GetSize();
+				if (_fields[i].IsDecimal())
+				{
+					schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
+					if (precision > 0)
+					{
+						schemaRow["NumericPrecision"] = precision;
+					}
+					schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
+				}
+				schemaRow["DataType"] = GetFieldType(i);
+				schemaRow["ProviderType"] = GetProviderType(i);
+				schemaRow["IsLong"] = _fields[i].IsLong();
+				schemaRow["AllowDBNull"] = _fields[i].AllowDBNull();
+				schemaRow["IsRowVersion"] = false;
+				schemaRow["IsAutoIncrement"] = false;
+				schemaRow["IsReadOnly"] = isReadOnly;
+				schemaRow["IsKey"] = isKeyColumn;
+				schemaRow["IsUnique"] = isUnique;
+				schemaRow["IsAliased"] = _fields[i].IsAliased();
+				schemaRow["IsExpression"] = isExpression;
+				schemaRow["BaseSchemaName"] = DBNull.Value;
+				schemaRow["BaseCatalogName"] = DBNull.Value;
+				schemaRow["BaseTableName"] = _fields[i].Relation;
+				schemaRow["BaseColumnName"] = _fields[i].Name;
+
+				_schemaTable.Rows.Add(schemaRow);
+
+				if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
+				{
+					tableCount++;
+					currentTable = _fields[i].Relation;
+				}
+
+				await schemaCmd.CloseAsync().ConfigureAwait(false);
+			}
+
+			if (tableCount > 1)
+			{
+				foreach (DataRow row in _schemaTable.Rows)
+				{
+					row["IsKey"] = false;
+					row["IsUnique"] = false;
+				}
+			}
+
+			_schemaTable.EndLoadData();
+		}
+		finally
+		{
+#if NET48 || NETSTANDARD2_0
 			schemaCmd.Dispose();
 #else
-						await schemaCmd.DisposeAsync().ConfigureAwait(false);
+			await schemaCmd.DisposeAsync().ConfigureAwait(false);
 #endif
-				}
-
-				return _schemaTable;
 		}
 
-		public override int GetOrdinal(string name)
+		return _schemaTable;
+	}
+
+	public override int GetOrdinal(string name)
+	{
+		CheckState();
+
+		return GetColumnIndex(name);
+	}
+
+	public override string GetName(int i)
+	{
+		CheckState();
+		CheckIndex(i);
+
+		return _fields[i].Alias.Length > 0 ? _fields[i].Alias : _fields[i].Name;
+	}
+
+	public override string GetDataTypeName(int i)
+	{
+		CheckState();
+		CheckIndex(i);
+
+		return TypeHelper.GetDataTypeName(_fields[i].DbDataType);
+	}
+
+	public override Type GetFieldType(int i)
+	{
+		CheckState();
+		CheckIndex(i);
+
+		return _fields[i].GetSystemType();
+	}
+
+	public override Type GetProviderSpecificFieldType(int i) => GetFieldType(i);
+
+	public override object GetProviderSpecificValue(int i) => GetValue(i);
+
+	public override int GetProviderSpecificValues(object[] values) => GetValues(values);
+
+	public override object GetValue(int i)
+	{
+		// type coercions for EF
+		if (_command.ExpectedColumnTypes != null)
 		{
-				CheckState();
-
-				return GetColumnIndex(name);
-		}
-
-		public override string GetName(int i)
-		{
-				CheckState();
-				CheckIndex(i);
-
-				return _fields[i].Alias.Length > 0 ? _fields[i].Alias : _fields[i].Name;
-		}
-
-		public override string GetDataTypeName(int i)
-		{
-				CheckState();
-				CheckIndex(i);
-
-				return TypeHelper.GetDataTypeName(_fields[i].DbDataType);
-		}
-
-		public override Type GetFieldType(int i)
-		{
-				CheckState();
-				CheckIndex(i);
-
-				return _fields[i].GetSystemType();
-		}
-
-		public override Type GetProviderSpecificFieldType(int i) => GetFieldType(i);
-
-		public override object GetProviderSpecificValue(int i) => GetValue(i);
-
-		public override int GetProviderSpecificValues(object[] values) => GetValues(values);
-
-		public override object GetValue(int i)
-		{
-				// type coercions for EF
-				if (_command.ExpectedColumnTypes != null)
+			var type = _command.ExpectedColumnTypes.ElementAtOrDefault(i);
+			var nullableUnderlying = Nullable.GetUnderlyingType(type);
+			if (nullableUnderlying != null)
+			{
+				if (IsDBNull(i))
 				{
-						var type = _command.ExpectedColumnTypes.ElementAtOrDefault(i);
-						var nullableUnderlying = Nullable.GetUnderlyingType(type);
-						if (nullableUnderlying != null)
-						{
-								if (IsDBNull(i))
-								{
-										return null;
-								}
-								if (nullableUnderlying == typeof(bool))
-								{
-										return GetFieldValue<bool>(i);
-								}
-						}
-						if (type == typeof(bool))
-						{
-								return GetFieldValue<bool>(i);
-						}
+					return null;
 				}
-
-				return GetFieldValue<object>(i);
+				if (nullableUnderlying == typeof(bool))
+				{
+					return GetFieldValue<bool>(i);
+				}
+			}
+			if (type == typeof(bool))
+			{
+				return GetFieldValue<bool>(i);
+			}
 		}
 
-		public override int GetValues(object[] values)
+		return GetFieldValue<object>(i);
+	}
+
+	public override int GetValues(object[] values)
+	{
+		int count = Math.Min(_fields.Count, values.Length);
+		for (int i = 0; i < count; i++)
 		{
-				int count = Math.Min(_fields.Count, values.Length);
-				for (int i = 0; i < count; i++)
-				{
-						values[i] = GetValue(i);
-				}
-				return count;
+			values[i] = GetValue(i);
 		}
+		return count;
+	}
 
-		public override T GetFieldValue<T>(int i)
+	public override T GetFieldValue<T>(int i)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
+
+		var type = typeof(T);
+		type = Nullable.GetUnderlyingType(type) ?? type;
+		try
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-
-				var type = typeof(T);
-				type = Nullable.GetUnderlyingType(type) ?? type;
-				try
-				{
-						if (type == typeof(bool))
-						{
-								return (T) (object) _row[i].GetBoolean();
-						}
-						else if (type == typeof(byte))
-						{
-								return (T) (object) _row[i].GetByte();
-						}
-						else if (type == typeof(char))
-						{
-								return (T) (object) _row[i].GetChar();
-						}
-						else if (type == typeof(Guid))
-						{
-								return (T) (object) _row[i].GetGuid();
-						}
-						else if (type == typeof(short))
-						{
-								return (T) (object) _row[i].GetInt16();
-						}
-						else if (type == typeof(int))
-						{
-								return (T) (object) _row[i].GetInt32();
-						}
-						else if (type == typeof(long))
-						{
-								return (T) (object) _row[i].GetInt64();
-						}
-						else if (type == typeof(float))
-						{
-								return (T) (object) _row[i].GetFloat();
-						}
-						else if (type == typeof(double))
-						{
-								return (T) (object) _row[i].GetDouble();
-						}
-						else if (type == typeof(string))
-						{
-								return (T) (object) _row[i].GetString();
-						}
-						else if (type == typeof(decimal))
-						{
-								return (T) (object) _row[i].GetDecimal();
-						}
-						else if (type == typeof(DateTime))
-						{
-								return (T) (object) _row[i].GetDateTime();
-						}
-						else if (type == typeof(TimeSpan))
-						{
-								return (T) (object) _row[i].GetTimeSpan();
-						}
-						else if (type == typeof(byte[]))
-						{
-								return (T) (object) _row[i].GetBinary();
-						}
-						else if (type == typeof(FbDecFloat))
-						{
-								return (T) (object) _row[i].GetDecFloat();
-						}
-						else if (type == typeof(BigInteger))
-						{
-								return (T) (object) _row[i].GetInt128();
-						}
-						else if (type == typeof(FbZonedDateTime))
-						{
-								return (T) (object) _row[i].GetZonedDateTime();
-						}
-						else if (type == typeof(FbZonedTime))
-						{
-								return (T) (object) _row[i].GetZonedTime();
-						}
+			if (type == typeof(bool))
+			{
+				return (T) (object) _row[i].GetBoolean();
+			}
+			else if (type == typeof(byte))
+			{
+				return (T) (object) _row[i].GetByte();
+			}
+			else if (type == typeof(char))
+			{
+				return (T) (object) _row[i].GetChar();
+			}
+			else if (type == typeof(Guid))
+			{
+				return (T) (object) _row[i].GetGuid();
+			}
+			else if (type == typeof(short))
+			{
+				return (T) (object) _row[i].GetInt16();
+			}
+			else if (type == typeof(int))
+			{
+				return (T) (object) _row[i].GetInt32();
+			}
+			else if (type == typeof(long))
+			{
+				return (T) (object) _row[i].GetInt64();
+			}
+			else if (type == typeof(float))
+			{
+				return (T) (object) _row[i].GetFloat();
+			}
+			else if (type == typeof(double))
+			{
+				return (T) (object) _row[i].GetDouble();
+			}
+			else if (type == typeof(string))
+			{
+				return (T) (object) _row[i].GetString();
+			}
+			else if (type == typeof(decimal))
+			{
+				return (T) (object) _row[i].GetDecimal();
+			}
+			else if (type == typeof(DateTime))
+			{
+				return (T) (object) _row[i].GetDateTime();
+			}
+			else if (type == typeof(TimeSpan))
+			{
+				return (T) (object) _row[i].GetTimeSpan();
+			}
+			else if (type == typeof(byte[]))
+			{
+				return (T) (object) _row[i].GetBinary();
+			}
+			else if (type == typeof(FbDecFloat))
+			{
+				return (T) (object) _row[i].GetDecFloat();
+			}
+			else if (type == typeof(BigInteger))
+			{
+				return (T) (object) _row[i].GetInt128();
+			}
+			else if (type == typeof(FbZonedDateTime))
+			{
+				return (T) (object) _row[i].GetZonedDateTime();
+			}
+			else if (type == typeof(FbZonedTime))
+			{
+				return (T) (object) _row[i].GetZonedTime();
+			}
 #if NET6_0_OR_GREATER
-						else if (type == typeof(DateOnly))
-						{
-								return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
-						}
-#endif
-#if NET6_0_OR_GREATER
-						else if (type == typeof(TimeOnly))
-						{
-								return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
-						}
-#endif
-						else
-						{
-								return (T) _row[i].GetValue();
-						}
-				}
-				catch (IscException ex)
-				{
-						throw FbException.Create(ex);
-				}
-		}
-
-		public override async Task<T> GetFieldValueAsync<T>(int i, CancellationToken cancellationToken)
-		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-
-				var type = typeof(T);
-				type = Nullable.GetUnderlyingType(type) ?? type;
-				try
-				{
-						if (type == typeof(bool))
-						{
-								return (T) (object) _row[i].GetBoolean();
-						}
-						else if (type == typeof(byte))
-						{
-								return (T) (object) _row[i].GetByte();
-						}
-						else if (type == typeof(char))
-						{
-								return (T) (object) _row[i].GetChar();
-						}
-						else if (type == typeof(Guid))
-						{
-								return (T) (object) _row[i].GetGuid();
-						}
-						else if (type == typeof(short))
-						{
-								return (T) (object) _row[i].GetInt16();
-						}
-						else if (type == typeof(int))
-						{
-								return (T) (object) _row[i].GetInt32();
-						}
-						else if (type == typeof(long))
-						{
-								return (T) (object) _row[i].GetInt64();
-						}
-						else if (type == typeof(float))
-						{
-								return (T) (object) _row[i].GetFloat();
-						}
-						else if (type == typeof(double))
-						{
-								return (T) (object) _row[i].GetDouble();
-						}
-						else if (type == typeof(string))
-						{
-								return (T) (object) await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
-						}
-						else if (type == typeof(decimal))
-						{
-								return (T) (object) _row[i].GetDecimal();
-						}
-						else if (type == typeof(DateTime))
-						{
-								return (T) (object) _row[i].GetDateTime();
-						}
-						else if (type == typeof(TimeSpan))
-						{
-								return (T) (object) _row[i].GetTimeSpan();
-						}
-						else if (type == typeof(byte[]))
-						{
-								return (T) (object) await _row[i].GetBinaryAsync().ConfigureAwait(false);
-						}
-						else if (type == typeof(FbDecFloat))
-						{
-								return (T) (object) _row[i].GetDecFloat();
-						}
-						else if (type == typeof(BigInteger))
-						{
-								return (T) (object) _row[i].GetInt128();
-						}
-						else if (type == typeof(FbZonedDateTime))
-						{
-								return (T) (object) _row[i].GetZonedDateTime();
-						}
-						else if (type == typeof(FbZonedTime))
-						{
-								return (T) (object) _row[i].GetZonedTime();
-						}
-#if NET6_0_OR_GREATER
-						else if (type == typeof(DateOnly))
-						{
-								return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
-						}
+			else if (type == typeof(DateOnly))
+			{
+				return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
+			}
 #endif
 #if NET6_0_OR_GREATER
-						else if (type == typeof(TimeOnly))
-						{
-								return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
-						}
+			else if (type == typeof(TimeOnly))
+			{
+				return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+			}
 #endif
-						else
-						{
-								return (T) await _row[i].GetValueAsync().ConfigureAwait(false);
-						}
-				}
-				catch (IscException ex)
-				{
-						throw FbException.Create(ex);
-				}
+			else
+			{
+				return (T) _row[i].GetValue();
+			}
 		}
-
-		public override bool GetBoolean(int i) => GetFieldValue<bool>(i);
-
-		public override byte GetByte(int i) => GetFieldValue<byte>(i);
-
-		public override long GetBytes(int i, long dataIndex, byte[] buffer, int bufferIndex, int length)
+		catch (IscException ex)
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-				int realLength = length;
-
-				if (buffer == null)
-				{
-						return IsDBNull(i) ? 0 : GetFieldValue<byte[]>(i).Length;
-				}
-				else
-				{
-						byte[] byteArray = GetFieldValue<byte[]>(i);
-
-						if (length > (byteArray.Length - dataIndex))
-						{
-								realLength = byteArray.Length - (int) dataIndex;
-						}
-
-						Array.Copy(byteArray, (int) dataIndex, buffer, bufferIndex, realLength);
-
-
-						int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int) dataIndex : length;
-
-						return bytesRead;
-				}
+			throw FbException.Create(ex);
 		}
+	}
 
-		public override char GetChar(int i) => GetFieldValue<char>(i);
+	public override async Task<T> GetFieldValueAsync<T>(int i, CancellationToken cancellationToken)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
 
-		public override long GetChars(int i, long dataIndex, char[] buffer, int bufferIndex, int length)
+		var type = typeof(T);
+		type = Nullable.GetUnderlyingType(type) ?? type;
+		try
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-
-				if (buffer == null)
-				{
-						return IsDBNull(i) ? 0 : GetFieldValue<string>(i).ToCharArray().Length;
-				}
-				else
-				{
-
-						char[] charArray = GetFieldValue<string>(i).ToCharArray();
-						int realLength = length;
-
-						if (length > (charArray.Length - dataIndex))
-						{
-								realLength = charArray.Length - (int) dataIndex;
-						}
-
-						Array.Copy(charArray, (int) dataIndex, buffer,
-							bufferIndex, realLength);
-
-
-						int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int) dataIndex : length;
-
-						return charsRead;
-				}
+			if (type == typeof(bool))
+			{
+				return (T) (object) _row[i].GetBoolean();
+			}
+			else if (type == typeof(byte))
+			{
+				return (T) (object) _row[i].GetByte();
+			}
+			else if (type == typeof(char))
+			{
+				return (T) (object) _row[i].GetChar();
+			}
+			else if (type == typeof(Guid))
+			{
+				return (T) (object) _row[i].GetGuid();
+			}
+			else if (type == typeof(short))
+			{
+				return (T) (object) _row[i].GetInt16();
+			}
+			else if (type == typeof(int))
+			{
+				return (T) (object) _row[i].GetInt32();
+			}
+			else if (type == typeof(long))
+			{
+				return (T) (object) _row[i].GetInt64();
+			}
+			else if (type == typeof(float))
+			{
+				return (T) (object) _row[i].GetFloat();
+			}
+			else if (type == typeof(double))
+			{
+				return (T) (object) _row[i].GetDouble();
+			}
+			else if (type == typeof(string))
+			{
+				return (T) (object) await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
+			}
+			else if (type == typeof(decimal))
+			{
+				return (T) (object) _row[i].GetDecimal();
+			}
+			else if (type == typeof(DateTime))
+			{
+				return (T) (object) _row[i].GetDateTime();
+			}
+			else if (type == typeof(TimeSpan))
+			{
+				return (T) (object) _row[i].GetTimeSpan();
+			}
+			else if (type == typeof(byte[]))
+			{
+				return (T) (object) await _row[i].GetBinaryAsync().ConfigureAwait(false);
+			}
+			else if (type == typeof(FbDecFloat))
+			{
+				return (T) (object) _row[i].GetDecFloat();
+			}
+			else if (type == typeof(BigInteger))
+			{
+				return (T) (object) _row[i].GetInt128();
+			}
+			else if (type == typeof(FbZonedDateTime))
+			{
+				return (T) (object) _row[i].GetZonedDateTime();
+			}
+			else if (type == typeof(FbZonedTime))
+			{
+				return (T) (object) _row[i].GetZonedTime();
+			}
+#if NET6_0_OR_GREATER
+			else if (type == typeof(DateOnly))
+			{
+				return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
+			}
+#endif
+#if NET6_0_OR_GREATER
+			else if (type == typeof(TimeOnly))
+			{
+				return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+			}
+#endif
+			else
+			{
+				return (T) await _row[i].GetValueAsync().ConfigureAwait(false);
+			}
 		}
-
-		public override Guid GetGuid(int i) => GetFieldValue<Guid>(i);
-
-		public override short GetInt16(int i) => GetFieldValue<short>(i);
-
-		public override int GetInt32(int i) => GetFieldValue<int>(i);
-
-		public override long GetInt64(int i) => GetFieldValue<long>(i);
-
-		public override float GetFloat(int i) => GetFieldValue<float>(i);
-
-		public override double GetDouble(int i) => GetFieldValue<double>(i);
-
-		public override string GetString(int i) => GetFieldValue<string>(i);
-
-		public override decimal GetDecimal(int i) => GetFieldValue<decimal>(i);
-
-		public override DateTime GetDateTime(int i) => GetFieldValue<DateTime>(i);
-
-		public override Stream GetStream(int i)
+		catch (IscException ex)
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-
-				return _row[i].GetBinaryStream();
+			throw FbException.Create(ex);
 		}
+	}
 
-		public override bool IsDBNull(int i)
+	public override bool GetBoolean(int i) => GetFieldValue<bool>(i);
+
+	public override byte GetByte(int i) => GetFieldValue<byte>(i);
+
+	public override long GetBytes(int i, long dataIndex, byte[] buffer, int bufferIndex, int length)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
+		int realLength = length;
+
+		if (buffer == null)
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
-
-				return _row[i].IsDBNull();
+			return IsDBNull(i) ? 0 : GetFieldValue<byte[]>(i).Length;
 		}
-		public override Task<bool> IsDBNullAsync(int i, CancellationToken cancellationToken)
+		else
 		{
-				CheckState();
-				CheckPosition();
-				CheckIndex(i);
+			byte[] byteArray = GetFieldValue<byte[]>(i);
 
-				return Task.FromResult(_row[i].IsDBNull());
+			if (length > (byteArray.Length - dataIndex))
+			{
+				realLength = byteArray.Length - (int) dataIndex;
+			}
+
+			Array.Copy(byteArray, (int) dataIndex, buffer, bufferIndex, realLength);
+
+
+			int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int) dataIndex : length;
+
+			return bytesRead;
 		}
+	}
 
-		public override IEnumerator GetEnumerator() => new DbEnumerator(this, IsCommandBehavior(CommandBehavior.CloseConnection));
+	public override char GetChar(int i) => GetFieldValue<char>(i);
 
-		public override bool NextResult() => false;
-		public override Task<bool> NextResultAsync(CancellationToken cancellationToken) => Task.FromResult(false);
+	public override long GetChars(int i, long dataIndex, char[] buffer, int bufferIndex, int length)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
 
-		#endregion
-
-		#region Private Methods
-
-		private void CheckPosition()
+		if (buffer == null)
 		{
-				if (_eof || _position == StartPosition)
-						throw new InvalidOperationException("There are no data to read.");
+			return IsDBNull(i) ? 0 : GetFieldValue<string>(i).ToCharArray().Length;
 		}
-
-		private void CheckState()
+		else
 		{
-				if (IsClosed)
-						throw new InvalidOperationException("Invalid attempt of read when the reader is closed.");
-		}
 
-		private void CheckIndex(int i)
+			char[] charArray = GetFieldValue<string>(i).ToCharArray();
+			int realLength = length;
+
+			if (length > (charArray.Length - dataIndex))
+			{
+				realLength = charArray.Length - (int) dataIndex;
+			}
+
+			Array.Copy(charArray, (int) dataIndex, buffer,
+				bufferIndex, realLength);
+
+
+			int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int) dataIndex : length;
+
+			return charsRead;
+		}
+	}
+
+	public override Guid GetGuid(int i) => GetFieldValue<Guid>(i);
+
+	public override short GetInt16(int i) => GetFieldValue<short>(i);
+
+	public override int GetInt32(int i) => GetFieldValue<int>(i);
+
+	public override long GetInt64(int i) => GetFieldValue<long>(i);
+
+	public override float GetFloat(int i) => GetFieldValue<float>(i);
+
+	public override double GetDouble(int i) => GetFieldValue<double>(i);
+
+	public override string GetString(int i) => GetFieldValue<string>(i);
+
+	public override decimal GetDecimal(int i) => GetFieldValue<decimal>(i);
+
+	public override DateTime GetDateTime(int i) => GetFieldValue<DateTime>(i);
+
+	public override Stream GetStream(int i)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
+
+		return _row[i].GetBinaryStream();
+	}
+
+	public override bool IsDBNull(int i)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
+
+		return _row[i].IsDBNull();
+	}
+	public override Task<bool> IsDBNullAsync(int i, CancellationToken cancellationToken)
+	{
+		CheckState();
+		CheckPosition();
+		CheckIndex(i);
+
+		return Task.FromResult(_row[i].IsDBNull());
+	}
+
+	public override IEnumerator GetEnumerator() => new DbEnumerator(this, IsCommandBehavior(CommandBehavior.CloseConnection));
+
+	public override bool NextResult() => false;
+	public override Task<bool> NextResultAsync(CancellationToken cancellationToken) => Task.FromResult(false);
+
+	#endregion
+
+	#region Private Methods
+
+	private void CheckPosition()
+	{
+		if (_eof || _position == StartPosition)
+			throw new InvalidOperationException("There are no data to read.");
+	}
+
+	private void CheckState()
+	{
+		if (IsClosed)
+			throw new InvalidOperationException("Invalid attempt of read when the reader is closed.");
+	}
+
+	private void CheckIndex(int i)
+	{
+		if (i < 0 || i >= FieldCount)
+			throw new IndexOutOfRangeException("Could not find specified column in results.");
+	}
+
+	private FbDbType GetProviderType(int i) => (FbDbType) _fields[i].DbDataType;
+
+	private void UpdateRecordsAffected()
+	{
+		if (_command != null && !_command.IsDisposed)
 		{
-				if (i < 0 || i >= FieldCount)
-						throw new IndexOutOfRangeException("Could not find specified column in results.");
+			if (_command.RecordsAffected != -1)
+			{
+				_recordsAffected = _recordsAffected == -1 ? 0 : _recordsAffected;
+				_recordsAffected += _command.RecordsAffected;
+			}
 		}
+	}
 
-		private FbDbType GetProviderType(int i) => (FbDbType) _fields[i].DbDataType;
+	private bool IsCommandBehavior(CommandBehavior behavior) => _commandBehavior.HasFlag(behavior);
 
-		private void UpdateRecordsAffected()
+	private void InitializeColumnsIndexes()
+	{
+		_columnsIndexesOrdinal = new Dictionary<string, int>(_fields.Count, StringComparer.Ordinal);
+		_columnsIndexesOrdinalCI = new Dictionary<string, int>(_fields.Count, StringComparer.OrdinalIgnoreCase);
+		for (int i = 0; i < _fields.Count; i++)
 		{
-				if (_command != null && !_command.IsDisposed)
-				{
-						if (_command.RecordsAffected != -1)
-						{
-								_recordsAffected = _recordsAffected == -1 ? 0 : _recordsAffected;
-								_recordsAffected += _command.RecordsAffected;
-						}
-				}
+			string fieldName = _fields[i].Alias;
+			_ = _columnsIndexesOrdinal.TryAdd(fieldName, i);
+			_ = _columnsIndexesOrdinalCI.TryAdd(fieldName, i);
 		}
+	}
 
-		private bool IsCommandBehavior(CommandBehavior behavior) => _commandBehavior.HasFlag(behavior);
-
-		private void InitializeColumnsIndexes()
+	private int GetColumnIndex(string name)
+	{
+		if (_columnsIndexesOrdinal == null || _columnsIndexesOrdinalCI == null)
 		{
-				_columnsIndexesOrdinal = new Dictionary<string, int>(_fields.Count, StringComparer.Ordinal);
-				_columnsIndexesOrdinalCI = new Dictionary<string, int>(_fields.Count, StringComparer.OrdinalIgnoreCase);
-				for (int i = 0; i < _fields.Count; i++)
-				{
-						string fieldName = _fields[i].Alias;
-						_ = _columnsIndexesOrdinal.TryAdd(fieldName, i);
-						_ = _columnsIndexesOrdinalCI.TryAdd(fieldName, i);
-				}
+			InitializeColumnsIndexes();
 		}
+		if (!_columnsIndexesOrdinal.TryGetValue(name, out int index))
+			if (!_columnsIndexesOrdinalCI.TryGetValue(name, out index))
+				throw new IndexOutOfRangeException($"Could not find specified column '{name}' in results.");
+		return index;
+	}
 
-		private int GetColumnIndex(string name)
-		{
-				if (_columnsIndexesOrdinal == null || _columnsIndexesOrdinalCI == null)
-				{
-						InitializeColumnsIndexes();
-				}
-				if (!_columnsIndexesOrdinal.TryGetValue(name, out int index))
-						if (!_columnsIndexesOrdinalCI.TryGetValue(name, out index))
-								throw new IndexOutOfRangeException($"Could not find specified column '{name}' in results.");
-				return index;
-		}
+	#endregion
 
-		#endregion
+	#region Static Methods
 
-		#region Static Methods
+	private static bool IsReadOnly(FbDataReader r) => IsExpression(r);
 
-		private static bool IsReadOnly(FbDataReader r) => IsExpression(r);
-
-		public static bool IsExpression(FbDataReader r) =>
-				/* [0] = COMPUTED_BLR
+	public static bool IsExpression(FbDataReader r) =>
+			/* [0] = COMPUTED_BLR
 * [1] = COMPUTED_SOURCE
 */
-				!r.IsDBNull(0) || !r.IsDBNull(1);
+			!r.IsDBNull(0) || !r.IsDBNull(1);
 
-		private static DataTable GetSchemaTableStructure()
-		{
-				var schema = new DataTable("Schema");
+	private static DataTable GetSchemaTableStructure()
+	{
+		var schema = new DataTable("Schema");
 
-				// Schema table structure
-				_ = schema.Columns.Add("ColumnName", Type.GetType("System.String"));
-				_ = schema.Columns.Add("ColumnOrdinal", Type.GetType("System.Int32"));
-				_ = schema.Columns.Add("ColumnSize", Type.GetType("System.Int32"));
-				_ = schema.Columns.Add("NumericPrecision", Type.GetType("System.Int32"));
-				_ = schema.Columns.Add("NumericScale", Type.GetType("System.Int32"));
-				_ = schema.Columns.Add("DataType", Type.GetType("System.Type"));
-				_ = schema.Columns.Add("ProviderType", Type.GetType("System.Int32"));
-				_ = schema.Columns.Add("IsLong", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("AllowDBNull", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsReadOnly", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsRowVersion", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsUnique", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsKey", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsAutoIncrement", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsAliased", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("IsExpression", Type.GetType("System.Boolean"));
-				_ = schema.Columns.Add("BaseSchemaName", Type.GetType("System.String"));
-				_ = schema.Columns.Add("BaseCatalogName", Type.GetType("System.String"));
-				_ = schema.Columns.Add("BaseTableName", Type.GetType("System.String"));
-				_ = schema.Columns.Add("BaseColumnName", Type.GetType("System.String"));
+		// Schema table structure
+		_ = schema.Columns.Add("ColumnName", Type.GetType("System.String"));
+		_ = schema.Columns.Add("ColumnOrdinal", Type.GetType("System.Int32"));
+		_ = schema.Columns.Add("ColumnSize", Type.GetType("System.Int32"));
+		_ = schema.Columns.Add("NumericPrecision", Type.GetType("System.Int32"));
+		_ = schema.Columns.Add("NumericScale", Type.GetType("System.Int32"));
+		_ = schema.Columns.Add("DataType", Type.GetType("System.Type"));
+		_ = schema.Columns.Add("ProviderType", Type.GetType("System.Int32"));
+		_ = schema.Columns.Add("IsLong", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("AllowDBNull", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsReadOnly", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsRowVersion", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsUnique", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsKey", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsAutoIncrement", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsAliased", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("IsExpression", Type.GetType("System.Boolean"));
+		_ = schema.Columns.Add("BaseSchemaName", Type.GetType("System.String"));
+		_ = schema.Columns.Add("BaseCatalogName", Type.GetType("System.String"));
+		_ = schema.Columns.Add("BaseTableName", Type.GetType("System.String"));
+		_ = schema.Columns.Add("BaseColumnName", Type.GetType("System.String"));
 
-				return schema;
-		}
+		return schema;
+	}
 
-		private static string GetSchemaCommandText()
-		{
-				const string sql =
-					@"SELECT
+	private static string GetSchemaCommandText()
+	{
+		const string sql =
+			@"SELECT
 					fld.rdb$computed_blr AS computed_blr,
 					fld.rdb$computed_source AS computed_source,
 					(SELECT COUNT(*) FROM rdb$relation_constraints rel
@@ -1045,21 +1045,21 @@ public sealed class FbDataReader : DbDataReader
 					AND rfr.rdb$field_name = ?
 				  ORDER BY rfr.rdb$relation_name, rfr.rdb$field_position";
 
-				return sql;
-		}
+		return sql;
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static T CheckedGetValue2<T>(Func<T> getter)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static T CheckedGetValue2<T>(Func<T> getter)
+	{
+		try
 		{
-				try
-				{
-						return getter();
-				}
-				catch (IscException ex)
-				{
-						throw FbException.Create(ex);
-				}
+			return getter();
 		}
+		catch (IscException ex)
+		{
+			throw FbException.Create(ex);
+		}
+	}
 
-		#endregion
+	#endregion
 }

@@ -22,8 +22,8 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 internal interface IFbPreparedCommand
 {
-		void Release();
-		Task ReleaseAsync(CancellationToken cancellationToken = default);
-		void TransactionCompleted();
-		Task TransactionCompletedAsync(CancellationToken cancellationToken = default);
+	void Release();
+	Task ReleaseAsync(CancellationToken cancellationToken = default);
+	void TransactionCompleted();
+	Task TransactionCompletedAsync(CancellationToken cancellationToken = default);
 }

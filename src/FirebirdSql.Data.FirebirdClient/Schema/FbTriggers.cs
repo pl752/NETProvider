@@ -24,15 +24,15 @@ namespace FirebirdSql.Data.Schema;
 
 internal class FbTriggers : FbSchema
 {
-		#region Protected Methods
+	#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions)
-		{
-				var sql = new StringBuilder();
-				var where = new StringBuilder();
+	protected override StringBuilder GetCommandText(string[] restrictions)
+	{
+		var sql = new StringBuilder();
+		var where = new StringBuilder();
 
-				_ = sql.Append(
-					@"SELECT
+		_ = sql.Append(
+			@"SELECT
 					null AS TABLE_CATALOG,
 					null AS TABLE_SCHEMA,
 					rdb$relation_name AS TABLE_NAME,
@@ -45,63 +45,63 @@ internal class FbTriggers : FbSchema
 					rdb$description AS DESCRIPTION
 				FROM rdb$triggers");
 
-				if (restrictions != null)
-				{
-						int index = 0;
+		if (restrictions != null)
+		{
+			int index = 0;
 
-						/* TABLE_CATALOG */
-						if (restrictions.Length >= 1 && restrictions[0] != null)
-						{
-						}
+			/* TABLE_CATALOG */
+			if (restrictions.Length >= 1 && restrictions[0] != null)
+			{
+			}
 
-						/* TABLE_SCHEMA */
-						if (restrictions.Length >= 2 && restrictions[1] != null)
-						{
-						}
+			/* TABLE_SCHEMA */
+			if (restrictions.Length >= 2 && restrictions[1] != null)
+			{
+			}
 
-						/* TABLE_NAME */
-						if (restrictions.Length >= 3 && restrictions[2] != null)
-						{
-								_ = where.AppendFormat("rdb$relation_name = @p{0}", index++);
-						}
+			/* TABLE_NAME */
+			if (restrictions.Length >= 3 && restrictions[2] != null)
+			{
+				_ = where.AppendFormat("rdb$relation_name = @p{0}", index++);
+			}
 
-						/* TRIGGER_NAME */
-						if (restrictions.Length >= 4 && restrictions[3] != null)
-						{
-								if (where.Length > 0)
-								{
-										_ = where.Append(" AND ");
-								}
-
-								_ = where.AppendFormat("rdb$trigger_name = @p{0}", index++);
-						}
-				}
-
+			/* TRIGGER_NAME */
+			if (restrictions.Length >= 4 && restrictions[3] != null)
+			{
 				if (where.Length > 0)
 				{
-						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
+					_ = where.Append(" AND ");
 				}
 
-				_ = sql.Append(" ORDER BY TABLE_NAME, TRIGGER_NAME");
-
-				return sql;
+				_ = where.AppendFormat("rdb$trigger_name = @p{0}", index++);
+			}
 		}
 
-		protected override void ProcessResult(DataTable schema)
+		if (where.Length > 0)
 		{
-				schema.BeginLoadData();
-
-				foreach (DataRow row in schema.Rows)
-				{
-						row["IS_SYSTEM_TRIGGER"] = row["IS_SYSTEM_TRIGGER"] == DBNull.Value ||
-							Convert.ToInt32(row["IS_SYSTEM_TRIGGER"], CultureInfo.InvariantCulture) == 0
-								? false
-								: true;
-				}
-
-				schema.EndLoadData();
-				schema.AcceptChanges();
+			_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 		}
 
-		#endregion
+		_ = sql.Append(" ORDER BY TABLE_NAME, TRIGGER_NAME");
+
+		return sql;
+	}
+
+	protected override void ProcessResult(DataTable schema)
+	{
+		schema.BeginLoadData();
+
+		foreach (DataRow row in schema.Rows)
+		{
+			row["IS_SYSTEM_TRIGGER"] = row["IS_SYSTEM_TRIGGER"] == DBNull.Value ||
+				Convert.ToInt32(row["IS_SYSTEM_TRIGGER"], CultureInfo.InvariantCulture) == 0
+					? false
+					: true;
+		}
+
+		schema.EndLoadData();
+		schema.AcceptChanges();
+	}
+
+	#endregion
 }

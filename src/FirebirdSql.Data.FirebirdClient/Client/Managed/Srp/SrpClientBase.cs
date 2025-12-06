@@ -30,146 +30,146 @@ namespace FirebirdSql.Data.Client.Managed.Srp;
 /// </remarks>
 abstract class SrpClientBase
 {
-		public abstract string Name { get; }
+	public abstract string Name { get; }
 
-		public string SessionKeyName { get; } = "Symmetric";
+	public string SessionKeyName { get; } = "Symmetric";
 
-		private const int SRP_KEY_SIZE = 128;
-		private const int SRP_SALT_SIZE = 32;
-		private static readonly BigInteger N = BigInteger.Parse("00E67D2E994B2F900C3F41F08F5BB2627ED0D49EE1FE767A52EFCD565CD6E768812C3E1E9CE8F0A8BEA6CB13CD29DDEBF7A96D4A93B55D488DF099A15C89DCB0640738EB2CBDD9A8F7BAB561AB1B0DC1C6CDABF303264A08D1BCA932D1F1EE428B619D970F342ABA9A65793B8B2F041AE5364350C16F735F56ECBCA87BD57B29E7", NumberStyles.HexNumber);
-		private static readonly BigInteger g = new BigInteger(2);
-		private static readonly BigInteger k = BigInteger.Parse("1277432915985975349439481660349303019122249719989");
-		private static readonly byte[] SEPARATOR_BYTES = Encoding.UTF8.GetBytes(":");
+	private const int SRP_KEY_SIZE = 128;
+	private const int SRP_SALT_SIZE = 32;
+	private static readonly BigInteger N = BigInteger.Parse("00E67D2E994B2F900C3F41F08F5BB2627ED0D49EE1FE767A52EFCD565CD6E768812C3E1E9CE8F0A8BEA6CB13CD29DDEBF7A96D4A93B55D488DF099A15C89DCB0640738EB2CBDD9A8F7BAB561AB1B0DC1C6CDABF303264A08D1BCA932D1F1EE428B619D970F342ABA9A65793B8B2F041AE5364350C16F735F56ECBCA87BD57B29E7", NumberStyles.HexNumber);
+	private static readonly BigInteger g = new BigInteger(2);
+	private static readonly BigInteger k = BigInteger.Parse("1277432915985975349439481660349303019122249719989");
+	private static readonly byte[] SEPARATOR_BYTES = Encoding.UTF8.GetBytes(":");
 
-		public BigInteger PublicKey { get; } // A
-		public string PublicKeyHex => Pad(PublicKey).ToHexString();
-		public BigInteger PrivateKey { get; } // a
-		public byte[] Proof { get; private set; } // M
-		public byte[] SessionKey { get; private set; } // K
+	public BigInteger PublicKey { get; } // A
+	public string PublicKeyHex => Pad(PublicKey).ToHexString();
+	public BigInteger PrivateKey { get; } // a
+	public byte[] Proof { get; private set; } // M
+	public byte[] SessionKey { get; private set; } // K
 
-		public SrpClientBase()
+	public SrpClientBase()
+	{
+		PrivateKey = GetSecret();
+		PublicKey = BigInteger.ModPow(g, PrivateKey, N);
+	}
+
+	public byte[] ClientProof(string user, string password, byte[] salt, BigInteger serverPublicKey)
+	{
+		byte[] K = GetClientSessionKey(user, password, salt, serverPublicKey);
+
+		var n1 = BigIntegerFromByteArray(ComputeSHA1Hash(BigIntegerToByteArray(N)));
+		var n2 = BigIntegerFromByteArray(ComputeSHA1Hash(BigIntegerToByteArray(g)));
+
+		n1 = BigInteger.ModPow(n1, n2, N);
+		n2 = BigIntegerFromByteArray(ComputeSHA1Hash(Encoding.UTF8.GetBytes(user)));
+		byte[] M = ComputeHash(BigIntegerToByteArray(n1), BigIntegerToByteArray(n2), salt, BigIntegerToByteArray(PublicKey), BigIntegerToByteArray(serverPublicKey), K);
+
+		SessionKey = K;
+		Proof = M;
+
+		return Proof;
+	}
+
+	public byte[] ClientProof(string user, string password, byte[] authData)
+	{
+		int saltLength = authData[0] + authData[1] * 256;
+		byte[] salt = new byte[saltLength];
+		Array.Copy(authData, 2, salt, 0, saltLength);
+
+		int serverKeyStart = saltLength + 4;
+		int serverKeyLength = authData.Length - saltLength - 4;
+		byte[] hexServerPublicKey = new byte[serverKeyLength];
+		Array.Copy(authData, serverKeyStart, hexServerPublicKey, 0, serverKeyLength);
+		string hexServerPublicKeyString = Encoding.UTF8.GetString(hexServerPublicKey);
+		var serverPublicKey = BigInteger.Parse($"00{hexServerPublicKeyString}", NumberStyles.HexNumber);
+		return ClientProof(user, password, salt, serverPublicKey);
+	}
+
+	public (BigInteger, BigInteger) ServerSeed(string user, string password, byte[] salt)
+	{
+		var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
+		var b = GetSecret();
+		var gb = BigInteger.ModPow(g, b, N);
+		_ = BigInteger.DivRem(k * v, N, out var kv);
+		_ = BigInteger.DivRem(BigInteger.Add(kv, gb), N, out var B);
+		return (B, b);
+	}
+
+	public static byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b)
+	{
+		var u = GetScramble(A, B);
+		var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
+		var vu = BigInteger.ModPow(v, u, N);
+		_ = BigInteger.DivRem(A * vu, N, out var Avu);
+		var sessionSecret = BigInteger.ModPow(Avu, b, N);
+		return ComputeSHA1Hash(BigIntegerToByteArray(sessionSecret));
+	}
+
+	public static byte[] GetSalt() => GetRandomBytes(SRP_SALT_SIZE);
+
+	private static BigInteger GetSecret() => new BigInteger(GetRandomBytes(SRP_KEY_SIZE / 8).Concat(new byte[] { 0 }).ToArray());
+
+	private byte[] GetClientSessionKey(string user, string password, byte[] salt, BigInteger serverPublicKey)
+	{
+		var u = GetScramble(PublicKey, serverPublicKey);
+		var x = GetUserHash(user, password, salt);
+		var gx = BigInteger.ModPow(g, x, N);
+		_ = BigInteger.DivRem(k * gx, N, out var kgx);
+		var Bkgx = serverPublicKey - kgx;
+		if (Bkgx < 0)
 		{
-				PrivateKey = GetSecret();
-				PublicKey = BigInteger.ModPow(g, PrivateKey, N);
+			Bkgx = Bkgx + N;
 		}
+		_ = BigInteger.DivRem(Bkgx, N, out var diff);
+		_ = BigInteger.DivRem(u * x, N, out var ux);
+		_ = BigInteger.DivRem(PrivateKey + ux, N, out var aux);
+		var sessionSecret = BigInteger.ModPow(diff, aux, N);
+		return ComputeSHA1Hash(BigIntegerToByteArray(sessionSecret));
+	}
 
-		public byte[] ClientProof(string user, string password, byte[] salt, BigInteger serverPublicKey)
+	protected abstract byte[] ComputeHash(params byte[][] ba);
+
+	private static BigInteger GetUserHash(string user, string password, byte[] salt)
+	{
+		byte[] userBytes = Encoding.UTF8.GetBytes(user);
+		byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+		byte[] hash1 = ComputeSHA1Hash(userBytes, SEPARATOR_BYTES, passwordBytes);
+		byte[] hash2 = ComputeSHA1Hash(salt, hash1);
+		return BigIntegerFromByteArray(hash2);
+	}
+
+	private static BigInteger BigIntegerFromByteArray(byte[] b)
+	{
+		Span<byte> bytes = [0, .. b];
+		bytes.Reverse();
+		return new BigInteger(bytes);
+	}
+
+	private static byte[] BigIntegerToByteArray(BigInteger n)
+	{
+		Span<byte> bytes = stackalloc byte[n.GetByteCount()];
+		_ = n.TryWriteBytes(bytes, out _);
+		bytes.Reverse();
+		return bytes[0] == 0 ? bytes[1..].ToArray() : bytes.ToArray();
+	}
+
+	private static byte[] ComputeSHA1Hash(params byte[][] ba) => SHA1.HashData([.. ba.SelectMany(x => x)]);
+
+	private static byte[] Pad(BigInteger n)
+	{
+		byte[] bn = BigIntegerToByteArray(n);
+		return [.. bn.SkipWhile((_, i) => i < bn.Length - SRP_KEY_SIZE)];
+	}
+
+	private static BigInteger GetScramble(BigInteger x, BigInteger y) => BigIntegerFromByteArray(ComputeSHA1Hash(Pad(x), Pad(y)));
+
+	private static byte[] GetRandomBytes(int count)
+	{
+		byte[] result = new byte[count];
+		using (var random = RandomNumberGenerator.Create())
 		{
-				byte[] K = GetClientSessionKey(user, password, salt, serverPublicKey);
-
-				var n1 = BigIntegerFromByteArray(ComputeSHA1Hash(BigIntegerToByteArray(N)));
-				var n2 = BigIntegerFromByteArray(ComputeSHA1Hash(BigIntegerToByteArray(g)));
-
-				n1 = BigInteger.ModPow(n1, n2, N);
-				n2 = BigIntegerFromByteArray(ComputeSHA1Hash(Encoding.UTF8.GetBytes(user)));
-				byte[] M = ComputeHash(BigIntegerToByteArray(n1), BigIntegerToByteArray(n2), salt, BigIntegerToByteArray(PublicKey), BigIntegerToByteArray(serverPublicKey), K);
-
-				SessionKey = K;
-				Proof = M;
-
-				return Proof;
+			random.GetBytes(result);
 		}
-
-		public byte[] ClientProof(string user, string password, byte[] authData)
-		{
-				int saltLength = authData[0] + authData[1] * 256;
-				byte[] salt = new byte[saltLength];
-				Array.Copy(authData, 2, salt, 0, saltLength);
-
-				int serverKeyStart = saltLength + 4;
-				int serverKeyLength = authData.Length - saltLength - 4;
-				byte[] hexServerPublicKey = new byte[serverKeyLength];
-				Array.Copy(authData, serverKeyStart, hexServerPublicKey, 0, serverKeyLength);
-				string hexServerPublicKeyString = Encoding.UTF8.GetString(hexServerPublicKey);
-				var serverPublicKey = BigInteger.Parse($"00{hexServerPublicKeyString}", NumberStyles.HexNumber);
-				return ClientProof(user, password, salt, serverPublicKey);
-		}
-
-		public (BigInteger, BigInteger) ServerSeed(string user, string password, byte[] salt)
-		{
-				var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
-				var b = GetSecret();
-				var gb = BigInteger.ModPow(g, b, N);
-				_ = BigInteger.DivRem(k * v, N, out var kv);
-				_ = BigInteger.DivRem(BigInteger.Add(kv, gb), N, out var B);
-				return (B, b);
-		}
-
-		public static byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b)
-		{
-				var u = GetScramble(A, B);
-				var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
-				var vu = BigInteger.ModPow(v, u, N);
-				_ = BigInteger.DivRem(A * vu, N, out var Avu);
-				var sessionSecret = BigInteger.ModPow(Avu, b, N);
-				return ComputeSHA1Hash(BigIntegerToByteArray(sessionSecret));
-		}
-
-		public static byte[] GetSalt() => GetRandomBytes(SRP_SALT_SIZE);
-
-		private static BigInteger GetSecret() => new BigInteger(GetRandomBytes(SRP_KEY_SIZE / 8).Concat(new byte[] { 0 }).ToArray());
-
-		private byte[] GetClientSessionKey(string user, string password, byte[] salt, BigInteger serverPublicKey)
-		{
-				var u = GetScramble(PublicKey, serverPublicKey);
-				var x = GetUserHash(user, password, salt);
-				var gx = BigInteger.ModPow(g, x, N);
-				_ = BigInteger.DivRem(k * gx, N, out var kgx);
-				var Bkgx = serverPublicKey - kgx;
-				if (Bkgx < 0)
-				{
-						Bkgx = Bkgx + N;
-				}
-				_ = BigInteger.DivRem(Bkgx, N, out var diff);
-				_ = BigInteger.DivRem(u * x, N, out var ux);
-				_ = BigInteger.DivRem(PrivateKey + ux, N, out var aux);
-				var sessionSecret = BigInteger.ModPow(diff, aux, N);
-				return ComputeSHA1Hash(BigIntegerToByteArray(sessionSecret));
-		}
-
-		protected abstract byte[] ComputeHash(params byte[][] ba);
-
-		private static BigInteger GetUserHash(string user, string password, byte[] salt)
-		{
-				byte[] userBytes = Encoding.UTF8.GetBytes(user);
-				byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-				byte[] hash1 = ComputeSHA1Hash(userBytes, SEPARATOR_BYTES, passwordBytes);
-				byte[] hash2 = ComputeSHA1Hash(salt, hash1);
-				return BigIntegerFromByteArray(hash2);
-		}
-
-		private static BigInteger BigIntegerFromByteArray(byte[] b)
-		{
-				Span<byte> bytes = [0, .. b];
-				bytes.Reverse();
-				return new BigInteger(bytes);
-		}
-
-		private static byte[] BigIntegerToByteArray(BigInteger n)
-		{
-				Span<byte> bytes = stackalloc byte[n.GetByteCount()];
-				_ = n.TryWriteBytes(bytes, out _);
-				bytes.Reverse();
-				return bytes[0] == 0 ? bytes[1..].ToArray() : bytes.ToArray();
-		}
-
-		private static byte[] ComputeSHA1Hash(params byte[][] ba) => SHA1.HashData([.. ba.SelectMany(x => x)]);
-
-		private static byte[] Pad(BigInteger n)
-		{
-				byte[] bn = BigIntegerToByteArray(n);
-				return [.. bn.SkipWhile((_, i) => i < bn.Length - SRP_KEY_SIZE)];
-		}
-
-		private static BigInteger GetScramble(BigInteger x, BigInteger y) => BigIntegerFromByteArray(ComputeSHA1Hash(Pad(x), Pad(y)));
-
-		private static byte[] GetRandomBytes(int count)
-		{
-				byte[] result = new byte[count];
-				using (var random = RandomNumberGenerator.Create())
-				{
-						random.GetBytes(result);
-				}
-				return result;
-		}
+		return result;
+	}
 }
