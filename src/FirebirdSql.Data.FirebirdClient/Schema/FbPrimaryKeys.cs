@@ -26,7 +26,7 @@ internal class FbPrimaryKeys : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS TABLE_CATALOG,
 					null AS TABLE_SCHEMA,
@@ -38,10 +38,10 @@ internal class FbPrimaryKeys : FbSchema {
 					LEFT JOIN rdb$indices idx ON rel.rdb$index_name = idx.rdb$index_name
 					LEFT JOIN rdb$index_segments seg ON idx.rdb$index_name = seg.rdb$index_name");
 
-				where.Append("rel.rdb$constraint_type = 'PRIMARY KEY'");
+				_ = where.Append("rel.rdb$constraint_type = 'PRIMARY KEY'");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* TABLE_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -53,15 +53,15 @@ internal class FbPrimaryKeys : FbSchema {
 
 						/* TABLE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY TABLE_NAME, PK_NAME, ORDINAL_POSITION");
+				_ = sql.Append(" ORDER BY TABLE_NAME, PK_NAME, ORDINAL_POSITION");
 
 				return sql;
 		}

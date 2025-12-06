@@ -98,7 +98,7 @@ internal abstract class StatementBase {
 
 		public bool ReturnRecordsAffected { get; set; }
 
-		public bool IsPrepared => !(State == StatementState.Deallocated || State == StatementState.Error);
+		public bool IsPrepared => State is not (StatementState.Deallocated or StatementState.Error);
 		public bool DoRecordsAffected => ReturnRecordsAffected
 			&& (StatementType == DbStatementType.Insert
 				|| StatementType == DbStatementType.Delete
@@ -111,37 +111,27 @@ internal abstract class StatementBase {
 		#region Dispose2
 
 		public virtual void Dispose2() { }
-		public virtual ValueTask Dispose2Async(CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		public virtual ValueTask Dispose2Async(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
 		#endregion
 
 		#region Methods
 
-		public string GetExecutionPlan() {
-				return GetPlanInfo(DescribePlanInfoItems);
-		}
-		public ValueTask<string> GetExecutionPlanAsync(CancellationToken cancellationToken) {
-				return GetPlanInfoAsync(DescribePlanInfoItems, cancellationToken);
-		}
+		public string GetExecutionPlan() => GetPlanInfo(DescribePlanInfoItems);
+		public ValueTask<string> GetExecutionPlanAsync(CancellationToken cancellationToken) => GetPlanInfoAsync(DescribePlanInfoItems, cancellationToken);
 
-		public string GetExecutionExplainedPlan() {
-				return GetPlanInfo(DescribeExplaindPlanInfoItems);
-		}
-		public ValueTask<string> GetExecutionExplainedPlanAsync(CancellationToken cancellationToken = default) {
-				return GetPlanInfoAsync(DescribeExplaindPlanInfoItems, cancellationToken);
-		}
+		public string GetExecutionExplainedPlan() => GetPlanInfo(DescribeExplaindPlanInfoItems);
+		public ValueTask<string> GetExecutionExplainedPlanAsync(CancellationToken cancellationToken = default) => GetPlanInfoAsync(DescribeExplaindPlanInfoItems, cancellationToken);
 
 		public virtual void Close() {
-				if(State == StatementState.Executed ||
-					State == StatementState.Error) {
-						if(StatementType == DbStatementType.Select ||
-							StatementType == DbStatementType.SelectForUpdate ||
-							StatementType == DbStatementType.StoredProcedure) {
-								if(State == StatementState.Allocated ||
-									State == StatementState.Prepared ||
-									State == StatementState.Executed) {
+				if(State is StatementState.Executed or
+					StatementState.Error) {
+						if(StatementType is DbStatementType.Select or
+							DbStatementType.SelectForUpdate or
+							DbStatementType.StoredProcedure) {
+								if(State is StatementState.Allocated or
+									StatementState.Prepared or
+									StatementState.Executed) {
 										try {
 												Free(IscCodes.DSQL_close);
 										}
@@ -153,14 +143,14 @@ internal abstract class StatementBase {
 				}
 		}
 		public virtual async ValueTask CloseAsync(CancellationToken cancellationToken = default) {
-				if(State == StatementState.Executed ||
-					State == StatementState.Error) {
-						if(StatementType == DbStatementType.Select ||
-							StatementType == DbStatementType.SelectForUpdate ||
-							StatementType == DbStatementType.StoredProcedure) {
-								if(State == StatementState.Allocated ||
-									State == StatementState.Prepared ||
-									State == StatementState.Executed) {
+				if(State is StatementState.Executed or
+					StatementState.Error) {
+						if(StatementType is DbStatementType.Select or
+							DbStatementType.SelectForUpdate or
+							DbStatementType.StoredProcedure) {
+								if(State is StatementState.Allocated or
+									StatementState.Prepared or
+									StatementState.Executed) {
 										try {
 												await FreeAsync(IscCodes.DSQL_close, cancellationToken).ConfigureAwait(false);
 										}
@@ -241,44 +231,35 @@ internal abstract class StatementBase {
 
 		#region Protected Methods
 
-		public DbValue[] GetOutputParameters() {
-				if(OutputParameters != null && OutputParameters.Count > 0) {
-						return OutputParameters.Dequeue();
-				}
-				return null;
-		}
+		public DbValue[] GetOutputParameters() => OutputParameters != null && OutputParameters.Count > 0 ? OutputParameters.Dequeue() : null;
 
-		protected byte[] GetSqlInfo(byte[] items) {
-				return GetSqlInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
-		}
-		protected ValueTask<byte[]> GetSqlInfoAsync(byte[] items, CancellationToken cancellationToken = default) {
-				return GetSqlInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
-		}
+		protected byte[] GetSqlInfo(byte[] items) => GetSqlInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
+		protected ValueTask<byte[]> GetSqlInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetSqlInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
 		protected int GetRecordsAffected() {
-				var buffer = GetSqlInfo(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
+				byte[] buffer = GetSqlInfo(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
 				return ProcessRecordsAffectedBuffer(buffer);
 		}
 		protected async ValueTask<int> GetRecordsAffectedAsync(CancellationToken cancellationToken = default) {
-				var buffer = await GetSqlInfoAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
+				byte[] buffer = await GetSqlInfoAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 				return ProcessRecordsAffectedBuffer(buffer);
 		}
 
 		protected static int ProcessRecordsAffectedBuffer(byte[] buffer) {
-				var insertCount = 0;
-				var updateCount = 0;
-				var deleteCount = 0;
-				var pos = 0;
+				int insertCount = 0;
+				int updateCount = 0;
+				int deleteCount = 0;
+				int pos = 0;
 
 				int type;
 				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						var length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+						int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 						pos += 2;
 						switch(type) {
 								case IscCodes.isc_info_sql_records:
 										int t;
 										while((t = buffer[pos++]) != IscCodes.isc_info_end) {
-												var l = (int)IscHelper.VaxInteger(buffer, pos, 2);
+												int l = (int)IscHelper.VaxInteger(buffer, pos, 2);
 												pos += 2;
 												switch(t) {
 														case IscCodes.isc_info_req_insert_count:
@@ -307,17 +288,17 @@ internal abstract class StatementBase {
 		}
 
 		protected DbStatementType GetStatementType() {
-				var buffer = GetSqlInfo(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE);
+				byte[] buffer = GetSqlInfo(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE);
 				return ProcessStatementTypeInfoBuffer(buffer);
 		}
 		protected async ValueTask<DbStatementType> GetStatementTypeAsync(CancellationToken cancellationToken = default) {
-				var buffer = await GetSqlInfoAsync(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
+				byte[] buffer = await GetSqlInfoAsync(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 				return ProcessStatementTypeInfoBuffer(buffer);
 		}
 
 		protected static DbStatementType ProcessStatementTypeInfoBuffer(byte[] buffer) {
 				var stmtType = DbStatementType.None;
-				var pos = 0;
+				int pos = 0;
 				int type;
 				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
 						int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
@@ -339,7 +320,7 @@ internal abstract class StatementBase {
 
 		protected void ClearArrayHandles() {
 				if(Fields != null && Fields.Count > 0) {
-						for(var i = 0; i < Fields.Count; i++) {
+						for(int i = 0; i < Fields.Count; i++) {
 								if(Fields[i].IsArray()) {
 										Fields[i].ArrayHandle = null;
 								}
@@ -348,9 +329,9 @@ internal abstract class StatementBase {
 		}
 
 		protected string GetPlanInfo(byte[] planInfoItems) {
-				var count = 0;
-				var bufferSize = IscCodes.DEFAULT_MAX_BUFFER_SIZE;
-				var buffer = GetSqlInfo(planInfoItems, bufferSize);
+				int count = 0;
+				int bufferSize = IscCodes.DEFAULT_MAX_BUFFER_SIZE;
+				byte[] buffer = GetSqlInfo(planInfoItems, bufferSize);
 
 				if(buffer[0] == IscCodes.isc_info_end) {
 						return string.Empty;
@@ -367,17 +348,12 @@ internal abstract class StatementBase {
 
 				int len = buffer[1];
 				len += buffer[2] << 8;
-				if(len > 0) {
-						return Database.Charset.GetString(buffer, 4, --len);
-				}
-				else {
-						return string.Empty;
-				}
+				return len > 0 ? Database.Charset.GetString(buffer, 4, --len) : string.Empty;
 		}
 		protected async ValueTask<string> GetPlanInfoAsync(byte[] planInfoItems, CancellationToken cancellationToken = default) {
-				var count = 0;
-				var bufferSize = IscCodes.DEFAULT_MAX_BUFFER_SIZE;
-				var buffer = await GetSqlInfoAsync(planInfoItems, bufferSize, cancellationToken).ConfigureAwait(false);
+				int count = 0;
+				int bufferSize = IscCodes.DEFAULT_MAX_BUFFER_SIZE;
+				byte[] buffer = await GetSqlInfoAsync(planInfoItems, bufferSize, cancellationToken).ConfigureAwait(false);
 
 				if(buffer[0] == IscCodes.isc_info_end) {
 						return string.Empty;
@@ -394,12 +370,7 @@ internal abstract class StatementBase {
 
 				int len = buffer[1];
 				len += buffer[2] << 8;
-				if(len > 0) {
-						return Database.Charset.GetString(buffer, 4, --len);
-				}
-				else {
-						return string.Empty;
-				}
+				return len > 0 ? Database.Charset.GetString(buffer, 4, --len) : string.Empty;
 		}
 
 		protected void EnsureNotDeallocated() {

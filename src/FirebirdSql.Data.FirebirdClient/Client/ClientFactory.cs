@@ -26,35 +26,27 @@ using WireCryptOption = FirebirdSql.Data.Client.Managed.Version13.WireCryptOptio
 namespace FirebirdSql.Data.Client;
 
 internal static class ClientFactory {
-		public static DatabaseBase CreateDatabase(ConnectionString options) {
-				return options.ServerType switch {
-						FbServerType.Default => CreateManagedDatabase(options),
-						FbServerType.Embedded => CreateNativeDatabase(options),
-						_ => throw IncorrectServerTypeException(),
-				};
-		}
-		public static ValueTask<DatabaseBase> CreateDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default) {
-				return options.ServerType switch {
-						FbServerType.Default => CreateManagedDatabaseAsync(options, cancellationToken),
-						FbServerType.Embedded => CreateNativeDatabaseAsync(options),
-						_ => throw IncorrectServerTypeException(),
-				};
-		}
+		public static DatabaseBase CreateDatabase(ConnectionString options) => options.ServerType switch {
+				FbServerType.Default => CreateManagedDatabase(options),
+				FbServerType.Embedded => CreateNativeDatabase(options),
+				_ => throw IncorrectServerTypeException(),
+		};
+		public static ValueTask<DatabaseBase> CreateDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch {
+				FbServerType.Default => CreateManagedDatabaseAsync(options, cancellationToken),
+				FbServerType.Embedded => CreateNativeDatabaseAsync(options),
+				_ => throw IncorrectServerTypeException(),
+		};
 
-		public static ServiceManagerBase CreateServiceManager(ConnectionString options) {
-				return options.ServerType switch {
-						FbServerType.Default => CreateManagedServiceManager(options),
-						FbServerType.Embedded => CreateNativeServiceManager(options),
-						_ => throw IncorrectServerTypeException(),
-				};
-		}
-		public static ValueTask<ServiceManagerBase> CreateServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default) {
-				return options.ServerType switch {
-						FbServerType.Default => CreateManagedServiceManagerAsync(options, cancellationToken),
-						FbServerType.Embedded => CreateNativeServiceManagerAsync(options),
-						_ => throw IncorrectServerTypeException(),
-				};
-		}
+		public static ServiceManagerBase CreateServiceManager(ConnectionString options) => options.ServerType switch {
+				FbServerType.Default => CreateManagedServiceManager(options),
+				FbServerType.Embedded => CreateNativeServiceManager(options),
+				_ => throw IncorrectServerTypeException(),
+		};
+		public static ValueTask<ServiceManagerBase> CreateServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch {
+				FbServerType.Default => CreateManagedServiceManagerAsync(options, cancellationToken),
+				FbServerType.Embedded => CreateNativeServiceManagerAsync(options),
+				_ => throw IncorrectServerTypeException(),
+		};
 
 		private static DatabaseBase CreateManagedDatabase(ConnectionString options) {
 				var charset = GetCharset(options);
@@ -172,18 +164,12 @@ internal static class ClientFactory {
 		private static Exception IncorrectServerTypeException() => new NotSupportedException("Specified server type is not correct.");
 		private static Exception InvalidCharsetException() => new ArgumentException("Invalid character set specified.");
 
-		private static Charset GetCharset(ConnectionString options) {
-				if(!Charset.TryGetByName(options.Charset, out var charset))
-						throw InvalidCharsetException();
-				return charset;
-		}
+		private static Charset GetCharset(ConnectionString options) => !Charset.TryGetByName(options.Charset, out var charset) ? throw InvalidCharsetException() : charset;
 
-		private static WireCryptOption FbWireCryptToWireCryptOption(FbWireCrypt wireCrypt) {
-				return wireCrypt switch {
-						FbWireCrypt.Disabled => WireCryptOption.Disabled,
-						FbWireCrypt.Enabled => WireCryptOption.Enabled,
-						FbWireCrypt.Required => WireCryptOption.Required,
-						_ => throw new ArgumentOutOfRangeException(nameof(wireCrypt), $"{nameof(wireCrypt)}={wireCrypt}"),
-				};
-		}
+		private static WireCryptOption FbWireCryptToWireCryptOption(FbWireCrypt wireCrypt) => wireCrypt switch {
+				FbWireCrypt.Disabled => WireCryptOption.Disabled,
+				FbWireCrypt.Enabled => WireCryptOption.Enabled,
+				FbWireCrypt.Required => WireCryptOption.Required,
+				_ => throw new ArgumentOutOfRangeException(nameof(wireCrypt), $"{nameof(wireCrypt)}={wireCrypt}"),
+		};
 }

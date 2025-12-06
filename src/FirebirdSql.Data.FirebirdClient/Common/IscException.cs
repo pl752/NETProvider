@@ -35,12 +35,10 @@ internal sealed class IscException : Exception {
 
 		private IscException(Exception innerException = null)
 			: base(innerException?.Message, innerException) {
-				Errors = new List<IscError>();
+				Errors = [];
 		}
 
-		public static IscException ForBuilding() {
-				return new IscException();
-		}
+		public static IscException ForBuilding() => new IscException();
 
 		public static IscException ForErrorCode(int errorCode, Exception innerException = null) {
 				var result = new IscException(innerException);
@@ -51,7 +49,7 @@ internal sealed class IscException : Exception {
 
 		public static IscException ForErrorCodes(IEnumerable<int> errorCodes, Exception innerException = null) {
 				var result = new IscException(innerException);
-				foreach(var errorCode in errorCodes) {
+				foreach(int errorCode in errorCodes) {
 						result.Errors.Add(new IscError(IscCodes.isc_arg_gds, errorCode));
 				}
 				result.BuildExceptionData();
@@ -97,9 +95,7 @@ internal sealed class IscException : Exception {
 				return result;
 		}
 
-		public static IscException ForIOException(IOException exception) {
-				return ForErrorCodes([IscCodes.isc_net_write_err, IscCodes.isc_net_read_err], exception);
-		}
+		public static IscException ForIOException(IOException exception) => ForErrorCodes([IscCodes.isc_net_write_err, IscCodes.isc_net_read_err], exception);
 
 		public void BuildExceptionData() {
 				BuildErrorCode();
@@ -107,36 +103,31 @@ internal sealed class IscException : Exception {
 				BuildExceptionMessage();
 		}
 
-		private void BuildErrorCode() {
-				ErrorCode = Errors.Count != 0 ? Errors[0].ErrorCode : 0;
-		}
+		private void BuildErrorCode() => ErrorCode = Errors.Count != 0 ? Errors[0].ErrorCode : 0;
 
 		private void BuildSqlState() {
 				var error = Errors.Find(e => e.Type == IscCodes.isc_arg_sql_state);
 				// step #1, maybe we already have a SQLSTATE stuffed in the status vector
-				if(error != null) {
-						SQLSTATE = error.StrParam;
-				}
-				// step #2, see if we can find a mapping.
-				else {
-						SQLSTATE = SqlStateMapping.TryGet(ErrorCode, out var value)
+				SQLSTATE = error != null
+						? error.StrParam
+						// step #2, see if we can find a mapping.
+						: SqlStateMapping.TryGet(ErrorCode, out string value)
 							? value
 							: string.Empty;
-				}
 		}
 
 		private void BuildExceptionMessage() {
 				var builder = new StringBuilder();
 
-				for(var i = 0; i < Errors.Count; i++) {
-						if(Errors[i].Type == IscCodes.isc_arg_gds || Errors[i].Type == IscCodes.isc_arg_warning) {
-								var code = Errors[i].ErrorCode;
-								var message = IscErrorMessages.TryGet(code, out var value)
+				for(int i = 0; i < Errors.Count; i++) {
+						if(Errors[i].Type is IscCodes.isc_arg_gds or IscCodes.isc_arg_warning) {
+								int code = Errors[i].ErrorCode;
+								string message = IscErrorMessages.TryGet(code, out string value)
 									? value
 									: BuildDefaultErrorMessage(code);
 
 								var args = new List<string>();
-								var index = i + 1;
+								int index = i + 1;
 								while(index < Errors.Count && Errors[index].IsArgument) {
 										args.Add(Errors[index++].StrParam);
 										i++;
@@ -170,8 +161,9 @@ internal sealed class IscException : Exception {
 				}
 
 				// Update error	collection only	with the main error
-				var mainError = new IscError(ErrorCode);
-				mainError.Message = builder.ToString();
+				var mainError = new IscError(ErrorCode) {
+						Message = builder.ToString()
+				};
 
 				Errors.Add(mainError);
 
@@ -179,14 +171,12 @@ internal sealed class IscException : Exception {
 				_message = builder.ToString();
 		}
 
-		private static string BuildDefaultErrorMessage(int code) {
-				return string.Format(CultureInfo.CurrentCulture, "No message for error code {0} found.", code);
-		}
+		private static string BuildDefaultErrorMessage(int code) => string.Format(CultureInfo.CurrentCulture, "No message for error code {0} found.", code);
 
 		private static void AppendMessage(StringBuilder builder, string message, List<string> args) {
 				if(builder.Length > 0) {
-						builder.Append(Environment.NewLine);
+						_ = builder.Append(Environment.NewLine);
 				}
-				builder.AppendFormat(CultureInfo.CurrentCulture, message, args.ToArray());
+				_ = builder.AppendFormat(CultureInfo.CurrentCulture, message, args.ToArray());
 		}
 }

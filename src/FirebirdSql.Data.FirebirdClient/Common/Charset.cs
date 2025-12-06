@@ -42,13 +42,13 @@ internal sealed class Charset {
 		public static bool TryGetByName(string name, out Charset charset) => charsetsByName.TryGetValue(name, out charset);
 
 		private static List<Charset> GetSupportedCharsets() {
-				var charsets = new List<Charset>();
-
-				charsets.Add(new Charset(0, None, 1, None));
-				charsets.Add(new Charset(1, Octets, 1, Octets));
-				charsets.Add(new Charset(2, "ASCII", 1, "ascii"));
-				charsets.Add(new Charset(3, "UNICODE_FSS", 3, "UTF-8"));
-				charsets.Add(new Charset(4, "UTF8", 4, "UTF-8"));
+				var charsets = new List<Charset> {
+						new Charset(0, None, 1, None),
+						new Charset(1, Octets, 1, Octets),
+						new Charset(2, "ASCII", 1, "ascii"),
+						new Charset(3, "UNICODE_FSS", 3, "UTF-8"),
+						new Charset(4, "UTF8", 4, "UTF-8")
+				};
 
 				TryAddCharset(charsets, () => new Charset(5, "SJIS_0208", 2, "shift_jis"));
 				TryAddCharset(charsets, () => new Charset(6, "EUCJ_0208", 2, "euc-jp"));
@@ -118,23 +118,13 @@ internal sealed class Charset {
 				}
 		}
 
-		public byte[] GetBytes(string s) {
-				return Encoding.GetBytes(s);
-		}
+		public byte[] GetBytes(string s) => Encoding.GetBytes(s);
 
-		public int GetBytes(string s, int charIndex, int charCount, byte[] bytes, int byteIndex) {
-				return Encoding.GetBytes(s, charIndex, charCount, bytes, byteIndex);
-		}
+		public int GetBytes(string s, int charIndex, int charCount, byte[] bytes, int byteIndex) => Encoding.GetBytes(s, charIndex, charCount, bytes, byteIndex);
 
-		public string GetString(byte[] buffer) {
-				return Encoding.GetString(buffer);
-		}
+		public string GetString(byte[] buffer) => Encoding.GetString(buffer);
 
-		public string GetString(ReadOnlySpan<byte> buffer) {
-				return Encoding.GetString(buffer);
-		}
+		public string GetString(ReadOnlySpan<byte> buffer) => Encoding.GetString(buffer);
 
-		public string GetString(byte[] buffer, int index, int count) {
-				return Encoding.GetString(buffer, index, count);
-		}
+		public string GetString(byte[] buffer, int index, int count) => Encoding.GetString(buffer, index, count);
 }

@@ -32,21 +32,13 @@ public sealed class FbError {
 
 		#region Properties
 
-		public byte Class {
-				get { return _classError; }
-		}
+		public byte Class => _classError;
 
-		public int LineNumber {
-				get { return _lineNumber; }
-		}
+		public int LineNumber => _lineNumber;
 
-		public string Message {
-				get { return _message; }
-		}
+		public string Message => _message;
 
-		public int Number {
-				get { return _number; }
-		}
+		public int Number => _number;
 
 		#endregion
 

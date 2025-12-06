@@ -227,19 +227,11 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 				await Xdr.WriteBufferAsync(dpb.ToArray(), cancellationToken).ConfigureAwait(false);
 		}
 
-		public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
-				Attach(dpb, database, cryptKey);
-		}
-		public override ValueTask AttachWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				return AttachAsync(dpb, database, cryptKey, cancellationToken);
-		}
+		public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => Attach(dpb, database, cryptKey);
+		public override ValueTask AttachWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => AttachAsync(dpb, database, cryptKey, cancellationToken);
 
-		public override void CreateDatabaseWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
-				CreateDatabase(dpb, database, cryptKey);
-		}
-		public override ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				return CreateDatabaseAsync(dpb, database, cryptKey, cancellationToken);
-		}
+		public override void CreateDatabaseWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => CreateDatabase(dpb, database, cryptKey);
+		public override ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => CreateDatabaseAsync(dpb, database, cryptKey, cancellationToken);
 
 		protected internal virtual IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey) {
 				while(response is CryptKeyCallbackResponse) {
@@ -260,15 +252,9 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 				return response;
 		}
 
-		public override StatementBase CreateStatement() {
-				return new GdsStatement(this);
-		}
+		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) {
-				return new GdsStatement(this, (Version10.GdsTransaction)transaction);
-		}
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 
-		public override DatabaseParameterBufferBase CreateDatabaseParameterBuffer() {
-				return new DatabaseParameterBuffer2(ParameterBufferEncoding);
-		}
+		public override DatabaseParameterBufferBase CreateDatabaseParameterBuffer() => new DatabaseParameterBuffer2(ParameterBufferEncoding);
 }

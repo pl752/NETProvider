@@ -30,9 +30,9 @@ public class BlobHandle : FirebirdHandle {
 						return true;
 				}
 
-				var statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+				nint[] statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 				var @ref = this;
-				FbClient.isc_close_blob(statusVector, ref @ref);
+				_ = FbClient.isc_close_blob(statusVector, ref @ref);
 				handle = @ref.handle;
 				var exception = StatusVectorHelper.ParseStatusVector(statusVector, Charset.DefaultCharset);
 				return exception == null || exception.IsWarning;

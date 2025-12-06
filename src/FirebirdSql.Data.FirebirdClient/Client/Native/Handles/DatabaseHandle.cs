@@ -30,9 +30,9 @@ public class DatabaseHandle : FirebirdHandle {
 						return true;
 				}
 
-				var statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+				nint[] statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 				var @ref = this;
-				FbClient.isc_detach_database(statusVector, ref @ref);
+				_ = FbClient.isc_detach_database(statusVector, ref @ref);
 				handle = @ref.handle;
 				var exception = StatusVectorHelper.ParseStatusVector(statusVector, Charset.DefaultCharset);
 				return exception == null || exception.IsWarning;

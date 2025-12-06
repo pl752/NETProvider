@@ -41,28 +41,18 @@ public sealed class FbTransaction : DbTransaction {
 
 		#region Properties
 
-		public new FbConnection Connection {
-				get { return !_isCompleted ? _connection : null; }
-		}
+		public new FbConnection Connection => !_isCompleted ? _connection : null;
 
 		public override IsolationLevel IsolationLevel { get; }
 
-		internal TransactionBase Transaction {
-				get { return _transaction; }
-		}
+		internal TransactionBase Transaction => _transaction;
 
-		internal bool IsCompleted {
-				get { return _isCompleted; }
-		}
+		internal bool IsCompleted => _isCompleted;
 
-		protected override DbConnection DbConnection {
-				get { return _connection; }
-		}
+		protected override DbConnection DbConnection => _connection;
 
 #if !(NET48 || NETSTANDARD2_0 || NETSTANDARD2_1)
-		public override bool SupportsSavepoints {
-				get { return true; }
-		}
+		public override bool SupportsSavepoints => true;
 #endif
 
 		#endregion
@@ -458,9 +448,7 @@ public sealed class FbTransaction : DbTransaction {
 
 		private void CompleteTransaction() {
 				var innerConnection = _connection?.InnerConnection;
-				if(innerConnection != null) {
-						innerConnection.TransactionCompleted();
-				}
+				innerConnection?.TransactionCompleted();
 				_connection = null;
 				_transaction.Dispose2();
 				_transaction = null;
@@ -478,9 +466,10 @@ public sealed class FbTransaction : DbTransaction {
 		}
 
 		private TransactionParameterBuffer BuildTpb() {
-				var options = new FbTransactionOptions();
-				options.WaitTimeout = null;
-				options.TransactionBehavior = FbTransactionBehavior.Write;
+				var options = new FbTransactionOptions {
+						WaitTimeout = null,
+						TransactionBehavior = FbTransactionBehavior.Write
+				};
 
 				options.TransactionBehavior |= FbTransactionBehavior.NoWait;
 
@@ -542,11 +531,10 @@ public sealed class FbTransaction : DbTransaction {
 						if(table.Value.HasFlag(FbTransactionBehavior.LockRead)) {
 								lockType = IscCodes.isc_tpb_lock_read;
 						}
-						else if(table.Value.HasFlag(FbTransactionBehavior.LockWrite)) {
-								lockType = IscCodes.isc_tpb_lock_write;
-						}
 						else {
-								throw new ArgumentException("Must specify either LockRead or LockWrite.");
+								lockType = table.Value.HasFlag(FbTransactionBehavior.LockWrite)
+										? IscCodes.isc_tpb_lock_write
+										: throw new ArgumentException("Must specify either LockRead or LockWrite.");
 						}
 						tpb.Append(lockType, table.Key);
 

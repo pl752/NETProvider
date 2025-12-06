@@ -53,16 +53,16 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 		public byte[] UserIdentificationData() {
 				using(var result = new MemoryStream(256)) {
-						var userString = Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER") ?? string.Empty;
+						string userString = Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER") ?? string.Empty;
 						Span<byte> user = stackalloc byte[Encoding.UTF8.GetByteCount(userString)];
-						Encoding.UTF8.TryGetBytes(userString, user, out int userLen);
+						_ = Encoding.UTF8.TryGetBytes(userString, user, out int userLen);
 						result.WriteByte(IscCodes.CNCT_user);
 						result.WriteByte((byte)userLen);
 						result.Write(user);
 
-						var hostName = Dns.GetHostName();
+						string hostName = Dns.GetHostName();
 						Span<byte> host = stackalloc byte[Encoding.UTF8.GetByteCount(hostName)];
-						Encoding.UTF8.TryGetBytes(hostName, host, out int hostLen);
+						_ = Encoding.UTF8.TryGetBytes(hostName, host, out int hostLen);
 						result.WriteByte(IscCodes.CNCT_host);
 						result.WriteByte((byte)hostLen);
 						result.Write(host);
@@ -73,30 +73,30 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 						if(!string.IsNullOrEmpty(User)) {
 								{
 										Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(User)];
-										Encoding.UTF8.TryGetBytes(User, bytes, out int len);
+										_ = Encoding.UTF8.TryGetBytes(User, bytes, out int len);
 										result.WriteByte(IscCodes.CNCT_login);
 										result.WriteByte((byte)len);
 										result.Write(bytes);
 								}
 								{
 										Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(_srp256.Name)];
-										Encoding.UTF8.TryGetBytes(_srp256.Name, bytes, out int len);
+										_ = Encoding.UTF8.TryGetBytes(_srp256.Name, bytes, out int len);
 										result.WriteByte(IscCodes.CNCT_plugin_name);
 										result.WriteByte((byte)len);
 										result.Write(bytes[..len]);
 								}
 								{
 										Span<byte> specificData = stackalloc byte[Encoding.UTF8.GetByteCount(_srp256.PublicKeyHex)];
-										Encoding.UTF8.TryGetBytes(_srp256.PublicKeyHex, specificData, out _);
+										_ = Encoding.UTF8.TryGetBytes(_srp256.PublicKeyHex, specificData, out _);
 										WriteMultiPartHelper(result, IscCodes.CNCT_specific_data, specificData);
 								}
 								{
 										Span<byte> bytes1 = stackalloc byte[Encoding.UTF8.GetByteCount(_srp256.Name)];
 										Span<byte> bytes2 = stackalloc byte[1];
 										Span<byte> bytes3 = stackalloc byte[Encoding.UTF8.GetByteCount(_srp.Name)];
-										Encoding.UTF8.TryGetBytes(_srp256.Name, bytes1, out int l1);
-										Encoding.UTF8.TryGetBytes(",", bytes2, out int l2);
-										Encoding.UTF8.TryGetBytes(_srp.Name, bytes3, out int l3);
+										_ = Encoding.UTF8.TryGetBytes(_srp256.Name, bytes1, out int l1);
+										_ = Encoding.UTF8.TryGetBytes(",", bytes2, out int l2);
+										_ = Encoding.UTF8.TryGetBytes(_srp.Name, bytes3, out int l3);
 										result.WriteByte(IscCodes.CNCT_plugin_list);
 										result.WriteByte((byte)(l1 + l2 + l3));
 										result.Write(bytes1);
@@ -108,18 +108,18 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 										result.WriteByte(IscCodes.CNCT_client_crypt);
 										result.WriteByte(4);
 										Span<byte> bytes = stackalloc byte[4];
-										BitConverter.TryWriteBytes(bytes, IPAddress.NetworkToHostOrder(WireCryptOptionValue(WireCrypt)));
+										_ = BitConverter.TryWriteBytes(bytes, IPAddress.NetworkToHostOrder(WireCryptOptionValue(WireCrypt)));
 										result.Write(bytes);
 								}
 						}
 						else {
 								Span<byte> pluginNameBytes = stackalloc byte[Encoding.UTF8.GetByteCount(_sspi.Name)];
-								Encoding.UTF8.TryGetBytes(_sspi.Name, pluginNameBytes, out int pluginNameLen);
+								_ = Encoding.UTF8.TryGetBytes(_sspi.Name, pluginNameBytes, out int pluginNameLen);
 								result.WriteByte(IscCodes.CNCT_plugin_name);
 								result.WriteByte((byte)pluginNameLen);
 								result.Write(pluginNameBytes);
 
-								var specificData = _sspi.InitializeClientSecurity();
+								byte[] specificData = _sspi.InitializeClientSecurity();
 								WriteMultiPartHelper(result, IscCodes.CNCT_specific_data, specificData);
 
 								result.WriteByte(IscCodes.CNCT_plugin_list);
@@ -129,7 +129,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 								result.WriteByte(IscCodes.CNCT_client_crypt);
 								result.WriteByte(4);
 								Span<byte> wireCryptBytes = stackalloc byte[4];
-								BitConverter.TryWriteBytes(wireCryptBytes, IPAddress.NetworkToHostOrder(IscCodes.WIRE_CRYPT_DISABLED));
+								_ = BitConverter.TryWriteBytes(wireCryptBytes, IPAddress.NetworkToHostOrder(IscCodes.WIRE_CRYPT_DISABLED));
 								result.Write(wireCryptBytes);
 						}
 
@@ -154,13 +154,13 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 		// TODO: maybe more logic can be pulled up here
 		public IResponse ProcessContAuthResponse() {
-				var operation = Connection.Xdr.ReadOperation();
+				int operation = Connection.Xdr.ReadOperation();
 				var response = Connection.ProcessOperation(operation);
 				response.HandleResponseException();
 				if(response is Version13.ContAuthResponse) {
 						return response;
 				}
-				else if(response is Version13.CryptKeyCallbackResponse || response is Version15.CryptKeyCallbackResponse) {
+				else if(response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse) {
 						return response;
 				}
 				else if(response is GenericResponse genericResponse) {
@@ -173,13 +173,13 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				return response;
 		}
 		public async ValueTask<IResponse> ProcessContAuthResponseAsync(CancellationToken cancellationToken = default) {
-				var operation = await Connection.Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+				int operation = await Connection.Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 				var response = await Connection.ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
 				if(response is Version13.ContAuthResponse) {
 						return response;
 				}
-				else if(response is Version13.CryptKeyCallbackResponse || response is Version15.CryptKeyCallbackResponse) {
+				else if(response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse) {
 						return response;
 				}
 				else if(response is GenericResponse genericResponse) {
@@ -216,7 +216,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				// after writing before reading
 				Connection.StartEncryption();
 
-				var operation = Connection.Xdr.ReadOperation();
+				int operation = Connection.Xdr.ReadOperation();
 				var response = Connection.ProcessOperation(operation);
 				response.HandleResponseException();
 
@@ -229,7 +229,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				// after writing before reading
 				Connection.StartEncryption();
 
-				var operation = await Connection.Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+				int operation = await Connection.Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 				var response = await Connection.ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
 
@@ -237,9 +237,9 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		}
 
 		public void WireCryptValidate(int protocolVersion) {
-				var validProtocolVersion = protocolVersion == IscCodes.PROTOCOL_VERSION13
-					|| protocolVersion == IscCodes.PROTOCOL_VERSION15
-					|| protocolVersion == IscCodes.PROTOCOL_VERSION16;
+				bool validProtocolVersion = protocolVersion is IscCodes.PROTOCOL_VERSION13
+					or IscCodes.PROTOCOL_VERSION15
+					or IscCodes.PROTOCOL_VERSION16;
 				if(validProtocolVersion && WireCrypt == WireCryptOption.Required && IsAuthenticated && !WireCryptInitialized) {
 						throw IscException.ForErrorCode(IscCodes.isc_wirecrypt_incompatible);
 				}
@@ -251,7 +251,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				IsAuthenticated = isAuthenticated;
 				ServerKeys = serverKeys;
 
-				var hasServerData = ServerData.Length != 0;
+				bool hasServerData = ServerData.Length != 0;
 				if(AcceptPluginName.Equals(_srp256.Name, StringComparison.Ordinal)) {
 						PublicClientData = Encoding.UTF8.GetBytes(_srp256.PublicKeyHex);
 						if(hasServerData) {
@@ -292,10 +292,10 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 		static void WriteMultiPartHelper(MemoryStream stream, byte code, byte[] data) {
 				const int MaxLength = 255 - 1;
-				var part = 0;
-				for(var i = 0; i < data.Length; i += MaxLength) {
+				int part = 0;
+				for(int i = 0; i < data.Length; i += MaxLength) {
 						stream.WriteByte(code);
-						var length = Math.Min(data.Length - i, MaxLength);
+						int length = Math.Min(data.Length - i, MaxLength);
 						stream.WriteByte((byte)(length + 1));
 						stream.WriteByte((byte)part);
 						stream.Write(data, i, length);
@@ -305,10 +305,10 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 		static void WriteMultiPartHelper(MemoryStream stream, byte code, ReadOnlySpan<byte> data) {
 				const int MaxLength = 255 - 1;
-				var part = 0;
-				for(var i = 0; i < data.Length; i += MaxLength) {
+				int part = 0;
+				for(int i = 0; i < data.Length; i += MaxLength) {
 						stream.WriteByte(code);
-						var length = Math.Min(data.Length - i, MaxLength);
+						int length = Math.Min(data.Length - i, MaxLength);
 						stream.WriteByte((byte)(length + 1));
 						stream.WriteByte((byte)part);
 						stream.Write(data[i..(i + length)]);
@@ -316,14 +316,12 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				}
 		}
 
-		static int WireCryptOptionValue(WireCryptOption wireCrypt) {
-				return wireCrypt switch {
-						WireCryptOption.Disabled => IscCodes.WIRE_CRYPT_DISABLED,
-						WireCryptOption.Enabled => IscCodes.WIRE_CRYPT_ENABLED,
-						WireCryptOption.Required => IscCodes.WIRE_CRYPT_REQUIRED,
-						_ => throw new ArgumentOutOfRangeException(nameof(wireCrypt), $"{nameof(wireCrypt)}={wireCrypt}"),
-				};
-		}
+		static int WireCryptOptionValue(WireCryptOption wireCrypt) => wireCrypt switch {
+				WireCryptOption.Disabled => IscCodes.WIRE_CRYPT_DISABLED,
+				WireCryptOption.Enabled => IscCodes.WIRE_CRYPT_ENABLED,
+				WireCryptOption.Required => IscCodes.WIRE_CRYPT_REQUIRED,
+				_ => throw new ArgumentOutOfRangeException(nameof(wireCrypt), $"{nameof(wireCrypt)}={wireCrypt}"),
+		};
 
 		internal static string NormalizeLogin(string login) {
 				if(string.IsNullOrEmpty(login)) {
@@ -335,7 +333,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 								// Double double quotes ("") escape a double quote in a quoted string
 								if(sb[idx] == '"') {
 										// Strip double quote escape
-										sb.Remove(idx, 1);
+										_ = sb.Remove(idx, 1);
 										if(idx < sb.Length && sb[idx] == '"') {
 												// Retain escaped double quote
 												idx += 1;

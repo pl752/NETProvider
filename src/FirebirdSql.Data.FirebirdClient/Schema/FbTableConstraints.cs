@@ -26,7 +26,7 @@ internal class FbTableConstraints : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
@@ -40,7 +40,7 @@ internal class FbTableConstraints : FbSchema {
 				FROM rdb$relation_constraints rc");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* CONSTRAINT_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -53,10 +53,10 @@ internal class FbTableConstraints : FbSchema {
 						/* CONSTRAINT_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("rc.rdb$constraint_name = @p{0}", index++);
+								_ = where.AppendFormat("rc.rdb$constraint_name = @p{0}", index++);
 						}
 
 						/* TABLE_CATALOG */
@@ -70,33 +70,33 @@ internal class FbTableConstraints : FbSchema {
 						/* TABLE_NAME */
 						if(restrictions.Length >= 6 && restrictions[5] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("rc.rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat("rc.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* CONSTRAINT_TYPE */
 						if(restrictions.Length >= 7 && restrictions[6] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("rc.rdb$constraint_type = @p{0}", index++);
+								_ = where.AppendFormat("rc.rdb$constraint_type = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
+				_ = sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
 
 				return sql;
 		}
 
 		protected override string[] ParseRestrictions(string[] restrictions) {
-				var parsed = restrictions;
+				string[] parsed = restrictions;
 
 				if(parsed != null) {
 						if(parsed.Length == 7 && parsed[6] != null) {

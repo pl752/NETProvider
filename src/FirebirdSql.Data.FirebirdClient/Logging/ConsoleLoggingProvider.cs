@@ -32,23 +32,21 @@ public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) :
 		sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger {
 				readonly FbLogLevel _minimumLevel = minimumLevel;
 
-				public bool IsEnabled(FbLogLevel level) {
-						return level >= _minimumLevel;
-				}
+				public bool IsEnabled(FbLogLevel level) => level >= _minimumLevel;
 
 				public void Log(FbLogLevel level, string msg, Exception exception = null) {
 						if(!IsEnabled(level))
 								return;
 
 						var sb = new StringBuilder();
-						sb.Append("[");
-						sb.Append(level.ToString().ToUpperInvariant());
-						sb.Append("] ");
+						_ = sb.Append('[');
+						_ = sb.Append(level.ToString().ToUpperInvariant());
+						_ = sb.Append("] ");
 
-						sb.AppendLine(msg);
+						_ = sb.AppendLine(msg);
 
 						if(exception != null)
-								sb.AppendLine(exception.ToString());
+								_ = sb.AppendLine(exception.ToString());
 
 						Console.Error.Write(sb.ToString());
 				}

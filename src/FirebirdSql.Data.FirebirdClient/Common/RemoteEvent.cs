@@ -28,7 +28,7 @@ internal class RemoteEvent(DatabaseBase database) {
 		const int MaxEventNameLength = 255;
 		const int MaxEpbLength = 65535;
 
-		readonly List<string> _events = new List<string>();
+		readonly List<string> _events = [];
 		readonly DatabaseBase _database = database;
 		int[] _previousCounts;
 		int[] _currentCounts;
@@ -39,13 +39,9 @@ internal class RemoteEvent(DatabaseBase database) {
 		public Action<string, int> EventCountsCallback { get; set; }
 		public Action<Exception> EventErrorCallback { get; set; }
 
-		public List<string> Events {
-				get { return _events; }
-		}
+		public List<string> Events => _events;
 
-		public DatabaseBase Database {
-				get { return _database; }
-		}
+		public DatabaseBase Database => _database;
 
 		public void QueueEvents(ICollection<string> events) {
 				EnsureNotRunning();
@@ -82,31 +78,29 @@ internal class RemoteEvent(DatabaseBase database) {
 				_previousCounts = _currentCounts;
 				_currentCounts = new int[_events.Count];
 
-				var pos = 1;
+				int pos = 1;
 				while(pos < buffer.Length) {
-						var length = buffer[pos++];
-						var eventName = _database.Charset.GetString(buffer, pos, length);
+						byte length = buffer[pos++];
+						string eventName = _database.Charset.GetString(buffer, pos, length);
 
 						pos += length;
 
-						var index = _events.IndexOf(eventName);
+						int index = _events.IndexOf(eventName);
 						Debug.Assert(index != -1);
 						_currentCounts[index] = BitConverter.ToInt32(buffer, pos) - 1;
 
 						pos += 4;
 				}
 
-				for(var i = 0; i < _events.Count; i++) {
-						var count = _currentCounts[i] - _previousCounts[i];
+				for(int i = 0; i < _events.Count; i++) {
+						int count = _currentCounts[i] - _previousCounts[i];
 						if(count == 0)
 								continue;
 						EventCountsCallback(_events[i], count);
 				}
 		}
 
-		internal void EventError(Exception error) {
-				EventErrorCallback(error);
-		}
+		internal void EventError(Exception error) => EventErrorCallback(error);
 
 		internal EventParameterBuffer BuildEpb() {
 				_currentCounts ??= new int[_events.Count];
@@ -121,7 +115,7 @@ internal class RemoteEvent(DatabaseBase database) {
 		EventParameterBuffer BuildEpb(IList<string> events, Func<int, int> countFactory) {
 				var epb = Database.CreateEventParameterBuffer();
 				epb.Append(IscCodes.EPB_version1);
-				for(var i = 0; i < events.Count; i++) {
+				for(int i = 0; i < events.Count; i++) {
 						epb.Append(events[i], countFactory(i));
 				}
 				return epb;

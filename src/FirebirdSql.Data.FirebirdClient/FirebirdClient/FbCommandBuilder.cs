@@ -31,16 +31,11 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 						throw new InvalidOperationException("DeriveParameters only supports CommandType.StoredProcedure.");
 				}
 
-				var spName = command.CommandText.Trim();
-				var quotePrefix = "\"";
-				var quoteSuffix = "\"";
+				string spName = command.CommandText.Trim();
+				string quotePrefix = "\"";
+				string quoteSuffix = "\"";
 
-				if(spName.StartsWith(quotePrefix) && spName.EndsWith(quoteSuffix)) {
-						spName = spName[1..^1];
-				}
-				else {
-						spName = spName.ToUpperInvariant();
-				}
+				spName = spName.StartsWith(quotePrefix) && spName.EndsWith(quoteSuffix) ? spName[1..^1] : spName.ToUpperInvariant();
 
 				command.Parameters.Clear();
 
@@ -71,8 +66,8 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 						parameter.Size = Convert.ToInt32(row["PARAMETER_SIZE"], CultureInfo.InvariantCulture);
 
-						if(parameter.FbDbType == FbDbType.Decimal ||
-							parameter.FbDbType == FbDbType.Numeric) {
+						if(parameter.FbDbType is FbDbType.Decimal or
+							FbDbType.Numeric) {
 								if(row["NUMERIC_PRECISION"] != DBNull.Value) {
 										parameter.Precision = Convert.ToByte(row["NUMERIC_PRECISION"], CultureInfo.InvariantCulture);
 								}
@@ -96,37 +91,17 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override string QuotePrefix {
-				get { return base.QuotePrefix; }
-				set {
-						if(string.IsNullOrEmpty(value)) {
-								base.QuotePrefix = value;
-						}
-						else {
-								base.QuotePrefix = "\"";
-						}
-				}
+		public override string QuotePrefix { get => base.QuotePrefix; set => base.QuotePrefix = string.IsNullOrEmpty(value) ? value : "\"";
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override string QuoteSuffix {
-				get { return base.QuoteSuffix; }
-				set {
-						if(string.IsNullOrEmpty(value)) {
-								base.QuoteSuffix = value;
-						}
-						else {
-								base.QuoteSuffix = "\"";
-						}
-				}
+		public override string QuoteSuffix { get => base.QuoteSuffix; set => base.QuoteSuffix = string.IsNullOrEmpty(value) ? value : "\"";
 		}
 
 		[DefaultValue(null)]
-		public new FbDataAdapter DataAdapter {
-				get { return (FbDataAdapter)base.DataAdapter; }
-				set { base.DataAdapter = value; }
+		public new FbDataAdapter DataAdapter { get => (FbDataAdapter)base.DataAdapter; set => base.DataAdapter = value;
 		}
 
 		#endregion
@@ -149,29 +124,17 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 		#region DbCommandBuilder methods
 
-		public new FbCommand GetInsertCommand() {
-				return base.GetInsertCommand() as FbCommand;
-		}
+		public new FbCommand GetInsertCommand() => base.GetInsertCommand() as FbCommand;
 
-		public new FbCommand GetInsertCommand(bool useColumnsForParameterNames) {
-				return base.GetInsertCommand(useColumnsForParameterNames) as FbCommand;
-		}
+		public new FbCommand GetInsertCommand(bool useColumnsForParameterNames) => base.GetInsertCommand(useColumnsForParameterNames) as FbCommand;
 
-		public new FbCommand GetUpdateCommand() {
-				return base.GetUpdateCommand() as FbCommand;
-		}
+		public new FbCommand GetUpdateCommand() => base.GetUpdateCommand() as FbCommand;
 
-		public new FbCommand GetUpdateCommand(bool useColumnsForParameterNames) {
-				return base.GetUpdateCommand(useColumnsForParameterNames) as FbCommand;
-		}
+		public new FbCommand GetUpdateCommand(bool useColumnsForParameterNames) => base.GetUpdateCommand(useColumnsForParameterNames) as FbCommand;
 
-		public new FbCommand GetDeleteCommand() {
-				return base.GetDeleteCommand() as FbCommand;
-		}
+		public new FbCommand GetDeleteCommand() => base.GetDeleteCommand() as FbCommand;
 
-		public new FbCommand GetDeleteCommand(bool useColumnsForParameterNames) {
-				return base.GetDeleteCommand(useColumnsForParameterNames) as FbCommand;
-		}
+		public new FbCommand GetDeleteCommand(bool useColumnsForParameterNames) => base.GetDeleteCommand(useColumnsForParameterNames) as FbCommand;
 
 		public override string QuoteIdentifier(string unquotedIdentifier) {
 				ArgumentNullException.ThrowIfNull(unquotedIdentifier);
@@ -182,7 +145,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 		public override string UnquoteIdentifier(string quotedIdentifier) {
 				ArgumentNullException.ThrowIfNull(quotedIdentifier);
 
-				var unquotedIdentifier = quotedIdentifier.Trim();
+				string unquotedIdentifier = quotedIdentifier.Trim();
 
 				if(unquotedIdentifier.StartsWith(QuotePrefix)) {
 						unquotedIdentifier = unquotedIdentifier[1..];
@@ -211,17 +174,11 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 				parameter.FbDbType = (FbDbType)row["ProviderType"];
 		}
 
-		protected override string GetParameterName(int parameterOrdinal) {
-				return string.Format("@p{0}", parameterOrdinal);
-		}
+		protected override string GetParameterName(int parameterOrdinal) => string.Format("@p{0}", parameterOrdinal);
 
-		protected override string GetParameterName(string parameterName) {
-				return string.Format("@{0}", parameterName);
-		}
+		protected override string GetParameterName(string parameterName) => string.Format("@{0}", parameterName);
 
-		protected override string GetParameterPlaceholder(int parameterOrdinal) {
-				return GetParameterName(parameterOrdinal);
-		}
+		protected override string GetParameterPlaceholder(int parameterOrdinal) => GetParameterName(parameterOrdinal);
 
 		protected override void SetRowUpdatingHandler(DbDataAdapter adapter) {
 				if(adapter is not FbDataAdapter) {
@@ -236,9 +193,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 		#region Event Handlers
 
-		private void RowUpdatingHandler(object sender, FbRowUpdatingEventArgs e) {
-				base.RowUpdatingHandler(e);
-		}
+		private void RowUpdatingHandler(object sender, FbRowUpdatingEventArgs e) => base.RowUpdatingHandler(e);
 
 		#endregion
 }

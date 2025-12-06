@@ -26,9 +26,7 @@ internal sealed class EventParameterBuffer(Encoding encoding) : ParameterBuffer 
 				Write(actualCount);
 		}
 
-		public void Append(string content, int actualCount) {
-				Append(Encoding.GetBytes(content), actualCount);
-		}
+		public void Append(string content, int actualCount) => Append(Encoding.GetBytes(content), actualCount);
 
 		public Encoding Encoding { get; } = encoding;
 }

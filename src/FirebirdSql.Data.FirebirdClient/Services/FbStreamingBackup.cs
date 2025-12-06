@@ -82,16 +82,12 @@ public sealed class FbStreamingBackup(string connectionString = null) : FbServic
 				}
 		}
 
-		void ReadOutput() {
-				Query([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) => {
-						var buffer = x as byte[];
-						OutputStream.Write(buffer, 0, buffer.Length);
-				});
-		}
-		Task ReadOutputAsync(CancellationToken cancellationToken = default) {
-				return QueryAsync([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) => {
-						var buffer = x as byte[];
-						await OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
-				}, cancellationToken);
-		}
+		void ReadOutput() => Query([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) => {
+				byte[] buffer = x as byte[];
+				OutputStream.Write(buffer, 0, buffer.Length);
+		});
+		Task ReadOutputAsync(CancellationToken cancellationToken = default) => QueryAsync([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) => {
+				byte[] buffer = x as byte[];
+				await OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+		}, cancellationToken);
 }

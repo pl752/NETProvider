@@ -43,9 +43,10 @@ public sealed class FbRemoteEvent(string connectionString) : IDisposable
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");
 
 				_connection.Connect();
-				_revent = new RemoteEvent(_connection.Database);
-				_revent.EventCountsCallback = OnRemoteEventCounts;
-				_revent.EventErrorCallback = OnRemoteEventError;
+				_revent = new RemoteEvent(_connection.Database) {
+						EventCountsCallback = OnRemoteEventCounts,
+						EventErrorCallback = OnRemoteEventError
+				};
 				_synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
 		}
 		public async Task OpenAsync(CancellationToken cancellationToken = default) {
@@ -53,19 +54,16 @@ public sealed class FbRemoteEvent(string connectionString) : IDisposable
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");
 
 				await _connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-				_revent = new RemoteEvent(_connection.Database);
-				_revent.EventCountsCallback = OnRemoteEventCounts;
-				_revent.EventErrorCallback = OnRemoteEventError;
+				_revent = new RemoteEvent(_connection.Database) {
+						EventCountsCallback = OnRemoteEventCounts,
+						EventErrorCallback = OnRemoteEventError
+				};
 				_synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
 		}
 
-		public void Dispose() {
-				_connection.Disconnect();
-		}
+		public void Dispose() => _connection.Disconnect();
 #if !(NET48 || NETSTANDARD2_0)
-		public ValueTask DisposeAsync() {
-				return new ValueTask(_connection.DisconnectAsync(CancellationToken.None));
-		}
+		public ValueTask DisposeAsync() => new ValueTask(_connection.DisconnectAsync(CancellationToken.None));
 #endif
 
 		public void QueueEvents(ICollection<string> events) {

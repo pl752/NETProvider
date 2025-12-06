@@ -62,7 +62,7 @@
 
 namespace Ionic.Zlib {
 		sealed class Tree {
-				private static readonly int HEAP_SIZE = (2 * InternalConstants.L_CODES + 1);
+				private static readonly int HEAP_SIZE = 2 * InternalConstants.L_CODES + 1;
 
 				// extra bits for each length code
 				internal static readonly int[] ExtraLengthBits =
@@ -170,11 +170,9 @@ namespace Ionic.Zlib {
 				/// <remarks> 
 				/// No side effects. _dist_code[256] and _dist_code[257] are never used.
 				/// </remarks>
-				internal static int DistanceCode(int dist) {
-						return (dist < 256)
+				internal static int DistanceCode(int dist) => (dist < 256)
 								? _dist_code[dist]
 								: _dist_code[256 + SharedUtils.URShift(dist, 7)];
-				}
 
 				internal short[] dyn_tree; // the dynamic tree
 				internal int max_code; // largest code with non zero frequency
@@ -298,7 +296,7 @@ namespace Ionic.Zlib {
 						// possible code. So to avoid special checks later on we force at least
 						// two codes of non zero frequency.
 						while(s.heap_len < 2) {
-								node = s.heap[++s.heap_len] = (max_code < 2 ? ++max_code : 0);
+								node = s.heap[++s.heap_len] = max_code < 2 ? ++max_code : 0;
 								tree[node * 2] = 1;
 								s.depth[node] = 0;
 								s.opt_len--;
@@ -380,7 +378,7 @@ namespace Ionic.Zlib {
 								if(len == 0)
 										continue;
 								// Now reverse the bits
-								tree[n * 2] = unchecked((short)(bi_reverse(next_code[len]++, len)));
+								tree[n * 2] = unchecked((short)bi_reverse(next_code[len]++, len));
 						}
 				}
 

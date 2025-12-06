@@ -38,17 +38,11 @@ internal sealed class Descriptor {
 
 		#region Properties
 
-		public short Version {
-				get { return _version; }
-		}
+		public short Version => _version;
 
-		public short Count {
-				get { return _count; }
-		}
+		public short Count => _count;
 
-		public short ActualCount {
-				get { return _actualCount; }
-				set { _actualCount = value; }
+		public short ActualCount { get => _actualCount; set => _actualCount = value;
 		}
 
 		#endregion
@@ -72,7 +66,7 @@ internal sealed class Descriptor {
 				_actualCount = n;
 				_fields = n > 0 ? new DbField[n] : [];
 
-				for(var i = 0; i < n; i++) {
+				for(int i = 0; i < n; i++) {
 						_fields[i] = new DbField();
 				}
 		}
@@ -82,7 +76,7 @@ internal sealed class Descriptor {
 		#region Methods
 
 		public void ResetValues() {
-				for(var i = 0; i < _fields.Length; i++) {
+				for(int i = 0; i < _fields.Length; i++) {
 						_fields[i].SetValue(null);
 				}
 		}
@@ -93,18 +87,18 @@ internal sealed class Descriptor {
 		}
 		public BlrData ToBlr() {
 				using(var blr = new MemoryStream(256)) {
-						var length = 0;
+						int length = 0;
 
 						blr.WriteByte(IscCodes.blr_version5);
 						blr.WriteByte(IscCodes.blr_begin);
 						blr.WriteByte(IscCodes.blr_message);
 						blr.WriteByte(0);
-						var par_count = Count * 2;
+						int par_count = Count * 2;
 						blr.WriteByte((byte)(par_count & 255));
 						blr.WriteByte((byte)(par_count >> 8));
 
-						for(var i = 0; i < _fields.Length; i++) {
-								var dtype = _fields[i].SqlType;
+						for(int i = 0; i < _fields.Length; i++) {
+								int dtype = _fields[i].SqlType;
 								int len = _fields[i].Length;
 
 								switch(dtype) {

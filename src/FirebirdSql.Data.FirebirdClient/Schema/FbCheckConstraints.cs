@@ -26,7 +26,7 @@ internal class FbCheckConstraints : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
@@ -47,15 +47,15 @@ internal class FbCheckConstraints : FbSchema {
 
 						/* CONSTRAINT_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.Append("chk.rdb$constraint_name = @p0");
+								_ = where.Append("chk.rdb$constraint_name = @p0");
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0}", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0}", where.ToString());
 				}
 
-				sql.Append(" ORDER BY CONSTRAINT_NAME");
+				_ = sql.Append(" ORDER BY CONSTRAINT_NAME");
 
 				return sql;
 		}

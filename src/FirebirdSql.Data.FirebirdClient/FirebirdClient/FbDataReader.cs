@@ -94,13 +94,9 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		public override bool HasRows {
-				get { return _command.HasFields; }
-		}
+		public override bool HasRows => _command.HasFields;
 
-		public override bool IsClosed {
-				get { return _isClosed; }
-		}
+		public override bool IsClosed => _isClosed;
 
 		public override int FieldCount {
 				get {
@@ -110,9 +106,7 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		public override int RecordsAffected {
-				get { return _recordsAffected; }
-		}
+		public override int RecordsAffected => _recordsAffected;
 
 		public override int VisibleFieldCount {
 				get {
@@ -245,8 +239,8 @@ public sealed class FbDataReader : DbDataReader {
 				}
 
 				DataRow schemaRow = null;
-				var tableCount = 0;
-				var currentTable = string.Empty;
+				int tableCount = 0;
+				string currentTable = string.Empty;
 
 				_schemaTable = GetSchemaTableStructure();
 
@@ -259,12 +253,12 @@ public sealed class FbDataReader : DbDataReader {
 
 						_schemaTable.BeginLoadData();
 
-						for(var i = 0; i < _fields.Count; i++) {
-								var isKeyColumn = false;
-								var isUnique = false;
-								var isReadOnly = false;
-								var precision = 0;
-								var isExpression = false;
+						for(int i = 0; i < _fields.Count; i++) {
+								bool isKeyColumn = false;
+								bool isUnique = false;
+								bool isReadOnly = false;
+								int precision = 0;
+								bool isExpression = false;
 
 								/* Get Schema data for the field	*/
 								schemaCmd.Parameters[0].Value = _fields[i].Relation;
@@ -273,9 +267,9 @@ public sealed class FbDataReader : DbDataReader {
 								var reader = schemaCmd.ExecuteReader(CommandBehavior.Default);
 								try {
 										if(reader.Read()) {
-												isReadOnly = (IsReadOnly(reader) || IsExpression(reader));
-												isKeyColumn = (reader.GetInt32(2) == 1);
-												isUnique = (reader.GetInt32(3) == 1);
+												isReadOnly = IsReadOnly(reader) || IsExpression(reader);
+												isKeyColumn = reader.GetInt32(2) == 1;
+												isUnique = reader.GetInt32(3) == 1;
 												precision = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
 												isExpression = IsExpression(reader);
 										}
@@ -359,8 +353,8 @@ public sealed class FbDataReader : DbDataReader {
 				}
 
 				DataRow schemaRow = null;
-				var tableCount = 0;
-				var currentTable = string.Empty;
+				int tableCount = 0;
+				string currentTable = string.Empty;
 
 				_schemaTable = GetSchemaTableStructure();
 
@@ -373,12 +367,12 @@ public sealed class FbDataReader : DbDataReader {
 
 						_schemaTable.BeginLoadData();
 
-						for(var i = 0; i < _fields.Count; i++) {
-								var isKeyColumn = false;
-								var isUnique = false;
-								var isReadOnly = false;
-								var precision = 0;
-								var isExpression = false;
+						for(int i = 0; i < _fields.Count; i++) {
+								bool isKeyColumn = false;
+								bool isUnique = false;
+								bool isReadOnly = false;
+								int precision = 0;
+								bool isExpression = false;
 
 								/* Get Schema data for the field	*/
 								schemaCmd.Parameters[0].Value = _fields[i].Relation;
@@ -471,12 +465,7 @@ public sealed class FbDataReader : DbDataReader {
 				CheckState();
 				CheckIndex(i);
 
-				if(_fields[i].Alias.Length > 0) {
-						return _fields[i].Alias;
-				}
-				else {
-						return _fields[i].Name;
-				}
+				return _fields[i].Alias.Length > 0 ? _fields[i].Alias : _fields[i].Name;
 		}
 
 		public override string GetDataTypeName(int i) {
@@ -493,17 +482,11 @@ public sealed class FbDataReader : DbDataReader {
 				return _fields[i].GetSystemType();
 		}
 
-		public override Type GetProviderSpecificFieldType(int i) {
-				return GetFieldType(i);
-		}
+		public override Type GetProviderSpecificFieldType(int i) => GetFieldType(i);
 
-		public override object GetProviderSpecificValue(int i) {
-				return GetValue(i);
-		}
+		public override object GetProviderSpecificValue(int i) => GetValue(i);
 
-		public override int GetProviderSpecificValues(object[] values) {
-				return GetValues(values);
-		}
+		public override int GetProviderSpecificValues(object[] values) => GetValues(values);
 
 		public override object GetValue(int i) {
 				// type coercions for EF
@@ -527,8 +510,8 @@ public sealed class FbDataReader : DbDataReader {
 		}
 
 		public override int GetValues(object[] values) {
-				var count = Math.Min(_fields.Count, values.Length);
-				for(var i = 0; i < count; i++) {
+				int count = Math.Min(_fields.Count, values.Length);
+				for(int i = 0; i < count; i++) {
 						values[i] = GetValue(i);
 				}
 				return count;
@@ -696,30 +679,21 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		public override bool GetBoolean(int i) {
-				return GetFieldValue<bool>(i);
-		}
+		public override bool GetBoolean(int i) => GetFieldValue<bool>(i);
 
-		public override byte GetByte(int i) {
-				return GetFieldValue<byte>(i);
-		}
+		public override byte GetByte(int i) => GetFieldValue<byte>(i);
 
 		public override long GetBytes(int i, long dataIndex, byte[] buffer, int bufferIndex, int length) {
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
-				var realLength = length;
+				int realLength = length;
 
 				if(buffer == null) {
-						if(IsDBNull(i)) {
-								return 0;
-						}
-						else {
-								return GetFieldValue<byte[]>(i).Length;
-						}
+						return IsDBNull(i) ? 0 : GetFieldValue<byte[]>(i).Length;
 				}
 				else {
-						var byteArray = GetFieldValue<byte[]>(i);
+						byte[] byteArray = GetFieldValue<byte[]>(i);
 
 						if(length > (byteArray.Length - dataIndex)) {
 								realLength = byteArray.Length - (int)dataIndex;
@@ -728,21 +702,13 @@ public sealed class FbDataReader : DbDataReader {
 						Array.Copy(byteArray, (int)dataIndex, buffer, bufferIndex, realLength);
 
 
-						int bytesRead;
-						if((byteArray.Length - dataIndex) < length) {
-								bytesRead = byteArray.Length - (int)dataIndex;
-						}
-						else {
-								bytesRead = length;
-						}
+						int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int)dataIndex : length;
 
 						return bytesRead;
 				}
 		}
 
-		public override char GetChar(int i) {
-				return GetFieldValue<char>(i);
-		}
+		public override char GetChar(int i) => GetFieldValue<char>(i);
 
 		public override long GetChars(int i, long dataIndex, char[] buffer, int bufferIndex, int length) {
 				CheckState();
@@ -750,17 +716,12 @@ public sealed class FbDataReader : DbDataReader {
 				CheckIndex(i);
 
 				if(buffer == null) {
-						if(IsDBNull(i)) {
-								return 0;
-						}
-						else {
-								return GetFieldValue<string>(i).ToCharArray().Length;
-						}
+						return IsDBNull(i) ? 0 : GetFieldValue<string>(i).ToCharArray().Length;
 				}
 				else {
 
-						var charArray = GetFieldValue<string>(i).ToCharArray();
-						var realLength = length;
+						char[] charArray = GetFieldValue<string>(i).ToCharArray();
+						int realLength = length;
 
 						if(length > (charArray.Length - dataIndex)) {
 								realLength = charArray.Length - (int)dataIndex;
@@ -770,53 +731,29 @@ public sealed class FbDataReader : DbDataReader {
 							bufferIndex, realLength);
 
 
-						int charsRead;
-						if((charArray.Length - dataIndex) < length) {
-								charsRead = charArray.Length - (int)dataIndex;
-						}
-						else {
-								charsRead = length;
-						}
+						int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int)dataIndex : length;
 
 						return charsRead;
 				}
 		}
 
-		public override Guid GetGuid(int i) {
-				return GetFieldValue<Guid>(i);
-		}
+		public override Guid GetGuid(int i) => GetFieldValue<Guid>(i);
 
-		public override short GetInt16(int i) {
-				return GetFieldValue<short>(i);
-		}
+		public override short GetInt16(int i) => GetFieldValue<short>(i);
 
-		public override int GetInt32(int i) {
-				return GetFieldValue<int>(i);
-		}
+		public override int GetInt32(int i) => GetFieldValue<int>(i);
 
-		public override long GetInt64(int i) {
-				return GetFieldValue<long>(i);
-		}
+		public override long GetInt64(int i) => GetFieldValue<long>(i);
 
-		public override float GetFloat(int i) {
-				return GetFieldValue<float>(i);
-		}
+		public override float GetFloat(int i) => GetFieldValue<float>(i);
 
-		public override double GetDouble(int i) {
-				return GetFieldValue<double>(i);
-		}
+		public override double GetDouble(int i) => GetFieldValue<double>(i);
 
-		public override string GetString(int i) {
-				return GetFieldValue<string>(i);
-		}
+		public override string GetString(int i) => GetFieldValue<string>(i);
 
-		public override decimal GetDecimal(int i) {
-				return GetFieldValue<decimal>(i);
-		}
+		public override decimal GetDecimal(int i) => GetFieldValue<decimal>(i);
 
-		public override DateTime GetDateTime(int i) {
-				return GetFieldValue<DateTime>(i);
-		}
+		public override DateTime GetDateTime(int i) => GetFieldValue<DateTime>(i);
 
 		public override Stream GetStream(int i) {
 				CheckState();
@@ -841,16 +778,10 @@ public sealed class FbDataReader : DbDataReader {
 				return Task.FromResult(_row[i].IsDBNull());
 		}
 
-		public override IEnumerator GetEnumerator() {
-				return new DbEnumerator(this, IsCommandBehavior(CommandBehavior.CloseConnection));
-		}
+		public override IEnumerator GetEnumerator() => new DbEnumerator(this, IsCommandBehavior(CommandBehavior.CloseConnection));
 
-		public override bool NextResult() {
-				return false;
-		}
-		public override Task<bool> NextResultAsync(CancellationToken cancellationToken) {
-				return Task.FromResult(false);
-		}
+		public override bool NextResult() => false;
+		public override Task<bool> NextResultAsync(CancellationToken cancellationToken) => Task.FromResult(false);
 
 		#endregion
 
@@ -871,9 +802,7 @@ public sealed class FbDataReader : DbDataReader {
 						throw new IndexOutOfRangeException("Could not find specified column in results.");
 		}
 
-		private FbDbType GetProviderType(int i) {
-				return (FbDbType)_fields[i].DbDataType;
-		}
+		private FbDbType GetProviderType(int i) => (FbDbType)_fields[i].DbDataType;
 
 		private void UpdateRecordsAffected() {
 				if(_command != null && !_command.IsDisposed) {
@@ -884,17 +813,15 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		private bool IsCommandBehavior(CommandBehavior behavior) {
-				return _commandBehavior.HasFlag(behavior);
-		}
+		private bool IsCommandBehavior(CommandBehavior behavior) => _commandBehavior.HasFlag(behavior);
 
 		private void InitializeColumnsIndexes() {
 				_columnsIndexesOrdinal = new Dictionary<string, int>(_fields.Count, StringComparer.Ordinal);
 				_columnsIndexesOrdinalCI = new Dictionary<string, int>(_fields.Count, StringComparer.OrdinalIgnoreCase);
-				for(var i = 0; i < _fields.Count; i++) {
-						var fieldName = _fields[i].Alias;
-						_columnsIndexesOrdinal.TryAdd(fieldName, i);
-						_columnsIndexesOrdinalCI.TryAdd(fieldName, i);
+				for(int i = 0; i < _fields.Count; i++) {
+						string fieldName = _fields[i].Alias;
+						_ = _columnsIndexesOrdinal.TryAdd(fieldName, i);
+						_ = _columnsIndexesOrdinalCI.TryAdd(fieldName, i);
 				}
 		}
 
@@ -902,7 +829,7 @@ public sealed class FbDataReader : DbDataReader {
 				if(_columnsIndexesOrdinal == null || _columnsIndexesOrdinalCI == null) {
 						InitializeColumnsIndexes();
 				}
-				if(!_columnsIndexesOrdinal.TryGetValue(name, out var index))
+				if(!_columnsIndexesOrdinal.TryGetValue(name, out int index))
 						if(!_columnsIndexesOrdinalCI.TryGetValue(name, out index))
 								throw new IndexOutOfRangeException($"Could not find specified column '{name}' in results.");
 				return index;
@@ -912,45 +839,38 @@ public sealed class FbDataReader : DbDataReader {
 
 		#region Static Methods
 
-		private static bool IsReadOnly(FbDataReader r) {
-				return IsExpression(r);
-		}
+		private static bool IsReadOnly(FbDataReader r) => IsExpression(r);
 
-		public static bool IsExpression(FbDataReader r) {
+		public static bool IsExpression(FbDataReader r) =>
 				/* [0] = COMPUTED_BLR
-				 * [1] = COMPUTED_SOURCE
-				 */
-				if(!r.IsDBNull(0) || !r.IsDBNull(1)) {
-						return true;
-				}
-
-				return false;
-		}
+* [1] = COMPUTED_SOURCE
+*/
+				!r.IsDBNull(0) || !r.IsDBNull(1);
 
 		private static DataTable GetSchemaTableStructure() {
 				var schema = new DataTable("Schema");
 
 				// Schema table structure
-				schema.Columns.Add("ColumnName", Type.GetType("System.String"));
-				schema.Columns.Add("ColumnOrdinal", Type.GetType("System.Int32"));
-				schema.Columns.Add("ColumnSize", Type.GetType("System.Int32"));
-				schema.Columns.Add("NumericPrecision", Type.GetType("System.Int32"));
-				schema.Columns.Add("NumericScale", Type.GetType("System.Int32"));
-				schema.Columns.Add("DataType", Type.GetType("System.Type"));
-				schema.Columns.Add("ProviderType", Type.GetType("System.Int32"));
-				schema.Columns.Add("IsLong", Type.GetType("System.Boolean"));
-				schema.Columns.Add("AllowDBNull", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsReadOnly", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsRowVersion", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsUnique", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsKey", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsAutoIncrement", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsAliased", Type.GetType("System.Boolean"));
-				schema.Columns.Add("IsExpression", Type.GetType("System.Boolean"));
-				schema.Columns.Add("BaseSchemaName", Type.GetType("System.String"));
-				schema.Columns.Add("BaseCatalogName", Type.GetType("System.String"));
-				schema.Columns.Add("BaseTableName", Type.GetType("System.String"));
-				schema.Columns.Add("BaseColumnName", Type.GetType("System.String"));
+				_ = schema.Columns.Add("ColumnName", Type.GetType("System.String"));
+				_ = schema.Columns.Add("ColumnOrdinal", Type.GetType("System.Int32"));
+				_ = schema.Columns.Add("ColumnSize", Type.GetType("System.Int32"));
+				_ = schema.Columns.Add("NumericPrecision", Type.GetType("System.Int32"));
+				_ = schema.Columns.Add("NumericScale", Type.GetType("System.Int32"));
+				_ = schema.Columns.Add("DataType", Type.GetType("System.Type"));
+				_ = schema.Columns.Add("ProviderType", Type.GetType("System.Int32"));
+				_ = schema.Columns.Add("IsLong", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("AllowDBNull", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsReadOnly", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsRowVersion", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsUnique", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsKey", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsAutoIncrement", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsAliased", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("IsExpression", Type.GetType("System.Boolean"));
+				_ = schema.Columns.Add("BaseSchemaName", Type.GetType("System.String"));
+				_ = schema.Columns.Add("BaseCatalogName", Type.GetType("System.String"));
+				_ = schema.Columns.Add("BaseTableName", Type.GetType("System.String"));
+				_ = schema.Columns.Add("BaseColumnName", Type.GetType("System.String"));
 
 				return schema;
 		}

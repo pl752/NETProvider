@@ -30,7 +30,5 @@ public class FbStatement {
 				CleanText = cleanText;
 		}
 
-		internal void SetStatementType(SqlStatementType statementType) {
-				StatementType = statementType;
-		}
+		internal void SetStatementType(SqlStatementType statementType) => StatementType = statementType;
 }

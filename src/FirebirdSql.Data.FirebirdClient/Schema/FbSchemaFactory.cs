@@ -42,7 +42,7 @@ internal sealed class FbSchemaFactory {
 		#region Methods
 
 		public static DataTable GetSchema(FbConnection connection, string collectionName, string[] restrictions) {
-				var filter = string.Format("CollectionName = '{0}'", collectionName);
+				string filter = string.Format("CollectionName = '{0}'", collectionName);
 				var ds = new DataSet();
 				using(var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName)) {
 						var oldCulture = Thread.CurrentThread.CurrentCulture;
@@ -50,7 +50,7 @@ internal sealed class FbSchemaFactory {
 								Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 								// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
 								// that's the reason for temporarily changing culture
-								ds.ReadXml(xmlStream);
+								_ = ds.ReadXml(xmlStream);
 						}
 						finally {
 								Thread.CurrentThread.CurrentCulture = oldCulture;
@@ -63,15 +63,11 @@ internal sealed class FbSchemaFactory {
 						throw new NotSupportedException("Unsupported collection name.");
 				}
 
-				if(restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]) {
-						throw new InvalidOperationException("The number of specified restrictions is not valid.");
-				}
-
-				if(ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]) {
-						throw new InvalidOperationException("Incorrect restriction definition.");
-				}
-
-				return collection[0]["PopulationMechanism"].ToString() switch {
+				return restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]
+						?           throw new InvalidOperationException("The number of specified restrictions is not valid.")
+						: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]
+						?            throw new InvalidOperationException("Incorrect restriction definition.")
+						: collection[0]["PopulationMechanism"].ToString() switch {
 						"PrepareCollection" => PrepareCollection(connection, collectionName, restrictions),
 						"DataTable" => ds.Tables[collection[0]["PopulationString"].ToString()].Copy(),
 						"SQLCommand" => SqlCommandSchema(connection, collectionName, restrictions),
@@ -79,7 +75,7 @@ internal sealed class FbSchemaFactory {
 				};
 		}
 		public static Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
-				var filter = string.Format("CollectionName = '{0}'", collectionName);
+				string filter = string.Format("CollectionName = '{0}'", collectionName);
 				var ds = new DataSet();
 				using(var xmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName)) {
 						var oldCulture = Thread.CurrentThread.CurrentCulture;
@@ -87,7 +83,7 @@ internal sealed class FbSchemaFactory {
 								Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 								// ReadXml contains error: http://connect.microsoft.com/VisualStudio/feedback/Validation.aspx?FeedbackID=95116
 								// that's the reason for temporarily changing culture
-								ds.ReadXml(xmlStream);
+								_ = ds.ReadXml(xmlStream);
 						}
 						finally {
 								Thread.CurrentThread.CurrentCulture = oldCulture;
@@ -100,15 +96,11 @@ internal sealed class FbSchemaFactory {
 						throw new NotSupportedException("Unsupported collection name.");
 				}
 
-				if(restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]) {
-						throw new InvalidOperationException("The number of specified restrictions is not valid.");
-				}
-
-				if(ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]) {
-						throw new InvalidOperationException("Incorrect restriction definition.");
-				}
-
-				return collection[0]["PopulationMechanism"].ToString() switch {
+				return restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]
+						?           throw new InvalidOperationException("The number of specified restrictions is not valid.")
+						: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]
+						?            throw new InvalidOperationException("Incorrect restriction definition.")
+						: collection[0]["PopulationMechanism"].ToString() switch {
 						"PrepareCollection" => PrepareCollectionAsync(connection, collectionName, restrictions, cancellationToken),
 						"DataTable" => Task.FromResult(ds.Tables[collection[0]["PopulationString"].ToString()].Copy()),
 						"SQLCommand" => SqlCommandSchemaAsync(connection, collectionName, restrictions, cancellationToken),
@@ -189,12 +181,8 @@ internal sealed class FbSchemaFactory {
 				return returnSchema.GetSchemaAsync(connection, collectionName, restrictions, cancellationToken);
 		}
 
-		private static DataTable SqlCommandSchema(FbConnection connection, string collectionName, string[] restrictions) {
-				throw new NotImplementedException();
-		}
-		private static Task<DataTable> SqlCommandSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
-				throw new NotImplementedException();
-		}
+		private static DataTable SqlCommandSchema(FbConnection connection, string collectionName, string[] restrictions) => throw new NotImplementedException();
+		private static Task<DataTable> SqlCommandSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
 		#endregion
 }

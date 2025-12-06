@@ -31,13 +31,13 @@ internal static class Int128Helper {
 		}
 
 		public static byte[] GetBytes(BigInteger value) {
-				var result = value.ToByteArray();
+				byte[] result = value.ToByteArray();
 				if(result.Length > 16) {
 						throw new ArgumentOutOfRangeException("Value too big for Int128.");
 				}
 				if(result.Length < 16) {
-						var padding = value.Sign == -1 ? (byte)255 : (byte)0;
-						var tmp = new byte[16] { padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding };
+						byte padding = value.Sign == -1 ? (byte)255 : (byte)0;
+						byte[] tmp = [padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding];
 						Buffer.BlockCopy(result, 0, tmp, 0, result.Length);
 						result = tmp;
 				}

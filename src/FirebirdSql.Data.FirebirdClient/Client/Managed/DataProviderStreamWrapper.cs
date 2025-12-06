@@ -27,50 +27,30 @@ sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider {
 		readonly Stream _stream = stream;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int Read(byte[] buffer, int offset, int count) {
-				return _stream.Read(buffer, offset, count);
-		}
+		public int Read(byte[] buffer, int offset, int count) => _stream.Read(buffer, offset, count);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int Read(Span<byte> buffer, int offset, int count) {
-				return _stream.Read(buffer[offset..(offset + count)]);
-		}
+		public int Read(Span<byte> buffer, int offset, int count) => _stream.Read(buffer[offset..(offset + count)]);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
-				return new ValueTask<int>(_stream.ReadAsync(buffer, offset, count, cancellationToken));
-		}
+		public ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) => new ValueTask<int>(_stream.ReadAsync(buffer, offset, count, cancellationToken));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
-				return _stream.ReadAsync(buffer.Slice(offset, count), cancellationToken);
-		}
+		public ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) => _stream.ReadAsync(buffer.Slice(offset, count), cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write(ReadOnlySpan<byte> buffer) {
-				_stream.Write(buffer);
-		}
+		public void Write(ReadOnlySpan<byte> buffer) => _stream.Write(buffer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write(byte[] buffer, int offset, int count) {
-				_stream.Write(buffer, offset, count);
-		}
+		public void Write(byte[] buffer, int offset, int count) => _stream.Write(buffer, offset, count);
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
-				return new ValueTask(_stream.WriteAsync(buffer, offset, count, cancellationToken));
-		}
+		public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) => new ValueTask(_stream.WriteAsync(buffer, offset, count, cancellationToken));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
-				return _stream.WriteAsync(buffer.Slice(offset, count), cancellationToken);
-		}
+		public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) => _stream.WriteAsync(buffer.Slice(offset, count), cancellationToken);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Flush() {
-				_stream.Flush();
-		}
+		public void Flush() => _stream.Flush();
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ValueTask FlushAsync(CancellationToken cancellationToken = default) {
-				return new ValueTask(_stream.FlushAsync(cancellationToken));
-		}
+		public ValueTask FlushAsync(CancellationToken cancellationToken = default) => new ValueTask(_stream.FlushAsync(cancellationToken));
 }

@@ -43,11 +43,11 @@ internal abstract class BlobBase(DatabaseBase db) {
 		public abstract DatabaseBase Database { get; }
 
 		public string ReadString() {
-				var buffer = Read();
+				byte[] buffer = Read();
 				return _charset.GetString(buffer, 0, buffer.Length);
 		}
 		public async ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default) {
-				var buffer = await ReadAsync(cancellationToken).ConfigureAwait(false);
+				byte[] buffer = await ReadAsync(cancellationToken).ConfigureAwait(false);
 				return _charset.GetString(buffer, 0, buffer.Length);
 		}
 
@@ -94,29 +94,21 @@ internal abstract class BlobBase(DatabaseBase db) {
 				}
 		}
 
-		public void Write(string data) {
-				Write(_charset.GetBytes(data));
-		}
-		public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default) {
-				return WriteAsync(_charset.GetBytes(data), cancellationToken);
-		}
+		public void Write(string data) => Write(_charset.GetBytes(data));
+		public ValueTask WriteAsync(string data, CancellationToken cancellationToken = default) => WriteAsync(_charset.GetBytes(data), cancellationToken);
 
-		public void Write(byte[] buffer) {
-				Write(buffer, 0, buffer.Length);
-		}
-		public ValueTask WriteAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				return WriteAsync(buffer, 0, buffer.Length, cancellationToken);
-		}
+		public void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
+		public ValueTask WriteAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteAsync(buffer, 0, buffer.Length, cancellationToken);
 
 		public void Write(byte[] buffer, int index, int count) {
 				try {
 						Create();
 
-						var length = count;
-						var offset = index;
-						var chunk = length >= _segmentSize ? _segmentSize : length;
+						int length = count;
+						int offset = index;
+						int chunk = length >= _segmentSize ? _segmentSize : length;
 
-						var tmpBuffer = new byte[chunk];
+						byte[] tmpBuffer = new byte[chunk];
 
 						while(length > 0) {
 								if(chunk > length) {
@@ -144,11 +136,11 @@ internal abstract class BlobBase(DatabaseBase db) {
 				try {
 						await CreateAsync(cancellationToken).ConfigureAwait(false);
 
-						var length = count;
-						var offset = index;
-						var chunk = length >= _segmentSize ? _segmentSize : length;
+						int length = count;
+						int offset = index;
+						int chunk = length >= _segmentSize ? _segmentSize : length;
 
-						var tmpBuffer = new byte[chunk];
+						byte[] tmpBuffer = new byte[chunk];
 
 						while(length > 0) {
 								if(chunk > length) {
@@ -200,11 +192,7 @@ internal abstract class BlobBase(DatabaseBase db) {
 		public abstract void Cancel();
 		public abstract ValueTask CancelAsync(CancellationToken cancellationToken = default);
 
-		protected void RblAddValue(int rblValue) {
-				_rblFlags |= rblValue;
-		}
+		protected void RblAddValue(int rblValue) => _rblFlags |= rblValue;
 
-		protected void RblRemoveValue(int rblValue) {
-				_rblFlags &= ~rblValue;
-		}
+		protected void RblRemoveValue(int rblValue) => _rblFlags &= ~rblValue;
 }

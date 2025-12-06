@@ -26,7 +26,7 @@ internal class FbForeignKeyColumns : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
@@ -47,10 +47,10 @@ internal class FbForeignKeyColumns : FbSchema {
 					INNER JOIN rdb$indices refidx ON refidx.rdb$index_name = tempidx.rdb$foreign_key
 					INNER JOIN rdb$index_segments refidxseg ON refidxseg.rdb$index_name = refidx.rdb$index_name AND refidxseg.rdb$field_position = coidxseg.rdb$field_position");
 
-				where.Append("co.rdb$constraint_type = 'FOREIGN KEY'");
+				_ = where.Append("co.rdb$constraint_type = 'FOREIGN KEY'");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* TABLE_CATALOG	*/
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -62,25 +62,25 @@ internal class FbForeignKeyColumns : FbSchema {
 
 						/* TABLE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat(" AND co.rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat(" AND co.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* CONSTRAINT_NAME */
 						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								where.AppendFormat(" AND co.rdb$constraint_name = @p{0}", index++);
+								_ = where.AppendFormat(" AND co.rdb$constraint_name = @p{0}", index++);
 						}
 
 						/* COLUMN_NAME */
 						if(restrictions.Length >= 5 && restrictions[4] != null) {
-								where.AppendFormat(" AND coidxseg.rdb$field_name = @p{0}", index++);
+								_ = where.AppendFormat(" AND coidxseg.rdb$field_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY CONSTRAINT_NAME, ORDINAL_POSITION");
+				_ = sql.Append(" ORDER BY CONSTRAINT_NAME, ORDINAL_POSITION");
 
 				return sql;
 		}

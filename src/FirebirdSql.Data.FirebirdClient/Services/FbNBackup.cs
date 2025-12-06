@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Services;
 public sealed class FbNBackup(string connectionString = null) : FbService(connectionString) {
 		private int _level;
 		public int Level {
-				get { return _level; }
+				get => _level;
 				set {
 						if(value < 0)
 								throw new ArgumentOutOfRangeException();

@@ -25,13 +25,9 @@ namespace FirebirdSql.Data.Client.Managed.Version12;
 internal class GdsDatabase(GdsConnection connection) : Version11.GdsDatabase(connection) {
 		public override bool UseUtf8ParameterBuffer => true;
 
-		public override StatementBase CreateStatement() {
-				return new GdsStatement(this);
-		}
+		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) {
-				return new GdsStatement(this, (Version10.GdsTransaction)transaction);
-		}
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 
 		public override void CancelOperation(short kind) {
 				try {

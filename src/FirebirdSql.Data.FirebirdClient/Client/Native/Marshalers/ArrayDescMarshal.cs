@@ -31,7 +31,5 @@ internal struct ArrayDescMarshal {
 		public short Dimensions;
 		public short Flags;
 
-		public static int ComputeLength(int n) {
-				return Marshal.SizeOf<ArrayDescMarshal>() + n * Marshal.SizeOf<ArrayBoundMarshal>();
-		}
+		public static int ComputeLength(int n) => Marshal.SizeOf<ArrayDescMarshal>() + n * Marshal.SizeOf<ArrayBoundMarshal>();
 }

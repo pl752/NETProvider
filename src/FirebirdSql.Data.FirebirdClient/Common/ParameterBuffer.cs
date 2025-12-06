@@ -27,35 +27,25 @@ internal abstract class ParameterBuffer {
 		public short Length => (short)_data.Count;
 
 		protected ParameterBuffer() {
-				_data = new List<byte>();
+				_data = [];
 		}
 
-		public byte[] ToArray() {
-				return [.. _data];
-		}
+		public byte[] ToArray() => [.. _data];
 
-		public void Append(int type) {
-				WriteByte(type);
-		}
+		public void Append(int type) => WriteByte(type);
 
-		protected void WriteByte(int value) {
-				WriteByte((byte)value);
-		}
+		protected void WriteByte(int value) => WriteByte((byte)value);
 
-		protected void WriteByte(byte value) {
-				_data.Add(value);
-		}
+		protected void WriteByte(byte value) => _data.Add(value);
 
-		protected void Write(byte value) {
-				WriteByte(value);
-		}
+		protected void Write(byte value) => WriteByte(value);
 
 		protected void Write(short value) {
 				if(!BitConverter.IsLittleEndian) {
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[2];
-				BitConverter.TryWriteBytes(buffer, value);
+				_ = BitConverter.TryWriteBytes(buffer, value);
 				Write(buffer);
 		}
 
@@ -64,7 +54,7 @@ internal abstract class ParameterBuffer {
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[4];
-				BitConverter.TryWriteBytes(buffer, value);
+				_ = BitConverter.TryWriteBytes(buffer, value);
 				Write(buffer);
 		}
 
@@ -73,19 +63,13 @@ internal abstract class ParameterBuffer {
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[8];
-				BitConverter.TryWriteBytes(buffer, value);
+				_ = BitConverter.TryWriteBytes(buffer, value);
 				Write(buffer);
 		}
 
-		protected void Write(byte[] buffer) {
-				Write(buffer, 0, buffer.Length);
-		}
+		protected void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
 
-		protected void Write(ReadOnlySpan<byte> buffer) {
-				_data.AddRange(buffer);
-		}
+		protected void Write(ReadOnlySpan<byte> buffer) => _data.AddRange(buffer);
 
-		protected void Write(byte[] buffer, int offset, int count) {
-				_data.AddRange(new ArraySegment<byte>(buffer, offset, count));
-		}
+		protected void Write(byte[] buffer, int offset, int count) => _data.AddRange(new ArraySegment<byte>(buffer, offset, count));
 }

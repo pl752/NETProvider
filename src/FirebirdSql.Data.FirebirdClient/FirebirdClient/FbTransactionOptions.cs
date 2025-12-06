@@ -23,11 +23,11 @@ namespace FirebirdSql.Data.FirebirdClient;
 public class FbTransactionOptions {
 		private TimeSpan? _waitTimeout;
 		public TimeSpan? WaitTimeout {
-				get { return _waitTimeout; }
+				get => _waitTimeout;
 				set {
 						if(value.HasValue) {
-								var secs = ((TimeSpan)value).TotalSeconds;
-								if(secs < 1 || secs > short.MaxValue)
+								double secs = ((TimeSpan)value).TotalSeconds;
+								if(secs is < 1 or > short.MaxValue)
 										throw new ArgumentException($"The value must be between 1 and {short.MaxValue}.");
 						}
 
@@ -39,13 +39,7 @@ public class FbTransactionOptions {
 		public FbTransactionBehavior TransactionBehavior { get; set; }
 
 		private IDictionary<string, FbTransactionBehavior> _lockTables;
-		public IDictionary<string, FbTransactionBehavior> LockTables {
-				get {
-						return _lockTables ??= new Dictionary<string, FbTransactionBehavior>();
-				}
-				set {
-						_lockTables = value ?? throw new ArgumentNullException($"{nameof(LockTables)} cannot be null.");
-				}
+		public IDictionary<string, FbTransactionBehavior> LockTables { get => _lockTables ??= new Dictionary<string, FbTransactionBehavior>(); set => _lockTables = value ?? throw new ArgumentNullException($"{nameof(LockTables)} cannot be null.");
 		}
 
 		public long? SnapshotAtNumber { get; set; }

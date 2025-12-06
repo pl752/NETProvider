@@ -26,7 +26,7 @@ public sealed class FbBatchParameterCollection : IList<FbParameterCollection> {
 		readonly List<FbParameterCollection> _inner;
 
 		internal FbBatchParameterCollection() {
-				_inner = new List<FbParameterCollection>();
+				_inner = [];
 		}
 
 		public FbParameterCollection this[int index] {

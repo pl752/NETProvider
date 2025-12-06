@@ -28,18 +28,14 @@ namespace FirebirdSql.Data.Client.Managed.Version11;
 internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(connection) {
 		private readonly Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)> _deferredPackets = new Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)>();
 
-		public override StatementBase CreateStatement() {
-				return new GdsStatement(this);
-		}
+		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) {
-				return new GdsStatement(this, (Version10.GdsTransaction)transaction);
-		}
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 
 		public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
 				try {
 						using(var sspiHelper = new SspiHelper()) {
-								var authData = sspiHelper.InitializeClientSecurity();
+								byte[] authData = sspiHelper.InitializeClientSecurity();
 								SendTrustedAuthToBuffer(dpb, authData);
 								SendAttachToBuffer(dpb, database);
 								Xdr.Flush();
@@ -63,7 +59,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 		public override async ValueTask AttachWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
 				try {
 						using(var sspiHelper = new SspiHelper()) {
-								var authData = sspiHelper.InitializeClientSecurity();
+								byte[] authData = sspiHelper.InitializeClientSecurity();
 								await SendTrustedAuthToBufferAsync(dpb, authData, cancellationToken).ConfigureAwait(false);
 								await SendAttachToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 								await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -85,9 +81,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 				await AfterAttachActionsAsync(cancellationToken).ConfigureAwait(false);
 		}
 
-		protected virtual void SendTrustedAuthToBuffer(DatabaseParameterBufferBase dpb, byte[] authData) {
-				dpb.Append(IscCodes.isc_dpb_trusted_auth, authData);
-		}
+		protected virtual void SendTrustedAuthToBuffer(DatabaseParameterBufferBase dpb, byte[] authData) => dpb.Append(IscCodes.isc_dpb_trusted_auth, authData);
 		protected virtual ValueTask SendTrustedAuthToBufferAsync(DatabaseParameterBufferBase dpb, byte[] authData, CancellationToken cancellationToken = default) {
 				dpb.Append(IscCodes.isc_dpb_trusted_auth, authData);
 				return ValueTask2.CompletedTask;
@@ -95,7 +89,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 		protected IResponse ProcessTrustedAuthResponse(SspiHelper sspiHelper, IResponse response) {
 				while(response is AuthResponse authResponse) {
-						var authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
+						byte[] authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
 						Xdr.Write(IscCodes.op_trusted_auth);
 						Xdr.WriteBuffer(authData);
 						Xdr.Flush();
@@ -105,7 +99,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 		}
 		protected async ValueTask<IResponse> ProcessTrustedAuthResponseAsync(SspiHelper sspiHelper, IResponse response, CancellationToken cancellationToken = default) {
 				while(response is AuthResponse authResponse) {
-						var authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
+						byte[] authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
 						await Xdr.WriteAsync(IscCodes.op_trusted_auth, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteBufferAsync(authData, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -116,7 +110,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 		public override void CreateDatabaseWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
 				using(var sspiHelper = new SspiHelper()) {
-						var authData = sspiHelper.InitializeClientSecurity();
+						byte[] authData = sspiHelper.InitializeClientSecurity();
 						SendTrustedAuthToBuffer(dpb, authData);
 						SendCreateToBuffer(dpb, database);
 						Xdr.Flush();
@@ -128,7 +122,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 		}
 		public override async ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
 				using(var sspiHelper = new SspiHelper()) {
-						var authData = sspiHelper.InitializeClientSecurity();
+						byte[] authData = sspiHelper.InitializeClientSecurity();
 						await SendTrustedAuthToBufferAsync(dpb, authData, cancellationToken).ConfigureAwait(false);
 						await SendCreateToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -167,12 +161,8 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 				return base.ReadOperation();
 		}
 
-		public void AppendDeferredPacket(Action<IResponse> packet) {
-				_deferredPackets.Enqueue((packet, null));
-		}
-		public void AppendDeferredPacket(Func<IResponse, CancellationToken, ValueTask> packet) {
-				_deferredPackets.Enqueue((null, packet));
-		}
+		public void AppendDeferredPacket(Action<IResponse> packet) => _deferredPackets.Enqueue((packet, null));
+		public void AppendDeferredPacket(Func<IResponse, CancellationToken, ValueTask> packet) => _deferredPackets.Enqueue((null, packet));
 
 		private void ProcessDeferredPackets() {
 				if(_deferredPackets.Count > 0) {

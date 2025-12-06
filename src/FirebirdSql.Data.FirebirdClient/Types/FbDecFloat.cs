@@ -86,22 +86,14 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 				if(this == PositiveSignalingNaN) {
 						return "snan";
 				}
-				if(this == NegativeNaN) {
-						return "-nan";
-				}
-				if(this == NegativeSignalingNaN) {
-						return "-snan";
-				}
-				return $"{Coefficient}E{Exponent}";
+				return this == NegativeNaN ? "-nan" : this == NegativeSignalingNaN ? "-snan" : $"{Coefficient}E{Exponent}";
 		}
 
-		public override bool Equals(object obj) {
-				return obj is FbDecFloat fbDecFloat && Equals(fbDecFloat);
-		}
+		public override bool Equals(object obj) => obj is FbDecFloat fbDecFloat && Equals(fbDecFloat);
 
 		public override int GetHashCode() {
 				unchecked {
-						var hash = (int)2166136261;
+						int hash = (int)2166136261;
 						hash = (hash * 16777619) ^ Type.GetHashCode();
 						hash = (hash * 16777619) ^ Negative.GetHashCode();
 						hash = (hash * 16777619) ^ Coefficient.GetHashCode();
@@ -116,12 +108,12 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 				if(Coefficient.Equals(other.Coefficient) && Exponent.Equals(other.Exponent))
 						return true;
 				if(Exponent < other.Exponent) {
-						var difference = other.Exponent - Exponent;
+						int difference = other.Exponent - Exponent;
 						var value = other.Coefficient * BigInteger.Pow(10, difference);
 						return value.Equals(Coefficient);
 				}
 				if(Exponent > other.Exponent) {
-						var difference = Exponent - other.Exponent;
+						int difference = Exponent - other.Exponent;
 						var value = Coefficient * BigInteger.Pow(10, difference);
 						return value.Equals(other.Coefficient);
 				}
@@ -137,8 +129,8 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 		}
 
 		static FbDecFloat ParseNumber(IFormattable formattable, string format) {
-				var s = formattable.ToString(format, CultureInfo.InvariantCulture);
-				var pos = s.IndexOf('.');
+				string s = formattable.ToString(format, CultureInfo.InvariantCulture);
+				int pos = s.IndexOf('.');
 				return new FbDecFloat(BigInteger.Parse(s.Remove(pos, 1), CultureInfo.InvariantCulture), -(s.Length - pos - 1));
 		}
 }

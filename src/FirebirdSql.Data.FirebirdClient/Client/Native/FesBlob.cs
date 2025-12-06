@@ -35,13 +35,9 @@ internal sealed class FesBlob : BlobBase {
 
 		#region Properties
 
-		public override DatabaseBase Database {
-				get { return _database; }
-		}
+		public override DatabaseBase Database => _database;
 
-		public override int Handle {
-				get { return _blobHandle.DangerousGetHandle().AsInt(); }
-		}
+		public override int Handle => _blobHandle.DangerousGetHandle().AsInt();
 
 		#endregion
 
@@ -71,7 +67,7 @@ internal sealed class FesBlob : BlobBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
-				_database.FbClient.isc_create_blob2(
+				_ = _database.FbClient.isc_create_blob2(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -92,7 +88,7 @@ internal sealed class FesBlob : BlobBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
-				_database.FbClient.isc_create_blob2(
+				_ = _database.FbClient.isc_create_blob2(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -116,7 +112,7 @@ internal sealed class FesBlob : BlobBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
-				_database.FbClient.isc_open_blob2(
+				_ = _database.FbClient.isc_open_blob2(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -135,7 +131,7 @@ internal sealed class FesBlob : BlobBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
-				_database.FbClient.isc_open_blob2(
+				_ = _database.FbClient.isc_open_blob2(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -154,9 +150,9 @@ internal sealed class FesBlob : BlobBase {
 		public override int GetLength() {
 				ClearStatusVector();
 
-				var buffer = new byte[20];
+				byte[] buffer = new byte[20];
 
-				_database.FbClient.isc_blob_info(
+				_ = _database.FbClient.isc_blob_info(
 					_statusVector,
 					ref _blobHandle,
 					1,
@@ -166,8 +162,8 @@ internal sealed class FesBlob : BlobBase {
 
 				_database.ProcessStatusVector(_statusVector);
 
-				var length = IscHelper.VaxInteger(buffer, 1, 2);
-				var size = IscHelper.VaxInteger(buffer, 3, (int)length);
+				long length = IscHelper.VaxInteger(buffer, 1, 2);
+				long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
 				return (int)size;
 		}
@@ -175,9 +171,9 @@ internal sealed class FesBlob : BlobBase {
 		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				var buffer = new byte[20];
+				byte[] buffer = new byte[20];
 
-				_database.FbClient.isc_blob_info(
+				_ = _database.FbClient.isc_blob_info(
 					_statusVector,
 					ref _blobHandle,
 					1,
@@ -187,21 +183,21 @@ internal sealed class FesBlob : BlobBase {
 
 				_database.ProcessStatusVector(_statusVector);
 
-				var length = IscHelper.VaxInteger(buffer, 1, 2);
-				var size = IscHelper.VaxInteger(buffer, 3, (int)length);
+				long length = IscHelper.VaxInteger(buffer, 1, 2);
+				long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
 				return ValueTask2.FromResult((int)size);
 		}
 
 		public override void GetSegment(Stream stream) {
-				var requested = (short)SegmentSize;
+				short requested = (short)SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
 
-				var tmp = new byte[requested];
+				byte[] tmp = new byte[requested];
 
-				var status = _database.FbClient.isc_get_segment(
+				nint status = _database.FbClient.isc_get_segment(
 					_statusVector,
 					ref _blobHandle,
 					ref segmentLength,
@@ -226,14 +222,14 @@ internal sealed class FesBlob : BlobBase {
 				stream.Write(tmp, 0, segmentLength);
 		}
 		public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default) {
-				var requested = (short)SegmentSize;
+				short requested = (short)SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
 
-				var tmp = new byte[requested];
+				byte[] tmp = new byte[requested];
 
-				var status = _database.FbClient.isc_get_segment(
+				nint status = _database.FbClient.isc_get_segment(
 					_statusVector,
 					ref _blobHandle,
 					ref segmentLength,
@@ -262,14 +258,14 @@ internal sealed class FesBlob : BlobBase {
 		}
 
 		public override byte[] GetSegment() {
-				var requested = (short)(SegmentSize - 2);
+				short requested = (short)(SegmentSize - 2);
 				short segmentLength = 0;
 
 				ClearStatusVector();
 
-				var tmp = new byte[requested];
+				byte[] tmp = new byte[requested];
 
-				var status = _database.FbClient.isc_get_segment(
+				nint status = _database.FbClient.isc_get_segment(
 					_statusVector,
 					ref _blobHandle,
 					ref segmentLength,
@@ -291,7 +287,7 @@ internal sealed class FesBlob : BlobBase {
 						_database.ProcessStatusVector(_statusVector);
 				}
 
-				var actualSegment = tmp;
+				byte[] actualSegment = tmp;
 				if(actualSegment.Length != segmentLength) {
 						tmp = new byte[segmentLength];
 						Array.Copy(actualSegment, tmp, segmentLength);
@@ -301,14 +297,14 @@ internal sealed class FesBlob : BlobBase {
 				return actualSegment;
 		}
 		public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default) {
-				var requested = (short)SegmentSize;
+				short requested = (short)SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
 
-				var tmp = new byte[requested];
+				byte[] tmp = new byte[requested];
 
-				var status = _database.FbClient.isc_get_segment(
+				nint status = _database.FbClient.isc_get_segment(
 					_statusVector,
 					ref _blobHandle,
 					ref segmentLength,
@@ -331,7 +327,7 @@ internal sealed class FesBlob : BlobBase {
 						}
 				}
 
-				var actualSegment = tmp;
+				byte[] actualSegment = tmp;
 				if(actualSegment.Length != segmentLength) {
 						tmp = new byte[segmentLength];
 						Array.Copy(actualSegment, tmp, segmentLength);
@@ -344,7 +340,7 @@ internal sealed class FesBlob : BlobBase {
 		public override void PutSegment(byte[] buffer) {
 				ClearStatusVector();
 
-				_database.FbClient.isc_put_segment(
+				_ = _database.FbClient.isc_put_segment(
 					_statusVector,
 					ref _blobHandle,
 					(short)buffer.Length,
@@ -355,7 +351,7 @@ internal sealed class FesBlob : BlobBase {
 		public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				_database.FbClient.isc_put_segment(
+				_ = _database.FbClient.isc_put_segment(
 					_statusVector,
 					ref _blobHandle,
 					(short)buffer.Length,
@@ -369,8 +365,8 @@ internal sealed class FesBlob : BlobBase {
 		public override void Seek(int position, int seekOperation) {
 				ClearStatusVector();
 
-				var resultingPosition = 0;
-				_database.FbClient.isc_seek_blob(
+				int resultingPosition = 0;
+				_ = _database.FbClient.isc_seek_blob(
 					_statusVector,
 					ref _blobHandle,
 					(short)seekOperation,
@@ -382,8 +378,8 @@ internal sealed class FesBlob : BlobBase {
 		public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				var resultingPosition = 0;
-				_database.FbClient.isc_seek_blob(
+				int resultingPosition = 0;
+				_ = _database.FbClient.isc_seek_blob(
 					_statusVector,
 					ref _blobHandle,
 					(short)seekOperation,
@@ -398,14 +394,14 @@ internal sealed class FesBlob : BlobBase {
 		public override void Close() {
 				ClearStatusVector();
 
-				_database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
+				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
 		public override ValueTask CloseAsync(CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				_database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
+				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -415,14 +411,14 @@ internal sealed class FesBlob : BlobBase {
 		public override void Cancel() {
 				ClearStatusVector();
 
-				_database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
+				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
 		public override ValueTask CancelAsync(CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				_database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
+				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -433,9 +429,7 @@ internal sealed class FesBlob : BlobBase {
 
 		#region Private Methods
 
-		private void ClearStatusVector() {
-				Array.Clear(_statusVector, 0, _statusVector.Length);
-		}
+		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
 		#endregion
 }

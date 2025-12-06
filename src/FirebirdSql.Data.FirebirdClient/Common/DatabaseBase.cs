@@ -85,20 +85,20 @@ internal abstract class DatabaseBase(Charset charset, int packetSize, short dial
 		public abstract ValueTask CancelOperationAsync(short kind, CancellationToken cancellationToken = default);
 
 		public string GetServerVersion() {
-				var items = new byte[]
-				{
+				byte[] items =
+				[
 				IscCodes.isc_info_firebird_version,
 				IscCodes.isc_info_end
-				};
+				];
 				var info = GetDatabaseInfo(items, IscCodes.BUFFER_SIZE_256);
 				return (string)info[info.Count - 1];
 		}
 		public async ValueTask<string> GetServerVersionAsync(CancellationToken cancellationToken = default) {
-				var items = new byte[]
-				{
+				byte[] items =
+				[
 				IscCodes.isc_info_firebird_version,
 				IscCodes.isc_info_end
-				};
+				];
 				var info = await GetDatabaseInfoAsync(items, IscCodes.BUFFER_SIZE_256, cancellationToken).ConfigureAwait(false);
 				return (string)info[info.Count - 1];
 		}

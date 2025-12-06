@@ -29,7 +29,7 @@ internal class FbTables : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS TABLE_CATALOG,
 					null AS TABLE_SCHEMA,
@@ -42,7 +42,7 @@ internal class FbTables : FbSchema {
 				FROM rdb$relations");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* TABLE_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -54,37 +54,37 @@ internal class FbTables : FbSchema {
 
 						/* TABLE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat("rdb$relation_name = @p{0}", index++);
 						}
 
 						/* TABLE_TYPE */
 						if(restrictions.Length >= 4 && restrictions[3] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
 								switch(restrictions[3].ToString()) {
 										case "VIEW":
-												where.Append("rdb$view_source IS NOT NULL");
+												_ = where.Append("rdb$view_source IS NOT NULL");
 												break;
 
 										case "SYSTEM TABLE":
-												where.Append("rdb$view_source IS NULL and rdb$system_flag = 1");
+												_ = where.Append("rdb$view_source IS NULL and rdb$system_flag = 1");
 												break;
 
 										case "TABLE":
 										default:
-												where.Append("rdb$view_source IS NULL and rdb$system_flag = 0");
+												_ = where.Append("rdb$view_source IS NULL and rdb$system_flag = 0");
 												break;
 								}
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY IS_SYSTEM_TABLE, OWNER_NAME, TABLE_NAME");
+				_ = sql.Append(" ORDER BY IS_SYSTEM_TABLE, OWNER_NAME, TABLE_NAME");
 
 				return sql;
 		}

@@ -47,7 +47,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 
 		public int Read(byte[] buffer, int offset, int count) {
 				if(_inputBuffer.Count < count) {
-						var readBuffer = _readBuffer;
+						byte[] readBuffer = _readBuffer;
 						int read;
 						try {
 								read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
@@ -57,9 +57,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								throw;
 						}
 						if(read != 0) {
-								if(_decryptor != null) {
-										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
-								}
+								_decryptor?.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
 								if(_decompressor != null) {
 										read = HandleDecompression(readBuffer, read);
 										readBuffer = _compressionBuffer;
@@ -67,13 +65,13 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								WriteToInputBuffer(readBuffer, read);
 						}
 				}
-				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				int dataLength = ReadFromInputBuffer(buffer, offset, count);
 				return dataLength;
 		}
 
 		public int Read(Span<byte> buffer, int offset, int count) {
 				if(_inputBuffer.Count < count) {
-						var readBuffer = _readBuffer;
+						byte[] readBuffer = _readBuffer;
 						int read;
 						try {
 								read = _dataProvider.Read(readBuffer, 0, readBuffer.Length);
@@ -83,9 +81,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								throw;
 						}
 						if(read != 0) {
-								if(_decryptor != null) {
-										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
-								}
+								_decryptor?.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
 								if(_decompressor != null) {
 										read = HandleDecompression(readBuffer, read);
 										readBuffer = _compressionBuffer;
@@ -93,12 +89,12 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								WriteToInputBuffer(readBuffer, read);
 						}
 				}
-				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				int dataLength = ReadFromInputBuffer(buffer, offset, count);
 				return dataLength;
 		}
 		public async ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
 				if(_inputBuffer.Count < count) {
-						var readBuffer = _readBuffer;
+						byte[] readBuffer = _readBuffer;
 						int read;
 						try {
 								read = await _dataProvider.ReadAsync(readBuffer, 0, readBuffer.Length, cancellationToken).ConfigureAwait(false);
@@ -108,9 +104,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								throw;
 						}
 						if(read != 0) {
-								if(_decryptor != null) {
-										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
-								}
+								_decryptor?.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
 								if(_decompressor != null) {
 										read = HandleDecompression(readBuffer, read);
 										readBuffer = _compressionBuffer;
@@ -118,13 +112,13 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								WriteToInputBuffer(readBuffer, read);
 						}
 				}
-				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				int dataLength = ReadFromInputBuffer(buffer, offset, count);
 				return dataLength;
 		}
 
 		public async ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
 				if(_inputBuffer.Count < count) {
-						var readBuffer = _readBuffer;
+						byte[] readBuffer = _readBuffer;
 						int read;
 						try {
 								// Use IDataProvider Memory-based overload
@@ -135,9 +129,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								throw;
 						}
 						if(read != 0) {
-								if(_decryptor != null) {
-										_decryptor.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
-								}
+								_decryptor?.ProcessBytes(readBuffer, 0, read, readBuffer, 0);
 								if(_decompressor != null) {
 										read = HandleDecompression(readBuffer, read);
 										readBuffer = _compressionBuffer;
@@ -145,43 +137,41 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 								WriteToInputBuffer(readBuffer.AsSpan(0, read));
 						}
 				}
-				var dataLength = ReadFromInputBuffer(buffer, offset, count);
+				int dataLength = ReadFromInputBuffer(buffer, offset, count);
 				return dataLength;
 		}
 
 		public void Write(ReadOnlySpan<byte> buffer) {
-				foreach(var b in buffer)
+				foreach(byte b in buffer)
 						_outputBuffer.Enqueue(b);
 		}
 
 		public void Write(byte[] buffer, int offset, int count) {
-				for(var i = offset; i < count; i++)
+				for(int i = offset; i < count; i++)
 						_outputBuffer.Enqueue(buffer[i]);
 		}
 		public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default) {
-				for(var i = offset; i < count; i++)
+				for(int i = offset; i < count; i++)
 						_outputBuffer.Enqueue(buffer[i]);
 				return ValueTask2.CompletedTask;
 		}
 
 		public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default) {
 				var span = buffer.Span.Slice(offset, count);
-				foreach(var b in span)
+				foreach(byte b in span)
 						_outputBuffer.Enqueue(b);
 				return ValueTask2.CompletedTask;
 		}
 
 		public void Flush() {
-				var buffer = _outputBuffer.ToArray();
+				byte[] buffer = _outputBuffer.ToArray();
 				_outputBuffer.Clear();
-				var count = buffer.Length;
+				int count = buffer.Length;
 				if(_compressor != null) {
 						count = HandleCompression(buffer, count);
 						buffer = _compressionBuffer;
 				}
-				if(_encryptor != null) {
-						_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
-				}
+				_encryptor?.ProcessBytes(buffer, 0, count, buffer, 0);
 				try {
 						_dataProvider.Write(buffer, 0, count);
 						_dataProvider.Flush();
@@ -192,16 +182,14 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 				}
 		}
 		public async ValueTask FlushAsync(CancellationToken cancellationToken = default) {
-				var buffer = _outputBuffer.ToArray();
+				byte[] buffer = _outputBuffer.ToArray();
 				_outputBuffer.Clear();
-				var count = buffer.Length;
+				int count = buffer.Length;
 				if(_compressor != null) {
 						count = HandleCompression(buffer, count);
 						buffer = _compressionBuffer;
 				}
-				if(_encryptor != null) {
-						_encryptor.ProcessBytes(buffer, 0, count, buffer, 0);
-				}
+				_encryptor?.ProcessBytes(buffer, 0, count, buffer, 0);
 				try {
 						await _dataProvider.WriteAsync(buffer, 0, count, cancellationToken).ConfigureAwait(false);
 						await _dataProvider.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -224,16 +212,16 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 		}
 
 		int ReadFromInputBuffer(byte[] buffer, int offset, int count) {
-				var read = Math.Min(count, _inputBuffer.Count);
-				for(var i = 0; i < read; i++) {
+				int read = Math.Min(count, _inputBuffer.Count);
+				for(int i = 0; i < read; i++) {
 						buffer[offset + i] = _inputBuffer.Dequeue();
 				}
 				return read;
 		}
 
 		int ReadFromInputBuffer(Span<byte> buffer, int offset, int count) {
-				var read = Math.Min(count, _inputBuffer.Count);
-				for(var i = 0; i < read; i++) {
+				int read = Math.Min(count, _inputBuffer.Count);
+				for(int i = 0; i < read; i++) {
 						buffer[offset + i] = _inputBuffer.Dequeue();
 				}
 				return read;
@@ -241,21 +229,21 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 
 		int ReadFromInputBuffer(Memory<byte> buffer, int offset, int count) {
 				var span = buffer.Span;
-				var read = Math.Min(count, _inputBuffer.Count);
-				for(var i = 0; i < read; i++) {
+				int read = Math.Min(count, _inputBuffer.Count);
+				for(int i = 0; i < read; i++) {
 						span[offset + i] = _inputBuffer.Dequeue();
 				}
 				return read;
 		}
 
 		void WriteToInputBuffer(byte[] data, int count) {
-				for(var i = 0; i < count; i++) {
+				for(int i = 0; i < count; i++) {
 						_inputBuffer.Enqueue(data[i]);
 				}
 		}
 
 		void WriteToInputBuffer(ReadOnlySpan<byte> data) {
-				for(var i = 0; i < data.Length; i++) {
+				for(int i = 0; i < data.Length; i++) {
 						_inputBuffer.Enqueue(data[i]);
 				}
 		}
@@ -268,7 +256,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 				while(true) {
 						_decompressor.OutputBuffer = _compressionBuffer;
 						_decompressor.AvailableBytesOut = _compressionBuffer.Length - _decompressor.NextOut;
-						var rc = _decompressor.Inflate(Ionic.Zlib.FlushType.None);
+						int rc = _decompressor.Inflate(Ionic.Zlib.FlushType.None);
 						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
 								throw new IOException($"Error '{rc}' while decompressing the data.");
 						if(_decompressor.AvailableBytesIn > 0 || _decompressor.AvailableBytesOut == 0) {
@@ -288,7 +276,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 				while(true) {
 						_compressor.OutputBuffer = _compressionBuffer;
 						_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
-						var rc = _compressor.Deflate(Ionic.Zlib.FlushType.None);
+						int rc = _compressor.Deflate(Ionic.Zlib.FlushType.None);
 						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
 								throw new IOException($"Error '{rc}' while compressing the data.");
 						if(_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0) {
@@ -300,7 +288,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 				while(true) {
 						_compressor.OutputBuffer = _compressionBuffer;
 						_compressor.AvailableBytesOut = _compressionBuffer.Length - _compressor.NextOut;
-						var rc = _compressor.Deflate(Ionic.Zlib.FlushType.Sync);
+						int rc = _compressor.Deflate(Ionic.Zlib.FlushType.Sync);
 						if(rc != Ionic.Zlib.ZlibConstants.Z_OK)
 								throw new IOException($"Error '{rc}' while compressing the data.");
 						if(_compressor.AvailableBytesIn > 0 || _compressor.AvailableBytesOut == 0) {
@@ -312,9 +300,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 				return _compressor.NextOut;
 		}
 
-		static void ResizeBuffer(ref byte[] buffer) {
-				Array.Resize(ref buffer, buffer.Length * 2);
-		}
+		static void ResizeBuffer(ref byte[] buffer) => Array.Resize(ref buffer, buffer.Length * 2);
 
 		static Org.BouncyCastle.Crypto.Engines.RC4Engine CreateCipher(byte[] key) {
 				var cipher = new Org.BouncyCastle.Crypto.Engines.RC4Engine();

@@ -28,9 +28,7 @@ public class FirebirdClientFactory : DbProviderFactory {
 
 		#region Properties
 
-		public override bool CanCreateDataSourceEnumerator {
-				get { return false; }
-		}
+		public override bool CanCreateDataSourceEnumerator => false;
 
 		#endregion
 
@@ -43,29 +41,17 @@ public class FirebirdClientFactory : DbProviderFactory {
 
 		#region Methods
 
-		public override DbCommand CreateCommand() {
-				return new FbCommand();
-		}
+		public override DbCommand CreateCommand() => new FbCommand();
 
-		public override DbCommandBuilder CreateCommandBuilder() {
-				return new FbCommandBuilder();
-		}
+		public override DbCommandBuilder CreateCommandBuilder() => new FbCommandBuilder();
 
-		public override DbConnection CreateConnection() {
-				return new FbConnection();
-		}
+		public override DbConnection CreateConnection() => new FbConnection();
 
-		public override DbConnectionStringBuilder CreateConnectionStringBuilder() {
-				return new FbConnectionStringBuilder();
-		}
+		public override DbConnectionStringBuilder CreateConnectionStringBuilder() => new FbConnectionStringBuilder();
 
-		public override DbDataAdapter CreateDataAdapter() {
-				return new FbDataAdapter();
-		}
+		public override DbDataAdapter CreateDataAdapter() => new FbDataAdapter();
 
-		public override DbParameter CreateParameter() {
-				return new FbParameter();
-		}
+		public override DbParameter CreateParameter() => new FbParameter();
 
 		#endregion
 }

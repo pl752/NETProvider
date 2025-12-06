@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Common;
 
 internal static class TypeEncoder {
 		public static object EncodeDecimal(decimal d, int scale, int type) {
-				var shift = scale < 0 ? -scale : scale;
+				int shift = scale < 0 ? -scale : scale;
 
 				return (type & ~1) switch {
 						IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
@@ -37,26 +37,20 @@ internal static class TypeEncoder {
 				};
 		}
 
-		public static int EncodeTime(TimeSpan t) {
-				return (int)(t.Ticks / 1000L);
-		}
+		public static int EncodeTime(TimeSpan t) => (int)(t.Ticks / 1000L);
 #if NET6_0_OR_GREATER
-		public static int EncodeTime(TimeOnly t) {
-				return (int)(t.Ticks / 1000L);
-		}
+		public static int EncodeTime(TimeOnly t) => (int)(t.Ticks / 1000L);
 #endif
 
 		public static int EncodeDate(DateTime d) {
 				var calendar = new GregorianCalendar();
-				var day = calendar.GetDayOfMonth(d);
-				var month = calendar.GetMonth(d);
-				var year = calendar.GetYear(d);
+				int day = calendar.GetDayOfMonth(d);
+				int month = calendar.GetMonth(d);
+				int year = calendar.GetYear(d);
 				return EncodeDateImpl(year, month, day);
 		}
 #if NET6_0_OR_GREATER
-		public static int EncodeDate(DateOnly d) {
-				return EncodeDateImpl(d.Year, d.Month, d.Day);
-		}
+		public static int EncodeDate(DateOnly d) => EncodeDateImpl(d.Year, d.Month, d.Day);
 #endif
 		static int EncodeDateImpl(int year, int month, int day) {
 				if(month > 2) {
@@ -67,25 +61,21 @@ internal static class TypeEncoder {
 						year -= 1;
 				}
 
-				var c = year / 100;
-				var ya = year - 100 * c;
+				int c = year / 100;
+				int ya = year - 100 * c;
 
-				return ((146097 * c) / 4 + (1461 * ya) / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001);
+				return 146097 * c / 4 + 1461 * ya / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001;
 		}
 
-		public static byte[] EncodeBoolean(bool value) {
-				return [(byte)(value ? 1 : 0)];
-		}
+		public static byte[] EncodeBoolean(bool value) => [(byte)(value ? 1 : 0)];
 
-		public static void EncodeBoolean(bool value, Span<byte> destination) {
-				destination[0] = (byte)(value ? 1 : 0);
-		}
+		public static void EncodeBoolean(bool value, Span<byte> destination) => destination[0] = (byte)(value ? 1 : 0);
 
 		public static byte[] EncodeGuid(Guid value) {
-				var data = value.ToByteArray();
-				var a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
-				var b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
-				var c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
+				byte[] data = value.ToByteArray();
+				byte[] a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
+				byte[] b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
+				byte[] c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
 				return
 				[
 					a[0], a[1], a[2], a[3],
@@ -97,15 +87,15 @@ internal static class TypeEncoder {
 
 		public static void EncodeGuid(Guid value, Span<byte> destination) {
 				Span<byte> data = stackalloc byte[16];
-				value.TryWriteBytes(data);
+				_ = value.TryWriteBytes(data);
 
 				Span<byte> a = stackalloc byte[4];
 				Span<byte> b = stackalloc byte[2];
 				Span<byte> c = stackalloc byte[2];
 
-				BitConverter.TryWriteBytes(a, IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data[..4])));
-				BitConverter.TryWriteBytes(b, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(4, 2))));
-				BitConverter.TryWriteBytes(c, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(6, 2))));
+				_ = BitConverter.TryWriteBytes(a, IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data[..4])));
+				_ = BitConverter.TryWriteBytes(b, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(4, 2))));
+				_ = BitConverter.TryWriteBytes(c, IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data.Slice(6, 2))));
 
 				a.CopyTo(destination[..4]);
 				b.CopyTo(destination.Slice(4, 2));
@@ -113,24 +103,16 @@ internal static class TypeEncoder {
 				data.Slice(8, 8).CopyTo(destination[8..]);
 		}
 
-		public static byte[] EncodeInt32(int value) {
-				return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
-		}
+		public static byte[] EncodeInt32(int value) => BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
 
-		public static void EncodeInt32(int value, Span<byte> destination) {
-				BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
-		}
+		public static void EncodeInt32(int value, Span<byte> destination) => BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
 
-		public static byte[] EncodeInt64(long value) {
-				return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
-		}
+		public static byte[] EncodeInt64(long value) => BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
 
-		public static void EncodeInt64(long value, Span<byte> destination) {
-				BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
-		}
+		public static void EncodeInt64(long value, Span<byte> destination) => BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
 
 		public static byte[] EncodeDec16(FbDecFloat value) {
-				var result = DecimalCodec.DecFloat16.EncodeDecimal(value);
+				byte[] result = DecimalCodec.DecFloat16.EncodeDecimal(value);
 				if(BitConverter.IsLittleEndian) {
 						Array.Reverse(result);
 				}
@@ -138,7 +120,7 @@ internal static class TypeEncoder {
 		}
 
 		public static byte[] EncodeDec34(FbDecFloat value) {
-				var result = DecimalCodec.DecFloat34.EncodeDecimal(value);
+				byte[] result = DecimalCodec.DecFloat34.EncodeDecimal(value);
 				if(BitConverter.IsLittleEndian) {
 						Array.Reverse(result);
 				}
@@ -146,7 +128,7 @@ internal static class TypeEncoder {
 		}
 
 		public static byte[] EncodeInt128(BigInteger value) {
-				var result = Int128Helper.GetBytes(value);
+				byte[] result = Int128Helper.GetBytes(value);
 				if(BitConverter.IsLittleEndian) {
 						Array.Reverse(result);
 				}

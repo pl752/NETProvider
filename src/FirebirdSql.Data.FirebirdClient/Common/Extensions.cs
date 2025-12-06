@@ -24,32 +24,22 @@ using System.Text;
 namespace FirebirdSql.Data.Common;
 
 internal static class Extensions {
-		public static int AsInt(this IntPtr ptr) {
-				return (int)ptr.ToInt64();
-		}
+		public static int AsInt(this IntPtr ptr) => (int)ptr.ToInt64();
 
-		public static IntPtr ReadIntPtr(this BinaryReader self) {
-				if(IntPtr.Size == sizeof(int)) {
-						return new IntPtr(self.ReadInt32());
-				}
-				else if(IntPtr.Size == sizeof(long)) {
-						return new IntPtr(self.ReadInt64());
-				}
-				else {
-						throw new NotSupportedException();
-				}
-		}
+		public static IntPtr ReadIntPtr(this BinaryReader self) => IntPtr.Size == sizeof(int)
+						? new IntPtr(self.ReadInt32())
+						: IntPtr.Size == sizeof(long) ? new IntPtr(self.ReadInt64()) : throw new NotSupportedException();
 
-		public static string ToHexString(this byte[] b) {
+		public static string ToHexString(this byte[] b) =>
 #if NET5_0_OR_GREATER
-				return Convert.ToHexString(b);
+				Convert.ToHexString(b);
 #else
 		return BitConverter.ToString(b).Replace("-", string.Empty);
 #endif
-		}
+
 
 		public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size) {
-				for(var i = 0; i < (float)array.Length / size; i++) {
+				for(int i = 0; i < (float)array.Length / size; i++) {
 						yield return array.Skip(i * size).Take(size);
 				}
 		}
@@ -87,7 +77,7 @@ internal static class Extensions {
 
 #else
 				return s.EnumerateRunes().Select(r => {
-						var result = new char[r.Utf16SequenceLength];
+						char[] result = new char[r.Utf16SequenceLength];
 						r.EncodeToUtf16(result);
 						return result;
 				});

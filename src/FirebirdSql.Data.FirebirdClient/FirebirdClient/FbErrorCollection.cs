@@ -34,28 +34,22 @@ public sealed class FbErrorCollection : ICollection<FbError> {
 		#region Constructors
 
 		internal FbErrorCollection() {
-				_errors = new List<FbError>();
+				_errors = [];
 		}
 
 		#endregion
 
 		#region Properties
 
-		public int Count {
-				get { return _errors.Count; }
-		}
+		public int Count => _errors.Count;
 
-		public bool IsReadOnly {
-				get { return true; }
-		}
+		public bool IsReadOnly => true;
 
 		#endregion
 
 		#region Methods
 
-		internal int IndexOf(string errorMessage) {
-				return _errors.FindIndex(x => string.Equals(x.Message, errorMessage, StringComparison.CurrentCultureIgnoreCase));
-		}
+		internal int IndexOf(string errorMessage) => _errors.FindIndex(x => string.Equals(x.Message, errorMessage, StringComparison.CurrentCultureIgnoreCase));
 
 		internal FbError Add(FbError error) {
 				_errors.Add(error);
@@ -63,37 +57,21 @@ public sealed class FbErrorCollection : ICollection<FbError> {
 				return error;
 		}
 
-		internal FbError Add(string errorMessage, int number) {
-				return Add(new FbError(errorMessage, number));
-		}
+		internal FbError Add(string errorMessage, int number) => Add(new FbError(errorMessage, number));
 
-		void ICollection<FbError>.Add(FbError item) {
-				throw new NotSupportedException();
-		}
+		void ICollection<FbError>.Add(FbError item) => throw new NotSupportedException();
 
-		void ICollection<FbError>.Clear() {
-				throw new NotSupportedException();
-		}
+		void ICollection<FbError>.Clear() => throw new NotSupportedException();
 
-		public bool Contains(FbError item) {
-				return _errors.Contains(item);
-		}
+		public bool Contains(FbError item) => _errors.Contains(item);
 
-		public void CopyTo(FbError[] array, int arrayIndex) {
-				_errors.CopyTo(array, arrayIndex);
-		}
+		public void CopyTo(FbError[] array, int arrayIndex) => _errors.CopyTo(array, arrayIndex);
 
-		bool ICollection<FbError>.Remove(FbError item) {
-				throw new NotSupportedException();
-		}
+		bool ICollection<FbError>.Remove(FbError item) => throw new NotSupportedException();
 
-		public IEnumerator<FbError> GetEnumerator() {
-				return _errors.GetEnumerator();
-		}
+		public IEnumerator<FbError> GetEnumerator() => _errors.GetEnumerator();
 
-		IEnumerator IEnumerable.GetEnumerator() {
-				return GetEnumerator();
-		}
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		#endregion
 }

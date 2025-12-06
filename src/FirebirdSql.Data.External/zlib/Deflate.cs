@@ -118,9 +118,7 @@ namespace Ionic.Zlib {
 								this.Flavor = flavor;
 						}
 
-						public static Config Lookup(CompressionLevel level) {
-								return Table[(int)level];
-						}
+						public static Config Lookup(CompressionLevel level) => Table[(int)level];
 
 
 						static Config() {
@@ -183,9 +181,9 @@ namespace Ionic.Zlib {
 				private static readonly int MIN_MATCH = 3;
 				private static readonly int MAX_MATCH = 258;
 
-				private static readonly int MIN_LOOKAHEAD = (MAX_MATCH + MIN_MATCH + 1);
+				private static readonly int MIN_LOOKAHEAD = MAX_MATCH + MIN_MATCH + 1;
 
-				private static readonly int HEAP_SIZE = (2 * InternalConstants.L_CODES + 1);
+				private static readonly int HEAP_SIZE = 2 * InternalConstants.L_CODES + 1;
 
 				private static readonly int END_BLOCK = 256;
 
@@ -414,7 +412,7 @@ namespace Ionic.Zlib {
 				internal static bool _IsSmaller(short[] tree, int n, int m, sbyte[] depth) {
 						short tn2 = tree[n * 2];
 						short tm2 = tree[m * 2];
-						return (tn2 < tm2 || (tn2 == tm2 && depth[n] <= depth[m]));
+						return tn2 < tm2 || (tn2 == tm2 && depth[n] <= depth[m]);
 				}
 
 
@@ -609,7 +607,7 @@ namespace Ionic.Zlib {
 
 				internal void send_code(int c, short[] tree) {
 						int c2 = c * 2;
-						send_bits((tree[c2] & 0xffff), (tree[c2 + 1] & 0xffff));
+						send_bits(tree[c2] & 0xffff, tree[c2 + 1] & 0xffff);
 				}
 
 				internal void send_bits(int value, int length) {
@@ -897,10 +895,9 @@ namespace Ionic.Zlib {
 						}
 
 						flush_block_only(flush == FlushType.Finish);
-						if(_codec.AvailableBytesOut == 0)
-								return (flush == FlushType.Finish) ? BlockState.FinishStarted : BlockState.NeedMore;
-
-						return flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
+						return _codec.AvailableBytesOut == 0
+								? (flush == FlushType.Finish) ? BlockState.FinishStarted : BlockState.NeedMore
+								: flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
 				}
 
 
@@ -988,7 +985,7 @@ namespace Ionic.Zlib {
 						int more; // Amount of free space at the end of the window.
 
 						do {
-								more = (window_size - lookahead - strstart);
+								more = window_size - lookahead - strstart;
 
 								// Deal with !@#$% 64K limit:
 								if(more == 0 && strstart == 0 && lookahead == 0) {
@@ -1017,7 +1014,7 @@ namespace Ionic.Zlib {
 										n = hash_size;
 										p = n;
 										do {
-												m = (head[--p] & 0xffff);
+												m = head[--p] & 0xffff;
 												head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
 										}
 										while(--n != 0);
@@ -1025,7 +1022,7 @@ namespace Ionic.Zlib {
 										n = w_size;
 										p = n;
 										do {
-												m = (prev[--p] & 0xffff);
+												m = prev[--p] & 0xffff;
 												prev[p] = (short)((m >= w_size) ? (m - w_size) : 0);
 												// If n is not on any hash chain, prev[n] is garbage but
 												// its value will never be used.
@@ -1089,10 +1086,10 @@ namespace Ionic.Zlib {
 								// Insert the string window[strstart .. strstart+2] in the
 								// dictionary, and set hash_head to the head of the hash chain:
 								if(lookahead >= MIN_MATCH) {
-										ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+										ins_h = (((ins_h) << hash_shift) ^ (window[strstart + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
 
 										//  prev[strstart&w_mask]=hash_head=head[ins_h];
-										hash_head = (head[ins_h] & 0xffff);
+										hash_head = head[ins_h] & 0xffff;
 										prev[strstart & w_mask] = head[ins_h];
 										head[ins_h] = unchecked((short)strstart);
 								}
@@ -1123,9 +1120,9 @@ namespace Ionic.Zlib {
 												do {
 														strstart++;
 
-														ins_h = ((ins_h << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+														ins_h = ((ins_h << hash_shift) ^ (window[strstart + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
 														//      prev[strstart&w_mask]=hash_head=head[ins_h];
-														hash_head = (head[ins_h] & 0xffff);
+														hash_head = head[ins_h] & 0xffff;
 														prev[strstart & w_mask] = head[ins_h];
 														head[ins_h] = unchecked((short)strstart);
 
@@ -1160,13 +1157,9 @@ namespace Ionic.Zlib {
 						}
 
 						flush_block_only(flush == FlushType.Finish);
-						if(_codec.AvailableBytesOut == 0) {
-								if(flush == FlushType.Finish)
-										return BlockState.FinishStarted;
-								else
-										return BlockState.NeedMore;
-						}
-						return flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
+						return _codec.AvailableBytesOut == 0
+								? flush == FlushType.Finish ? BlockState.FinishStarted : BlockState.NeedMore
+								: flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
 				}
 
 				// Same as above, but achieves better compression. We use a lazy
@@ -1197,9 +1190,9 @@ namespace Ionic.Zlib {
 								// dictionary, and set hash_head to the head of the hash chain:
 
 								if(lookahead >= MIN_MATCH) {
-										ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+										ins_h = (((ins_h) << hash_shift) ^ (window[strstart + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
 										//  prev[strstart&w_mask]=hash_head=head[ins_h];
-										hash_head = (head[ins_h] & 0xffff);
+										hash_head = head[ins_h] & 0xffff;
 										prev[strstart & w_mask] = head[ins_h];
 										head[ins_h] = unchecked((short)strstart);
 								}
@@ -1243,13 +1236,13 @@ namespace Ionic.Zlib {
 										// strstart-1 and strstart are already inserted. If there is not
 										// enough lookahead, the last two strings are not inserted in
 										// the hash table.
-										lookahead -= (prev_length - 1);
+										lookahead -= prev_length - 1;
 										prev_length -= 2;
 										do {
 												if(++strstart <= max_insert) {
-														ins_h = (((ins_h) << hash_shift) ^ (window[(strstart) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+														ins_h = (((ins_h) << hash_shift) ^ (window[strstart + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
 														//prev[strstart&w_mask]=hash_head=head[ins_h];
-														hash_head = (head[ins_h] & 0xffff);
+														hash_head = head[ins_h] & 0xffff;
 														prev[strstart & w_mask] = head[ins_h];
 														head[ins_h] = unchecked((short)strstart);
 												}
@@ -1297,14 +1290,9 @@ namespace Ionic.Zlib {
 						}
 						flush_block_only(flush == FlushType.Finish);
 
-						if(_codec.AvailableBytesOut == 0) {
-								if(flush == FlushType.Finish)
-										return BlockState.FinishStarted;
-								else
-										return BlockState.NeedMore;
-						}
-
-						return flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
+						return _codec.AvailableBytesOut == 0
+								? flush == FlushType.Finish ? BlockState.FinishStarted : BlockState.NeedMore
+								: flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
 				}
 
 
@@ -1384,40 +1372,30 @@ namespace Ionic.Zlib {
 										scan_end = window[scan + best_len];
 								}
 						}
-						while((cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0);
+						while((cur_match = prev[cur_match & wmask] & 0xffff) > limit && --chain_length != 0);
 
-						if(best_len <= lookahead)
-								return best_len;
-						return lookahead;
+						return best_len <= lookahead ? best_len : lookahead;
 				}
 
 
 				private bool Rfc1950BytesEmitted = false;
 				private bool _WantRfc1950HeaderBytes = true;
-				internal bool WantRfc1950HeaderBytes {
-						get { return _WantRfc1950HeaderBytes; }
-						set { _WantRfc1950HeaderBytes = value; }
+				internal bool WantRfc1950HeaderBytes { get => _WantRfc1950HeaderBytes; set => _WantRfc1950HeaderBytes = value;
 				}
 
 
-				internal int Initialize(ZlibCodec codec, CompressionLevel level) {
-						return Initialize(codec, level, ZlibConstants.WindowBitsMax);
-				}
+				internal int Initialize(ZlibCodec codec, CompressionLevel level) => Initialize(codec, level, ZlibConstants.WindowBitsMax);
 
-				internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits) {
-						return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
-				}
+				internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits) => Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, CompressionStrategy.Default);
 
-				internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits, CompressionStrategy compressionStrategy) {
-						return Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
-				}
+				internal int Initialize(ZlibCodec codec, CompressionLevel level, int bits, CompressionStrategy compressionStrategy) => Initialize(codec, level, bits, MEM_LEVEL_DEFAULT, compressionStrategy);
 
 				internal int Initialize(ZlibCodec codec, CompressionLevel level, int windowBits, int memLevel, CompressionStrategy strategy) {
 						_codec = codec;
 						_codec.Message = null;
 
 						// validation
-						if(windowBits < 9 || windowBits > 15)
+						if(windowBits is < 9 or > 15)
 								throw new ZlibException("windowBits must be in the range 9..15.");
 
 						if(memLevel < 1 || memLevel > MEM_LEVEL_MAX)
@@ -1432,7 +1410,7 @@ namespace Ionic.Zlib {
 						hash_bits = memLevel + 7;
 						hash_size = 1 << hash_bits;
 						hash_mask = hash_size - 1;
-						hash_shift = ((hash_bits + MIN_MATCH - 1) / MIN_MATCH);
+						hash_shift = (hash_bits + MIN_MATCH - 1) / MIN_MATCH;
 
 						window = new byte[w_size * 2];
 						prev = new short[w_size];
@@ -1472,7 +1450,7 @@ namespace Ionic.Zlib {
 
 						Rfc1950BytesEmitted = false;
 
-						status = (WantRfc1950HeaderBytes) ? INIT_STATE : BUSY_STATE;
+						status = WantRfc1950HeaderBytes ? INIT_STATE : BUSY_STATE;
 						_codec._Adler32 = Adler.Adler32(0, null, 0, 0);
 
 						last_flush = (int)FlushType.None;
@@ -1563,7 +1541,7 @@ namespace Ionic.Zlib {
 						ins_h = (((ins_h) << hash_shift) ^ (window[1] & 0xff)) & hash_mask;
 
 						for(int n = 0; n <= length - MIN_MATCH; n++) {
-								ins_h = (((ins_h) << hash_shift) ^ (window[(n) + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
+								ins_h = (((ins_h) << hash_shift) ^ (window[n + (MIN_MATCH - 1)] & 0xff)) & hash_mask;
 								prev[n & w_mask] = head[ins_h];
 								head[ins_h] = (short)n;
 						}
@@ -1578,11 +1556,11 @@ namespace Ionic.Zlib {
 						if(_codec.OutputBuffer == null ||
 								(_codec.InputBuffer == null && _codec.AvailableBytesIn != 0) ||
 								(status == FINISH_STATE && flush != FlushType.Finish)) {
-								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_STREAM_ERROR)];
+								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - ZlibConstants.Z_STREAM_ERROR];
 								throw new ZlibException(String.Format("Something is fishy. [{0}]", _codec.Message));
 						}
 						if(_codec.AvailableBytesOut == 0) {
-								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
+								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - ZlibConstants.Z_BUF_ERROR];
 								throw new ZlibException("OutputBuffer is full (AvailableBytesOut == 0)");
 						}
 
@@ -1596,7 +1574,7 @@ namespace Ionic.Zlib {
 
 								if(level_flags > 3)
 										level_flags = 3;
-								header |= (level_flags << 6);
+								header |= level_flags << 6;
 								if(strstart != 0)
 										header |= PRESET_DICT;
 								header += 31 - (header % 31);
@@ -1653,7 +1631,7 @@ namespace Ionic.Zlib {
 
 						// User must not provide more input after the first FINISH:
 						if(status == FINISH_STATE && _codec.AvailableBytesIn != 0) {
-								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_BUF_ERROR)];
+								_codec.Message = _ErrorMessage[ZlibConstants.Z_NEED_DICT - ZlibConstants.Z_BUF_ERROR];
 								throw new ZlibException("status == FINISH_STATE && _codec.AvailableBytesIn != 0");
 						}
 
@@ -1661,10 +1639,10 @@ namespace Ionic.Zlib {
 						if(_codec.AvailableBytesIn != 0 || lookahead != 0 || (flush != FlushType.None && status != FINISH_STATE)) {
 								BlockState bstate = DeflateFunction(flush);
 
-								if(bstate == BlockState.FinishStarted || bstate == BlockState.FinishDone) {
+								if(bstate is BlockState.FinishStarted or BlockState.FinishDone) {
 										status = FINISH_STATE;
 								}
-								if(bstate == BlockState.NeedMore || bstate == BlockState.FinishStarted) {
+								if(bstate is BlockState.NeedMore or BlockState.FinishStarted) {
 										if(_codec.AvailableBytesOut == 0) {
 												last_flush = -1; // avoid BUF_ERROR next call, see above
 										}

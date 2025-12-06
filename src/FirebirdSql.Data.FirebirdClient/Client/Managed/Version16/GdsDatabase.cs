@@ -43,11 +43,7 @@ internal class GdsDatabase(GdsConnection connection) : Version15.GdsDatabase(con
 				return response;
 		}
 
-		public override StatementBase CreateStatement() {
-				return new GdsStatement(this);
-		}
+		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) {
-				return new GdsStatement(this, (Version10.GdsTransaction)transaction);
-		}
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 }

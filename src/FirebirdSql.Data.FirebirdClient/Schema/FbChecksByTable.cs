@@ -26,7 +26,7 @@ internal class FbChecksByTable : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
@@ -39,7 +39,7 @@ internal class FbChecksByTable : FbSchema {
 				    INNER JOIN rdb$triggers trig ON chk.rdb$trigger_name = trig.rdb$trigger_name");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* CONSTRAINT_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -51,15 +51,15 @@ internal class FbChecksByTable : FbSchema {
 
 						/* CONSTRAINT_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("chktb.rdb$constraint_name = @p{0}", index++);
+								_ = where.AppendFormat("chktb.rdb$constraint_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
+				_ = sql.Append(" ORDER BY TABLE_NAME, CONSTRAINT_NAME");
 
 				return sql;
 		}

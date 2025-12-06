@@ -56,16 +56,12 @@ internal abstract class TransactionBase {
 		public abstract ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default);
 
 		public virtual void Dispose2() { }
-		public virtual ValueTask Dispose2Async(CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		public virtual ValueTask Dispose2Async(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
 		protected void EnsureActiveTransactionState() {
 				if(State != TransactionState.Active)
 						throw IscException.ForTypeErrorCodeIntParamStrParam(IscCodes.isc_arg_gds, IscCodes.isc_tra_state, Handle, "no valid");
 		}
 
-		protected void OnUpdate(EventArgs e) {
-				Update?.Invoke(this, e);
-		}
+		protected void OnUpdate(EventArgs e) => Update?.Invoke(this, e);
 }

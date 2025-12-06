@@ -46,7 +46,7 @@ internal static class FbClientFactory {
 		/// Static constructor sets up member variables.
 		/// </summary>
 		static FbClientFactory() {
-				cache = new Dictionary<string, IFbClient>();
+				cache = [];
 				cacheLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 				injectionTypes = new HashSet<Type>(typeof(FbClientFactory).Assembly.GetTypes()
 					.Where(x => !x.IsAbstract && !x.IsInterface)
@@ -129,7 +129,7 @@ internal static class FbClientFactory {
 				// We need to keep the parameter types and attributes in a separate array.
 				var ptypes = new Type[pis.Count];
 				var attrs = new ParameterAttributes[pis.Count];
-				for(var i = 0; i < pis.Count; i++) {
+				for(int i = 0; i < pis.Count; i++) {
 						ptypes[i] = pis[i].ParameterType;
 						attrs[i] = pis[i].Attributes;
 				}
@@ -153,8 +153,8 @@ internal static class FbClientFactory {
 				smb.SetCustomAttribute(cab);
 
 				// Also, any attributes on the actual parameters need to be copied to the P/Invoke declaration as well.
-				for(var i = 0; i < attrs.Length; i++) {
-						smb.DefineParameter(i + 1, attrs[i], pis[i].Name);
+				for(int i = 0; i < attrs.Length; i++) {
+						_ = smb.DefineParameter(i + 1, attrs[i], pis[i].Name);
 				}
 
 				// Now create the interface implementation method
@@ -165,14 +165,14 @@ internal static class FbClientFactory {
 					mi.ReturnType, ptypes);
 
 				// Also, any attributes on the actual parameters need to be copied to the P/Invoke declaration as well.
-				for(var i = 0; i < attrs.Length; i++) {
-						mb.DefineParameter(i + 1, attrs[i], pis[i].Name);
+				for(int i = 0; i < attrs.Length; i++) {
+						_ = mb.DefineParameter(i + 1, attrs[i], pis[i].Name);
 				}
 
 				// We need to generate a little IL here to actually call the P/Invoke declaration. Luckily for us, since we're just
 				// going to pass our parameters to the P/Invoke method as-is, we don't need to muck with the eval stack ;-)
 				var il = mb.GetILGenerator();
-				for(var i = 1; i <= pis.Count; i++) {
+				for(int i = 1; i <= pis.Count; i++) {
 						EmitLdarg(il, i);
 				}
 
@@ -190,11 +190,11 @@ internal static class FbClientFactory {
 			Type returnType,
 			List<ParameterInfo> pis,
 			ILGenerator il) {
-				var injectProperties = pis.Select(x => x.ParameterType).Intersect(injectionTypes).Any();
+				bool injectProperties = pis.Select(x => x.ParameterType).Intersect(injectionTypes).Any();
 				if(injectProperties) {
-						il.DeclareLocal(returnType);
+						_ = il.DeclareLocal(returnType);
 						il.Emit(OpCodes.Stloc_0);
-						for(var i = 0; i < pis.Count; i++) {
+						for(int i = 0; i < pis.Count; i++) {
 								if(injectionTypes.Contains(pis[i].ParameterType)) {
 										EmitLdarg(il, i + 1);
 										il.Emit(OpCodes.Ldind_Ref);
@@ -256,8 +256,9 @@ internal static class FbClientFactory {
 				baseName = SanitizeBaseName(baseName);
 
 				// Generate a name for our assembly, based on the name of the DLL.
-				var assemblyName = new AssemblyName();
-				assemblyName.Name = baseName + "_Assembly";
+				var assemblyName = new AssemblyName {
+						Name = baseName + "_Assembly"
+				};
 
 				// We create the dynamic assembly in our current AppDomain
 				var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName,
@@ -282,12 +283,11 @@ internal static class FbClientFactory {
 		/// <param name="baseName">The "base name" which we'll make sure contains only legal
 		/// identfier characters.</param>
 		/// <returns>A new string that is a value type name.</returns>
-		private static string SanitizeBaseName(string baseName) {
+		private static string SanitizeBaseName(string baseName) =>
 				// Note: We could actually go through and replace invalid characters with different
 				// characters, and so on, but that's too much work. Besides, you never really see the
 				// dynamic type name (expect maybe in a stack trace). If you really don't like this method,
 				// you're free to change it ;)
 
-				return "FB_" + Math.Abs(baseName.GetHashCode());
-		}
+				"FB_" + Math.Abs(baseName.GetHashCode());
 }

@@ -48,13 +48,9 @@ internal sealed class FesTransaction : TransactionBase {
 
 		#region Properties
 
-		public override int Handle {
-				get { return _handle.DangerousGetHandle().AsInt(); }
-		}
+		public override int Handle => _handle.DangerousGetHandle().AsInt();
 
-		public TransactionHandle HandlePtr {
-				get { return _handle; }
-		}
+		public TransactionHandle HandlePtr => _handle;
 
 		#endregion
 
@@ -108,7 +104,7 @@ internal sealed class FesTransaction : TransactionBase {
 				}
 
 				var teb = new IscTeb();
-				var tebData = IntPtr.Zero;
+				nint tebData = IntPtr.Zero;
 
 				try {
 						ClearStatusVector();
@@ -121,12 +117,12 @@ internal sealed class FesTransaction : TransactionBase {
 						teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
 						Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
 
-						var size = Marshal.SizeOf<IscTeb>();
+						int size = Marshal.SizeOf<IscTeb>();
 						tebData = Marshal.AllocHGlobal(size);
 
 						Marshal.StructureToPtr(teb, tebData, true);
 
-						_database.FbClient.isc_start_multiple(
+						_ = _database.FbClient.isc_start_multiple(
 							_statusVector,
 							ref _handle,
 							1,
@@ -157,7 +153,7 @@ internal sealed class FesTransaction : TransactionBase {
 				}
 
 				var teb = new IscTeb();
-				var tebData = IntPtr.Zero;
+				nint tebData = IntPtr.Zero;
 
 				try {
 						ClearStatusVector();
@@ -170,12 +166,12 @@ internal sealed class FesTransaction : TransactionBase {
 						teb.tpb_ptr = Marshal.AllocHGlobal(tpb.Length);
 						Marshal.Copy(tpb.ToArray(), 0, teb.tpb_ptr, tpb.Length);
 
-						var size = Marshal.SizeOf<IscTeb>();
+						int size = Marshal.SizeOf<IscTeb>();
 						tebData = Marshal.AllocHGlobal(size);
 
 						Marshal.StructureToPtr(teb, tebData, true);
 
-						_database.FbClient.isc_start_multiple(
+						_ = _database.FbClient.isc_start_multiple(
 							_statusVector,
 							ref _handle,
 							1,
@@ -208,7 +204,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -223,7 +219,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_commit_transaction(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -241,7 +237,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -256,7 +252,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_rollback_transaction(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -274,7 +270,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -285,7 +281,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_commit_retaining(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -299,7 +295,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -310,7 +306,7 @@ internal sealed class FesTransaction : TransactionBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
+				_ = _database.FbClient.isc_rollback_retaining(_statusVector, ref _handle);
 
 				_database.ProcessStatusVector(_statusVector);
 
@@ -320,31 +316,23 @@ internal sealed class FesTransaction : TransactionBase {
 		}
 
 		public override void Prepare() { }
-		public override ValueTask PrepareAsync(CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		public override ValueTask PrepareAsync(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
 		public override void Prepare(byte[] buffer) { }
-		public override ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		public override ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
-		public override List<object> GetTransactionInfo(byte[] items) {
-				return GetTransactionInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
-		}
-		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, CancellationToken cancellationToken = default) {
-				return GetTransactionInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
-		}
+		public override List<object> GetTransactionInfo(byte[] items) => GetTransactionInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
+		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetTransactionInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
 		public override List<object> GetTransactionInfo(byte[] items, int bufferLength) {
-				var buffer = new byte[bufferLength];
+				byte[] buffer = new byte[bufferLength];
 
 				TransactionInfo(items, buffer, buffer.Length);
 
 				return IscHelper.ParseTransactionInfo(buffer, _database.Charset);
 		}
 		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
-				var buffer = new byte[bufferLength];
+				byte[] buffer = new byte[bufferLength];
 
 				TransactionInfo(items, buffer, buffer.Length);
 
@@ -358,7 +346,7 @@ internal sealed class FesTransaction : TransactionBase {
 		private void TransactionInfo(byte[] items, byte[] buffer, int bufferLength) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				_database.FbClient.isc_transaction_info(
+				_ = _database.FbClient.isc_transaction_info(
 					_statusVector,
 					ref _handle,
 					(short)items.Length,
@@ -369,17 +357,11 @@ internal sealed class FesTransaction : TransactionBase {
 				ProcessStatusVector();
 		}
 
-		private void ClearStatusVector() {
-				Array.Clear(_statusVector, 0, _statusVector.Length);
-		}
+		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
-		private void ProcessStatusVector() {
-				StatusVectorHelper.ProcessStatusVector(_statusVector, _database.Charset, _database.WarningMessage);
-		}
+		private void ProcessStatusVector() => StatusVectorHelper.ProcessStatusVector(_statusVector, _database.Charset, _database.WarningMessage);
 
-		private void ProcessStatusVector(Charset charset) {
-				StatusVectorHelper.ProcessStatusVector(_statusVector, charset, _database.WarningMessage);
-		}
+		private void ProcessStatusVector(Charset charset) => StatusVectorHelper.ProcessStatusVector(_statusVector, charset, _database.WarningMessage);
 
 		#endregion
 }

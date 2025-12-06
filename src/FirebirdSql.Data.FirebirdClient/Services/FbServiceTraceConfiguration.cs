@@ -35,72 +35,70 @@ public class FbServiceTraceConfiguration : FbTraceConfiguration {
 		public string IncludeGdsCodes { get; set; }
 		public string ExcludeGdsCodes { get; set; }
 
-		public string BuildConfiguration(FbTraceVersion version) {
-				return version switch {
-						FbTraceVersion.Version1 => BuildConfiguration1(),
-						FbTraceVersion.Version2 => BuildConfiguration2(),
-						_ => throw new ArgumentOutOfRangeException(nameof(version)),
-				};
-		}
+		public string BuildConfiguration(FbTraceVersion version) => version switch {
+				FbTraceVersion.Version1 => BuildConfiguration1(),
+				FbTraceVersion.Version2 => BuildConfiguration2(),
+				_ => throw new ArgumentOutOfRangeException(nameof(version)),
+		};
 		string BuildConfiguration1() {
 				var sb = new StringBuilder();
-				sb.AppendLine("<services>");
-				sb.AppendFormat("enabled {0}", WriteBoolValue(Enabled));
-				sb.AppendLine();
+				_ = sb.AppendLine("<services>");
+				_ = sb.AppendFormat("enabled {0}", WriteBoolValue(Enabled));
+				_ = sb.AppendLine();
 				if(!string.IsNullOrEmpty(IncludeFilter)) {
-						sb.AppendFormat("include_filter {0}", WriteRegEx(IncludeFilter));
-						sb.AppendLine();
+						_ = sb.AppendFormat("include_filter {0}", WriteRegEx(IncludeFilter));
+						_ = sb.AppendLine();
 				}
 				if(!string.IsNullOrEmpty(ExcludeFilter)) {
-						sb.AppendFormat("exclude_filter {0}", WriteRegEx(ExcludeFilter));
-						sb.AppendLine();
+						_ = sb.AppendFormat("exclude_filter {0}", WriteRegEx(ExcludeFilter));
+						_ = sb.AppendLine();
 				}
-				sb.AppendFormat("log_services {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Services)));
-				sb.AppendLine();
-				sb.AppendFormat("log_service_query {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.ServiceQuery)));
-				sb.AppendLine();
-				sb.AppendFormat("log_errors {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Errors)));
-				sb.AppendLine();
-				sb.AppendFormat("log_warnings {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Warnings)));
-				sb.AppendLine();
-				sb.AppendFormat("log_initfini {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.InitFini)));
-				sb.AppendLine();
-				sb.AppendLine("</services>");
+				_ = sb.AppendFormat("log_services {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Services)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_service_query {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.ServiceQuery)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_errors {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Errors)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_warnings {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Warnings)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_initfini {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.InitFini)));
+				_ = sb.AppendLine();
+				_ = sb.AppendLine("</services>");
 				return sb.ToString();
 		}
 		string BuildConfiguration2() {
 				var sb = new StringBuilder();
-				sb.AppendLine("services");
-				sb.AppendLine("{");
-				sb.AppendFormat("enabled = {0}", WriteBoolValue(Enabled));
-				sb.AppendLine();
+				_ = sb.AppendLine("services");
+				_ = sb.AppendLine("{");
+				_ = sb.AppendFormat("enabled = {0}", WriteBoolValue(Enabled));
+				_ = sb.AppendLine();
 				if(!string.IsNullOrEmpty(IncludeFilter)) {
-						sb.AppendFormat("include_filter = {0}", WriteRegEx(IncludeFilter));
-						sb.AppendLine();
+						_ = sb.AppendFormat("include_filter = {0}", WriteRegEx(IncludeFilter));
+						_ = sb.AppendLine();
 				}
 				if(!string.IsNullOrEmpty(ExcludeFilter)) {
-						sb.AppendFormat("exclude_filter = {0}", WriteRegEx(ExcludeFilter));
-						sb.AppendLine();
+						_ = sb.AppendFormat("exclude_filter = {0}", WriteRegEx(ExcludeFilter));
+						_ = sb.AppendLine();
 				}
 				if(!string.IsNullOrEmpty(IncludeGdsCodes)) {
-						sb.AppendFormat("include_gds_codes = {0}", WriteString(IncludeGdsCodes));
-						sb.AppendLine();
+						_ = sb.AppendFormat("include_gds_codes = {0}", WriteString(IncludeGdsCodes));
+						_ = sb.AppendLine();
 				}
 				if(!string.IsNullOrEmpty(ExcludeGdsCodes)) {
-						sb.AppendFormat("exclude_gds_codes = {0}", WriteString(ExcludeGdsCodes));
-						sb.AppendLine();
+						_ = sb.AppendFormat("exclude_gds_codes = {0}", WriteString(ExcludeGdsCodes));
+						_ = sb.AppendLine();
 				}
-				sb.AppendFormat("log_services = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Services)));
-				sb.AppendLine();
-				sb.AppendFormat("log_service_query = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.ServiceQuery)));
-				sb.AppendLine();
-				sb.AppendFormat("log_errors = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Errors)));
-				sb.AppendLine();
-				sb.AppendFormat("log_warnings = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Warnings)));
-				sb.AppendLine();
-				sb.AppendFormat("log_initfini = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.InitFini)));
-				sb.AppendLine();
-				sb.AppendLine("}");
+				_ = sb.AppendFormat("log_services = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Services)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_service_query = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.ServiceQuery)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_errors = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Errors)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_warnings = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.Warnings)));
+				_ = sb.AppendLine();
+				_ = sb.AppendFormat("log_initfini = {0}", WriteBoolValue(Events.HasFlag(FbServiceTraceEvents.InitFini)));
+				_ = sb.AppendLine();
+				_ = sb.AppendLine("}");
 				return sb.ToString();
 		}
 }

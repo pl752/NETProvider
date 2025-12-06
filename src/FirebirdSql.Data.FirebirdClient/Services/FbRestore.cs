@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Services;
 public sealed class FbRestore(string connectionString = null) : FbService(connectionString) {
 		private int? _pageSize;
 		public int? PageSize {
-				get { return _pageSize; }
+				get => _pageSize;
 				set {
 						if(value is int v && !SizeHelper.IsValidPageSize(v))
 								throw SizeHelper.InvalidSizeException("page size");
@@ -35,7 +35,7 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 				}
 		}
 
-		public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
+		public FbBackupFileCollection BackupFiles { get; } = [];
 		public bool Verbose { get; set; }
 		public int? VerboseInterval { get; set; }
 		public int? PageBuffers { get; set; }

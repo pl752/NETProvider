@@ -33,17 +33,13 @@ internal static class ExplicitCancellation {
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void ExitExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) {
-				cancellationTokenRegistration.Dispose();
-		}
+		static void ExitExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) => cancellationTokenRegistration.Dispose();
 
 		[StructLayout(LayoutKind.Auto)]
 		internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable {
 				readonly CancellationTokenRegistration _cancellationTokenRegistration = cancellationTokenRegistration;
 
-				public void Dispose() {
-						ExitExplicitCancel(_cancellationTokenRegistration);
-				}
+				public void Dispose() => ExitExplicitCancel(_cancellationTokenRegistration);
 
 				public static CancellationToken CancellationToken => CancellationToken.None;
 		}

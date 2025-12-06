@@ -43,10 +43,10 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		public byte[] ReadBytes(byte[] buffer, int count) {
 				if(count > 0) {
-						var toRead = count;
-						var currentlyRead = -1;
+						int toRead = count;
+						int currentlyRead = -1;
 						while(toRead > 0 && currentlyRead != 0) {
-								toRead -= (currentlyRead = _dataProvider.Read(buffer, count - toRead, toRead));
+								toRead -= currentlyRead = _dataProvider.Read(buffer, count - toRead, toRead);
 						}
 						if(currentlyRead == 0) {
 								if(_dataProvider is ITracksIOFailure tracksIOFailure) {
@@ -60,10 +60,10 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		public void ReadBytes(Span<byte> dst, int count) {
 				if(count > 0) {
-						var toRead = count;
-						var currentlyRead = -1;
+						int toRead = count;
+						int currentlyRead = -1;
 						while(toRead > 0 && currentlyRead != 0) {
-								toRead -= (currentlyRead = _dataProvider.Read(dst, count - toRead, toRead));
+								toRead -= currentlyRead = _dataProvider.Read(dst, count - toRead, toRead);
 						}
 						if(currentlyRead == 0) {
 								if(_dataProvider is ITracksIOFailure tracksIOFailure) {
@@ -75,10 +75,10 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 		public async ValueTask<byte[]> ReadBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default) {
 				if(count > 0) {
-						var toRead = count;
-						var currentlyRead = -1;
+						int toRead = count;
+						int currentlyRead = -1;
 						while(toRead > 0 && currentlyRead != 0) {
-								toRead -= (currentlyRead = await _dataProvider.ReadAsync(buffer, count - toRead, toRead, cancellationToken).ConfigureAwait(false));
+								toRead -= currentlyRead = await _dataProvider.ReadAsync(buffer, count - toRead, toRead, cancellationToken).ConfigureAwait(false);
 						}
 						if(currentlyRead == 0) {
 								if(_dataProvider is ITracksIOFailure tracksIOFailure) {
@@ -93,10 +93,10 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		public async ValueTask ReadBytesAsync(Memory<byte> buffer, int count, CancellationToken cancellationToken = default) {
 				if(count <= 0)
 						return;
-				var toRead = count;
-				var offset = 0;
+				int toRead = count;
+				int offset = 0;
 				while(toRead > 0) {
-						var chunk = await _dataProvider.ReadAsync(buffer.Slice(offset, toRead), 0, toRead, cancellationToken).ConfigureAwait(false);
+						int chunk = await _dataProvider.ReadAsync(buffer.Slice(offset, toRead), 0, toRead, cancellationToken).ConfigureAwait(false);
 						if(chunk == 0) {
 								if(_dataProvider is ITracksIOFailure tracksIOFailure) {
 										tracksIOFailure.IOFailed = true;
@@ -109,8 +109,8 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public byte[] ReadOpaque(int length) {
-				var buffer = length > 0 ? new byte[length] : _emptyBuf;
-				ReadBytes(buffer, length);
+				byte[] buffer = length > 0 ? new byte[length] : _emptyBuf;
+				_ = ReadBytes(buffer, length);
 				ReadPad((4 - length) & 3);
 				return buffer;
 		}
@@ -121,8 +121,8 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public async ValueTask<byte[]> ReadOpaqueAsync(int length, CancellationToken cancellationToken = default) {
-				var buffer = length > 0 ? new byte[length] : _emptyBuf;
-				await ReadBytesAsync(buffer, length, cancellationToken).ConfigureAwait(false);
+				byte[] buffer = length > 0 ? new byte[length] : _emptyBuf;
+				_ = await ReadBytesAsync(buffer, length, cancellationToken).ConfigureAwait(false);
 				await ReadPadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 				return buffer;
 		}
@@ -134,45 +134,27 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				await ReadPadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 		}
 
-		public byte[] ReadBuffer() {
-				return ReadOpaque((ushort)ReadInt32());
-		}
+		public byte[] ReadBuffer() => ReadOpaque((ushort)ReadInt32());
 
-		public void ReadBuffer(Span<byte> dst) {
-				ReadOpaque(dst, (ushort)ReadInt32());
-		}
+		public void ReadBuffer(Span<byte> dst) => ReadOpaque(dst, (ushort)ReadInt32());
 
-		public async ValueTask<byte[]> ReadBufferAsync(CancellationToken cancellationToken = default) {
-				return await ReadOpaqueAsync((ushort)await ReadInt32Async(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-		}
+		public async ValueTask<byte[]> ReadBufferAsync(CancellationToken cancellationToken = default) => await ReadOpaqueAsync((ushort)await ReadInt32Async(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 
 		public async ValueTask ReadBufferAsync(Memory<byte> dst, CancellationToken cancellationToken = default) {
-				var length = (ushort)await ReadInt32Async(cancellationToken).ConfigureAwait(false);
+				ushort length = (ushort)await ReadInt32Async(cancellationToken).ConfigureAwait(false);
 				if(dst.Length < length)
 						throw new IOException($"Destination too small. Need {length}, have {dst.Length}.");
 				await ReadOpaqueAsync(dst, length, cancellationToken).ConfigureAwait(false);
 		}
 
-		public string ReadString() {
-				return ReadString(_charset);
-		}
-		public ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default) {
-				return ReadStringAsync(_charset, cancellationToken);
-		}
+		public string ReadString() => ReadString(_charset);
+		public ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default) => ReadStringAsync(_charset, cancellationToken);
 
-		public string ReadString(int length) {
-				return ReadString(_charset, length);
-		}
-		public ValueTask<string> ReadStringAsync(int length, CancellationToken cancellationToken = default) {
-				return ReadStringAsync(_charset, length, cancellationToken);
-		}
+		public string ReadString(int length) => ReadString(_charset, length);
+		public ValueTask<string> ReadStringAsync(int length, CancellationToken cancellationToken = default) => ReadStringAsync(_charset, length, cancellationToken);
 
-		public string ReadString(Charset charset) {
-				return ReadString(charset, ReadInt32());
-		}
-		public async ValueTask<string> ReadStringAsync(Charset charset, CancellationToken cancellationToken = default) {
-				return await ReadStringAsync(charset, await ReadInt32Async(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-		}
+		public string ReadString(Charset charset) => ReadString(charset, ReadInt32());
+		public async ValueTask<string> ReadStringAsync(Charset charset, CancellationToken cancellationToken = default) => await ReadStringAsync(charset, await ReadInt32Async(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 
 		public string ReadString(Charset charset, int length) {
 				if(length <= 0)
@@ -183,9 +165,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 						return charset.GetString(buffer);
 				}
 				else {
-						var rented = ArrayPool<byte>.Shared.Rent(length);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(length);
 						try {
-								ReadBytes(rented, length);
+								_ = ReadBytes(rented, length);
 								ReadPad((4 - length) & 3);
 								return charset.GetString(rented.AsSpan(0, length));
 						}
@@ -197,9 +179,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		public async ValueTask<string> ReadStringAsync(Charset charset, int length, CancellationToken cancellationToken = default) {
 				if(length <= 0)
 						return string.Empty;
-				var rented = ArrayPool<byte>.Shared.Rent(length);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(length);
 				try {
-						await ReadBytesAsync(rented, length, cancellationToken).ConfigureAwait(false);
+						_ = await ReadBytesAsync(rented, length, cancellationToken).ConfigureAwait(false);
 						await ReadPadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 						return charset.GetString(rented.AsSpan(0, length));
 				}
@@ -208,28 +190,24 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 
-		public short ReadInt16() {
-				return Convert.ToInt16(ReadInt32());
-		}
-		public async ValueTask<short> ReadInt16Async(CancellationToken cancellationToken = default) {
-				return Convert.ToInt16(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
-		}
+		public short ReadInt16() => Convert.ToInt16(ReadInt32());
+		public async ValueTask<short> ReadInt16Async(CancellationToken cancellationToken = default) => Convert.ToInt16(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
 
 		public int ReadInt32() {
-				ReadBytes(_smallBuffer, 4);
+				_ = ReadBytes(_smallBuffer, 4);
 				return TypeDecoder.DecodeInt32(_smallBuffer);
 		}
 		public async ValueTask<int> ReadInt32Async(CancellationToken cancellationToken = default) {
-				await ReadBytesAsync(_smallBuffer, 4, cancellationToken).ConfigureAwait(false);
+				_ = await ReadBytesAsync(_smallBuffer, 4, cancellationToken).ConfigureAwait(false);
 				return TypeDecoder.DecodeInt32(_smallBuffer);
 		}
 
 		public long ReadInt64() {
-				ReadBytes(_smallBuffer, 8);
+				_ = ReadBytes(_smallBuffer, 8);
 				return TypeDecoder.DecodeInt64(_smallBuffer);
 		}
 		public async ValueTask<long> ReadInt64Async(CancellationToken cancellationToken = default) {
-				await ReadBytesAsync(_smallBuffer, 8, cancellationToken).ConfigureAwait(false);
+				_ = await ReadBytesAsync(_smallBuffer, 8, cancellationToken).ConfigureAwait(false);
 				return TypeDecoder.DecodeInt64(_smallBuffer);
 		}
 
@@ -240,7 +218,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				else {
 						Span<byte> buf = stackalloc byte[16];
 						ReadOpaque(buf, 16);
-						var rented = ArrayPool<byte>.Shared.Rent(16);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 						try {
 								buf.CopyTo(rented);
 								return TypeDecoder.DecodeGuid(rented);
@@ -255,9 +233,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 						return TypeDecoder.DecodeGuid(await ReadBufferAsync(cancellationToken).ConfigureAwait(false));
 				}
 				else {
-						var rented = ArrayPool<byte>.Shared.Rent(16);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 						try {
-								await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
+								_ = await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
 								return TypeDecoder.DecodeGuid(rented);
 						}
 						finally {
@@ -268,29 +246,21 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		public float Int2Single(int sqlType) {
 				Span<byte> bytes = stackalloc byte[4];
-				BitConverter.TryWriteBytes(bytes, sqlType);
+				_ = BitConverter.TryWriteBytes(bytes, sqlType);
 				return BitConverter.ToSingle(bytes);
 		}
 
-		public float ReadSingle() {
-				return Int2Single(ReadInt32());
-		}
-		public async ValueTask<float> ReadSingleAsync(CancellationToken cancellationToken = default) {
-				return Int2Single(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
-		}
+		public float ReadSingle() => Int2Single(ReadInt32());
+		public async ValueTask<float> ReadSingleAsync(CancellationToken cancellationToken = default) => Int2Single(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
 
 		public double Long2Double(long sqlType) {
 				Span<byte> bytes = stackalloc byte[8];
-				BitConverter.TryWriteBytes(bytes, sqlType);
+				_ = BitConverter.TryWriteBytes(bytes, sqlType);
 				return BitConverter.ToDouble(bytes);
 		}
 
-		public double ReadDouble() {
-				return Long2Double(ReadInt64());
-		}
-		public async ValueTask<double> ReadDoubleAsync(CancellationToken cancellationToken = default) {
-				return Long2Double(await ReadInt64Async(cancellationToken).ConfigureAwait(false));
-		}
+		public double ReadDouble() => Long2Double(ReadInt64());
+		public async ValueTask<double> ReadDoubleAsync(CancellationToken cancellationToken = default) => Long2Double(await ReadInt64Async(cancellationToken).ConfigureAwait(false));
 
 		public DateTime ReadDateTime() {
 				var date = ReadDate();
@@ -303,40 +273,28 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				return date.Add(time);
 		}
 
-		public DateTime ReadDate() {
-				return TypeDecoder.DecodeDate(ReadInt32());
-		}
-		public async ValueTask<DateTime> ReadDateAsync(CancellationToken cancellationToken = default) {
-				return TypeDecoder.DecodeDate(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
-		}
+		public DateTime ReadDate() => TypeDecoder.DecodeDate(ReadInt32());
+		public async ValueTask<DateTime> ReadDateAsync(CancellationToken cancellationToken = default) => TypeDecoder.DecodeDate(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
 
-		public TimeSpan ReadTime() {
-				return TypeDecoder.DecodeTime(ReadInt32());
-		}
-		public async ValueTask<TimeSpan> ReadTimeAsync(CancellationToken cancellationToken = default) {
-				return TypeDecoder.DecodeTime(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
-		}
+		public TimeSpan ReadTime() => TypeDecoder.DecodeTime(ReadInt32());
+		public async ValueTask<TimeSpan> ReadTimeAsync(CancellationToken cancellationToken = default) => TypeDecoder.DecodeTime(await ReadInt32Async(cancellationToken).ConfigureAwait(false));
 
-		public decimal ReadDecimal(int type, int scale) {
-				return (type & ~1) switch {
-						IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(ReadInt16(), scale, type),
-						IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(ReadInt32(), scale, type),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(ReadInt64(), scale, type),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(ReadDouble(), scale, type),
-						IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(ReadInt128(), scale, type),
-						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
-				};
-		}
-		public async ValueTask<decimal> ReadDecimalAsync(int type, int scale, CancellationToken cancellationToken = default) {
-				return (type & ~1) switch {
-						IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(await ReadInt16Async(cancellationToken).ConfigureAwait(false), scale, type),
-						IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(await ReadInt32Async(cancellationToken).ConfigureAwait(false), scale, type),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(await ReadInt64Async(cancellationToken).ConfigureAwait(false), scale, type),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(await ReadDoubleAsync(cancellationToken).ConfigureAwait(false), scale, type),
-						IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(await ReadInt128Async(cancellationToken).ConfigureAwait(false), scale, type),
-						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
-				};
-		}
+		public decimal ReadDecimal(int type, int scale) => (type & ~1) switch {
+				IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(ReadInt16(), scale, type),
+				IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(ReadInt32(), scale, type),
+				IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(ReadInt64(), scale, type),
+				IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(ReadDouble(), scale, type),
+				IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(ReadInt128(), scale, type),
+				_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+		};
+		public async ValueTask<decimal> ReadDecimalAsync(int type, int scale, CancellationToken cancellationToken = default) => (type & ~1) switch {
+				IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(await ReadInt16Async(cancellationToken).ConfigureAwait(false), scale, type),
+				IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(await ReadInt32Async(cancellationToken).ConfigureAwait(false), scale, type),
+				IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(await ReadInt64Async(cancellationToken).ConfigureAwait(false), scale, type),
+				IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(await ReadDoubleAsync(cancellationToken).ConfigureAwait(false), scale, type),
+				IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(await ReadInt128Async(cancellationToken).ConfigureAwait(false), scale, type),
+				_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+		};
 
 		public bool ReadBoolean() {
 				Span<byte> bytes = stackalloc byte[1];
@@ -344,7 +302,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				return TypeDecoder.DecodeBoolean(bytes);
 		}
 		public async ValueTask<bool> ReadBooleanAsync(CancellationToken cancellationToken = default) {
-				await ReadBytesAsync(_smallBuffer, 1, cancellationToken).ConfigureAwait(false);
+				_ = await ReadBytesAsync(_smallBuffer, 1, cancellationToken).ConfigureAwait(false);
 				await ReadPadAsync((4 - 1) & 3, cancellationToken).ConfigureAwait(false);
 				return TypeDecoder.DecodeBoolean(_smallBuffer);
 		}
@@ -360,26 +318,22 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				return TypeHelper.CreateZonedDateTime(dt, (ushort)await ReadInt16Async(cancellationToken).ConfigureAwait(false), isExtended ? await ReadInt16Async(cancellationToken).ConfigureAwait(false) : (short?)null);
 		}
 
-		public FbZonedTime ReadZonedTime(bool isExtended) {
-				return TypeHelper.CreateZonedTime(ReadTime(), (ushort)ReadInt16(), isExtended ? ReadInt16() : (short?)null);
-		}
-		public async ValueTask<FbZonedTime> ReadZonedTimeAsync(bool isExtended, CancellationToken cancellationToken = default) {
-				return TypeHelper.CreateZonedTime(await ReadTimeAsync(cancellationToken).ConfigureAwait(false), (ushort)await ReadInt16Async(cancellationToken).ConfigureAwait(false), isExtended ? await ReadInt16Async(cancellationToken).ConfigureAwait(false) : (short?)null);
-		}
+		public FbZonedTime ReadZonedTime(bool isExtended) => TypeHelper.CreateZonedTime(ReadTime(), (ushort)ReadInt16(), isExtended ? ReadInt16() : (short?)null);
+		public async ValueTask<FbZonedTime> ReadZonedTimeAsync(bool isExtended, CancellationToken cancellationToken = default) => TypeHelper.CreateZonedTime(await ReadTimeAsync(cancellationToken).ConfigureAwait(false), (ushort)await ReadInt16Async(cancellationToken).ConfigureAwait(false), isExtended ? await ReadInt16Async(cancellationToken).ConfigureAwait(false) : (short?)null);
 
 		public FbDecFloat ReadDec16() {
-				ReadBytes(_smallBuffer, 8);
+				_ = ReadBytes(_smallBuffer, 8);
 				return TypeDecoder.DecodeDec16(_smallBuffer);
 		}
 		public async ValueTask<FbDecFloat> ReadDec16Async(CancellationToken cancellationToken = default) {
-				await ReadBytesAsync(_smallBuffer, 8, cancellationToken).ConfigureAwait(false);
+				_ = await ReadBytesAsync(_smallBuffer, 8, cancellationToken).ConfigureAwait(false);
 				return TypeDecoder.DecodeDec16(_smallBuffer);
 		}
 
 		public FbDecFloat ReadDec34() {
-				var rented = ArrayPool<byte>.Shared.Rent(16);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 				try {
-						ReadBytes(rented, 16);
+						_ = ReadBytes(rented, 16);
 						return TypeDecoder.DecodeDec34(rented);
 				}
 				finally {
@@ -387,9 +341,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 		public async ValueTask<FbDecFloat> ReadDec34Async(CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(16);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 				try {
-						await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
+						_ = await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
 						return TypeDecoder.DecodeDec34(rented);
 				}
 				finally {
@@ -398,9 +352,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public BigInteger ReadInt128() {
-				var rented = ArrayPool<byte>.Shared.Rent(16);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 				try {
-						ReadBytes(rented, 16);
+						_ = ReadBytes(rented, 16);
 						return TypeDecoder.DecodeInt128(rented);
 				}
 				finally {
@@ -408,9 +362,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 		public async ValueTask<BigInteger> ReadInt128Async(CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(16);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 				try {
-						await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
+						_ = await ReadBytesAsync(rented, 16, cancellationToken).ConfigureAwait(false);
 						return TypeDecoder.DecodeInt128(rented);
 				}
 				finally {
@@ -420,15 +374,15 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		public IscException ReadStatusVector() {
 				IscException exception = null;
-				var eof = false;
+				bool eof = false;
 
 				while(!eof) {
-						var arg = ReadInt32();
+						int arg = ReadInt32();
 
 						switch(arg) {
 								case IscCodes.isc_arg_gds:
 								default:
-										var er = ReadInt32();
+										int er = ReadInt32();
 										if(er != 0) {
 												exception ??= IscException.ForBuilding();
 												exception.Errors.Add(new IscError(arg, er));
@@ -456,15 +410,15 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 		public async ValueTask<IscException> ReadStatusVectorAsync(CancellationToken cancellationToken = default) {
 				IscException exception = null;
-				var eof = false;
+				bool eof = false;
 
 				while(!eof) {
-						var arg = await ReadInt32Async(cancellationToken).ConfigureAwait(false);
+						int arg = await ReadInt32Async(cancellationToken).ConfigureAwait(false);
 
 						switch(arg) {
 								case IscCodes.isc_arg_gds:
 								default:
-										var er = await ReadInt32Async(cancellationToken).ConfigureAwait(false);
+										int er = await ReadInt32Async(cancellationToken).ConfigureAwait(false);
 										if(er != 0) {
 												exception ??= IscException.ForBuilding();
 												exception.Errors.Add(new IscError(arg, er));
@@ -516,31 +470,17 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		#region Write
 
-		public void Flush() {
-				_dataProvider.Flush();
-		}
-		public ValueTask FlushAsync(CancellationToken cancellationToken = default) {
-				return _dataProvider.FlushAsync(cancellationToken);
-		}
+		public void Flush() => _dataProvider.Flush();
+		public ValueTask FlushAsync(CancellationToken cancellationToken = default) => _dataProvider.FlushAsync(cancellationToken);
 
-		public void WriteBytes(ReadOnlySpan<byte> buffer) {
-				_dataProvider.Write(buffer);
-		}
+		public void WriteBytes(ReadOnlySpan<byte> buffer) => _dataProvider.Write(buffer);
 
-		public void WriteBytes(byte[] buffer, int count) {
-				_dataProvider.Write(buffer, 0, count);
-		}
-		public ValueTask WriteBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default) {
-				return _dataProvider.WriteAsync(buffer, 0, count, cancellationToken);
-		}
+		public void WriteBytes(byte[] buffer, int count) => _dataProvider.Write(buffer, 0, count);
+		public ValueTask WriteBytesAsync(byte[] buffer, int count, CancellationToken cancellationToken = default) => _dataProvider.WriteAsync(buffer, 0, count, cancellationToken);
 
-		public void WriteOpaque(byte[] buffer) {
-				WriteOpaque(buffer, buffer.Length);
-		}
+		public void WriteOpaque(byte[] buffer) => WriteOpaque(buffer, buffer.Length);
 
-		public ValueTask WriteOpaqueAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				return WriteOpaqueAsync(buffer, buffer.Length, cancellationToken);
-		}
+		public ValueTask WriteOpaqueAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteOpaqueAsync(buffer, buffer.Length, cancellationToken);
 
 		public void WriteOpaque(byte[] buffer, int length) {
 				if(buffer != null && length > 0) {
@@ -561,7 +501,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public void WriteOpaque(ReadOnlySpan<byte> buffer) {
-				var length = buffer.Length;
+				int length = buffer.Length;
 				if(length > 0) {
 						_dataProvider.Write(buffer);
 						WritePad((4 - length) & 3);
@@ -586,22 +526,18 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public async ValueTask WriteOpaqueAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
-				var length = buffer.Length;
+				int length = buffer.Length;
 				if(length > 0) {
 						await _dataProvider.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
 						await WritePadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 				}
 		}
 
-		public void WriteBuffer(byte[] buffer) {
-				WriteBuffer(buffer, buffer?.Length ?? 0);
-		}
-		public ValueTask WriteBufferAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				return WriteBufferAsync(buffer, buffer?.Length ?? 0, cancellationToken);
-		}
+		public void WriteBuffer(byte[] buffer) => WriteBuffer(buffer, buffer?.Length ?? 0);
+		public ValueTask WriteBufferAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteBufferAsync(buffer, buffer?.Length ?? 0, cancellationToken);
 
 		public async ValueTask WriteBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
-				var length = buffer.Length;
+				int length = buffer.Length;
 				await WriteAsync(length, cancellationToken).ConfigureAwait(false);
 				if(length > 0) {
 						await _dataProvider.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
@@ -618,7 +554,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public void WriteBuffer(ReadOnlySpan<byte> buffer) {
-				var length = buffer.Length;
+				int length = buffer.Length;
 				Write(length);
 				if(length > 0) {
 						_dataProvider.Write(buffer);
@@ -634,7 +570,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public void WriteBlobBuffer(byte[] buffer) {
-				var length = buffer.Length; // 2 for short for buffer length
+				int length = buffer.Length; // 2 for short for buffer length
 				if(length > short.MaxValue)
 						throw new IOException("Blob buffer too big.");
 				Write(length + 2);
@@ -648,7 +584,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public void WriteBlobBuffer(ReadOnlySpan<byte> buffer) {
-				var length = buffer.Length; // 2 for short for buffer length
+				int length = buffer.Length; // 2 for short for buffer length
 				if(length > short.MaxValue)
 						throw new IOException("Blob buffer too big.");
 				Write(length + 2);
@@ -659,12 +595,12 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				WritePad((4 - length + 2) & 3);
 		}
 		public async ValueTask WriteBlobBufferAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				var length = buffer.Length; // 2 for short for buffer length
+				int length = buffer.Length; // 2 for short for buffer length
 				if(length > short.MaxValue)
 						throw new IOException("Blob buffer too big.");
 				await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);
 				await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);  //bizarre but true! three copies of the length
-				var rented = ArrayPool<byte>.Shared.Rent(2);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(2);
 				try {
 						rented[0] = (byte)((length >> 0) & 0xff);
 						rented[1] = (byte)((length >> 8) & 0xff);
@@ -678,7 +614,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		}
 
 		public async ValueTask WriteBlobBufferAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) {
-				var length = buffer.Length; // 2 for short for buffer length
+				int length = buffer.Length; // 2 for short for buffer length
 				if(length > short.MaxValue)
 						throw new IOException("Blob buffer too big.");
 				await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);
@@ -713,7 +649,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 		public void WriteTyped(int type, ReadOnlySpan<byte> buffer) {
 				int length;
 				Span<byte> typeByte = stackalloc byte[1];
-				if(buffer == null) {
+				if(buffer.IsEmpty) {
 						Write(1);
 						typeByte[0] = (byte)type;
 						_dataProvider.Write(typeByte);
@@ -732,7 +668,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				int length;
 				if(buffer == null) {
 						await WriteAsync(1, cancellationToken).ConfigureAwait(false);
-						var rented = ArrayPool<byte>.Shared.Rent(1);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(1);
 						try {
 								rented[0] = (byte)type;
 								await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
@@ -745,7 +681,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				else {
 						length = buffer.Length + 1;
 						await WriteAsync(length, cancellationToken).ConfigureAwait(false);
-						var rented = ArrayPool<byte>.Shared.Rent(1);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(1);
 						try {
 								rented[0] = (byte)type;
 								await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
@@ -762,7 +698,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				int length;
 				if(buffer.Length == 0) {
 						await WriteAsync(1, cancellationToken).ConfigureAwait(false);
-						var rented = ArrayPool<byte>.Shared.Rent(1);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(1);
 						try {
 								rented[0] = (byte)type;
 								await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
@@ -775,7 +711,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				else {
 						length = buffer.Length + 1;
 						await WriteAsync(length, cancellationToken).ConfigureAwait(false);
-						var rented = ArrayPool<byte>.Shared.Rent(1);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(1);
 						try {
 								rented[0] = (byte)type;
 								await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
@@ -794,16 +730,16 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 						return;
 				}
 				var encoding = _charset.Encoding;
-				var maxBytes = encoding.GetMaxByteCount(value.Length);
+				int maxBytes = encoding.GetMaxByteCount(value.Length);
 				if(maxBytes <= StackallocThreshold) {
 						Span<byte> span = stackalloc byte[maxBytes];
-						var written = encoding.GetBytes(value.AsSpan(), span);
+						int written = encoding.GetBytes(value.AsSpan(), span);
 						WriteBuffer(span[..written]);
 				}
 				else {
-						var rented = ArrayPool<byte>.Shared.Rent(maxBytes);
+						byte[] rented = ArrayPool<byte>.Shared.Rent(maxBytes);
 						try {
-								var written = encoding.GetBytes(value.AsSpan(), rented.AsSpan());
+								int written = encoding.GetBytes(value.AsSpan(), rented.AsSpan());
 								WriteBuffer(rented.AsSpan(0, written));
 						}
 						finally {
@@ -816,9 +752,9 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 						return WriteBufferAsync(Array.Empty<byte>(), 0, cancellationToken);
 				}
 				var encoding = _charset.Encoding;
-				var byteCount = encoding.GetByteCount(value);
-				var rented = ArrayPool<byte>.Shared.Rent(byteCount);
-				var written = encoding.GetBytes(value, 0, value.Length, rented, 0);
+				int byteCount = encoding.GetByteCount(value);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(byteCount);
+				int written = encoding.GetBytes(value, 0, value.Length, rented, 0);
 				var task = WriteBufferAsync(rented, written, cancellationToken);
 				return ReturnAfter(task, rented);
 		}
@@ -828,12 +764,8 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				finally { ArrayPool<byte>.Shared.Return(rented); }
 		}
 
-		public void Write(short value) {
-				Write((int)value);
-		}
-		public ValueTask WriteAsync(short value, CancellationToken cancellationToken = default) {
-				return WriteAsync((int)value, cancellationToken);
-		}
+		public void Write(short value) => Write((int)value);
+		public ValueTask WriteAsync(short value, CancellationToken cancellationToken = default) => WriteAsync((int)value, cancellationToken);
 
 		public void Write(int value) {
 				Span<byte> bytes = stackalloc byte[4];
@@ -841,7 +773,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				_dataProvider.Write(bytes);
 		}
 		public ValueTask WriteAsync(int value, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(4);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(4);
 				Span<byte> span = rented;
 				TypeEncoder.EncodeInt32(value, span);
 				var task = _dataProvider.WriteAsync(rented, 0, 4, cancellationToken);
@@ -854,7 +786,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				_dataProvider.Write(bytes);
 		}
 		public ValueTask WriteAsync(long value, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(8);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(8);
 				Span<byte> span = rented;
 				TypeEncoder.EncodeInt64(value, span);
 				var task = _dataProvider.WriteAsync(rented, 0, 8, cancellationToken);
@@ -863,32 +795,32 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 
 		public void Write(float value) {
 				Span<byte> buffer = stackalloc byte[4];
-				BitConverter.TryWriteBytes(buffer, value);
+				_ = BitConverter.TryWriteBytes(buffer, value);
 				Write(BitConverter.ToInt32(buffer));
 		}
 		public ValueTask WriteAsync(float value, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(4);
-				BitConverter.TryWriteBytes(rented, value);
-				var intVal = BitConverter.ToInt32(rented, 0);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(4);
+				_ = BitConverter.TryWriteBytes(rented, value);
+				int intVal = BitConverter.ToInt32(rented, 0);
 				ArrayPool<byte>.Shared.Return(rented);
 				return WriteAsync(intVal, cancellationToken);
 		}
 
 		public void Write(double value) {
 				Span<byte> buffer = stackalloc byte[8];
-				BitConverter.TryWriteBytes(buffer, value);
+				_ = BitConverter.TryWriteBytes(buffer, value);
 				Write(BitConverter.ToInt64(buffer));
 		}
 		public ValueTask WriteAsync(double value, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(8);
-				BitConverter.TryWriteBytes(rented, value);
-				var longVal = BitConverter.ToInt64(rented, 0);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(8);
+				_ = BitConverter.TryWriteBytes(rented, value);
+				long longVal = BitConverter.ToInt64(rented, 0);
 				ArrayPool<byte>.Shared.Return(rented);
 				return WriteAsync(longVal, cancellationToken);
 		}
 
 		public void Write(decimal value, int type, int scale) {
-				var numeric = TypeEncoder.EncodeDecimal(value, scale, type);
+				object numeric = TypeEncoder.EncodeDecimal(value, scale, type);
 				switch(type & ~1) {
 						case IscCodes.SQL_SHORT:
 								Write((short)numeric);
@@ -912,7 +844,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 		public ValueTask WriteAsync(decimal value, int type, int scale, CancellationToken cancellationToken = default) {
-				var numeric = TypeEncoder.EncodeDecimal(value, scale, type);
+				object numeric = TypeEncoder.EncodeDecimal(value, scale, type);
 				return (type & ~1) switch {
 						IscCodes.SQL_SHORT => WriteAsync((short)numeric, cancellationToken),
 						IscCodes.SQL_LONG => WriteAsync((int)numeric, cancellationToken),
@@ -929,7 +861,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				WriteOpaque(buffer);
 		}
 		public ValueTask WriteAsync(bool value, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(1);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(1);
 				TypeEncoder.EncodeBoolean(value, rented.AsSpan());
 				var task = WriteOpaqueAsync(rented, 1, cancellationToken);
 				return ReturnAfter(task, rented);
@@ -955,7 +887,7 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 		public ValueTask WriteAsync(Guid value, int sqlType, CancellationToken cancellationToken = default) {
-				var rented = ArrayPool<byte>.Shared.Rent(16);
+				byte[] rented = ArrayPool<byte>.Shared.Rent(16);
 				Span<byte> span = rented;
 				TypeEncoder.EncodeGuid(value, span);
 				if(sqlType == IscCodes.SQL_VARYING) {
@@ -968,70 +900,46 @@ sealed class XdrReaderWriter(IDataProvider dataProvider, Charset charset) : IXdr
 				}
 		}
 
-		public void Write(FbDecFloat value, int size) {
-				WriteOpaque(size switch {
-						16 => TypeEncoder.EncodeDec16(value),
-						34 => TypeEncoder.EncodeDec34(value),
-						_ => throw new ArgumentOutOfRangeException(),
-				});
-		}
-		public ValueTask WriteAsync(FbDecFloat value, int size, CancellationToken cancellationToken = default) {
-				return WriteOpaqueAsync(size switch {
-						16 => TypeEncoder.EncodeDec16(value),
-						34 => TypeEncoder.EncodeDec34(value),
-						_ => throw new ArgumentOutOfRangeException(),
-				}, cancellationToken);
-		}
+		public void Write(FbDecFloat value, int size) => WriteOpaque(size switch {
+				16 => TypeEncoder.EncodeDec16(value),
+				34 => TypeEncoder.EncodeDec34(value),
+				_ => throw new ArgumentOutOfRangeException(),
+		});
+		public ValueTask WriteAsync(FbDecFloat value, int size, CancellationToken cancellationToken = default) => WriteOpaqueAsync(size switch {
+				16 => TypeEncoder.EncodeDec16(value),
+				34 => TypeEncoder.EncodeDec34(value),
+				_ => throw new ArgumentOutOfRangeException(),
+		}, cancellationToken);
 
-		public void Write(BigInteger value) {
-				WriteOpaque(TypeEncoder.EncodeInt128(value));
-		}
-		public ValueTask WriteAsync(BigInteger value, CancellationToken cancellationToken = default) {
-				return WriteOpaqueAsync(TypeEncoder.EncodeInt128(value), cancellationToken);
-		}
+		public void Write(BigInteger value) => WriteOpaque(TypeEncoder.EncodeInt128(value));
+		public ValueTask WriteAsync(BigInteger value, CancellationToken cancellationToken = default) => WriteOpaqueAsync(TypeEncoder.EncodeInt128(value), cancellationToken);
 
-		public void WriteDate(DateTime value) {
-				Write(TypeEncoder.EncodeDate(Convert.ToDateTime(value)));
-		}
-		public ValueTask WriteDateAsync(DateTime value, CancellationToken cancellationToken = default) {
-				return WriteAsync(TypeEncoder.EncodeDate(Convert.ToDateTime(value)), cancellationToken);
-		}
+		public void WriteDate(DateTime value) => Write(TypeEncoder.EncodeDate(Convert.ToDateTime(value)));
+		public ValueTask WriteDateAsync(DateTime value, CancellationToken cancellationToken = default) => WriteAsync(TypeEncoder.EncodeDate(Convert.ToDateTime(value)), cancellationToken);
 
-		public void WriteTime(TimeSpan value) {
-				Write(TypeEncoder.EncodeTime(value));
-		}
-		public ValueTask WriteTimeAsync(TimeSpan value, CancellationToken cancellationToken = default) {
-				return WriteAsync(TypeEncoder.EncodeTime(value), cancellationToken);
-		}
+		public void WriteTime(TimeSpan value) => Write(TypeEncoder.EncodeTime(value));
+		public ValueTask WriteTimeAsync(TimeSpan value, CancellationToken cancellationToken = default) => WriteAsync(TypeEncoder.EncodeTime(value), cancellationToken);
 
 		#endregion
 
 		#region Pad + Fill
 
 		static readonly byte[] PadArray = [0, 0, 0, 0];
-		void WritePad(int length) {
-				_dataProvider.Write(PadArray, 0, length);
-		}
-		ValueTask WritePadAsync(int length, CancellationToken cancellationToken = default) {
-				return _dataProvider.WriteAsync(PadArray, 0, length, cancellationToken);
-		}
+		void WritePad(int length) => _dataProvider.Write(PadArray, 0, length);
+		ValueTask WritePadAsync(int length, CancellationToken cancellationToken = default) => _dataProvider.WriteAsync(PadArray, 0, length, cancellationToken);
 
 		void ReadPad(int length) {
 				Debug.Assert(length < _smallBuffer.Length);
-				ReadBytes(_smallBuffer, length);
+				_ = ReadBytes(_smallBuffer, length);
 		}
 		async ValueTask ReadPadAsync(int length, CancellationToken cancellationToken = default) {
 				Debug.Assert(length < _smallBuffer.Length);
-				await ReadBytesAsync(_smallBuffer, length, cancellationToken).ConfigureAwait(false);
+				_ = await ReadBytesAsync(_smallBuffer, length, cancellationToken).ConfigureAwait(false);
 		}
 
 		static readonly byte[] FillArray = [.. Enumerable.Repeat((byte)32, 32767)];
-		void WriteFill(int length) {
-				_dataProvider.Write(FillArray, 0, length);
-		}
-		ValueTask WriteFillAsync(int length, CancellationToken cancellationToken = default) {
-				return _dataProvider.WriteAsync(FillArray, 0, length, cancellationToken);
-		}
+		void WriteFill(int length) => _dataProvider.Write(FillArray, 0, length);
+		ValueTask WriteFillAsync(int length, CancellationToken cancellationToken = default) => _dataProvider.WriteAsync(FillArray, 0, length, cancellationToken);
 
 		#endregion
 }

@@ -29,7 +29,7 @@ internal class FbProcedures : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.AppendFormat(
+				_ = sql.AppendFormat(
 					@"SELECT
 					null AS PROCEDURE_CATALOG,
 					null AS PROCEDURE_SCHEMA,
@@ -44,7 +44,7 @@ internal class FbProcedures : FbSchema {
 					MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* PROCEDURE_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -56,15 +56,15 @@ internal class FbProcedures : FbSchema {
 
 						/* PROCEDURE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("rdb$procedure_name = @p{0}", index++);
+								_ = where.AppendFormat("rdb$procedure_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY PACKAGE_NAME, PROCEDURE_NAME");
+				_ = sql.Append(" ORDER BY PACKAGE_NAME, PROCEDURE_NAME");
 
 				return sql;
 		}
@@ -79,13 +79,10 @@ internal class FbProcedures : FbSchema {
 						if(row["OUTPUTS"] == DBNull.Value) {
 								row["OUTPUTS"] = 0;
 						}
-						if(row["IS_SYSTEM_PROCEDURE"] == DBNull.Value ||
-							Convert.ToInt32(row["IS_SYSTEM_PROCEDURE"], CultureInfo.InvariantCulture) == 0) {
-								row["IS_SYSTEM_PROCEDURE"] = false;
-						}
-						else {
-								row["IS_SYSTEM_PROCEDURE"] = true;
-						}
+						row["IS_SYSTEM_PROCEDURE"] = row["IS_SYSTEM_PROCEDURE"] == DBNull.Value ||
+							Convert.ToInt32(row["IS_SYSTEM_PROCEDURE"], CultureInfo.InvariantCulture) == 0
+								? false
+								: true;
 				}
 
 				schema.EndLoadData();

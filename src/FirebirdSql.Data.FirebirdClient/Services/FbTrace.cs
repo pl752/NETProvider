@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Services;
 public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, string connectionString = null) : FbService(connectionString) {
 		readonly FbTraceVersion _version = version;
 
-		public FbDatabaseTraceConfigurationCollection DatabasesConfigurations { get; } = new FbDatabaseTraceConfigurationCollection();
+		public FbDatabaseTraceConfigurationCollection DatabasesConfigurations { get; } = [];
 		public FbServiceTraceConfiguration ServiceConfiguration { get; set; }
 
 		public void Start(string sessionName) {
@@ -36,7 +36,7 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 				}
 				try {
 						try {
-								var config = string.Join(Environment.NewLine, DatabasesConfigurations.BuildConfiguration(version), ServiceConfiguration?.BuildConfiguration(version) ?? string.Empty);
+								string config = string.Join(Environment.NewLine, DatabasesConfigurations.BuildConfiguration(version), ServiceConfiguration?.BuildConfiguration(version) ?? string.Empty);
 
 								Open();
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
@@ -62,7 +62,7 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 				}
 				try {
 						try {
-								var config = string.Join(Environment.NewLine, DatabasesConfigurations.BuildConfiguration(version), ServiceConfiguration?.BuildConfiguration(version) ?? string.Empty);
+								string config = string.Join(Environment.NewLine, DatabasesConfigurations.BuildConfiguration(version), ServiceConfiguration?.BuildConfiguration(version) ?? string.Empty);
 
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
@@ -82,33 +82,17 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 				}
 		}
 
-		public void Stop(int sessionID) {
-				DoSimpleAction(IscCodes.isc_action_svc_trace_stop, sessionID);
-		}
-		public Task StopAsync(int sessionID, CancellationToken cancellationToken = default) {
-				return DoSimpleActionAsync(IscCodes.isc_action_svc_trace_stop, sessionID, cancellationToken);
-		}
+		public void Stop(int sessionID) => DoSimpleAction(IscCodes.isc_action_svc_trace_stop, sessionID);
+		public Task StopAsync(int sessionID, CancellationToken cancellationToken = default) => DoSimpleActionAsync(IscCodes.isc_action_svc_trace_stop, sessionID, cancellationToken);
 
-		public void Suspend(int sessionID) {
-				DoSimpleAction(IscCodes.isc_action_svc_trace_suspend, sessionID);
-		}
-		public Task SuspendAsync(int sessionID, CancellationToken cancellationToken = default) {
-				return DoSimpleActionAsync(IscCodes.isc_action_svc_trace_suspend, sessionID, cancellationToken);
-		}
+		public void Suspend(int sessionID) => DoSimpleAction(IscCodes.isc_action_svc_trace_suspend, sessionID);
+		public Task SuspendAsync(int sessionID, CancellationToken cancellationToken = default) => DoSimpleActionAsync(IscCodes.isc_action_svc_trace_suspend, sessionID, cancellationToken);
 
-		public void Resume(int sessionID) {
-				DoSimpleAction(IscCodes.isc_action_svc_trace_resume, sessionID);
-		}
-		public Task ResumeAsync(int sessionID, CancellationToken cancellationToken = default) {
-				return DoSimpleActionAsync(IscCodes.isc_action_svc_trace_resume, sessionID, cancellationToken);
-		}
+		public void Resume(int sessionID) => DoSimpleAction(IscCodes.isc_action_svc_trace_resume, sessionID);
+		public Task ResumeAsync(int sessionID, CancellationToken cancellationToken = default) => DoSimpleActionAsync(IscCodes.isc_action_svc_trace_resume, sessionID, cancellationToken);
 
-		public void List() {
-				DoSimpleAction(IscCodes.isc_action_svc_trace_list, null);
-		}
-		public Task ListAsync(CancellationToken cancellationToken = default) {
-				return DoSimpleActionAsync(IscCodes.isc_action_svc_trace_list, null, cancellationToken);
-		}
+		public void List() => DoSimpleAction(IscCodes.isc_action_svc_trace_list, null);
+		public Task ListAsync(CancellationToken cancellationToken = default) => DoSimpleActionAsync(IscCodes.isc_action_svc_trace_list, null, cancellationToken);
 
 		void DoSimpleAction(int action, int? sessionID) {
 				try {
@@ -152,17 +136,11 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 		FbTraceVersion DetectVersion() {
 				var serverProperties = new FbServerProperties(ConnectionString);
 				var serverVersion = FbServerProperties.ParseServerVersion(serverProperties.GetServerVersion());
-				if(serverVersion < new Version(3, 0, 0, 0))
-						return FbTraceVersion.Version1;
-				else
-						return FbTraceVersion.Version2;
+				return serverVersion < new Version(3, 0, 0, 0) ? FbTraceVersion.Version1 : FbTraceVersion.Version2;
 		}
 		async Task<FbTraceVersion> DetectVersionAsync(CancellationToken cancellationToken = default) {
 				var serverProperties = new FbServerProperties(ConnectionString);
 				var serverVersion = FbServerProperties.ParseServerVersion(await serverProperties.GetServerVersionAsync(cancellationToken).ConfigureAwait(false));
-				if(serverVersion < new Version(3, 0, 0, 0))
-						return FbTraceVersion.Version1;
-				else
-						return FbTraceVersion.Version2;
+				return serverVersion < new Version(3, 0, 0, 0) ? FbTraceVersion.Version1 : FbTraceVersion.Version2;
 		}
 }

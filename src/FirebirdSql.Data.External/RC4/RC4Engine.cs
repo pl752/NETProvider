@@ -46,9 +46,7 @@ namespace Org.BouncyCastle.Crypto.Engines {
 						throw new ArgumentException("invalid parameter passed to RC4 init");
 				}
 
-				public virtual string AlgorithmName {
-						get { return "RC4"; }
-				}
+				public virtual string AlgorithmName => "RC4";
 
 				public virtual byte ReturnByte(
 			byte input) {
@@ -88,9 +86,7 @@ namespace Org.BouncyCastle.Crypto.Engines {
 						}
 				}
 
-				public virtual void Reset() {
-						SetKey(workingKey);
-				}
+				public virtual void Reset() => SetKey(workingKey);
 
 				// Private implementation
 

@@ -26,7 +26,7 @@ internal static class IscHelper {
 		public static List<object> ParseDatabaseInfo(byte[] buffer, Charset charset) {
 				var info = new List<object>();
 
-				var pos = 0;
+				int pos = 0;
 				int type;
 				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
 						int length = (int)VaxInteger(buffer, pos, 2);
@@ -96,10 +96,10 @@ internal static class IscHelper {
 										break;
 
 								case IscCodes.isc_info_db_id: {
-												var dbFile = charset.GetString(buffer, pos + 2, buffer[pos + 1]);
-												var sitePos = pos + 2 + buffer[pos + 1];
+												string dbFile = charset.GetString(buffer, pos + 2, buffer[pos + 1]);
+												int sitePos = pos + 2 + buffer[pos + 1];
 												int siteLength = buffer[sitePos];
-												var siteName = charset.GetString(buffer, sitePos + 1, siteLength);
+												string siteName = charset.GetString(buffer, sitePos + 1, siteLength);
 
 												sitePos += siteLength + 1;
 												siteLength = buffer[sitePos];
@@ -115,10 +115,10 @@ internal static class IscHelper {
 
 								case IscCodes.isc_info_isc_version:
 								case IscCodes.isc_info_firebird_version: {
-												var messagePosition = pos;
-												var count = buffer[messagePosition];
-												for(var i = 0; i < count; i++) {
-														var messageLength = buffer[messagePosition + 1];
+												int messagePosition = pos;
+												byte count = buffer[messagePosition];
+												for(int i = 0; i < count; i++) {
+														byte messageLength = buffer[messagePosition + 1];
 														info.Add(charset.GetString(buffer, messagePosition + 2, messageLength));
 														messagePosition += 1 + messageLength;
 												}
@@ -126,7 +126,7 @@ internal static class IscHelper {
 										break;
 
 								case IscCodes.isc_info_db_class: {
-												var serverClass = VaxInteger(buffer, pos, length);
+												long serverClass = VaxInteger(buffer, pos, length);
 												info.Add(serverClass switch {
 														IscCodes.isc_info_db_class_classic_access => "CLASSIC SERVER",
 														IscCodes.isc_info_db_class_server_access => "SUPER SERVER",
@@ -143,7 +143,7 @@ internal static class IscHelper {
 										break;
 
 								case IscCodes.fb_info_replica_mode: {
-												var mode = VaxInteger(buffer, pos, length);
+												long mode = VaxInteger(buffer, pos, length);
 												info.Add(mode switch {
 														0 => "NONE",
 														1 => "READ ONLY",
@@ -156,7 +156,7 @@ internal static class IscHelper {
 								case IscCodes.fb_info_creation_timestamp_tz: {
 												var date = TypeDecoder.DecodeDate((int)VaxInteger(buffer, pos, 4));
 												var time = TypeDecoder.DecodeTime((int)VaxInteger(buffer, pos + 4, 4));
-												var tzId = (ushort)VaxInteger(buffer, pos + 4 + 4, 4);
+												ushort tzId = (ushort)VaxInteger(buffer, pos + 4 + 4, 4);
 												var dt = date.Add(time);
 												dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 												info.Add(TypeHelper.CreateZonedDateTime(dt, tzId, null));
@@ -176,7 +176,7 @@ internal static class IscHelper {
 		public static List<object> ParseTransactionInfo(byte[] buffer, Charset charset) {
 				var info = new List<object>();
 
-				var pos = 0;
+				int pos = 0;
 				int type;
 				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
 						int length = (int)VaxInteger(buffer, pos, 2);
@@ -201,9 +201,9 @@ internal static class IscHelper {
 		}
 
 		public static long VaxInteger(byte[] buffer, int index, int length) {
-				var value = 0L;
-				var shift = 0;
-				var i = index;
+				long value = 0L;
+				int shift = 0;
+				int i = index;
 				while(--length >= 0) {
 						value += (buffer[i++] & 0xffL) << shift;
 						shift += 8;
@@ -212,9 +212,9 @@ internal static class IscHelper {
 		}
 
 		public static long VaxInteger(ReadOnlySpan<byte> buffer, int index, int length) {
-				var value = 0L;
-				var shift = 0;
-				var i = index;
+				long value = 0L;
+				int shift = 0;
+				int i = index;
 				while(--length >= 0) {
 						value += (buffer[i++] & 0xffL) << shift;
 						shift += 8;

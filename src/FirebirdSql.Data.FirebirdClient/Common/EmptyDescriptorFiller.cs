@@ -27,7 +27,5 @@ internal sealed class EmptyDescriptorFiller : IDescriptorFiller {
 
 		public void Fill(Descriptor descriptor, int index) { }
 
-		public ValueTask FillAsync(Descriptor descriptor, int index, CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		public ValueTask FillAsync(Descriptor descriptor, int index, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 }

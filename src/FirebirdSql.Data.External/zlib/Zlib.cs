@@ -283,9 +283,7 @@ namespace Ionic.Zlib {
 				/// <param name="number">Number to operate on</param>
 				/// <param name="bits">Ammount of bits to shift</param>
 				/// <returns>The resulting number from the shift operation</returns>
-				public static int URShift(int number, int bits) {
-						return (int)((uint)number >> bits);
-				}
+				public static int URShift(int number, int bits) => (int)((uint)number >> bits);
 
 #if NOT
         /// <summary>
@@ -334,14 +332,10 @@ namespace Ionic.Zlib {
 				}
 
 
-				internal static byte[] ToByteArray(System.String sourceString) {
-						return System.Text.UTF8Encoding.UTF8.GetBytes(sourceString);
-				}
+				internal static byte[] ToByteArray(System.String sourceString) => System.Text.UTF8Encoding.UTF8.GetBytes(sourceString);
 
 
-				internal static char[] ToCharArray(byte[] byteArray) {
-						return System.Text.UTF8Encoding.UTF8.GetChars(byteArray);
-				}
+				internal static char[] ToCharArray(byte[] byteArray) => System.Text.UTF8Encoding.UTF8.GetChars(byteArray);
 		}
 
 		internal static class InternalConstants {
@@ -350,7 +344,7 @@ namespace Ionic.Zlib {
 				internal static readonly int D_CODES = 30;
 				internal static readonly int LITERALS = 256;
 				internal static readonly int LENGTH_CODES = 29;
-				internal static readonly int L_CODES = (LITERALS + 1 + LENGTH_CODES);
+				internal static readonly int L_CODES = LITERALS + 1 + LENGTH_CODES;
 
 				// Bit length codes must not exceed MAX_BL_BITS bits
 				internal static readonly int MAX_BL_BITS = 7;

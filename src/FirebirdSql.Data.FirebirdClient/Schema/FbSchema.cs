@@ -91,21 +91,21 @@ internal abstract class FbSchema {
 
 		protected FbCommand BuildCommand(FbConnection connection, string collectionName, string[] restrictions) {
 				SetMajorVersionNumber(connection);
-				var filter = string.Format("CollectionName='{0}'", collectionName);
+				string filter = string.Format("CollectionName='{0}'", collectionName);
 				var builder = GetCommandText(restrictions);
 				var restriction = connection.GetSchema(DbMetaDataCollectionNames.Restrictions).Select(filter);
 				var transaction = connection.InnerConnection.ActiveTransaction;
 				var command = new FbCommand(builder.ToString(), connection, transaction);
 
 				if(restrictions != null && restrictions.Length > 0) {
-						var index = 0;
+						int index = 0;
 
-						for(var i = 0; i < restrictions.Length; i++) {
-								var rname = restriction[i]["RestrictionName"].ToString();
+						for(int i = 0; i < restrictions.Length; i++) {
+								string rname = restriction[i]["RestrictionName"].ToString();
 								if(restrictions[i] != null) {
 										// Catalog, Schema and TableType are no real restrictions
 										if(!rname.EndsWith("Catalog") && !rname.EndsWith("Schema") && rname != "TableType") {
-												var pname = string.Format("@p{0}", index++);
+												string pname = string.Format("@p{0}", index++);
 
 												command.Parameters.Add(pname, FbDbType.VarChar, 255).Value = restrictions[i];
 										}
@@ -119,9 +119,7 @@ internal abstract class FbSchema {
 
 		protected virtual void ProcessResult(DataTable schema) { }
 
-		protected virtual string[] ParseRestrictions(string[] restrictions) {
-				return restrictions;
-		}
+		protected virtual string[] ParseRestrictions(string[] restrictions) => restrictions;
 
 		#endregion
 
@@ -142,7 +140,7 @@ internal abstract class FbSchema {
 				schema.BeginLoadData();
 
 				foreach(DataRow row in schema.Rows) {
-						for(var i = 0; i < schema.Columns.Count; i++) {
+						for(int i = 0; i < schema.Columns.Count; i++) {
 								if(!row.IsNull(schema.Columns[i]) &&
 									schema.Columns[i].DataType == typeof(System.String)) {
 										row[schema.Columns[i]] = row[schema.Columns[i]].ToString().Trim();

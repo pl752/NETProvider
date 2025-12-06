@@ -26,7 +26,7 @@ internal class FbCollations : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS COLLATION_CATALOG,
 					null AS COLLATION_SCHEMA,
@@ -37,7 +37,7 @@ internal class FbCollations : FbSchema {
 					LEFT JOIN rdb$character_sets cs ON coll.rdb$character_set_id = cs.rdb$character_set_id");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* COLLATION_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -49,15 +49,15 @@ internal class FbCollations : FbSchema {
 
 						/* COLLATION_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("coll.rdb$collation_name = @p{0}", index++);
+								_ = where.AppendFormat("coll.rdb$collation_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY CHARACTER_SET_NAME, COLLATION_NAME");
+				_ = sql.Append(" ORDER BY CHARACTER_SET_NAME, COLLATION_NAME");
 
 				return sql;
 		}

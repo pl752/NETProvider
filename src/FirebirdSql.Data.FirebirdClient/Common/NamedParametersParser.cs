@@ -31,21 +31,21 @@ internal static class NamedParametersParser {
 				}
 
 				var namedParameters = new List<string>();
-				var inSingleQuotes = false;
-				var inDoubleQuotes = false;
-				var inParam = false;
-				for(var i = 0; i < sql.Length; i++) {
-						var sym = sql[i];
+				bool inSingleQuotes = false;
+				bool inDoubleQuotes = false;
+				bool inParam = false;
+				for(int i = 0; i < sql.Length; i++) {
+						char sym = sql[i];
 
 						if(inParam) {
 								if(char.IsLetterOrDigit(sym) || sym == '_' || sym == '$') {
-										paramBuilder.Append(sym);
+										_ = paramBuilder.Append(sym);
 								}
 								else {
 										namedParameters.Add(paramBuilder.ToString());
 										paramBuilder.Length = 0;
-										sqlBuilder.Append('?');
-										sqlBuilder.Append(sym);
+										_ = sqlBuilder.Append('?');
+										_ = sqlBuilder.Append(sym);
 										inParam = false;
 								}
 						}
@@ -58,17 +58,17 @@ internal static class NamedParametersParser {
 								}
 								else if(!(inSingleQuotes || inDoubleQuotes) && sym == '@') {
 										inParam = true;
-										paramBuilder.Append(sym);
+										_ = paramBuilder.Append(sym);
 										continue;
 								}
 
-								sqlBuilder.Append(sym);
+								_ = sqlBuilder.Append(sym);
 						}
 				}
 
 				if(inParam) {
 						namedParameters.Add(paramBuilder.ToString());
-						sqlBuilder.Append('?');
+						_ = sqlBuilder.Append('?');
 				}
 
 				return (sqlBuilder.ToString(), namedParameters);

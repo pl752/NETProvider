@@ -37,23 +37,20 @@ public class FbScript {
 		/// Returns a FbStatementCollection containing all the SQL statements (without comments) present on the file.
 		/// This property is loaded after the method call <see cref="Parse"/>.
 		/// </summary>
-		public FbStatementCollection Results {
-				get { return _results; }
-		}
+		public FbStatementCollection Results => _results;
 
 		/// <summary>
 		/// Creates FbScript reading content from file.
 		/// </summary>
-		public static FbScript LoadFromFile(string fileName) {
-				return new FbScript(File.ReadAllText(fileName));
-		}
+		public static FbScript LoadFromFile(string fileName) => new FbScript(File.ReadAllText(fileName));
 
 		public FbScript(string script) {
 				ArgumentNullException.ThrowIfNull(script);
 
-				_results = new FbStatementCollection();
-				_parser = new SqlStringParser(script);
-				_parser.Tokens = [";"];
+				_results = [];
+				_parser = new SqlStringParser(script) {
+						Tokens = [";"]
+				};
 		}
 
 		/// <summary>
@@ -63,7 +60,7 @@ public class FbScript {
 		public int Parse() {
 				_results.Clear();
 				foreach(var statement in _parser.Parse()) {
-						if(IsSetTermStatement(statement.CleanText, out var newParserToken)) {
+						if(IsSetTermStatement(statement.CleanText, out string newParserToken)) {
 								_parser.Tokens = [newParserToken];
 								continue;
 						}

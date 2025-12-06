@@ -50,7 +50,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 
 		[DefaultValue("")]
 		public override string ParameterName {
-				get { return _parameterName; }
+				get => _parameterName;
 				set {
 						_parameterName = value;
 						_internalParameterName = NormalizeParameterName(_parameterName);
@@ -62,9 +62,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 		[Category("Data")]
 		[DefaultValue(0)]
 		public override int Size {
-				get {
-						return (HasSize ? _size : RealValueSize ?? 0);
-				}
+				get => HasSize ? _size : RealValueSize ?? 0;
 				set {
 						ArgumentOutOfRangeException.ThrowIfNegative(value);
 
@@ -80,48 +78,38 @@ public sealed class FbParameter : DbParameter, ICloneable {
 
 		[Category("Data")]
 		[DefaultValue(ParameterDirection.Input)]
-		public override ParameterDirection Direction {
-				get { return _direction; }
-				set { _direction = value; }
+		public override ParameterDirection Direction { get => _direction; set => _direction = value;
 		}
 
 		[Browsable(false)]
 		[DesignOnly(true)]
 		[DefaultValue(false)]
 		[EditorBrowsable(EditorBrowsableState.Advanced)]
-		public override bool IsNullable {
-				get { return _isNullable; }
-				set { _isNullable = value; }
+		public override bool IsNullable { get => _isNullable; set => _isNullable = value;
 		}
 
 		[Category("Data")]
 		[DefaultValue("")]
-		public override string SourceColumn {
-				get { return _sourceColumn; }
-				set { _sourceColumn = value; }
+		public override string SourceColumn { get => _sourceColumn; set => _sourceColumn = value;
 		}
 
 		[Category("Data")]
 		[DefaultValue(DataRowVersion.Current)]
-		public override DataRowVersion SourceVersion {
-				get { return _sourceVersion; }
-				set { _sourceVersion = value; }
+		public override DataRowVersion SourceVersion { get => _sourceVersion; set => _sourceVersion = value;
 		}
 
 		[Browsable(false)]
 		[Category("Data")]
 		[RefreshProperties(RefreshProperties.All)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override DbType DbType {
-				get { return TypeHelper.GetDbTypeFromDbDataType((DbDataType)_fbDbType); }
-				set { FbDbType = (FbDbType)TypeHelper.GetDbDataTypeFromDbType(value); }
+		public override DbType DbType { get => TypeHelper.GetDbTypeFromDbDataType((DbDataType)_fbDbType); set => FbDbType = (FbDbType)TypeHelper.GetDbDataTypeFromDbType(value);
 		}
 
 		[RefreshProperties(RefreshProperties.All)]
 		[Category("Data")]
 		[DefaultValue(FbDbType.VarChar)]
 		public FbDbType FbDbType {
-				get { return _fbDbType; }
+				get => _fbDbType;
 				set {
 						_fbDbType = value;
 						IsTypeSet = true;
@@ -131,12 +119,12 @@ public sealed class FbParameter : DbParameter, ICloneable {
 		[Category("Data")]
 		[TypeConverter(typeof(StringConverter)), DefaultValue(null)]
 		public override object Value {
-				get { return _value; }
+				get => _value;
 				set {
 						value ??= DBNull.Value;
 
 						if(FbDbType == FbDbType.Guid && value != null &&
-							value != DBNull.Value && !(value is Guid) && !(value is byte[])) {
+							value != DBNull.Value && value is not Guid && value is not byte[]) {
 								throw new InvalidOperationException("Incorrect Guid value.");
 						}
 
@@ -150,14 +138,10 @@ public sealed class FbParameter : DbParameter, ICloneable {
 
 		[Category("Data")]
 		[DefaultValue(FbCharset.Default)]
-		public FbCharset Charset {
-				get { return _charset; }
-				set { _charset = value; }
+		public FbCharset Charset { get => _charset; set => _charset = value;
 		}
 
-		public override bool SourceColumnNullMapping {
-				get { return _sourceColumnNullMapping; }
-				set { _sourceColumnNullMapping = value; }
+		public override bool SourceColumnNullMapping { get => _sourceColumnNullMapping; set => _sourceColumnNullMapping = value;
 		}
 
 		#endregion
@@ -166,16 +150,12 @@ public sealed class FbParameter : DbParameter, ICloneable {
 
 		[Category("Data")]
 		[DefaultValue((byte)0)]
-		public override byte Precision {
-				get { return _precision; }
-				set { _precision = value; }
+		public override byte Precision { get => _precision; set => _precision = value;
 		}
 
 		[Category("Data")]
 		[DefaultValue((byte)0)]
-		public override byte Scale {
-				get { return _scale; }
-				set { _scale = value; }
+		public override byte Scale { get => _scale; set => _scale = value;
 		}
 
 		#endregion
@@ -183,7 +163,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 		#region Internal Properties
 
 		internal FbParameterCollection Parent {
-				get { return _parent; }
+				get => _parent;
 				set {
 						_parent?.ParameterNameChanged();
 						_parent = value;
@@ -191,11 +171,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 				}
 		}
 
-		internal string InternalParameterName {
-				get {
-						return _internalParameterName;
-				}
-		}
+		internal string InternalParameterName => _internalParameterName;
 
 		internal bool IsTypeSet { get; private set; }
 
@@ -205,7 +181,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 								case string svalue:
 										return svalue[..Math.Min(Size, svalue.Length)];
 								case byte[] bvalue:
-										var result = new byte[Math.Min(Size, bvalue.Length)];
+										byte[] result = new byte[Math.Min(Size, bvalue.Length)];
 										Array.Copy(bvalue, result, result.Length);
 										return result;
 								default:
@@ -214,9 +190,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 				}
 		}
 
-		internal bool HasSize {
-				get { return _size != default; }
-		}
+		internal bool HasSize => _size != default;
 
 		#endregion
 
@@ -287,8 +261,7 @@ public sealed class FbParameter : DbParameter, ICloneable {
 		#endregion
 
 		#region ICloneable Methods
-		object ICloneable.Clone() {
-				return new FbParameter(
+		object ICloneable.Clone() => new FbParameter(
 					_parameterName,
 					_fbDbType,
 					_size,
@@ -299,21 +272,16 @@ public sealed class FbParameter : DbParameter, ICloneable {
 					_sourceColumn,
 					_sourceVersion,
 					_value) {
-						Charset = _charset
-				};
-		}
+				Charset = _charset
+		};
 
 		#endregion
 
 		#region DbParameter methods
 
-		public override string ToString() {
-				return _parameterName;
-		}
+		public override string ToString() => _parameterName;
 
-		public override void ResetDbType() {
-				throw new NotImplementedException();
-		}
+		public override void ResetDbType() => throw new NotImplementedException();
 
 		#endregion
 
@@ -330,36 +298,27 @@ public sealed class FbParameter : DbParameter, ICloneable {
 
 		private int? RealValueSize {
 				get {
-						var svalue = (_value as string);
+						string svalue = _value as string;
 						if(svalue != null) {
 								return svalue.Length;
 						}
-						var bvalue = (_value as byte[]);
-						if(bvalue != null) {
-								return bvalue.Length;
-						}
-						return null;
+						byte[] bvalue = _value as byte[];
+						return bvalue?.Length;
 				}
 		}
 
-		internal bool IsUnicodeParameterName {
-				get {
-						return _isUnicodeParameterName;
-				}
-		}
+		internal bool IsUnicodeParameterName => _isUnicodeParameterName;
 
 		#endregion
 
 		#region Static Methods
 
-		internal static string NormalizeParameterName(string parameterName) {
-				return string.IsNullOrEmpty(parameterName) || parameterName[0] == '@'
+		internal static string NormalizeParameterName(string parameterName) => string.IsNullOrEmpty(parameterName) || parameterName[0] == '@'
 					? parameterName
 					: "@" + parameterName;
-		}
 
 		internal static bool IsNonAsciiParameterName(string parameterName) {
-				var isAscii = string.IsNullOrWhiteSpace(parameterName)
+				bool isAscii = string.IsNullOrWhiteSpace(parameterName)
 					|| Encoding.UTF8.GetByteCount(parameterName) == parameterName.Length;
 				return !isAscii;
 		}

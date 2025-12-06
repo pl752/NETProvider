@@ -26,25 +26,25 @@ internal class FbRoles : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					rdb$role_name AS ROLE_NAME,
 					rdb$owner_name AS OWNER_NAME
 				FROM rdb$roles");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
-								where.AppendFormat("rdb$role_name = @p{0}", index++);
+								_ = where.AppendFormat("rdb$role_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY ROLE_NAME");
+				_ = sql.Append(" ORDER BY ROLE_NAME");
 
 				return sql;
 		}

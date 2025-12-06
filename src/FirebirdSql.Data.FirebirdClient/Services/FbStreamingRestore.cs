@@ -29,7 +29,7 @@ namespace FirebirdSql.Data.Services;
 public class FbStreamingRestore(string connectionString = null) : FbService(connectionString) {
 		private int? _pageSize;
 		public int? PageSize {
-				get { return _pageSize; }
+				get => _pageSize;
 				set {
 						if(value is int v && !SizeHelper.IsValidPageSize(v))
 								throw SizeHelper.InvalidSizeException("page size");
@@ -118,14 +118,14 @@ public class FbStreamingRestore(string connectionString = null) : FbService(conn
 		}
 
 		void ReadInput() {
-				var items = new byte[] { IscCodes.isc_info_svc_stdin, IscCodes.isc_info_svc_line };
+				byte[] items = [IscCodes.isc_info_svc_stdin, IscCodes.isc_info_svc_line];
 				var spb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				var response = Query(items, spb);
-				var requestedLength = GetLength(response);
+				int requestedLength = GetLength(response);
 				while(true) {
 						if(requestedLength > 0) {
-								var data = new byte[requestedLength];
-								var read = InputStream.Read(data, 0, requestedLength);
+								byte[] data = new byte[requestedLength];
+								int read = InputStream.Read(data, 0, requestedLength);
 								if(read > 0) {
 										Array.Resize(ref data, read);
 										spb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
@@ -144,14 +144,14 @@ public class FbStreamingRestore(string connectionString = null) : FbService(conn
 				}
 		}
 		async Task ReadInputAsync(CancellationToken cancellationToken = default) {
-				var items = new byte[] { IscCodes.isc_info_svc_stdin, IscCodes.isc_info_svc_line };
+				byte[] items = [IscCodes.isc_info_svc_stdin, IscCodes.isc_info_svc_line];
 				var spb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				var response = await QueryAsync(items, spb, cancellationToken).ConfigureAwait(false);
-				var requestedLength = GetLength(response);
+				int requestedLength = GetLength(response);
 				while(true) {
 						if(requestedLength > 0) {
-								var data = new byte[requestedLength];
-								var read = await InputStream.ReadAsync(data, 0, requestedLength).ConfigureAwait(false);
+								byte[] data = new byte[requestedLength];
+								int read = await InputStream.ReadAsync(data, 0, requestedLength).ConfigureAwait(false);
 								if(read > 0) {
 										Array.Resize(ref data, read);
 										spb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);

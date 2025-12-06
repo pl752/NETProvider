@@ -32,8 +32,8 @@ internal static class XsqldaMarshaler {
 
 						Marshal.DestroyStructure<XSQLDA>(pNativeData);
 
-						for(var i = 0; i < xsqlda.sqln; i++) {
-								var ptr = IntPtr.Add(pNativeData, ComputeLength(i));
+						for(int i = 0; i < xsqlda.sqln; i++) {
+								nint ptr = IntPtr.Add(pNativeData, ComputeLength(i));
 
 								var sqlvar = new XSQLVAR();
 								MarshalXSQLVARNativeToManaged(ptr, sqlvar, true);
@@ -66,7 +66,7 @@ internal static class XsqldaMarshaler {
 
 				var xsqlvar = new XSQLVAR[descriptor.Count];
 
-				for(var i = 0; i < xsqlvar.Length; i++) {
+				for(int i = 0; i < xsqlvar.Length; i++) {
 						xsqlvar[i] = new XSQLVAR {
 								sqltype = descriptor[i].DataType,
 								sqlscale = descriptor[i].NumericScale,
@@ -76,7 +76,7 @@ internal static class XsqldaMarshaler {
 
 
 						if(descriptor[i].HasDataType() && descriptor[i].DbDataType != DbDataType.Null) {
-								var buffer = descriptor[i].DbValue.GetBytes();
+								byte[] buffer = descriptor[i].DbValue.GetBytes();
 								xsqlvar[i].sqldata = Marshal.AllocHGlobal(buffer.Length);
 								Marshal.Copy(buffer, 0, xsqlvar[i].sqldata, buffer.Length);
 						}
@@ -104,22 +104,20 @@ internal static class XsqldaMarshaler {
 		}
 
 		public static IntPtr MarshalManagedToNative(XSQLDA xsqlda, XSQLVAR[] xsqlvar) {
-				var size = ComputeLength(xsqlda.sqln);
-				var ptr = Marshal.AllocHGlobal(size);
+				int size = ComputeLength(xsqlda.sqln);
+				nint ptr = Marshal.AllocHGlobal(size);
 
 				Marshal.StructureToPtr(xsqlda, ptr, true);
 
-				for(var i = 0; i < xsqlvar.Length; i++) {
-						var offset = ComputeLength(i);
+				for(int i = 0; i < xsqlvar.Length; i++) {
+						int offset = ComputeLength(i);
 						Marshal.StructureToPtr(xsqlvar[i], IntPtr.Add(ptr, offset), true);
 				}
 
 				return ptr;
 		}
 
-		public static Descriptor MarshalNativeToManaged(Charset charset, IntPtr pNativeData) {
-				return MarshalNativeToManaged(charset, pNativeData, false);
-		}
+		public static Descriptor MarshalNativeToManaged(Charset charset, IntPtr pNativeData) => MarshalNativeToManaged(charset, pNativeData, false);
 
 		public static Descriptor MarshalNativeToManaged(Charset charset, IntPtr pNativeData, bool fetching) {
 				var xsqlda = Marshal.PtrToStructure<XSQLDA>(pNativeData);
@@ -127,8 +125,8 @@ internal static class XsqldaMarshaler {
 				var descriptor = new Descriptor(xsqlda.sqln) { ActualCount = xsqlda.sqld };
 
 				var xsqlvar = new XSQLVAR();
-				for(var i = 0; i < xsqlda.sqln; i++) {
-						var ptr = IntPtr.Add(pNativeData, ComputeLength(i));
+				for(int i = 0; i < xsqlda.sqln; i++) {
+						nint ptr = IntPtr.Add(pNativeData, ComputeLength(i));
 						MarshalXSQLVARNativeToManaged(ptr, xsqlvar);
 
 						descriptor[i].DataType = xsqlvar.sqltype;
@@ -213,7 +211,7 @@ internal static class XsqldaMarshaler {
 		}
 
 		private static int ComputeLength(int n) {
-				var length = (SizeOfXSQLDA + n * SizeOfXSQLVAR);
+				int length = SizeOfXSQLDA + n * SizeOfXSQLVAR;
 				if(IntPtr.Size == 8) {
 						length += 4;
 				}
@@ -225,11 +223,11 @@ internal static class XsqldaMarshaler {
 						return null;
 				}
 
-				var type = xsqlvar.sqltype & ~1;
+				int type = xsqlvar.sqltype & ~1;
 				switch(type) {
 						case IscCodes.SQL_VARYING: {
-										var buffer = new byte[Marshal.ReadInt16(xsqlvar.sqldata)];
-										var tmp = IntPtr.Add(xsqlvar.sqldata, 2);
+										byte[] buffer = new byte[Marshal.ReadInt16(xsqlvar.sqldata)];
+										nint tmp = IntPtr.Add(xsqlvar.sqldata, 2);
 										Marshal.Copy(tmp, buffer, 0, buffer.Length);
 										return buffer;
 								}
@@ -254,7 +252,7 @@ internal static class XsqldaMarshaler {
 						case IscCodes.SQL_DEC16:
 						case IscCodes.SQL_DEC34:
 						case IscCodes.SQL_INT128: {
-										var buffer = new byte[xsqlvar.sqllen];
+										byte[] buffer = new byte[xsqlvar.sqllen];
 										Marshal.Copy(xsqlvar.sqldata, buffer, 0, buffer.Length);
 										return buffer;
 								}
@@ -264,17 +262,15 @@ internal static class XsqldaMarshaler {
 		}
 
 		private static byte[] GetStringBuffer(Charset charset, string value) {
-				var buffer = new byte[32];
-				charset.GetBytes(value, 0, value.Length, buffer, 0);
+				byte[] buffer = new byte[32];
+				_ = charset.GetBytes(value, 0, value.Length, buffer, 0);
 				return buffer;
 		}
 
 		private static string GetString(Charset charset, byte[] buffer) {
-				var value = charset.GetString(buffer);
+				string value = charset.GetString(buffer);
 				return value.TrimEnd('\0', ' ');
 		}
 
-		private static string GetString(Charset charset, byte[] buffer, short bufferLength) {
-				return charset.GetString(buffer, 0, bufferLength);
-		}
+		private static string GetString(Charset charset, byte[] buffer, short bufferLength) => charset.GetString(buffer, 0, bufferLength);
 }

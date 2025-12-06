@@ -122,7 +122,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 						Xdr.WriteBuffer(AuthBlock.UserIdentificationData());
 
-						var priority = 0;
+						int priority = 0;
 						foreach(var protocol in protocols) {
 								Xdr.Write(protocol.Version);
 								Xdr.Write(IscCodes.GenericAchitectureClient);
@@ -134,10 +134,10 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 						Xdr.Flush();
 
-						var operation = Xdr.ReadOperation();
+						int operation = Xdr.ReadOperation();
 						while(operation == IscCodes.op_crypt_key_callback) {
-								var data = Xdr.ReadBuffer();
-								var size = Xdr.ReadInt32();
+								byte[] data = Xdr.ReadBuffer();
+								int size = Xdr.ReadInt32();
 
 								Xdr.Write(IscCodes.op_crypt_key_callback);
 								Xdr.WriteBuffer(CryptKey);
@@ -145,7 +145,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 								Xdr.Flush();
 								operation = Xdr.ReadOperation();
 						}
-						if(operation == IscCodes.op_accept || operation == IscCodes.op_cond_accept || operation == IscCodes.op_accept_data) {
+						if(operation is IscCodes.op_accept or IscCodes.op_cond_accept or IscCodes.op_accept_data) {
 								ProtocolVersion = Xdr.ReadInt32();
 								ProtocolArchitecture = Xdr.ReadInt32();
 								ProtocolMinimunType = Xdr.ReadInt32();
@@ -158,7 +158,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										Compression = false;
 								}
 
-								if(operation == IscCodes.op_cond_accept || operation == IscCodes.op_accept_data) {
+								if(operation is IscCodes.op_cond_accept or IscCodes.op_accept_data) {
 										AuthBlock.Start(
 											Xdr.ReadBuffer(),
 											Xdr.ReadString(),
@@ -220,7 +220,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 						await Xdr.WriteBufferAsync(AuthBlock.UserIdentificationData(), cancellationToken).ConfigureAwait(false);
 
-						var priority = 0;
+						int priority = 0;
 						foreach(var protocol in protocols) {
 								await Xdr.WriteAsync(protocol.Version, cancellationToken).ConfigureAwait(false);
 								await Xdr.WriteAsync(IscCodes.GenericAchitectureClient, cancellationToken).ConfigureAwait(false);
@@ -232,10 +232,10 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var operation = await Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+						int operation = await Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 						while(operation == IscCodes.op_crypt_key_callback) {
-								var data = await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false);
-								var size = await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+								byte[] data = await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false);
+								int size = await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 
 								await Xdr.WriteAsync(IscCodes.op_crypt_key_callback, cancellationToken).ConfigureAwait(false);
 								await Xdr.WriteBufferAsync(CryptKey, cancellationToken).ConfigureAwait(false);
@@ -243,7 +243,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 								await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 								operation = await Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 						}
-						if(operation == IscCodes.op_accept || operation == IscCodes.op_cond_accept || operation == IscCodes.op_accept_data) {
+						if(operation is IscCodes.op_accept or IscCodes.op_cond_accept or IscCodes.op_accept_data) {
 								ProtocolVersion = await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 								ProtocolArchitecture = await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 								ProtocolMinimunType = await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
@@ -256,7 +256,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										Compression = false;
 								}
 
-								if(operation == IscCodes.op_cond_accept || operation == IscCodes.op_accept_data) {
+								if(operation is IscCodes.op_cond_accept or IscCodes.op_accept_data) {
 										AuthBlock.Start(
 											await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false),
 											await Xdr.ReadStringAsync(cancellationToken).ConfigureAwait(false),
@@ -310,8 +310,8 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 #else
 						_networkStream.Dispose();
 #endif
-						_networkStream = null;
-				}
+				_networkStream = null;
+		}
 		}
 		public async ValueTask DisconnectAsync(CancellationToken cancellationToken = default) {
 				if(_networkStream != null) {
@@ -348,16 +348,13 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										Xdr.ReadBuffer());
 
 						case IscCodes.op_crypt_key_callback:
-								if(ProtocolVersion == IscCodes.PROTOCOL_VERSION15
-									|| ProtocolVersion == IscCodes.PROTOCOL_VERSION16) {
-										return new Version15.CryptKeyCallbackResponse(
+								return ProtocolVersion is IscCodes.PROTOCOL_VERSION15
+									or IscCodes.PROTOCOL_VERSION16
+										? new Version15.CryptKeyCallbackResponse(
 												Xdr.ReadBuffer(),
-												Xdr.ReadInt32());
-								}
-								else {
-										return new Version13.CryptKeyCallbackResponse(
+												Xdr.ReadInt32())
+										: new Version13.CryptKeyCallbackResponse(
 												Xdr.ReadBuffer());
-								}
 
 						case IscCodes.op_cont_auth:
 								return new Version13.ContAuthResponse(
@@ -367,26 +364,26 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										Xdr.ReadBuffer());
 
 						case IscCodes.op_batch_cs:
-								var statementHandle = Xdr.ReadInt16();
-								var p_batch_reccount = Xdr.ReadInt32();
-								var p_batch_updates = Xdr.ReadInt32();
-								var p_batch_vectors = Xdr.ReadInt32();
-								var p_batch_errors = Xdr.ReadInt32();
+								short statementHandle = Xdr.ReadInt16();
+								int p_batch_reccount = Xdr.ReadInt32();
+								int p_batch_updates = Xdr.ReadInt32();
+								int p_batch_vectors = Xdr.ReadInt32();
+								int p_batch_errors = Xdr.ReadInt32();
 
-								var p_batch_updates_data = new int[p_batch_updates];
-								for(var i = 0; i < p_batch_updates; i++) {
+								int[] p_batch_updates_data = new int[p_batch_updates];
+								for(int i = 0; i < p_batch_updates; i++) {
 										p_batch_updates_data[i] = Xdr.ReadInt32();
 								}
 
 								var p_batch_vectors_data = new (int messageNumber, IscException statusVector)[p_batch_vectors];
-								for(var i = 0; i < p_batch_vectors; i++) {
-										var messageNumber = Xdr.ReadInt32();
+								for(int i = 0; i < p_batch_vectors; i++) {
+										int messageNumber = Xdr.ReadInt32();
 										var statusVector = Xdr.ReadStatusVector();
 										p_batch_vectors_data[i] = (messageNumber, statusVector);
 								}
 
-								var p_batch_errors_data = new int[p_batch_errors];
-								for(var i = 0; i < p_batch_errors; i++) {
+								int[] p_batch_errors_data = new int[p_batch_errors];
+								for(int i = 0; i < p_batch_errors; i++) {
 										p_batch_errors_data[i] = Xdr.ReadInt32();
 								}
 
@@ -424,16 +421,13 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false));
 
 						case IscCodes.op_crypt_key_callback:
-								if(ProtocolVersion == IscCodes.PROTOCOL_VERSION15
-									|| ProtocolVersion == IscCodes.PROTOCOL_VERSION16) {
-										return new Version15.CryptKeyCallbackResponse(
+								return ProtocolVersion is IscCodes.PROTOCOL_VERSION15
+									or IscCodes.PROTOCOL_VERSION16
+										? new Version15.CryptKeyCallbackResponse(
 												await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false),
-												await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false));
-								}
-								else {
-										return new Version13.CryptKeyCallbackResponse(
+												await Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false))
+										: new Version13.CryptKeyCallbackResponse(
 												await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false));
-								}
 
 						case IscCodes.op_cont_auth:
 								return new Version13.ContAuthResponse(
@@ -443,26 +437,26 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 										await Xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false));
 
 						case IscCodes.op_batch_cs:
-								var statementHandle = await Xdr.ReadInt16Async().ConfigureAwait(false);
-								var p_batch_reccount = await Xdr.ReadInt32Async().ConfigureAwait(false);
-								var p_batch_updates = await Xdr.ReadInt32Async().ConfigureAwait(false);
-								var p_batch_vectors = await Xdr.ReadInt32Async().ConfigureAwait(false);
-								var p_batch_errors = await Xdr.ReadInt32Async().ConfigureAwait(false);
+								short statementHandle = await Xdr.ReadInt16Async().ConfigureAwait(false);
+								int p_batch_reccount = await Xdr.ReadInt32Async().ConfigureAwait(false);
+								int p_batch_updates = await Xdr.ReadInt32Async().ConfigureAwait(false);
+								int p_batch_vectors = await Xdr.ReadInt32Async().ConfigureAwait(false);
+								int p_batch_errors = await Xdr.ReadInt32Async().ConfigureAwait(false);
 
-								var p_batch_updates_data = new int[p_batch_updates];
-								for(var i = 0; i < p_batch_updates; i++) {
+								int[] p_batch_updates_data = new int[p_batch_updates];
+								for(int i = 0; i < p_batch_updates; i++) {
 										p_batch_updates_data[i] = await Xdr.ReadInt32Async().ConfigureAwait(false);
 								}
 
 								var p_batch_vectors_data = new (int messageNumber, IscException statusVector)[p_batch_vectors];
-								for(var i = 0; i < p_batch_vectors; i++) {
-										var messageNumber = await Xdr.ReadInt32Async().ConfigureAwait(false);
+								for(int i = 0; i < p_batch_vectors; i++) {
+										int messageNumber = await Xdr.ReadInt32Async().ConfigureAwait(false);
 										var statusVector = await Xdr.ReadStatusVectorAsync().ConfigureAwait(false);
 										p_batch_vectors_data[i] = (messageNumber, statusVector);
 								}
 
-								var p_batch_errors_data = new int[p_batch_errors];
-								for(var i = 0; i < p_batch_errors; i++) {
+								int[] p_batch_errors_data = new int[p_batch_errors];
+								for(int i = 0; i < p_batch_errors; i++) {
 										p_batch_errors_data[i] = await Xdr.ReadInt32Async().ConfigureAwait(false);
 								}
 
@@ -478,20 +472,16 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 				}
 		}
 
-		internal void StartCompression() {
-				_firebirdNetworkHandlingWrapper.StartCompression();
-		}
+		internal void StartCompression() => _firebirdNetworkHandlingWrapper.StartCompression();
 
-		internal void StartEncryption() {
-				_firebirdNetworkHandlingWrapper.StartEncryption(AuthBlock.SessionKey);
-		}
+		internal void StartEncryption() => _firebirdNetworkHandlingWrapper.StartEncryption(AuthBlock.SessionKey);
 
 		private static IPAddress GetIPAddress(string dataSource) {
 				if(IPAddress.TryParse(dataSource, out var ipaddress)) {
 						return ipaddress;
 				}
 
-				var addresses = (Dns.GetHostEntry(dataSource)).AddressList;
+				var addresses = Dns.GetHostEntry(dataSource).AddressList;
 				foreach(var address in addresses) {
 						// IPv4 priority
 						if(address.AddressFamily == AddressFamily.InterNetwork) {
@@ -505,7 +495,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 						return ipaddress;
 				}
 
-				var addresses = (await Dns.GetHostEntryAsync(dataSource).ConfigureAwait(false)).AddressList;
+				var addresses = (await Dns.GetHostEntryAsync(dataSource, cancellationToken).ConfigureAwait(false)).AddressList;
 				foreach(var address in addresses) {
 						// IPv4 priority
 						if(address.AddressFamily == AddressFamily.InterNetwork) {

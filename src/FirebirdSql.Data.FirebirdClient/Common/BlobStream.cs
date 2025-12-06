@@ -42,14 +42,14 @@ public sealed class BlobStream : Stream {
 				if(!_blobHandle.IsOpen)
 						_blobHandle.Open();
 
-				var copied = 0;
-				var remainingBufferSize = buffer.Length - offset;
+				int copied = 0;
+				int remainingBufferSize = buffer.Length - offset;
 				do {
 						if(remainingBufferSize == 0)
 								break;
 
 						if(Available > 0) {
-								var toCopy = Math.Min(Available, remainingBufferSize);
+								int toCopy = Math.Min(Available, remainingBufferSize);
 								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
 								copied += toCopy;
 								_segmentPosition += toCopy;
@@ -75,14 +75,14 @@ public sealed class BlobStream : Stream {
 				if(!_blobHandle.IsOpen)
 						await _blobHandle.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-				var copied = 0;
-				var remainingBufferSize = buffer.Length - offset;
+				int copied = 0;
+				int remainingBufferSize = buffer.Length - offset;
 				do {
 						if(remainingBufferSize == 0)
 								break;
 
 						if(Available > 0) {
-								var toCopy = Math.Min(Available, remainingBufferSize);
+								int toCopy = Math.Min(Available, remainingBufferSize);
 								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
 								copied += toCopy;
 								_segmentPosition += toCopy;
@@ -106,7 +106,7 @@ public sealed class BlobStream : Stream {
 				if(!_blobHandle.IsOpen)
 						_blobHandle.Open();
 
-				var seekMode = origin switch {
+				int seekMode = origin switch {
 						SeekOrigin.Begin => IscCodes.isc_blb_seek_from_head,
 						SeekOrigin.Current => IscCodes.isc_blb_seek_relative,
 						SeekOrigin.End => IscCodes.isc_blb_seek_from_tail,
@@ -117,17 +117,15 @@ public sealed class BlobStream : Stream {
 				return _position = _blobHandle.Position;
 		}
 
-		public override void SetLength(long value) {
-				throw new NotSupportedException();
-		}
+		public override void SetLength(long value) => throw new NotSupportedException();
 
 		public override void Write(byte[] buffer, int offset, int count) {
 				try {
 						if(!_blobHandle.IsOpen)
 								_blobHandle.Create();
 
-						var chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
-						var tmpBuffer = new byte[chunk];
+						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
+						byte[] tmpBuffer = new byte[chunk];
 
 						while(count > 0) {
 								if(chunk > count) {
@@ -153,8 +151,8 @@ public sealed class BlobStream : Stream {
 						if(!_blobHandle.IsOpen)
 								await _blobHandle.CreateAsync(cancellationToken).ConfigureAwait(false);
 
-						var chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
-						var tmpBuffer = new byte[chunk];
+						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
+						byte[] tmpBuffer = new byte[chunk];
 
 						while(count > 0) {
 								if(chunk > count) {
@@ -180,14 +178,10 @@ public sealed class BlobStream : Stream {
 		public override bool CanSeek => true;
 		public override bool CanWrite => true;
 
-		protected override void Dispose(bool disposing) {
-				_blobHandle.Close();
-		}
+		protected override void Dispose(bool disposing) => _blobHandle.Close();
 
 #if !(NET48 || NETSTANDARD2_0)
-		public override ValueTask DisposeAsync() {
-				return _blobHandle.CloseAsync();
-		}
+		public override ValueTask DisposeAsync() => _blobHandle.CloseAsync();
 #endif
 
 		private static void ValidateBufferSize(byte[] buffer, int offset, int count) {

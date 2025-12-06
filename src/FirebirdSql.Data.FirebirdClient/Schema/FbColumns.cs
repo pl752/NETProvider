@@ -32,7 +32,7 @@ internal class FbColumns : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.AppendFormat(
+				_ = sql.AppendFormat(
 					@"SELECT
 					null AS TABLE_CATALOG,
 					null AS TABLE_SCHEMA,
@@ -71,7 +71,7 @@ internal class FbColumns : FbSchema {
 					MajorVersionNumber >= 3 ? "rfr.rdb$identity_type" : "null");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* TABLE_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -83,58 +83,58 @@ internal class FbColumns : FbSchema {
 
 						/* TABLE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("rfr.rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat("rfr.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* COLUMN_NAME */
 						if(restrictions.Length >= 4 && restrictions[3] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("rfr.rdb$field_name = @p{0}", index++);
+								_ = where.AppendFormat("rfr.rdb$field_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY TABLE_NAME, ORDINAL_POSITION");
+				_ = sql.Append(" ORDER BY TABLE_NAME, ORDINAL_POSITION");
 
 				return sql;
 		}
 
 		protected override void ProcessResult(DataTable schema) {
 				schema.BeginLoadData();
-				schema.Columns.Add("IS_NULLABLE", typeof(bool));
-				schema.Columns.Add("IS_ARRAY", typeof(bool));
-				schema.Columns.Add("IS_IDENTITY", typeof(bool));
+				_ = schema.Columns.Add("IS_NULLABLE", typeof(bool));
+				_ = schema.Columns.Add("IS_ARRAY", typeof(bool));
+				_ = schema.Columns.Add("IS_IDENTITY", typeof(bool));
 
 				foreach(DataRow row in schema.Rows) {
-						var blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
+						int blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
 
-						var subType = 0;
+						int subType = 0;
 						if(row["COLUMN_SUB_TYPE"] != DBNull.Value) {
 								subType = Convert.ToInt32(row["COLUMN_SUB_TYPE"], CultureInfo.InvariantCulture);
 						}
 
-						var scale = 0;
+						int scale = 0;
 						if(row["NUMERIC_SCALE"] != DBNull.Value) {
 								scale = Convert.ToInt32(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
 						}
 
-						row["IS_NULLABLE"] = (row["COLUMN_NULLABLE"] == DBNull.Value);
-						row["IS_ARRAY"] = (row["COLUMN_ARRAY"] != DBNull.Value);
+						row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
+						row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
 
 						var dbType = (FbDbType)TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
 						row["COLUMN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType)dbType).ToLowerInvariant();
 
-						if(dbType == FbDbType.Binary || dbType == FbDbType.Text) {
+						if(dbType is FbDbType.Binary or FbDbType.Text) {
 								row["COLUMN_SIZE"] = Int32.MaxValue;
 						}
 
-						if(dbType == FbDbType.Char || dbType == FbDbType.VarChar) {
+						if(dbType is FbDbType.Char or FbDbType.VarChar) {
 								if(!row.IsNull("CHARACTER_MAX_LENGTH")) {
 										row["COLUMN_SIZE"] = row["CHARACTER_MAX_LENGTH"];
 								}
@@ -154,7 +154,7 @@ internal class FbColumns : FbSchema {
 
 						row["NUMERIC_SCALE"] = (-1) * scale;
 
-						var domainName = row["DOMAIN_NAME"].ToString();
+						string domainName = row["DOMAIN_NAME"].ToString();
 						if(domainName != null && domainName.StartsWith("RDB$")) {
 								row["DOMAIN_NAME"] = null;
 						}

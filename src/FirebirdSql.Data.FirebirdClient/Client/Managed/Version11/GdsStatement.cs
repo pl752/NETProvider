@@ -39,7 +39,7 @@ internal class GdsStatement : Version10.GdsStatement {
 				ClearAll();
 
 				try {
-						var numberOfResponses = 0;
+						int numberOfResponses = 0;
 						if(State == StatementState.Deallocated) {
 								SendAllocateToBuffer();
 								numberOfResponses++;
@@ -62,7 +62,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 								numberOfResponses--;
 								var prepareResponse = (GenericResponse)_database.ReadResponse();
-								var deferredExecute = ((prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE);
+								bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 								numberOfResponses--;
 								var statementTypeResponse = (GenericResponse)_database.ReadResponse();
@@ -88,7 +88,7 @@ internal class GdsStatement : Version10.GdsStatement {
 				ClearAll();
 
 				try {
-						var numberOfResponses = 0;
+						int numberOfResponses = 0;
 						if(State == StatementState.Deallocated) {
 								await SendAllocateToBufferAsync(cancellationToken).ConfigureAwait(false);
 								numberOfResponses++;
@@ -111,7 +111,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 								numberOfResponses--;
 								var prepareResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-								var deferredExecute = ((prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE);
+								bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 								numberOfResponses--;
 								var statementTypeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
@@ -144,7 +144,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						SendExecuteToBuffer(timeout, descriptorFiller);
 
-						var readRowsAffectedResponse = false;
+						bool readRowsAffectedResponse = false;
 						if(DoRecordsAffected) {
 								SendInfoSqlToBuffer(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
 
@@ -153,7 +153,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						_database.Xdr.Flush();
 
-						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
+						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
 						try {
 								SqlResponse sqlStoredProcedureResponse = null;
 								if(StatementType == DbStatementType.StoredProcedure) {
@@ -197,7 +197,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						await SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
 
-						var readRowsAffectedResponse = false;
+						bool readRowsAffectedResponse = false;
 						if(DoRecordsAffected) {
 								await SendInfoSqlToBufferAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 
@@ -206,7 +206,7 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
+						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
 						try {
 								SqlResponse sqlStoredProcedureResponse = null;
 								if(StatementType == DbStatementType.StoredProcedure) {

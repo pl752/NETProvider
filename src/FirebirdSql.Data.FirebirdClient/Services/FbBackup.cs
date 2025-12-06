@@ -24,7 +24,7 @@ using FirebirdSql.Data.FirebirdClient;
 namespace FirebirdSql.Data.Services;
 
 public sealed class FbBackup(string connectionString = null) : FbService(connectionString) {
-		public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
+		public FbBackupFileCollection BackupFiles { get; } = [];
 		public bool Verbose { get; set; }
 		public int? VerboseInterval { get; set; }
 		public int Factor { get; set; }

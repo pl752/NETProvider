@@ -22,7 +22,7 @@ namespace FirebirdSql.Data.Services;
 public sealed class FbUserData {
 		private string _userName;
 		public string UserName {
-				get { return _userName; }
+				get => _userName;
 				set {
 						if(value == null)
 								throw new InvalidOperationException("The user name cannot be null.");
@@ -34,7 +34,7 @@ public sealed class FbUserData {
 
 		private string _userPassword;
 		public string UserPassword {
-				get { return _userPassword; }
+				get => _userPassword;
 				set {
 						if(value == null)
 								throw new InvalidOperationException("The user password cannot be null.");

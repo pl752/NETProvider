@@ -42,12 +42,10 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Properties
 
-		public override DatabaseBase Database {
-				get { return _database; }
-		}
+		public override DatabaseBase Database => _database;
 
 		public override TransactionBase Transaction {
-				get { return _transaction; }
+				get => _transaction;
 				set {
 						if(_transaction != value) {
 								if(TransactionUpdate != null && _transaction != null) {
@@ -67,17 +65,13 @@ internal sealed class FesStatement : StatementBase {
 				}
 		}
 
-		public override Descriptor Parameters {
-				get { return _parameters; }
-				set { _parameters = value; }
+		public override Descriptor Parameters { get => _parameters; set => _parameters = value;
 		}
 
-		public override Descriptor Fields {
-				get { return _fields; }
-		}
+		public override Descriptor Fields => _fields;
 
 		public override int FetchSize {
-				get { return 200; }
+				get => 200;
 				set { }
 		}
 
@@ -144,13 +138,9 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Blob Creation Metods
 
-		public override BlobBase CreateBlob() {
-				return new FesBlob(_database, _transaction);
-		}
+		public override BlobBase CreateBlob() => new FesBlob(_database, _transaction);
 
-		public override BlobBase CreateBlob(long blobId) {
-				return new FesBlob(_database, _transaction, blobId);
-		}
+		public override BlobBase CreateBlob(long blobId) => new FesBlob(_database, _transaction, blobId);
 
 		#endregion
 
@@ -187,13 +177,9 @@ internal sealed class FesStatement : StatementBase {
 				return array;
 		}
 
-		public override BatchBase CreateBatch() {
-				throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
-		}
+		public override BatchBase CreateBatch() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
 
-		public override BatchParameterBuffer CreateBatchParameterBuffer() {
-				throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
-		}
+		public override BatchParameterBuffer CreateBatchParameterBuffer() => throw new NotSupportedException("Batching isn't, yet, supported on Firebird Embedded.");
 
 		#endregion
 
@@ -232,12 +218,12 @@ internal sealed class FesStatement : StatementBase {
 
 				_fields = new Descriptor(1);
 
-				var sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				var trHandle = _transaction.HandlePtr;
 
-				var buffer = _database.Charset.GetBytes(commandText);
+				byte[] buffer = _database.Charset.GetBytes(commandText);
 
-				_database.FbClient.isc_dsql_prepare(
+				_ = _database.FbClient.isc_dsql_prepare(
 					_statusVector,
 					ref trHandle,
 					ref _handle,
@@ -282,12 +268,12 @@ internal sealed class FesStatement : StatementBase {
 
 				_fields = new Descriptor(1);
 
-				var sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				var trHandle = _transaction.HandlePtr;
 
-				var buffer = _database.Charset.GetBytes(commandText);
+				byte[] buffer = _database.Charset.GetBytes(commandText);
 
-				_database.FbClient.isc_dsql_prepare(
+				_ = _database.FbClient.isc_dsql_prepare(
 					_statusVector,
 					ref trHandle,
 					ref _handle,
@@ -331,14 +317,14 @@ internal sealed class FesStatement : StatementBase {
 				NativeHelpers.CallIfExists(
 					nameof(IFbClient.fb_dsql_set_timeout),
 					() => {
-							_database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
+							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
 							_database.ProcessStatusVector(_statusVector);
 					});
 
 				ClearStatusVector();
 
-				var inSqlda = IntPtr.Zero;
-				var outSqlda = IntPtr.Zero;
+				nint inSqlda = IntPtr.Zero;
+				nint outSqlda = IntPtr.Zero;
 
 				if(_parameters != null) {
 						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
@@ -350,7 +336,7 @@ internal sealed class FesStatement : StatementBase {
 
 				var trHandle = _transaction.HandlePtr;
 
-				_database.FbClient.isc_dsql_execute2(
+				_ = _database.FbClient.isc_dsql_execute2(
 					_statusVector,
 					ref trHandle,
 					ref _handle,
@@ -363,9 +349,9 @@ internal sealed class FesStatement : StatementBase {
 
 						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
 
-						for(var i = 0; i < values.Length; i++) {
+						for(int i = 0; i < values.Length; i++) {
 								var d = descriptor[i];
-								var value = d.DbValue.GetValue();
+								object value = d.DbValue.GetValue();
 								values[i] = new DbValue(this, d, value);
 						}
 
@@ -377,12 +363,7 @@ internal sealed class FesStatement : StatementBase {
 
 				_database.ProcessStatusVector(_statusVector);
 
-				if(DoRecordsAffected) {
-						RecordsAffected = GetRecordsAffected();
-				}
-				else {
-						RecordsAffected = -1;
-				}
+				RecordsAffected = DoRecordsAffected ? GetRecordsAffected() : -1;
 
 				State = StatementState.Executed;
 		}
@@ -395,14 +376,14 @@ internal sealed class FesStatement : StatementBase {
 				NativeHelpers.CallIfExists(
 					nameof(IFbClient.fb_dsql_set_timeout),
 					() => {
-							_database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
+							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
 							_database.ProcessStatusVector(_statusVector);
 					});
 
 				ClearStatusVector();
 
-				var inSqlda = IntPtr.Zero;
-				var outSqlda = IntPtr.Zero;
+				nint inSqlda = IntPtr.Zero;
+				nint outSqlda = IntPtr.Zero;
 
 				if(_parameters != null) {
 						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
@@ -414,7 +395,7 @@ internal sealed class FesStatement : StatementBase {
 
 				var trHandle = _transaction.HandlePtr;
 
-				_database.FbClient.isc_dsql_execute2(
+				_ = _database.FbClient.isc_dsql_execute2(
 					_statusVector,
 					ref trHandle,
 					ref _handle,
@@ -427,9 +408,9 @@ internal sealed class FesStatement : StatementBase {
 
 						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
 
-						for(var i = 0; i < values.Length; i++) {
+						for(int i = 0; i < values.Length; i++) {
 								var d = descriptor[i];
-								var value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
+								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
 								values[i] = new DbValue(this, d, value);
 						}
 
@@ -441,12 +422,7 @@ internal sealed class FesStatement : StatementBase {
 
 				_database.ProcessStatusVector(_statusVector);
 
-				if(DoRecordsAffected) {
-						RecordsAffected = await GetRecordsAffectedAsync(cancellationToken).ConfigureAwait(false);
-				}
-				else {
-						RecordsAffected = -1;
-				}
+				RecordsAffected = DoRecordsAffected ? await GetRecordsAffectedAsync(cancellationToken).ConfigureAwait(false) : -1;
 
 				State = StatementState.Executed;
 		}
@@ -461,7 +437,7 @@ internal sealed class FesStatement : StatementBase {
 				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
 						return null;
 				}
-				else if(StatementType != DbStatementType.Select && StatementType != DbStatementType.SelectForUpdate) {
+				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
 						return null;
 				}
 
@@ -477,7 +453,7 @@ internal sealed class FesStatement : StatementBase {
 
 				ClearStatusVector();
 
-				var status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
+				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
 				if(status == new IntPtr(100)) {
 						_allRowsFetched = true;
 
@@ -489,7 +465,7 @@ internal sealed class FesStatement : StatementBase {
 						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
 
 						if(_fields.Count == rowDesc.Count) {
-								for(var i = 0; i < _fields.Count; i++) {
+								for(int i = 0; i < _fields.Count; i++) {
 										if(_fields[i].IsArray() && _fields[i].ArrayHandle != null) {
 												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
 										}
@@ -501,9 +477,9 @@ internal sealed class FesStatement : StatementBase {
 						_database.ProcessStatusVector(_statusVector);
 
 						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for(var i = 0; i < row.Length; i++) {
+						for(int i = 0; i < row.Length; i++) {
 								var d = _fields[i];
-								var value = d.DbValue.GetValue();
+								object value = d.DbValue.GetValue();
 								row[i] = new DbValue(this, d, value);
 						}
 						return row;
@@ -519,7 +495,7 @@ internal sealed class FesStatement : StatementBase {
 				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
 						return null;
 				}
-				else if(StatementType != DbStatementType.Select && StatementType != DbStatementType.SelectForUpdate) {
+				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
 						return null;
 				}
 
@@ -535,7 +511,7 @@ internal sealed class FesStatement : StatementBase {
 
 				ClearStatusVector();
 
-				var status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
+				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
 				if(status == new IntPtr(100)) {
 						_allRowsFetched = true;
 
@@ -547,7 +523,7 @@ internal sealed class FesStatement : StatementBase {
 						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
 
 						if(_fields.Count == rowDesc.Count) {
-								for(var i = 0; i < _fields.Count; i++) {
+								for(int i = 0; i < _fields.Count; i++) {
 										if(_fields[i].IsArray() && _fields[i].ArrayHandle != null) {
 												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
 										}
@@ -559,9 +535,9 @@ internal sealed class FesStatement : StatementBase {
 						_database.ProcessStatusVector(_statusVector);
 
 						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for(var i = 0; i < row.Length; i++) {
+						for(int i = 0; i < row.Length; i++) {
 								var d = _fields[i];
-								var value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
+								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
 								row[i] = new DbValue(this, d, value);
 						}
 						return row;
@@ -581,7 +557,7 @@ internal sealed class FesStatement : StatementBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_dsql_free_statement(
+				_ = _database.FbClient.isc_dsql_free_statement(
 					_statusVector,
 					ref _handle,
 					(short)option);
@@ -605,7 +581,7 @@ internal sealed class FesStatement : StatementBase {
 
 				ClearStatusVector();
 
-				_database.FbClient.isc_dsql_free_statement(
+				_ = _database.FbClient.isc_dsql_free_statement(
 					_statusVector,
 					ref _handle,
 					(short)option);
@@ -636,9 +612,9 @@ internal sealed class FesStatement : StatementBase {
 		protected override byte[] GetSqlInfo(byte[] items, int bufferLength) {
 				ClearStatusVector();
 
-				var buffer = new byte[bufferLength];
+				byte[] buffer = new byte[bufferLength];
 
-				_database.FbClient.isc_dsql_sql_info(
+				_ = _database.FbClient.isc_dsql_sql_info(
 					_statusVector,
 					ref _handle,
 					(short)items.Length,
@@ -653,9 +629,9 @@ internal sealed class FesStatement : StatementBase {
 		protected override ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
 				ClearStatusVector();
 
-				var buffer = new byte[bufferLength];
+				byte[] buffer = new byte[bufferLength];
 
-				_database.FbClient.isc_dsql_sql_info(
+				_ = _database.FbClient.isc_dsql_sql_info(
 					_statusVector,
 					ref _handle,
 					(short)items.Length,
@@ -672,13 +648,9 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Private Methods
 
-		private void ClearStatusVector() {
-				Array.Clear(_statusVector, 0, _statusVector.Length);
-		}
+		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
-		private void Clear() {
-				OutputParameters?.Clear();
-		}
+		private void Clear() => OutputParameters?.Clear();
 
 		private void ClearAll() {
 				Clear();
@@ -692,7 +664,7 @@ internal sealed class FesStatement : StatementBase {
 
 				var dbHandle = _database.HandlePtr;
 
-				_database.FbClient.isc_dsql_allocate_statement(
+				_ = _database.FbClient.isc_dsql_allocate_statement(
 					_statusVector,
 					ref dbHandle,
 					ref _handle);
@@ -709,9 +681,9 @@ internal sealed class FesStatement : StatementBase {
 
 				_fields = new Descriptor(_fields.ActualCount);
 
-				var sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 
-				_database.FbClient.isc_dsql_describe(
+				_ = _database.FbClient.isc_dsql_describe(
 					_statusVector,
 					ref _handle,
 					IscCodes.SQLDA_VERSION1,
@@ -731,10 +703,10 @@ internal sealed class FesStatement : StatementBase {
 
 				_parameters = new Descriptor(1);
 
-				var sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+				nint sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
 
 
-				_database.FbClient.isc_dsql_describe_bind(
+				_ = _database.FbClient.isc_dsql_describe_bind(
 					_statusVector,
 					ref _handle,
 					IscCodes.SQLDA_VERSION1,
@@ -745,14 +717,14 @@ internal sealed class FesStatement : StatementBase {
 				_database.ProcessStatusVector(_statusVector);
 
 				if(descriptor.ActualCount != 0 && descriptor.Count != descriptor.ActualCount) {
-						var n = descriptor.ActualCount;
+						short n = descriptor.ActualCount;
 						descriptor = new Descriptor(n);
 
 						XsqldaMarshaler.CleanUpNativeData(ref sqlda);
 
 						sqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, descriptor);
 
-						_database.FbClient.isc_dsql_describe_bind(
+						_ = _database.FbClient.isc_dsql_describe_bind(
 							_statusVector,
 							ref _handle,
 							IscCodes.SQLDA_VERSION1,

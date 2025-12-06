@@ -37,13 +37,9 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 
 		#region Properties
 
-		public bool IsCompleted {
-				get { return (_transaction == null); }
-		}
+		public bool IsCompleted => _transaction == null;
 
-		public Transaction SystemTransaction {
-				get { return _systemTransaction; }
-		}
+		public Transaction SystemTransaction => _systemTransaction;
 
 		#endregion
 
@@ -54,7 +50,7 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 				_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
 				_systemTransaction = systemTransaction;
 
-				_systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
+				_ = _systemTransaction.EnlistVolatile(this, EnlistmentOptions.None);
 		}
 
 		#endregion
@@ -81,13 +77,9 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 				}
 		}
 
-		public void InDoubt(Enlistment enlistment) {
-				throw new NotSupportedException("In Doubt transactions are not supported");
-		}
+		public void InDoubt(Enlistment enlistment) => throw new NotSupportedException("In Doubt transactions are not supported");
 
-		public void Prepare(PreparingEnlistment preparingEnlistment) {
-				preparingEnlistment.Prepared();
-		}
+		public void Prepare(PreparingEnlistment preparingEnlistment) => preparingEnlistment.Prepared();
 
 		public void Rollback(Enlistment enlistment) {
 				if(_transaction != null && !_transaction.IsCompleted) {

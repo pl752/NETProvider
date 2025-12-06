@@ -30,9 +30,7 @@ internal struct DbValue {
 		private readonly DbField _field;
 		private object _value;
 
-		public readonly DbField Field {
-				get { return _field; }
-		}
+		public readonly DbField Field => _field;
 
 		public DbValue(DbField field, object value) {
 				_field = field;
@@ -45,9 +43,7 @@ internal struct DbValue {
 				_value = value ?? DBNull.Value;
 		}
 
-		public readonly bool IsDBNull() {
-				return TypeHelper.IsDBNull(_value);
-		}
+		public readonly bool IsDBNull() => TypeHelper.IsDBNull(_value);
 
 		public object GetValue() {
 				if(IsDBNull()) {
@@ -56,28 +52,13 @@ internal struct DbValue {
 
 				switch(_field.DbDataType) {
 						case DbDataType.Text:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return GetString();
-								}
+								return _statement == null ? GetInt64() : GetString();
 
 						case DbDataType.Binary:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return GetBinary();
-								}
+								return _statement == null ? GetInt64() : GetBinary();
 
 						case DbDataType.Array:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return GetArray();
-								}
+								return _statement == null ? GetInt64() : GetArray();
 
 						default:
 								return _value;
@@ -90,148 +71,93 @@ internal struct DbValue {
 
 				switch(_field.DbDataType) {
 						case DbDataType.Text:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return await GetStringAsync(cancellationToken).ConfigureAwait(false);
-								}
+								return _statement == null ? GetInt64() : await GetStringAsync(cancellationToken).ConfigureAwait(false);
 
 						case DbDataType.Binary:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return await GetBinaryAsync(cancellationToken).ConfigureAwait(false);
-								}
+								return _statement == null ? GetInt64() : await GetBinaryAsync(cancellationToken).ConfigureAwait(false);
 
 						case DbDataType.Array:
-								if(_statement == null) {
-										return GetInt64();
-								}
-								else {
-										return await GetArrayAsync(cancellationToken).ConfigureAwait(false);
-								}
+								return _statement == null ? GetInt64() : await GetArrayAsync(cancellationToken).ConfigureAwait(false);
 
 						default:
 								return _value;
 				}
 		}
 
-		public void SetValue(object value) {
-				_value = value;
-		}
+		public void SetValue(object value) => _value = value;
 
 		public string GetString() {
 				if(Field.DbDataType == DbDataType.Text && _value is long l) {
 						_value = GetClobData(l);
 				}
 
-				if(_value is byte[] bytes) {
-						return Field.Charset.GetString(bytes);
-				}
-				return _value.ToString();
+				return _value is byte[] bytes ? Field.Charset.GetString(bytes) : _value.ToString();
 		}
 		public async ValueTask<string> GetStringAsync(CancellationToken cancellationToken = default) {
 				if(Field.DbDataType == DbDataType.Text && _value is long l) {
 						_value = await GetClobDataAsync(l, cancellationToken).ConfigureAwait(false);
 				}
 
-				if(_value is byte[] bytes) {
-						return Field.Charset.GetString(bytes);
-				}
-				return _value.ToString();
+				return _value is byte[] bytes ? Field.Charset.GetString(bytes) : _value.ToString();
 		}
 
-		public readonly char GetChar() {
-				return Convert.ToChar(_value, CultureInfo.CurrentCulture);
-		}
+		public readonly char GetChar() => Convert.ToChar(_value, CultureInfo.CurrentCulture);
 
-		public readonly bool GetBoolean() {
-				return Convert.ToBoolean(_value, CultureInfo.InvariantCulture);
-		}
+		public readonly bool GetBoolean() => Convert.ToBoolean(_value, CultureInfo.InvariantCulture);
 
-		public readonly byte GetByte() {
-				return _value switch {
-						BigInteger bi => (byte)bi,
-						_ => Convert.ToByte(_value, CultureInfo.InvariantCulture),
-				};
-		}
+		public readonly byte GetByte() => _value switch {
+				BigInteger bi => (byte)bi,
+				_ => Convert.ToByte(_value, CultureInfo.InvariantCulture),
+		};
 
-		public readonly short GetInt16() {
-				return _value switch {
-						BigInteger bi => (short)bi,
-						_ => Convert.ToInt16(_value, CultureInfo.InvariantCulture),
-				};
-		}
+		public readonly short GetInt16() => _value switch {
+				BigInteger bi => (short)bi,
+				_ => Convert.ToInt16(_value, CultureInfo.InvariantCulture),
+		};
 
-		public readonly int GetInt32() {
-				return _value switch {
-						BigInteger bi => (int)bi,
-						_ => Convert.ToInt32(_value, CultureInfo.InvariantCulture),
-				};
-		}
+		public readonly int GetInt32() => _value switch {
+				BigInteger bi => (int)bi,
+				_ => Convert.ToInt32(_value, CultureInfo.InvariantCulture),
+		};
 
-		public readonly long GetInt64() {
-				return _value switch {
-						BigInteger bi => (long)bi,
-						_ => Convert.ToInt64(_value, CultureInfo.InvariantCulture),
-				};
-		}
+		public readonly long GetInt64() => _value switch {
+				BigInteger bi => (long)bi,
+				_ => Convert.ToInt64(_value, CultureInfo.InvariantCulture),
+		};
 
-		public readonly decimal GetDecimal() {
-				return Convert.ToDecimal(_value, CultureInfo.InvariantCulture);
-		}
+		public readonly decimal GetDecimal() => Convert.ToDecimal(_value, CultureInfo.InvariantCulture);
 
-		public readonly float GetFloat() {
-				return Convert.ToSingle(_value, CultureInfo.InvariantCulture);
-		}
+		public readonly float GetFloat() => Convert.ToSingle(_value, CultureInfo.InvariantCulture);
 
-		public readonly Guid GetGuid() {
-				return _value switch {
-						Guid guid => guid,
-						byte[] bytes => TypeDecoder.DecodeGuid(bytes),
-						_ => throw new InvalidOperationException($"Incorrect {nameof(Guid)} value."),
-				};
-		}
+		public readonly Guid GetGuid() => _value switch {
+				Guid guid => guid,
+				byte[] bytes => TypeDecoder.DecodeGuid(bytes),
+				_ => throw new InvalidOperationException($"Incorrect {nameof(Guid)} value."),
+		};
 
-		public readonly double GetDouble() {
-				return Convert.ToDouble(_value, CultureInfo.InvariantCulture);
-		}
+		public readonly double GetDouble() => Convert.ToDouble(_value, CultureInfo.InvariantCulture);
 
-		public readonly DateTime GetDateTime() {
-				return _value switch {
-						DateTimeOffset dto => dto.DateTime,
-						FbZonedDateTime zdt => zdt.DateTime,
-						_ => Convert.ToDateTime(_value, CultureInfo.CurrentCulture.DateTimeFormat),
-				};
-		}
+		public readonly DateTime GetDateTime() => _value switch {
+				DateTimeOffset dto => dto.DateTime,
+				FbZonedDateTime zdt => zdt.DateTime,
+				_ => Convert.ToDateTime(_value, CultureInfo.CurrentCulture.DateTimeFormat),
+		};
 
-		public readonly TimeSpan GetTimeSpan() {
-				return (TimeSpan)_value;
-		}
+		public readonly TimeSpan GetTimeSpan() => (TimeSpan)_value;
 
-		public readonly FbDecFloat GetDecFloat() {
-				return (FbDecFloat)_value;
-		}
+		public readonly FbDecFloat GetDecFloat() => (FbDecFloat)_value;
 
-		public readonly BigInteger GetInt128() {
-				return _value switch {
-						byte b => b,
-						short s => s,
-						int i => i,
-						long l => l,
-						_ => (BigInteger)_value,
-				};
-		}
+		public readonly BigInteger GetInt128() => _value switch {
+				byte b => b,
+				short s => s,
+				int i => i,
+				long l => l,
+				_ => (BigInteger)_value,
+		};
 
-		public readonly FbZonedDateTime GetZonedDateTime() {
-				return (FbZonedDateTime)_value;
-		}
+		public readonly FbZonedDateTime GetZonedDateTime() => (FbZonedDateTime)_value;
 
-		public readonly FbZonedTime GetZonedTime() {
-				return (FbZonedTime)_value;
-		}
+		public readonly FbZonedTime GetZonedTime() => (FbZonedTime)_value;
 
 		public Array GetArray() {
 				if(_value is long l) {
@@ -252,64 +178,42 @@ internal struct DbValue {
 				if(_value is long l) {
 						_value = GetBlobData(l);
 				}
-				if(_value is Guid guid) {
-						return TypeEncoder.EncodeGuid(guid);
-				}
-
-				return (byte[])_value;
+				return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[])_value;
 		}
 		public async ValueTask<byte[]> GetBinaryAsync(CancellationToken cancellationToken = default) {
 				if(_value is long l) {
 						_value = await GetBlobDataAsync(l, cancellationToken).ConfigureAwait(false);
 				}
-				if(_value is Guid guid) {
-						return TypeEncoder.EncodeGuid(guid);
-				}
-
-				return (byte[])_value;
+				return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[])_value;
 		}
 
-		public readonly BlobStream GetBinaryStream() {
-				if(_value is not long l)
-						throw new NotSupportedException();
+		public readonly BlobStream GetBinaryStream() => _value is not long l ? throw new NotSupportedException() : GetBlobStream(l);
+		public readonly ValueTask<BlobStream> GetBinaryStreamAsync(CancellationToken cancellationToken = default) => _value is not long l ? throw new NotSupportedException() : GetBlobStreamAsync(l, cancellationToken);
 
-				return GetBlobStream(l);
-		}
-		public readonly ValueTask<BlobStream> GetBinaryStreamAsync(CancellationToken cancellationToken = default) {
-				if(_value is not long l)
-						throw new NotSupportedException();
-
-				return GetBlobStreamAsync(l, cancellationToken);
-		}
-
-		public readonly int GetDate() {
-				return _value switch {
+		public readonly int GetDate() => _value switch {
 #if NET6_0_OR_GREATER
-						DateOnly @do => TypeEncoder.EncodeDate(@do),
+				DateOnly @do => TypeEncoder.EncodeDate(@do),
 #endif
-						_ => TypeEncoder.EncodeDate(GetDateTime()),
-				};
-		}
+				_ => TypeEncoder.EncodeDate(GetDateTime()),
+		};
 
-		public readonly int GetTime() {
-				return _value switch {
-						TimeSpan ts => TypeEncoder.EncodeTime(ts),
-						FbZonedTime zt => TypeEncoder.EncodeTime(zt.Time),
+		public readonly int GetTime() => _value switch {
+				TimeSpan ts => TypeEncoder.EncodeTime(ts),
+				FbZonedTime zt => TypeEncoder.EncodeTime(zt.Time),
 #if NET6_0_OR_GREATER
-						TimeOnly to => TypeEncoder.EncodeTime(to),
+				TimeOnly to => TypeEncoder.EncodeTime(to),
 #endif
-						_ => TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(GetDateTime())),
-				};
-		}
+				_ => TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(GetDateTime())),
+		};
 
 		public readonly ushort GetTimeZoneId() {
 				{
-						if(_value is FbZonedDateTime zdt && TimeZoneMapping.TryGetByName(zdt.TimeZone, out var id)) {
+						if(_value is FbZonedDateTime zdt && TimeZoneMapping.TryGetByName(zdt.TimeZone, out ushort id)) {
 								return id;
 						}
 				}
 				{
-						if(_value is FbZonedTime zt && TimeZoneMapping.TryGetByName(zt.TimeZone, out var id)) {
+						if(_value is FbZonedTime zt && TimeZoneMapping.TryGetByName(zt.TimeZone, out ushort id)) {
 								return id;
 						}
 				}
@@ -331,28 +235,28 @@ internal struct DbValue {
 
 				switch(Field.DbDataType) {
 						case DbDataType.Char: {
-										var buffer = new byte[Field.Length];
+										byte[] buffer = new byte[Field.Length];
 										byte[] bytes;
 
 										if(Field.Charset.IsOctetsCharset) {
 												bytes = GetBinary();
 										}
 										else if(Field.Charset.IsNoneCharset) {
-												var bvalue = Field.Charset.GetBytes(GetString());
+												byte[] bvalue = Field.Charset.GetBytes(GetString());
 												if(bvalue.Length > Field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = bvalue;
 										}
 										else {
-												var svalue = GetString();
+												string svalue = GetString();
 												if((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = Field.Charset.GetBytes(svalue);
 										}
 
-										for(var i = 0; i < buffer.Length; i++) {
+										for(int i = 0; i < buffer.Length; i++) {
 												buffer[i] = (byte)' ';
 										}
 										Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
@@ -360,21 +264,21 @@ internal struct DbValue {
 								}
 
 						case DbDataType.VarChar: {
-										var buffer = new byte[Field.Length + 2];
+										byte[] buffer = new byte[Field.Length + 2];
 										byte[] bytes;
 
 										if(Field.Charset.IsOctetsCharset) {
 												bytes = GetBinary();
 										}
 										else if(Field.Charset.IsNoneCharset) {
-												var bvalue = Field.Charset.GetBytes(GetString());
+												byte[] bvalue = Field.Charset.GetBytes(GetString());
 												if(bvalue.Length > Field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = bvalue;
 										}
 										else {
-												var svalue = GetString();
+												string svalue = GetString();
 												if((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
@@ -416,17 +320,17 @@ internal struct DbValue {
 
 						case DbDataType.TimeStamp: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
 
-										var result = new byte[8];
+										byte[] result = new byte[8];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										return result;
 								}
 
 						case DbDataType.Guid: {
-										var bytes = TypeEncoder.EncodeGuid(GetGuid());
+										byte[] bytes = TypeEncoder.EncodeGuid(GetGuid());
 										byte[] buffer;
 										if(Field.SqlType == IscCodes.SQL_VARYING) {
 												buffer = new byte[bytes.Length + 2];
@@ -445,11 +349,11 @@ internal struct DbValue {
 
 						case DbDataType.TimeStampTZ: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
 
-										var result = new byte[10];
+										byte[] result = new byte[10];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 8, tzId.Length);
@@ -458,12 +362,12 @@ internal struct DbValue {
 
 						case DbDataType.TimeStampTZEx: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
-										var offset = new byte[] { 0, 0 };
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] offset = [0, 0];
 
-										var result = new byte[12];
+										byte[] result = new byte[12];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 8, tzId.Length);
@@ -472,21 +376,21 @@ internal struct DbValue {
 								}
 
 						case DbDataType.TimeTZ: {
-										var time = BitConverter.GetBytes(GetTime());
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] time = BitConverter.GetBytes(GetTime());
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
 
-										var result = new byte[6];
+										byte[] result = new byte[6];
 										Buffer.BlockCopy(time, 0, result, 0, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 4, tzId.Length);
 										return result;
 								}
 
 						case DbDataType.TimeTZEx: {
-										var time = BitConverter.GetBytes(GetTime());
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
-										var offset = new byte[] { 0, 0 };
+										byte[] time = BitConverter.GetBytes(GetTime());
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] offset = [0, 0];
 
-										var result = new byte[8];
+										byte[] result = new byte[8];
 										Buffer.BlockCopy(time, 0, result, 0, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 4, tzId.Length);
 										Buffer.BlockCopy(offset, 0, result, 6, offset.Length);
@@ -521,28 +425,28 @@ internal struct DbValue {
 
 				switch(Field.DbDataType) {
 						case DbDataType.Char: {
-										var buffer = new byte[Field.Length];
+										byte[] buffer = new byte[Field.Length];
 										byte[] bytes;
 
 										if(Field.Charset.IsOctetsCharset) {
 												bytes = await GetBinaryAsync(cancellationToken).ConfigureAwait(false);
 										}
 										else if(Field.Charset.IsNoneCharset) {
-												var bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
+												byte[] bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
 												if(bvalue.Length > Field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = bvalue;
 										}
 										else {
-												var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
+												string svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
 												if((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = Field.Charset.GetBytes(svalue);
 										}
 
-										for(var i = 0; i < buffer.Length; i++) {
+										for(int i = 0; i < buffer.Length; i++) {
 												buffer[i] = (byte)' ';
 										}
 										Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
@@ -550,21 +454,21 @@ internal struct DbValue {
 								}
 
 						case DbDataType.VarChar: {
-										var buffer = new byte[Field.Length + 2];
+										byte[] buffer = new byte[Field.Length + 2];
 										byte[] bytes;
 
 										if(Field.Charset.IsOctetsCharset) {
 												bytes = await GetBinaryAsync(cancellationToken).ConfigureAwait(false);
 										}
 										else if(Field.Charset.IsNoneCharset) {
-												var bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
+												byte[] bvalue = Field.Charset.GetBytes(await GetStringAsync(cancellationToken).ConfigureAwait(false));
 												if(bvalue.Length > Field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												bytes = bvalue;
 										}
 										else {
-												var svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
+												string svalue = await GetStringAsync(cancellationToken).ConfigureAwait(false);
 												if((Field.Length % Field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > Field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
@@ -606,17 +510,17 @@ internal struct DbValue {
 
 						case DbDataType.TimeStamp: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
 
-										var result = new byte[8];
+										byte[] result = new byte[8];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										return result;
 								}
 
 						case DbDataType.Guid: {
-										var bytes = TypeEncoder.EncodeGuid(GetGuid());
+										byte[] bytes = TypeEncoder.EncodeGuid(GetGuid());
 										byte[] buffer;
 										if(Field.SqlType == IscCodes.SQL_VARYING) {
 												buffer = new byte[bytes.Length + 2];
@@ -635,11 +539,11 @@ internal struct DbValue {
 
 						case DbDataType.TimeStampTZ: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
 
-										var result = new byte[10];
+										byte[] result = new byte[10];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 8, tzId.Length);
@@ -648,12 +552,12 @@ internal struct DbValue {
 
 						case DbDataType.TimeStampTZEx: {
 										var dt = GetDateTime();
-										var date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
-										var time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
-										var offset = new byte[] { 0, 0 };
+										byte[] date = BitConverter.GetBytes(TypeEncoder.EncodeDate(dt));
+										byte[] time = BitConverter.GetBytes(TypeEncoder.EncodeTime(TypeHelper.DateTimeTimeToTimeSpan(dt)));
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] offset = [0, 0];
 
-										var result = new byte[12];
+										byte[] result = new byte[12];
 										Buffer.BlockCopy(date, 0, result, 0, date.Length);
 										Buffer.BlockCopy(time, 0, result, 4, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 8, tzId.Length);
@@ -662,21 +566,21 @@ internal struct DbValue {
 								}
 
 						case DbDataType.TimeTZ: {
-										var time = BitConverter.GetBytes(GetTime());
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] time = BitConverter.GetBytes(GetTime());
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
 
-										var result = new byte[6];
+										byte[] result = new byte[6];
 										Buffer.BlockCopy(time, 0, result, 0, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 4, tzId.Length);
 										return result;
 								}
 
 						case DbDataType.TimeTZEx: {
-										var time = BitConverter.GetBytes(GetTime());
-										var tzId = BitConverter.GetBytes(GetTimeZoneId());
-										var offset = new byte[] { 0, 0 };
+										byte[] time = BitConverter.GetBytes(GetTime());
+										byte[] tzId = BitConverter.GetBytes(GetTimeZoneId());
+										byte[] offset = [0, 0];
 
-										var result = new byte[8];
+										byte[] result = new byte[8];
 										Buffer.BlockCopy(time, 0, result, 0, time.Length);
 										Buffer.BlockCopy(tzId, 0, result, 4, tzId.Length);
 										Buffer.BlockCopy(offset, 0, result, 6, offset.Length);
@@ -698,8 +602,8 @@ internal struct DbValue {
 		}
 
 		private readonly byte[] GetNumericBytes() {
-				var value = GetDecimal();
-				var numeric = TypeEncoder.EncodeDecimal(value, Field.NumericScale, Field.DataType);
+				decimal value = GetDecimal();
+				object numeric = TypeEncoder.EncodeDecimal(value, Field.NumericScale, Field.DataType);
 
 				return _field.SqlType switch {
 						IscCodes.SQL_SHORT => BitConverter.GetBytes((short)numeric),

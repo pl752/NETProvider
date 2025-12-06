@@ -55,13 +55,9 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 						}
 				}
 
-				public int BiasedExponent(int unbiasedExponent) {
-						return unbiasedExponent + ExponentBias;
-				}
+				public int BiasedExponent(int unbiasedExponent) => unbiasedExponent + ExponentBias;
 
-				public int UnbiasedExponent(int biasedExponent) {
-						return biasedExponent - ExponentBias;
-				}
+				public int UnbiasedExponent(int biasedExponent) => biasedExponent - ExponentBias;
 		}
 
 		// Byte pattern that signals that the combination field contains 1 bit of the first digit (for value 8 or 9).
@@ -90,8 +86,8 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 
 				_decimalFormat.ValidateByteLength(decBytes);
 
-				var firstByte = decBytes[0] & 0xff;
-				var signum = -1 * (firstByte >>> 7) | 1;
+				int firstByte = decBytes[0] & 0xff;
+				int signum = -1 * (firstByte >>> 7) | 1;
 				var decimalType = DecimalTypeFromFirstByte(firstByte);
 				switch(decimalType) {
 						case DecimalType.Infinity:
@@ -112,9 +108,9 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 												exponentMSB = (firstByte >>> 1) & 0b01100 | (firstByte & 0b011);
 												firstDigit = 0b01000 | ((firstByte >>> 2) & 0b01);
 										}
-										var exponentBitsRemaining = _decimalFormat.ExponentContinuationBits - 2;
+										int exponentBitsRemaining = _decimalFormat.ExponentContinuationBits - 2;
 										Debug.Assert(exponentBitsRemaining == _decimalFormat.FormatBitLength - 8 - _decimalFormat.CoefficientContinuationBits, $"Unexpected exponent remaining length {exponentBitsRemaining}.");
-										var exponent = _decimalFormat.UnbiasedExponent(DecodeExponent(decBytes, exponentMSB, exponentBitsRemaining));
+										int exponent = _decimalFormat.UnbiasedExponent(DecodeExponent(decBytes, exponentMSB, exponentBitsRemaining));
 										var coefficient = _coefficientCoder.DecodeValue(signum, firstDigit, decBytes);
 										return new FbDecFloat(DecimalType.Finite, signum == NegativeSignum, coefficient, exponent);
 								}
@@ -125,7 +121,7 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 
 		// Encodes a FbDecFloat to its IEEE-754 format.
 		public byte[] EncodeDecimal(FbDecFloat @decimal) {
-				var decBytes = new byte[_decimalFormat.FormatByteLength];
+				byte[] decBytes = new byte[_decimalFormat.FormatByteLength];
 
 				if(@decimal.Negative) {
 						decBytes[0] = NegativeBit;
@@ -146,11 +142,11 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 		}
 
 		void EncodeFinite(FbDecFloat @decimal, byte[] decBytes) {
-				var biasedExponent = _decimalFormat.BiasedExponent(@decimal.Exponent);
+				int biasedExponent = _decimalFormat.BiasedExponent(@decimal.Exponent);
 				var coefficient = @decimal.Coefficient;
-				var mostSignificantDigit = _coefficientCoder.EncodeValue(coefficient, decBytes);
-				var expMSB = biasedExponent >>> _decimalFormat.ExponentContinuationBits;
-				var expTwoBitCont = (biasedExponent >>> _decimalFormat.ExponentContinuationBits - 2) & 0b011;
+				int mostSignificantDigit = _coefficientCoder.EncodeValue(coefficient, decBytes);
+				int expMSB = biasedExponent >>> _decimalFormat.ExponentContinuationBits;
+				int expTwoBitCont = (biasedExponent >>> _decimalFormat.ExponentContinuationBits - 2) & 0b011;
 				if(mostSignificantDigit <= 7) {
 						decBytes[0] |= (byte)((expMSB << 5)
 								| (mostSignificantDigit << 2)
@@ -166,7 +162,7 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 		}
 
 		static void EncodeExponentContinuation(byte[] decBytes, int expAndBias, int expBitsRemaining) {
-				var expByteIndex = 1;
+				int expByteIndex = 1;
 				while(expBitsRemaining > 8) {
 						decBytes[expByteIndex++] = (byte)(expAndBias >>> expBitsRemaining - 8);
 						expBitsRemaining -= 8;
@@ -177,8 +173,8 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 		}
 
 		static int DecodeExponent(byte[] decBytes, int exponentMSB, int exponentBitsRemaining) {
-				var exponent = exponentMSB;
-				var byteIndex = 1;
+				int exponent = exponentMSB;
+				int byteIndex = 1;
 				while(exponentBitsRemaining > 8) {
 						exponent = (exponent << 8) | (decBytes[byteIndex] & 0xFF);
 						exponentBitsRemaining -= 8;
@@ -191,23 +187,19 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 				return exponent;
 		}
 
-		static DecimalType DecimalTypeFromFirstByte(int firstByte) {
-				return (firstByte & TypeMask) switch {
-						Infinity0 => DecimalType.Infinity,
-						Infinity2 => DecimalType.Infinity,
-						NaNQuiet => DecimalType.NaN,
-						NaNSignal => DecimalType.SignalingNaN,
-						_ => DecimalType.Finite,
-				};
-		}
+		static DecimalType DecimalTypeFromFirstByte(int firstByte) => (firstByte & TypeMask) switch {
+				Infinity0 => DecimalType.Infinity,
+				Infinity2 => DecimalType.Infinity,
+				NaNQuiet => DecimalType.NaN,
+				NaNSignal => DecimalType.SignalingNaN,
+				_ => DecimalType.Finite,
+		};
 
-		static byte GetSpecialBits(DecimalType decimalType) {
-				return decimalType switch {
-						DecimalType.Finite => throw new InvalidOperationException($"{nameof(DecimalType)} {nameof(DecimalType.Finite)} has no special bits."),
-						DecimalType.Infinity => Infinity0,
-						DecimalType.NaN => NaNQuiet,
-						DecimalType.SignalingNaN => NaNSignal,
-						_ => throw new ArgumentOutOfRangeException(),
-				};
-		}
+		static byte GetSpecialBits(DecimalType decimalType) => decimalType switch {
+				DecimalType.Finite => throw new InvalidOperationException($"{nameof(DecimalType)} {nameof(DecimalType.Finite)} has no special bits."),
+				DecimalType.Infinity => Infinity0,
+				DecimalType.NaN => NaNQuiet,
+				DecimalType.SignalingNaN => NaNSignal,
+				_ => throw new ArgumentOutOfRangeException(),
+		};
 }

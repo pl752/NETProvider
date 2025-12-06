@@ -47,9 +47,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 				public IntPtr LowPart = IntPtr.Zero;
 				public IntPtr HighPart = IntPtr.Zero;
 
-				public readonly bool IsInvalid {
-						get { return LowPart == IntPtr.Zero && HighPart == IntPtr.Zero; }
-				}
+				public readonly bool IsInvalid => LowPart == IntPtr.Zero && HighPart == IntPtr.Zero;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
@@ -274,7 +272,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 				_clientContext = new SecHandle();
 				var clientTokenBuf = new SecBufferDesc(MAX_TOKEN_SIZE);
 				try {
-						var resCode = InitializeSecurityContext(
+						int resCode = InitializeSecurityContext(
 							ref _clientCredentials,
 							IntPtr.Zero,
 							_remotePrincipal,
@@ -285,11 +283,11 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 							0,
 							out _clientContext,
 							ref clientTokenBuf,
-							out var contextAttributes,
+							out uint contextAttributes,
 							out var expiry);
-						if(resCode != SEC_E_OK && resCode != SEC_I_CONTINUE_NEEDED)
-								throw new Exception($"{nameof(InitializeSecurityContext)} failed");
-						return clientTokenBuf.GetSecBufferBytes();
+						return resCode is not SEC_E_OK and not SEC_I_CONTINUE_NEEDED
+								?                throw new Exception($"{nameof(InitializeSecurityContext)} failed")
+								: clientTokenBuf.GetSecBufferBytes();
 				}
 				finally {
 						clientTokenBuf.Dispose();
@@ -311,7 +309,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 				try {
 						var serverTokenBuf = new SecBufferDesc(serverToken);
 						try {
-								var resCode = InitializeSecurityContext(
+								int resCode = InitializeSecurityContext(
 									ref _clientCredentials,
 									ref _clientContext,
 									_remotePrincipal,
@@ -322,11 +320,11 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 									0,
 									out _clientContext,
 									ref clientTokenBuf,
-									out var contextAttributes,
+									out uint contextAttributes,
 									out var expiry);
-								if(resCode != SEC_E_OK && resCode != SEC_I_CONTINUE_NEEDED)
-										throw new Exception($"{nameof(InitializeSecurityContext)} failed");
-								return clientTokenBuf.GetSecBufferBytes();
+								return resCode is not SEC_E_OK and not SEC_I_CONTINUE_NEEDED
+										?                    throw new Exception($"{nameof(InitializeSecurityContext)} failed")
+										: clientTokenBuf.GetSecBufferBytes();
 						}
 						finally {
 								serverTokenBuf.Dispose();
@@ -339,7 +337,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken) {
 				// Bridge for span-based callers; small and called infrequently in auth flow.
-				var arr = serverToken.ToArray();
+				byte[] arr = serverToken.ToArray();
 				return GetClientSecurity(arr);
 		}
 
@@ -374,7 +372,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		private void InitializeClientCredentials() {
 				_clientCredentials = new SecHandle();
-				var resCode = AcquireCredentialsHandle(null, _securityPackage, SECPKG_CRED_OUTBOUND,
+				int resCode = AcquireCredentialsHandle(null, _securityPackage, SECPKG_CRED_OUTBOUND,
 					IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero,
 					out _clientCredentials, out var expiry);
 				if(resCode != SEC_E_OK)
@@ -383,12 +381,12 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		private void CloseClientContext() {
 				if(!_clientContext.IsInvalid)
-						DeleteSecurityContext(ref _clientContext);
+						_ = DeleteSecurityContext(ref _clientContext);
 		}
 
 		private void CloseClientCredentials() {
 				if(!_clientCredentials.IsInvalid)
-						FreeCredentialsHandle(ref _clientCredentials);
+						_ = FreeCredentialsHandle(ref _clientCredentials);
 		}
 
 		private void EnsureDisposed() {

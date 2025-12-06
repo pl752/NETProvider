@@ -32,13 +32,13 @@ internal static class FbBackupRestoreStatisticsExtensions {
 		public static string BuildConfiguration(this FbBackupRestoreStatistics statistics) {
 				var sb = new StringBuilder();
 				if(statistics.HasFlag(FbBackupRestoreStatistics.TotalTime))
-						sb.Append("T");
+						_ = sb.Append('T');
 				if(statistics.HasFlag(FbBackupRestoreStatistics.TimeDelta))
-						sb.Append("D");
+						_ = sb.Append('D');
 				if(statistics.HasFlag(FbBackupRestoreStatistics.PageReads))
-						sb.Append("R");
+						_ = sb.Append('R');
 				if(statistics.HasFlag(FbBackupRestoreStatistics.PageWrites))
-						sb.Append("W");
+						_ = sb.Append('W');
 				return sb.ToString();
 		}
 }

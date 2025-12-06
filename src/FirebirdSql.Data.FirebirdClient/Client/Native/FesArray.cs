@@ -38,19 +38,13 @@ internal sealed class FesArray : ArrayBase {
 
 		#region Properties
 
-		public override long Handle {
-				get { return _handle; }
-				set { _handle = value; }
+		public override long Handle { get => _handle; set => _handle = value;
 		}
 
-		public override DatabaseBase Database {
-				get { return _database; }
-				set { _database = (FesDatabase)value; }
+		public override DatabaseBase Database { get => _database; set => _database = (FesDatabase)value;
 		}
 
-		public override TransactionBase Transaction {
-				get { return _transaction; }
-				set { _transaction = (FesTransaction)value; }
+		public override TransactionBase Transaction { get => _transaction; set => _transaction = (FesTransaction)value;
 		}
 
 		#endregion
@@ -83,11 +77,11 @@ internal sealed class FesArray : ArrayBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = _transaction.HandlePtr;
 
-				var arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
+				nint arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
 
-				var buffer = new byte[sliceLength];
+				byte[] buffer = new byte[sliceLength];
 
-				_database.FbClient.isc_array_get_slice(
+				_ = _database.FbClient.isc_array_get_slice(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -108,11 +102,11 @@ internal sealed class FesArray : ArrayBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = _transaction.HandlePtr;
 
-				var arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
+				nint arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
 
-				var buffer = new byte[sliceLength];
+				byte[] buffer = new byte[sliceLength];
 
-				_database.FbClient.isc_array_get_slice(
+				_ = _database.FbClient.isc_array_get_slice(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -134,11 +128,11 @@ internal sealed class FesArray : ArrayBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = _transaction.HandlePtr;
 
-				var arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
+				nint arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
 
 				var systemType = GetSystemType();
 
-				var buffer = new byte[sliceLength];
+				byte[] buffer = new byte[sliceLength];
 				if(systemType.GetTypeInfo().IsPrimitive) {
 						Buffer.BlockCopy(sourceArray, 0, buffer, 0, buffer.Length);
 				}
@@ -146,7 +140,7 @@ internal sealed class FesArray : ArrayBase {
 						buffer = EncodeSlice(Descriptor, sourceArray, sliceLength);
 				}
 
-				_database.FbClient.isc_array_put_slice(
+				_ = _database.FbClient.isc_array_put_slice(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -165,11 +159,11 @@ internal sealed class FesArray : ArrayBase {
 				var dbHandle = _database.HandlePtr;
 				var trHandle = _transaction.HandlePtr;
 
-				var arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
+				nint arrayDesc = ArrayDescMarshaler.MarshalManagedToNative(Descriptor);
 
 				var systemType = GetSystemType();
 
-				var buffer = new byte[sliceLength];
+				byte[] buffer = new byte[sliceLength];
 				if(systemType.GetTypeInfo().IsPrimitive) {
 						Buffer.BlockCopy(sourceArray, 0, buffer, 0, buffer.Length);
 				}
@@ -177,7 +171,7 @@ internal sealed class FesArray : ArrayBase {
 						buffer = EncodeSlice(Descriptor, sourceArray, sliceLength);
 				}
 
-				_database.FbClient.isc_array_put_slice(
+				_ = _database.FbClient.isc_array_put_slice(
 					_statusVector,
 					ref dbHandle,
 					ref trHandle,
@@ -198,13 +192,13 @@ internal sealed class FesArray : ArrayBase {
 		#region Protected Methods
 
 		protected override Array DecodeSlice(byte[] slice) {
-				var slicePosition = 0;
+				int slicePosition = 0;
 				var systemType = GetSystemType();
 				var charset = _database.Charset;
-				var lengths = new int[Descriptor.Dimensions];
-				var lowerBounds = new int[Descriptor.Dimensions];
+				int[] lengths = new int[Descriptor.Dimensions];
+				int[] lowerBounds = new int[Descriptor.Dimensions];
 
-				for(var i = 0; i < Descriptor.Dimensions; i++) {
+				for(int i = 0; i < Descriptor.Dimensions; i++) {
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
@@ -222,7 +216,7 @@ internal sealed class FesArray : ArrayBase {
 
 				int itemLength = Descriptor.Length;
 
-				for(var i = 0; i < tempData.Length; i++) {
+				for(int i = 0; i < tempData.Length; i++) {
 						if(slicePosition >= slice.Length) {
 								break;
 						}
@@ -233,8 +227,8 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.VarChar: {
-												var index = slicePosition;
-												var count = 0;
+												int index = slicePosition;
+												int count = 0;
 												while(slice[index++] != 0) {
 														count++;
 												}
@@ -275,7 +269,7 @@ internal sealed class FesArray : ArrayBase {
 																break;
 												}
 
-												var dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
+												decimal dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
 
 												tempData.SetValue(dvalue, i);
 										}
@@ -290,7 +284,7 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Date: {
-												var idate = BitConverter.ToInt32(slice, slicePosition);
+												int idate = BitConverter.ToInt32(slice, slicePosition);
 
 												var date = TypeDecoder.DecodeDate(idate);
 
@@ -299,7 +293,7 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Time: {
-												var itime = BitConverter.ToInt32(slice, slicePosition);
+												int itime = BitConverter.ToInt32(slice, slicePosition);
 
 												var time = TypeDecoder.DecodeTime(itime);
 
@@ -308,8 +302,8 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.TimeStamp: {
-												var idate = BitConverter.ToInt32(slice, slicePosition);
-												var itime = BitConverter.ToInt32(slice, slicePosition + 4);
+												int idate = BitConverter.ToInt32(slice, slicePosition);
+												int itime = BitConverter.ToInt32(slice, slicePosition + 4);
 
 												var date = TypeDecoder.DecodeDate(idate);
 												var time = TypeDecoder.DecodeTime(itime);
@@ -335,13 +329,13 @@ internal sealed class FesArray : ArrayBase {
 				return sliceData;
 		}
 		protected override ValueTask<Array> DecodeSliceAsync(byte[] slice, CancellationToken cancellationToken = default) {
-				var slicePosition = 0;
+				int slicePosition = 0;
 				var systemType = GetSystemType();
 				var charset = _database.Charset;
-				var lengths = new int[Descriptor.Dimensions];
-				var lowerBounds = new int[Descriptor.Dimensions];
+				int[] lengths = new int[Descriptor.Dimensions];
+				int[] lowerBounds = new int[Descriptor.Dimensions];
 
-				for(var i = 0; i < Descriptor.Dimensions; i++) {
+				for(int i = 0; i < Descriptor.Dimensions; i++) {
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
@@ -359,7 +353,7 @@ internal sealed class FesArray : ArrayBase {
 
 				int itemLength = Descriptor.Length;
 
-				for(var i = 0; i < tempData.Length; i++) {
+				for(int i = 0; i < tempData.Length; i++) {
 						if(slicePosition >= slice.Length) {
 								break;
 						}
@@ -370,8 +364,8 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.VarChar: {
-												var index = slicePosition;
-												var count = 0;
+												int index = slicePosition;
+												int count = 0;
 												while(slice[index++] != 0) {
 														count++;
 												}
@@ -412,7 +406,7 @@ internal sealed class FesArray : ArrayBase {
 																break;
 												}
 
-												var dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
+												decimal dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
 
 												tempData.SetValue(dvalue, i);
 										}
@@ -427,7 +421,7 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Date: {
-												var idate = BitConverter.ToInt32(slice, slicePosition);
+												int idate = BitConverter.ToInt32(slice, slicePosition);
 
 												var date = TypeDecoder.DecodeDate(idate);
 
@@ -436,7 +430,7 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Time: {
-												var itime = BitConverter.ToInt32(slice, slicePosition);
+												int itime = BitConverter.ToInt32(slice, slicePosition);
 
 												var time = TypeDecoder.DecodeTime(itime);
 
@@ -445,8 +439,8 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.TimeStamp: {
-												var idate = BitConverter.ToInt32(slice, slicePosition);
-												var itime = BitConverter.ToInt32(slice, slicePosition + 4);
+												int idate = BitConverter.ToInt32(slice, slicePosition);
+												int itime = BitConverter.ToInt32(slice, slicePosition + 4);
 
 												var date = TypeDecoder.DecodeDate(idate);
 												var time = TypeDecoder.DecodeTime(itime);
@@ -476,31 +470,29 @@ internal sealed class FesArray : ArrayBase {
 
 		#region Private Metods
 
-		private void ClearStatusVector() {
-				Array.Clear(_statusVector, 0, _statusVector.Length);
-		}
+		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
 		private byte[] EncodeSlice(ArrayDesc desc, Array sourceArray, int length) {
 				using(var ms = new MemoryStream()) {
 						using(var writer = new BinaryWriter(ms)) {
 								var charset = _database.Charset;
 								var dbType = DbDataType.Array;
-								var subType = (Descriptor.Scale < 0) ? 2 : 0;
-								var type = 0;
+								int subType = (Descriptor.Scale < 0) ? 2 : 0;
+								int type = 0;
 
 								type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
 								dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, subType, Descriptor.Scale);
 
-								foreach(var source in sourceArray) {
+								foreach(object source in sourceArray) {
 										switch(dbType) {
 												case DbDataType.Char: {
-																var value = source != null ? (string)source : string.Empty;
-																var buffer = charset.GetBytes(value);
+																string value = source != null ? (string)source : string.Empty;
+																byte[] buffer = charset.GetBytes(value);
 
 																writer.Write(buffer);
 
 																if(desc.Length > buffer.Length) {
-																		for(var j = buffer.Length; j < desc.Length; j++) {
+																		for(int j = buffer.Length; j < desc.Length; j++) {
 																				writer.Write((byte)32);
 																		}
 																}
@@ -508,13 +500,13 @@ internal sealed class FesArray : ArrayBase {
 														break;
 
 												case DbDataType.VarChar: {
-																var value = source != null ? (string)source : string.Empty;
+																string value = source != null ? (string)source : string.Empty;
 
-																var buffer = charset.GetBytes(value);
+																byte[] buffer = charset.GetBytes(value);
 																writer.Write(buffer);
 
 																if(desc.Length > buffer.Length) {
-																		for(var j = buffer.Length; j < desc.Length; j++) {
+																		for(int j = buffer.Length; j < desc.Length; j++) {
 																				writer.Write((byte)0);
 																		}
 																}
@@ -544,7 +536,7 @@ internal sealed class FesArray : ArrayBase {
 
 												case DbDataType.Numeric:
 												case DbDataType.Decimal: {
-																var numeric = TypeEncoder.EncodeDecimal((decimal)source, desc.Scale, type);
+																object numeric = TypeEncoder.EncodeDecimal((decimal)source, desc.Scale, type);
 
 																switch(type) {
 																		case IscCodes.SQL_SHORT:

@@ -240,9 +240,7 @@ internal sealed class ConnectionString {
 		#endregion
 
 		#region Internal Properties
-		internal string NormalizedConnectionString {
-				get { return string.Join(";", _options.OrderBy(x => x.Key, StringComparer.Ordinal).Where(x => x.Value != null).Select(x => string.Format("{0}={1}", x.Key, WrapValueIfNeeded(x.Value.ToString())))); }
-		}
+		internal string NormalizedConnectionString => string.Join(";", _options.OrderBy(x => x.Key, StringComparer.Ordinal).Where(x => x.Value != null).Select(x => string.Format("{0}={1}", x.Key, WrapValueIfNeeded(x.Value.ToString()))));
 		#endregion
 
 		#region Constructors
@@ -262,22 +260,22 @@ internal sealed class ConnectionString {
 
 		public void Validate() {
 				if(
-					(string.IsNullOrEmpty(Database)) ||
+					string.IsNullOrEmpty(Database) ||
 					(string.IsNullOrEmpty(DataSource) && ServerType != FbServerType.Embedded) ||
-					(string.IsNullOrEmpty(Charset))
+					string.IsNullOrEmpty(Charset)
 					 ) {
 						throw new ArgumentException("An invalid connection string argument has been supplied or a required connection string argument has not been supplied.");
 				}
-				if(Port <= 0 || Port > 65535) {
+				if(Port is <= 0 or > 65535) {
 						throw new ArgumentException("Incorrect port.");
 				}
 				if(MinPoolSize > MaxPoolSize) {
 						throw new ArgumentException("Incorrect pool size.");
 				}
-				if(Dialect < 1 || Dialect > 3) {
+				if(Dialect is < 1 or > 3) {
 						throw new ArgumentException("Incorrect database dialect it should be 1, 2, or 3.");
 				}
-				if(PacketSize < 512 || PacketSize > 32767) {
+				if(PacketSize is < 512 or > 32767) {
 						throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "'Packet Size' value of {0} is not valid.{1}The value should be an integer >= 512 and <= 32767.", PacketSize, Environment.NewLine));
 				}
 				if(DbCachePages < 0) {
@@ -303,8 +301,8 @@ internal sealed class ConnectionString {
 
 						foreach(Match keyPair in keyPairs) {
 								if(keyPair.Groups.Count == 8) {
-										var values = new string[]
-										{
+										string[] values =
+										[
 							(keyPair.Groups[2].Success ? keyPair.Groups[2].Value
 								: keyPair.Groups[4].Success ? keyPair.Groups[4].Value
 									: keyPair.Groups[6].Success ? keyPair.Groups[6].Value
@@ -315,10 +313,10 @@ internal sealed class ConnectionString {
 									: keyPair.Groups[7].Success ? keyPair.Groups[7].Value
 										: string.Empty)
 							.Trim()
-										};
+										];
 
 										if(values.Length == 2 && !string.IsNullOrEmpty(values[0]) && !string.IsNullOrEmpty(values[1])) {
-												if(Synonyms.TryGetValue(values[0], out var key)) {
+												if(Synonyms.TryGetValue(values[0], out string key)) {
 														switch(key) {
 																case DefaultKeyServerType:
 																		_options[key] = ParseEnum<FbServerType>(values[1], DefaultKeyServerType);
@@ -327,7 +325,7 @@ internal sealed class ConnectionString {
 																		_options[key] = ParseEnum<IsolationLevel>(values[1], DefaultKeyIsolationLevel);
 																		break;
 																case DefaultKeyCryptKey:
-																		var cryptKey = default(byte[]);
+																		byte[] cryptKey = default;
 																		try {
 																				cryptKey = Convert.FromBase64String(values[1]);
 																		}
@@ -354,9 +352,7 @@ internal sealed class ConnectionString {
 				}
 		}
 
-		private void SetDefaultOptions() {
-				_options = new Dictionary<string, object>(DefaultValues);
-		}
+		private void SetDefaultOptions() => _options = new Dictionary<string, object>(DefaultValues);
 
 		// it is expected the hostname do be at least 2 characters to prevent possible ambiguity (DNET-892)
 		private void ParseConnectionInfo(string connectionInfo) {
@@ -467,59 +463,41 @@ internal sealed class ConnectionString {
 
 		internal delegate bool TryGetValueDelegate(string key, out object value);
 
-		internal static short GetInt16(string key, TryGetValueDelegate tryGetValue, short defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static short GetInt16(string key, TryGetValueDelegate tryGetValue, short defaultValue = default) => tryGetValue(key, out object value)
 					? Convert.ToInt16(value, CultureInfo.InvariantCulture)
 					: defaultValue;
-		}
 
-		internal static int GetInt32(string key, TryGetValueDelegate tryGetValue, int defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static int GetInt32(string key, TryGetValueDelegate tryGetValue, int defaultValue = default) => tryGetValue(key, out object value)
 					? Convert.ToInt32(value, CultureInfo.InvariantCulture)
 					: defaultValue;
-		}
 
-		internal static long GetInt64(string key, TryGetValueDelegate tryGetValue, long defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static long GetInt64(string key, TryGetValueDelegate tryGetValue, long defaultValue = default) => tryGetValue(key, out object value)
 					? Convert.ToInt64(value, CultureInfo.InvariantCulture)
 					: defaultValue;
-		}
 
-		internal static string GetString(string key, TryGetValueDelegate tryGetValue, string defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static string GetString(string key, TryGetValueDelegate tryGetValue, string defaultValue = default) => tryGetValue(key, out object value)
 					? Convert.ToString(value, CultureInfo.InvariantCulture)
 					: defaultValue;
-		}
 
-		internal static bool GetBoolean(string key, TryGetValueDelegate tryGetValue, bool defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static bool GetBoolean(string key, TryGetValueDelegate tryGetValue, bool defaultValue = default) => tryGetValue(key, out object value)
 					? Convert.ToBoolean(value, CultureInfo.InvariantCulture)
 					: defaultValue;
-		}
 
-		internal static byte[] GetBytes(string key, TryGetValueDelegate tryGetValue, byte[] defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static byte[] GetBytes(string key, TryGetValueDelegate tryGetValue, byte[] defaultValue = default) => tryGetValue(key, out object value)
 					? (byte[])value
 					: defaultValue;
-		}
 
-		internal static FbServerType GetServerType(string key, TryGetValueDelegate tryGetValue, FbServerType defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static FbServerType GetServerType(string key, TryGetValueDelegate tryGetValue, FbServerType defaultValue = default) => tryGetValue(key, out object value)
 					? (FbServerType)value
 					: defaultValue;
-		}
 
-		internal static IsolationLevel GetIsolationLevel(string key, TryGetValueDelegate tryGetValue, IsolationLevel defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static IsolationLevel GetIsolationLevel(string key, TryGetValueDelegate tryGetValue, IsolationLevel defaultValue = default) => tryGetValue(key, out object value)
 					? (IsolationLevel)value
 					: defaultValue;
-		}
 
-		internal static FbWireCrypt GetWireCrypt(string key, TryGetValueDelegate tryGetValue, FbWireCrypt defaultValue = default) {
-				return tryGetValue(key, out var value)
+		internal static FbWireCrypt GetWireCrypt(string key, TryGetValueDelegate tryGetValue, FbWireCrypt defaultValue = default) => tryGetValue(key, out object value)
 					? (FbWireCrypt)value
 					: defaultValue;
-		}
 
 		#endregion
 
@@ -530,24 +508,16 @@ internal sealed class ConnectionString {
 				if(s == null)
 						return s;
 
-				var dataDirectoryLocation = (string)AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
-				var pattern = string.Format("{0}{1}?", Regex.Escape(DataDirectoryKeyword), Regex.Escape(Path.DirectorySeparatorChar.ToString()));
+				string dataDirectoryLocation = (string)AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
+				string pattern = string.Format("{0}{1}?", Regex.Escape(DataDirectoryKeyword), Regex.Escape(Path.DirectorySeparatorChar.ToString()));
 				return Regex.Replace(s, pattern, dataDirectoryLocation + Path.DirectorySeparatorChar, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 		}
 
-		private static T ParseEnum<T>(string value, string name) where T : struct {
-				if(!Enum.TryParse<T>(value, true, out var result))
-						throw NotSupported(name);
-				return result;
-		}
+		private static T ParseEnum<T>(string value, string name) where T : struct => !Enum.TryParse<T>(value, true, out var result) ? throw NotSupported(name) : result;
 
 		private static Exception NotSupported(string name) => new NotSupportedException($"Not supported '{name}'.");
 
-		private static string WrapValueIfNeeded(string value) {
-				if(value != null && value.Contains(';'))
-						return "'" + value + "'";
-				return value;
-		}
+		private static string WrapValueIfNeeded(string value) => value != null && value.Contains(';') ? "'" + value + "'" : value;
 
 		#endregion
 }

@@ -64,19 +64,15 @@ internal abstract class ArrayBase {
 
 		#region Methods
 
-		public void Initialize() {
-				LookupBounds();
-		}
-		public ValueTask InitializeAsync(CancellationToken cancellationToken = default) {
-				return LookupBoundsAsync(cancellationToken);
-		}
+		public void Initialize() => LookupBounds();
+		public ValueTask InitializeAsync(CancellationToken cancellationToken = default) => LookupBoundsAsync(cancellationToken);
 
 		public Array Read() {
-				var slice = GetSlice(GetSliceLength(true));
+				byte[] slice = GetSlice(GetSliceLength(true));
 				return DecodeSlice(slice);
 		}
 		public async ValueTask<Array> ReadAsync(CancellationToken cancellationToken = default) {
-				var slice = await GetSliceAsync(GetSliceLength(true), cancellationToken).ConfigureAwait(false);
+				byte[] slice = await GetSliceAsync(GetSliceLength(true), cancellationToken).ConfigureAwait(false);
 				return await DecodeSliceAsync(slice, cancellationToken).ConfigureAwait(false);
 		}
 
@@ -92,9 +88,9 @@ internal abstract class ArrayBase {
 		public void SetDesc(Array sourceArray) {
 				_descriptor.Dimensions = (short)sourceArray.Rank;
 
-				for(var i = 0; i < sourceArray.Rank; i++) {
-						var lb = _descriptor.Bounds[i].LowerBound;
-						var ub = sourceArray.GetLength(i) - 1 + lb;
+				for(int i = 0; i < sourceArray.Rank; i++) {
+						int lb = _descriptor.Bounds[i].LowerBound;
+						int ub = sourceArray.GetLength(i) - 1 + lb;
 
 						_descriptor.Bounds[i].UpperBound = ub;
 				}
@@ -110,7 +106,7 @@ internal abstract class ArrayBase {
 
 						_descriptor.Bounds = new ArrayBound[16];
 						DbValue[] values;
-						var i = 0;
+						int i = 0;
 						while((values = lookup.Fetch()) != null) {
 								_descriptor.Bounds[i].LowerBound = values[0].GetInt32();
 								_descriptor.Bounds[i].UpperBound = values[1].GetInt32();
@@ -132,7 +128,7 @@ internal abstract class ArrayBase {
 
 						_descriptor.Bounds = new ArrayBound[16];
 						DbValue[] values;
-						var i = 0;
+						int i = 0;
 						while((values = await lookup.FetchAsync(cancellationToken).ConfigureAwait(false)) != null) {
 								_descriptor.Bounds[i].LowerBound = values[0].GetInt32();
 								_descriptor.Bounds[i].UpperBound = values[1].GetInt32();
@@ -162,7 +158,7 @@ internal abstract class ArrayBase {
 								_descriptor.Dimensions = values[3].GetInt16();
 								_descriptor.Flags = 0;
 
-								_rdbFieldName = (values[4].GetString()).Trim();
+								_rdbFieldName = values[4].GetString().Trim();
 						}
 						else {
 								throw new InvalidOperationException();
@@ -205,13 +201,13 @@ internal abstract class ArrayBase {
 		#region Protected Methods
 
 		protected int GetSliceLength(bool read) {
-				var elements = 1;
-				for(var i = 0; i < _descriptor.Dimensions; i++) {
+				int elements = 1;
+				for(int i = 0; i < _descriptor.Dimensions; i++) {
 						var bound = _descriptor.Bounds[i];
 						elements *= bound.UpperBound - bound.LowerBound + 1;
 				}
 
-				var length = elements * _descriptor.Length;
+				int length = elements * _descriptor.Length;
 
 				switch(_descriptor.DataType) {
 						case IscCodes.blr_varying:
@@ -223,9 +219,7 @@ internal abstract class ArrayBase {
 				return length;
 		}
 
-		protected Type GetSystemType() {
-				return TypeHelper.GetTypeFromBlrType(_descriptor.DataType, default, _descriptor.Scale);
-		}
+		protected Type GetSystemType() => TypeHelper.GetTypeFromBlrType(_descriptor.DataType, default, _descriptor.Scale);
 
 		#endregion
 
@@ -251,17 +245,17 @@ internal abstract class ArrayBase {
 		private string GetArrayDesc() {
 				var sql = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					"SELECT Y.RDB$FIELD_TYPE, Y.RDB$FIELD_SCALE, Y.RDB$FIELD_LENGTH, Y.RDB$DIMENSIONS, X.RDB$FIELD_SOURCE " +
 					"FROM RDB$RELATION_FIELDS X, RDB$FIELDS Y " +
 					"WHERE X.RDB$FIELD_SOURCE = Y.RDB$FIELD_NAME ");
 
 				if(_tableName != null && _tableName.Length != 0) {
-						sql.AppendFormat(" AND X.RDB$RELATION_NAME = '{0}'", _tableName);
+						_ = sql.AppendFormat(" AND X.RDB$RELATION_NAME = '{0}'", _tableName);
 				}
 
 				if(_fieldName != null && _fieldName.Length != 0) {
-						sql.AppendFormat(" AND X.RDB$FIELD_NAME = '{0}'", _fieldName);
+						_ = sql.AppendFormat(" AND X.RDB$FIELD_NAME = '{0}'", _fieldName);
 				}
 
 				return sql.ToString();
@@ -270,13 +264,13 @@ internal abstract class ArrayBase {
 		private string GetArrayBounds() {
 				var sql = new StringBuilder();
 
-				sql.Append("SELECT X.RDB$LOWER_BOUND, X.RDB$UPPER_BOUND FROM RDB$FIELD_DIMENSIONS X ");
+				_ = sql.Append("SELECT X.RDB$LOWER_BOUND, X.RDB$UPPER_BOUND FROM RDB$FIELD_DIMENSIONS X ");
 
 				if(_fieldName != null && _fieldName.Length != 0) {
-						sql.AppendFormat("WHERE X.RDB$FIELD_NAME = '{0}'", _rdbFieldName);
+						_ = sql.AppendFormat("WHERE X.RDB$FIELD_NAME = '{0}'", _rdbFieldName);
 				}
 
-				sql.Append(" ORDER BY X.RDB$DIMENSION");
+				_ = sql.Append(" ORDER BY X.RDB$DIMENSION");
 
 				return sql.ToString();
 		}

@@ -26,9 +26,7 @@ internal static class ProtocolsSupported {
 				public int MaxPType { get; } = maxPType;
 		}
 
-		public static ICollection<Protocol> Get(bool compression) {
-				return
-				[
+		public static ICollection<Protocol> Get(bool compression) => [
 						new Protocol(IscCodes.PROTOCOL_VERSION10, IscCodes.ptype_batch_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION11, IscCodes.ptype_lazy_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION12, IscCodes.ptype_lazy_send),
@@ -36,5 +34,4 @@ internal static class ProtocolsSupported {
 				new Protocol(IscCodes.PROTOCOL_VERSION15, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
 				new Protocol(IscCodes.PROTOCOL_VERSION16, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
 			];
-		}
 }

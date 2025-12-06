@@ -26,9 +26,7 @@ namespace Org.BouncyCastle.Crypto.Parameters {
 						Array.Copy(key, keyOff, this.key, 0, keyLen);
 				}
 
-				public byte[] GetKey() {
-						return (byte[])key.Clone();
-				}
+				public byte[] GetKey() => (byte[])key.Clone();
 		}
 
 }

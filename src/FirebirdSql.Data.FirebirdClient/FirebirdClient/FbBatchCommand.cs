@@ -57,7 +57,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		#region Properties
 
 		public string CommandText {
-				get { return _commandText; }
+				get => _commandText;
 				set {
 						if(_commandText != value && _statement != null) {
 								Release();
@@ -91,7 +91,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		//}
 
 		public FbConnection Connection {
-				get { return _connection; }
+				get => _connection;
 				set {
 						//if (_activeReader != null)
 						//{
@@ -114,13 +114,13 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 		public FbBatchParameterCollection BatchParameters {
 				get {
-						_batchParameters ??= new FbBatchParameterCollection();
+						_batchParameters ??= [];
 						return _batchParameters;
 				}
 		}
 
 		public FbTransaction Transaction {
-				get { return _implicitTransaction ? null : _transaction; }
+				get => _implicitTransaction ? null : _transaction;
 				set {
 						//if (_activeReader != null)
 						//{
@@ -131,14 +131,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 						_transaction = value;
 
-						if(_statement != null) {
-								if(_transaction != null) {
-										_statement.Transaction = _transaction.Transaction;
-								}
-								else {
-										_statement.Transaction = null;
-								}
-						}
+						_ = (_statement?.Transaction = _transaction?.Transaction);
 				}
 		}
 
@@ -155,13 +148,11 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		//	}
 		//}
 
-		public bool MultiError {
-				get { return _multiError; }
-				set { _multiError = value; }
+		public bool MultiError { get => _multiError; set => _multiError = value;
 		}
 
 		public int BatchBufferSize {
-				get { return _batchBufferSize; }
+				get => _batchBufferSize;
 				set {
 						if(!SizeHelper.IsValidBatchBufferSize(value))
 								throw SizeHelper.InvalidSizeException("batch buffer");
@@ -175,17 +166,13 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		/// </summary>
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public IReadOnlyList<string> NamedParameters {
-				get { return _namedParameters; }
-		}
+		public IReadOnlyList<string> NamedParameters => _namedParameters;
 
 		#endregion
 
 		#region Internal Properties
 
-		internal bool IsDisposed {
-				get { return _disposed; }
-		}
+		internal bool IsDisposed => _disposed;
 
 		//internal FbDataReader ActiveReader
 		//{
@@ -193,22 +180,16 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		//	set { _activeReader = value; }
 		//}
 
-		internal FbTransaction ActiveTransaction {
-				get { return _transaction; }
-		}
+		internal FbTransaction ActiveTransaction => _transaction;
 
-		internal bool HasImplicitTransaction {
-				get { return _implicitTransaction; }
-		}
+		internal bool HasImplicitTransaction => _implicitTransaction;
 
 		//internal bool HasFields
 		//{
 		//	get { return _statement?.Fields?.Count > 0; }
 		//}
 
-		internal bool HasParameters {
-				get { return _batchParameters != null && _batchParameters.Count > 0 && _batchParameters[0].Count > 0; }
-		}
+		internal bool HasParameters => _batchParameters != null && _batchParameters.Count > 0 && _batchParameters[0].Count > 0;
 
 		#endregion
 
@@ -302,13 +283,9 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 		#region Methods
 
-		public void Cancel() {
-				_connection.CancelCommand();
-		}
+		public void Cancel() => _connection.CancelCommand();
 
-		public static FbParameter CreateParameter() {
-				return new FbParameter();
-		}
+		public static FbParameter CreateParameter() => new FbParameter();
 
 		public FbParameterCollection AddBatchParameters() {
 				var result = new FbParameterCollection();
@@ -464,50 +441,18 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		//	return _activeReader;
 		//}
 
-		public string GetCommandPlan() {
-				if(_statement == null) {
-						return null;
-				}
-				return _statement.GetExecutionPlan();
-		}
-		public Task<string> GetCommandPlanAsync(CancellationToken cancellationToken = default) {
-				if(_statement == null) {
-						return Task.FromResult<string>(null);
-				}
-				return _statement.GetExecutionPlanAsync(cancellationToken).AsTask();
-		}
+		public string GetCommandPlan() => _statement?.GetExecutionPlan();
+		public Task<string> GetCommandPlanAsync(CancellationToken cancellationToken = default) => _statement == null ? Task.FromResult<string>(null) : _statement.GetExecutionPlanAsync(cancellationToken).AsTask();
 
-		public string GetCommandExplainedPlan() {
-				if(_statement == null) {
-						return null;
-				}
-				return _statement.GetExecutionExplainedPlan();
-		}
-		public Task<string> GetCommandExplainedPlanAsync(CancellationToken cancellationToken = default) {
-				if(_statement == null) {
-						return Task.FromResult<string>(null);
-				}
-				return _statement.GetExecutionExplainedPlanAsync(cancellationToken).AsTask();
-		}
+		public string GetCommandExplainedPlan() => _statement?.GetExecutionExplainedPlan();
+		public Task<string> GetCommandExplainedPlanAsync(CancellationToken cancellationToken = default) => _statement == null ? Task.FromResult<string>(null) : _statement.GetExecutionExplainedPlanAsync(cancellationToken).AsTask();
 
-		public int ComputeCurrentBatchSize() {
-				if(_batch == null) {
-						throw new InvalidOperationException("Batch must be prepared.");
-				}
-				if(!HasParameters) {
-						return 0;
-				}
-				return _batch.ComputeBatchSize(_batchParameters.Count, this);
-		}
-		public async Task<int> ComputeCurrentBatchSizeAsync(CancellationToken cancellationToken = default) {
-				if(_batch == null) {
-						throw new InvalidOperationException("Batch must be prepared.");
-				}
-				if(!HasParameters) {
-						return 0;
-				}
-				return await _batch.ComputeBatchSizeAsync(_batchParameters.Count, this, cancellationToken).ConfigureAwait(false);
-		}
+		public int ComputeCurrentBatchSize() => _batch == null
+						? throw new InvalidOperationException("Batch must be prepared.")
+						: !HasParameters ? 0 : _batch.ComputeBatchSize(_batchParameters.Count, this);
+		public async Task<int> ComputeCurrentBatchSizeAsync(CancellationToken cancellationToken = default) => _batch == null
+						? throw new InvalidOperationException("Batch must be prepared.")
+						: !HasParameters ? 0 : await _batch.ComputeBatchSizeAsync(_batchParameters.Count, this, cancellationToken).ConfigureAwait(false);
 
 		#endregion
 
@@ -670,9 +615,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 										_implicitTransaction = false;
 								}
 
-								if(_statement != null) {
-										_statement.Transaction = null;
-								}
+								_statement?.Transaction = null;
 						}
 				}
 		}
@@ -697,16 +640,14 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 										_implicitTransaction = false;
 								}
 
-								if(_statement != null) {
-										_statement.Transaction = null;
-								}
+								_statement?.Transaction = null;
 						}
 				}
 		}
 
 		internal void RollbackImplicitTransaction() {
 				if(HasImplicitTransaction && _transaction != null && _transaction.Transaction != null) {
-						var transactionCount = Connection.InnerConnection.Database.TransactionCount;
+						int transactionCount = Connection.InnerConnection.Database.TransactionCount;
 
 						try {
 								_transaction.Rollback();
@@ -725,15 +666,13 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								_transaction = null;
 								_implicitTransaction = false;
 
-								if(_statement != null) {
-										_statement.Transaction = null;
-								}
+								_statement?.Transaction = null;
 						}
 				}
 		}
 		internal async Task RollbackImplicitTransactionAsync(CancellationToken cancellationToken = default) {
 				if(HasImplicitTransaction && _transaction != null && _transaction.Transaction != null) {
-						var transactionCount = Connection.InnerConnection.Database.TransactionCount;
+						int transactionCount = Connection.InnerConnection.Database.TransactionCount;
 
 						try {
 								await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
@@ -752,24 +691,13 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								_transaction = null;
 								_implicitTransaction = false;
 
-								if(_statement != null) {
-										_statement.Transaction = null;
-								}
+								_statement?.Transaction = null;
 						}
 				}
 		}
 
-		internal void Close() {
-				if(_statement != null) {
-						_statement.Close();
-				}
-		}
-		internal Task CloseAsync(CancellationToken cancellationToken = default) {
-				if(_statement != null) {
-						return _statement.CloseAsync(cancellationToken).AsTask();
-				}
-				return Task.CompletedTask;
-		}
+		internal void Close() => _statement?.Close();
+		internal Task CloseAsync(CancellationToken cancellationToken = default) => _statement != null ? _statement.CloseAsync(cancellationToken).AsTask() : Task.CompletedTask;
 
 		void IFbPreparedCommand.Release() => Release();
 		internal void Release() {
@@ -783,10 +711,8 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 				_batch = null;
 
-				if(_statement != null) {
-						_statement.Dispose2();
-						_statement = null;
-				}
+				_statement?.Dispose2();
+				_statement = null;
 		}
 		Task IFbPreparedCommand.ReleaseAsync(CancellationToken cancellationToken) => ReleaseAsync(cancellationToken);
 		internal async Task ReleaseAsync(CancellationToken cancellationToken = default) {
@@ -831,9 +757,9 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 				if(!HasParameters)
 						return;
 
-				for(var i = 0; i < descriptor.Count; i++) {
+				for(int i = 0; i < descriptor.Count; i++) {
 						var parameter = descriptor[i];
-						var index = i;
+						int index = i;
 
 						if(_namedParameters.Count > 0) {
 								index = _batchParameters[batchIndex].IndexOf(_namedParameters[i], i);
@@ -891,7 +817,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 														break;
 
 												case DbDataType.Guid:
-														if(!(commandParameter.InternalValue is Guid) && !(commandParameter.InternalValue is byte[])) {
+														if(commandParameter.InternalValue is not Guid and not byte[]) {
 																throw new InvalidOperationException("Incorrect Guid value.");
 														}
 														parameter.DbValue.SetValue(commandParameter.InternalValue);
@@ -910,9 +836,9 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 				if(!HasParameters)
 						return;
 
-				for(var i = 0; i < descriptor.Count; i++) {
+				for(int i = 0; i < descriptor.Count; i++) {
 						var batchParameter = descriptor[i];
-						var index = i;
+						int index = i;
 
 						if(_namedParameters.Count > 0) {
 								index = _batchParameters[batchIndex].IndexOf(_namedParameters[i], i);
@@ -971,7 +897,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 														break;
 
 												case DbDataType.Guid:
-														if(!(commandParameter.InternalValue is Guid) && !(commandParameter.InternalValue is byte[])) {
+														if(commandParameter.InternalValue is not Guid and not byte[]) {
 																throw new InvalidOperationException("Incorrect Guid value.");
 														}
 														batchParameter.DbValue.SetValue(commandParameter.InternalValue);
@@ -1004,9 +930,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								_transaction.BeginTransaction();
 
 								// Update Statement	transaction
-								if(_statement != null) {
-										_statement.Transaction = _transaction.Transaction;
-								}
+								_ = (_statement?.Transaction = _transaction.Transaction);
 						}
 				}
 
@@ -1022,7 +946,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 						//DisposeReader();
 
 						// Reformat the SQL statement if needed
-						var sql = _commandText;
+						string sql = _commandText;
 
 						try {
 								(sql, _namedParameters) = NamedParametersParser.Parse(sql);
@@ -1060,9 +984,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								await _transaction.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 								// Update Statement	transaction
-								if(_statement != null) {
-										_statement.Transaction = _transaction.Transaction;
-								}
+								_ = (_statement?.Transaction = _transaction.Transaction);
 						}
 				}
 
@@ -1078,7 +1000,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 						//await DisposeReaderAsync(cancellationToken).ConfigureAwait(false);
 
 						// Reformat the SQL statement if needed
-						var sql = _commandText;
+						string sql = _commandText;
 
 						try {
 								(sql, _namedParameters) = NamedParametersParser.Parse(sql);

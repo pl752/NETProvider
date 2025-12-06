@@ -578,13 +578,11 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				}
 		}
 
-		private static byte FbShutdownOnlineModeToIscCode(FbShutdownOnlineMode mode) {
-				return mode switch {
-						FbShutdownOnlineMode.Normal => IscCodes.isc_spb_prp_sm_normal,
-						FbShutdownOnlineMode.Multi => IscCodes.isc_spb_prp_sm_multi,
-						FbShutdownOnlineMode.Single => IscCodes.isc_spb_prp_sm_single,
-						FbShutdownOnlineMode.Full => IscCodes.isc_spb_prp_sm_full,
-						_ => throw new ArgumentOutOfRangeException(nameof(mode)),
-				};
-		}
+		private static byte FbShutdownOnlineModeToIscCode(FbShutdownOnlineMode mode) => mode switch {
+				FbShutdownOnlineMode.Normal => IscCodes.isc_spb_prp_sm_normal,
+				FbShutdownOnlineMode.Multi => IscCodes.isc_spb_prp_sm_multi,
+				FbShutdownOnlineMode.Single => IscCodes.isc_spb_prp_sm_single,
+				FbShutdownOnlineMode.Full => IscCodes.isc_spb_prp_sm_full,
+				_ => throw new ArgumentOutOfRangeException(nameof(mode)),
+		};
 }

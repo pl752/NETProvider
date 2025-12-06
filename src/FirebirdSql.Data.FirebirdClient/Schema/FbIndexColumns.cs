@@ -26,7 +26,7 @@ internal class FbIndexColumns : FbSchema {
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
-				sql.Append(
+				_ = sql.Append(
 					@"SELECT
 					null AS CONSTRAINT_CATALOG,
 					null AS CONSTRAINT_SCHEMA,
@@ -41,7 +41,7 @@ internal class FbIndexColumns : FbSchema {
 					LEFT JOIN rdb$index_segments seg ON idx.rdb$index_name = seg.rdb$index_name");
 
 				if(restrictions != null) {
-						var index = 0;
+						int index = 0;
 
 						/* TABLE_CATALOG */
 						if(restrictions.Length >= 1 && restrictions[0] != null) {
@@ -53,33 +53,33 @@ internal class FbIndexColumns : FbSchema {
 
 						/* TABLE_NAME */
 						if(restrictions.Length >= 3 && restrictions[2] != null) {
-								where.AppendFormat("idx.rdb$relation_name = @p{0}", index++);
+								_ = where.AppendFormat("idx.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* INDEX_NAME */
 						if(restrictions.Length >= 4 && restrictions[3] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("idx.rdb$index_name = @p{0}", index++);
+								_ = where.AppendFormat("idx.rdb$index_name = @p{0}", index++);
 						}
 
 						/* COLUMN_NAME */
 						if(restrictions.Length >= 5 && restrictions[4] != null) {
 								if(where.Length > 0) {
-										where.Append(" AND ");
+										_ = where.Append(" AND ");
 								}
 
-								where.AppendFormat("seg.rdb$field_name = @p{0}", index++);
+								_ = where.AppendFormat("seg.rdb$field_name = @p{0}", index++);
 						}
 				}
 
 				if(where.Length > 0) {
-						sql.AppendFormat(" WHERE {0} ", where.ToString());
+						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
-				sql.Append(" ORDER BY TABLE_NAME, INDEX_NAME, ORDINAL_POSITION");
+				_ = sql.Append(" ORDER BY TABLE_NAME, INDEX_NAME, ORDINAL_POSITION");
 
 				return sql;
 		}

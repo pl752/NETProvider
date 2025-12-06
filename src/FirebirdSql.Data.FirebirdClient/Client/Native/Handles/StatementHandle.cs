@@ -30,9 +30,9 @@ public class StatementHandle : FirebirdHandle {
 						return true;
 				}
 
-				var statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
+				nint[] statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 				var @ref = this;
-				FbClient.isc_dsql_free_statement(statusVector, ref @ref, IscCodes.DSQL_drop);
+				_ = FbClient.isc_dsql_free_statement(statusVector, ref @ref, IscCodes.DSQL_drop);
 				handle = @ref.handle;
 
 				var exception = StatusVectorHelper.ParseStatusVector(statusVector, Charset.DefaultCharset);

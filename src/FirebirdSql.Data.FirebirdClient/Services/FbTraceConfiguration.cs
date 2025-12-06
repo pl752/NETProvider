@@ -20,9 +20,7 @@ using System.Globalization;
 namespace FirebirdSql.Data.Services;
 
 public abstract class FbTraceConfiguration {
-		protected static string WriteBoolValue(bool b) {
-				return b ? "true" : "false";
-		}
+		protected static string WriteBoolValue(bool b) => b ? "true" : "false";
 
 		protected static string WriteString(string s) {
 				s = s
@@ -33,11 +31,7 @@ public abstract class FbTraceConfiguration {
 				return string.Format("\"{0}\"", s);
 		}
 
-		protected static string WriteNumber(int i) {
-				return i.ToString(CultureInfo.InvariantCulture);
-		}
+		protected static string WriteNumber(int i) => i.ToString(CultureInfo.InvariantCulture);
 
-		protected static string WriteRegEx(string re) {
-				return WriteString(re);
-		}
+		protected static string WriteRegEx(string re) => WriteString(re);
 }

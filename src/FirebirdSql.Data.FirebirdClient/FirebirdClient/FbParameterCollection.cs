@@ -39,16 +39,12 @@ public sealed class FbParameterCollection : DbParameterCollection {
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public new FbParameter this[string parameterName] {
-				get { return this[IndexOf(parameterName)]; }
-				set { this[IndexOf(parameterName)] = value; }
+		public new FbParameter this[string parameterName] { get => this[IndexOf(parameterName)]; set => this[IndexOf(parameterName)] = value;
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public new FbParameter this[int index] {
-				get { return _parameters[index]; }
-				set { _parameters[index] = value; }
+		public new FbParameter this[int index] { get => _parameters[index]; set => _parameters[index] = value;
 		}
 
 		#endregion
@@ -57,42 +53,28 @@ public sealed class FbParameterCollection : DbParameterCollection {
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override int Count {
-				get { return _parameters.Count; }
-		}
+		public override int Count => _parameters.Count;
 
-		public override bool IsFixedSize {
-				get { return ((IList)_parameters).IsFixedSize; }
-		}
+		public override bool IsFixedSize => ((IList)_parameters).IsFixedSize;
 
-		public override bool IsReadOnly {
-				get { return ((IList)_parameters).IsReadOnly; }
-		}
+		public override bool IsReadOnly => ((IList)_parameters).IsReadOnly;
 
-		public override bool IsSynchronized {
-				get { return ((ICollection)_parameters).IsSynchronized; }
-		}
+		public override bool IsSynchronized => ((ICollection)_parameters).IsSynchronized;
 
-		public override object SyncRoot {
-				get { return ((ICollection)_parameters).SyncRoot; }
-		}
+		public override object SyncRoot => ((ICollection)_parameters).SyncRoot;
 
 		#endregion
 
 		#region Internal properties
 
-		internal bool HasParameterWithNonAsciiName {
-				get {
-						return _hasParameterWithNonAsciiName ?? (bool)(_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
-				}
-		}
+		internal bool HasParameterWithNonAsciiName => _hasParameterWithNonAsciiName ?? (bool)(_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
 
 		#endregion
 
 		#region Constructors
 
 		internal FbParameterCollection() {
-				_parameters = new List<FbParameter>();
+				_parameters = [];
 				_hasParameterWithNonAsciiName = null;
 		}
 
@@ -102,33 +84,21 @@ public sealed class FbParameterCollection : DbParameterCollection {
 
 		public void AddRange(IEnumerable<FbParameter> values) {
 				foreach(var p in values) {
-						Add(p);
+						_ = Add(p);
 				}
 		}
 
-		public override void AddRange(Array values) {
-				AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter)x; }));
-		}
+		public override void AddRange(Array values) => AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter)x; }));
 
-		public FbParameter AddWithValue(string parameterName, object value) {
-				return Add(new FbParameter(parameterName, value));
-		}
+		public FbParameter AddWithValue(string parameterName, object value) => Add(new FbParameter(parameterName, value));
 
-		public FbParameter Add(string parameterName, object value) {
-				return Add(new FbParameter(parameterName, value));
-		}
+		public FbParameter Add(string parameterName, object value) => Add(new FbParameter(parameterName, value));
 
-		public FbParameter Add(string parameterName, FbDbType type) {
-				return Add(new FbParameter(parameterName, type));
-		}
+		public FbParameter Add(string parameterName, FbDbType type) => Add(new FbParameter(parameterName, type));
 
-		public FbParameter Add(string parameterName, FbDbType fbType, int size) {
-				return Add(new FbParameter(parameterName, fbType, size));
-		}
+		public FbParameter Add(string parameterName, FbDbType fbType, int size) => Add(new FbParameter(parameterName, fbType, size));
 
-		public FbParameter Add(string parameterName, FbDbType fbType, int size, string sourceColumn) {
-				return Add(new FbParameter(parameterName, fbType, size, sourceColumn));
-		}
+		public FbParameter Add(string parameterName, FbDbType fbType, int size, string sourceColumn) => Add(new FbParameter(parameterName, fbType, size, sourceColumn));
 
 		public FbParameter Add(FbParameter value) {
 				EnsureFbParameterAddOrInsert(value);
@@ -144,9 +114,7 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				return IndexOf(Add((FbParameter)value));
 		}
 
-		public bool Contains(FbParameter value) {
-				return _parameters.Contains(value);
-		}
+		public bool Contains(FbParameter value) => _parameters.Contains(value);
 
 		public override bool Contains(object value) {
 				EnsureFbParameterType(value);
@@ -154,13 +122,9 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				return Contains((FbParameter)value);
 		}
 
-		public override bool Contains(string parameterName) {
-				return IndexOf(parameterName) != -1;
-		}
+		public override bool Contains(string parameterName) => IndexOf(parameterName) != -1;
 
-		public int IndexOf(FbParameter value) {
-				return _parameters.IndexOf(value);
-		}
+		public int IndexOf(FbParameter value) => _parameters.IndexOf(value);
 
 		public override int IndexOf(object value) {
 				EnsureFbParameterType(value);
@@ -168,16 +132,14 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				return IndexOf((FbParameter)value);
 		}
 
-		public override int IndexOf(string parameterName) {
-				return IndexOf(parameterName, -1);
-		}
+		public override int IndexOf(string parameterName) => IndexOf(parameterName, -1);
 
 		internal int IndexOf(string parameterName, int luckyIndex) {
-				var isNonAsciiParameterName = FbParameter.IsNonAsciiParameterName(parameterName);
+				bool isNonAsciiParameterName = FbParameter.IsNonAsciiParameterName(parameterName);
 				var usedComparison = isNonAsciiParameterName || HasParameterWithNonAsciiName
 					? StringComparison.CurrentCultureIgnoreCase
 					: StringComparison.OrdinalIgnoreCase;
-				var normalizedParameterName = FbParameter.NormalizeParameterName(parameterName);
+				string normalizedParameterName = FbParameter.NormalizeParameterName(parameterName);
 				if(luckyIndex != -1 && luckyIndex < _parameters.Count) {
 						if(_parameters[luckyIndex].InternalParameterName.Equals(normalizedParameterName, usedComparison)) {
 								return luckyIndex;
@@ -224,17 +186,11 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				ReleaseParameter(parameter);
 		}
 
-		public override void RemoveAt(string parameterName) {
-				RemoveAt(IndexOf(parameterName));
-		}
+		public override void RemoveAt(string parameterName) => RemoveAt(IndexOf(parameterName));
 
-		public void CopyTo(FbParameter[] array, int index) {
-				_parameters.CopyTo(array, index);
-		}
+		public void CopyTo(FbParameter[] array, int index) => _parameters.CopyTo(array, index);
 
-		public override void CopyTo(Array array, int index) {
-				((IList)_parameters).CopyTo(array, index);
-		}
+		public override void CopyTo(Array array, int index) => ((IList)_parameters).CopyTo(array, index);
 
 		public override void Clear() {
 				var parameters = _parameters.ToArray();
@@ -244,46 +200,34 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				}
 		}
 
-		public override IEnumerator GetEnumerator() {
-				return _parameters.GetEnumerator();
-		}
+		public override IEnumerator GetEnumerator() => _parameters.GetEnumerator();
 
 		#endregion
 
 		#region DbParameterCollection overriden protected methods
 
-		protected override DbParameter GetParameter(string parameterName) {
-				return this[parameterName];
-		}
+		protected override DbParameter GetParameter(string parameterName) => this[parameterName];
 
-		protected override DbParameter GetParameter(int index) {
-				return this[index];
-		}
+		protected override DbParameter GetParameter(int index) => this[index];
 
-		protected override void SetParameter(int index, DbParameter value) {
-				this[index] = (FbParameter)value;
-		}
+		protected override void SetParameter(int index, DbParameter value) => this[index] = (FbParameter)value;
 
-		protected override void SetParameter(string parameterName, DbParameter value) {
-				this[parameterName] = (FbParameter)value;
-		}
+		protected override void SetParameter(string parameterName, DbParameter value) => this[parameterName] = (FbParameter)value;
 
 		#endregion
 
 		#region Internal Methods
 
-		internal void ParameterNameChanged() {
-				_hasParameterWithNonAsciiName = null;
-		}
+		internal void ParameterNameChanged() => _hasParameterWithNonAsciiName = null;
 
 		#endregion
 
 		#region Private Methods
 
 		private string GenerateParameterName() {
-				var index = Count + 1;
+				int index = Count + 1;
 				while(true) {
-						var name = "Parameter" + index.ToString(CultureInfo.InvariantCulture);
+						string name = "Parameter" + index.ToString(CultureInfo.InvariantCulture);
 						if(!Contains(name)) {
 								return name;
 						}
@@ -292,7 +236,7 @@ public sealed class FbParameterCollection : DbParameterCollection {
 		}
 
 		private void EnsureFbParameterType(object value) {
-				if(!(value is FbParameter)) {
+				if(value is not FbParameter) {
 						throw new InvalidCastException($"The parameter passed was not a {nameof(FbParameter)}.");
 				}
 		}
@@ -312,13 +256,9 @@ public sealed class FbParameterCollection : DbParameterCollection {
 				}
 		}
 
-		private void AttachParameter(FbParameter parameter) {
-				parameter.Parent = this;
-		}
+		private void AttachParameter(FbParameter parameter) => parameter.Parent = this;
 
-		private static void ReleaseParameter(FbParameter parameter) {
-				parameter.Parent = null;
-		}
+		private static void ReleaseParameter(FbParameter parameter) => parameter.Parent = null;
 
 		#endregion
 }

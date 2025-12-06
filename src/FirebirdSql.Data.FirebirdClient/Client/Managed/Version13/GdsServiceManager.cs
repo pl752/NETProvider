@@ -102,11 +102,7 @@ internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServic
 				}
 		}
 
-		public override ServiceParameterBufferBase CreateServiceParameterBuffer() {
-				return new ServiceParameterBuffer3(Database.ParameterBufferEncoding);
-		}
+		public override ServiceParameterBufferBase CreateServiceParameterBuffer() => new ServiceParameterBuffer3(Database.ParameterBufferEncoding);
 
-		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection) {
-				return new GdsDatabase(connection);
-		}
+		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection) => new GdsDatabase(connection);
 }

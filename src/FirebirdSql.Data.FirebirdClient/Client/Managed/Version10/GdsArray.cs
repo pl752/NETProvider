@@ -42,19 +42,13 @@ internal sealed class GdsArray : ArrayBase {
 
 		#region Properties
 
-		public override long Handle {
-				get { return _handle; }
-				set { _handle = value; }
+		public override long Handle { get => _handle; set => _handle = value;
 		}
 
-		public override DatabaseBase Database {
-				get { return _database; }
-				set { _database = (GdsDatabase)value; }
+		public override DatabaseBase Database { get => _database; set => _database = (GdsDatabase)value;
 		}
 
-		public override TransactionBase Transaction {
-				get { return _transaction; }
-				set { _transaction = (GdsTransaction)value; }
+		public override TransactionBase Transaction { get => _transaction; set => _transaction = (GdsTransaction)value;
 		}
 
 		#endregion
@@ -80,7 +74,7 @@ internal sealed class GdsArray : ArrayBase {
 
 		public override byte[] GetSlice(int sliceLength) {
 				try {
-						var sdl = GenerateSDL(Descriptor);
+						byte[] sdl = GenerateSDL(Descriptor);
 
 						_database.Xdr.WriteBytes(bufOpGetSlice);
 						_database.Xdr.Write(_transaction.Handle);
@@ -99,7 +93,7 @@ internal sealed class GdsArray : ArrayBase {
 		}
 		public override async ValueTask<byte[]> GetSliceAsync(int sliceLength, CancellationToken cancellationToken = default) {
 				try {
-						var sdl = GenerateSDL(Descriptor);
+						byte[] sdl = GenerateSDL(Descriptor);
 
 						await _database.Xdr.WriteBytesAsync(bufOpGetSlice, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_transaction.Handle, cancellationToken).ConfigureAwait(false);
@@ -119,8 +113,8 @@ internal sealed class GdsArray : ArrayBase {
 
 		public override void PutSlice(Array sourceArray, int sliceLength) {
 				try {
-						var sdl = GenerateSDL(Descriptor);
-						var slice = EncodeSliceArray(sourceArray);
+						byte[] sdl = GenerateSDL(Descriptor);
+						byte[] slice = EncodeSliceArray(sourceArray);
 
 						_database.Xdr.WriteBytes(bufOpPutSlice);
 						_database.Xdr.Write(_transaction.Handle);
@@ -142,8 +136,8 @@ internal sealed class GdsArray : ArrayBase {
 		}
 		public override async ValueTask PutSliceAsync(Array sourceArray, int sliceLength, CancellationToken cancellationToken = default) {
 				try {
-						var sdl = GenerateSDL(Descriptor);
-						var slice = await EncodeSliceArrayAsync(sourceArray, cancellationToken).ConfigureAwait(false);
+						byte[] sdl = GenerateSDL(Descriptor);
+						byte[] slice = await EncodeSliceArrayAsync(sourceArray, cancellationToken).ConfigureAwait(false);
 
 						await _database.Xdr.WriteBytesAsync(bufOpPutSlice, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_transaction.Handle, cancellationToken).ConfigureAwait(false);
@@ -170,11 +164,11 @@ internal sealed class GdsArray : ArrayBase {
 
 		protected override Array DecodeSlice(byte[] slice) {
 				var systemType = GetSystemType();
-				var lengths = new int[Descriptor.Dimensions];
-				var lowerBounds = new int[Descriptor.Dimensions];
-				var index = 0;
+				int[] lengths = new int[Descriptor.Dimensions];
+				int[] lowerBounds = new int[Descriptor.Dimensions];
+				int index = 0;
 
-				for(var i = 0; i < Descriptor.Dimensions; i++) {
+				for(int i = 0; i < Descriptor.Dimensions; i++) {
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
@@ -255,11 +249,11 @@ internal sealed class GdsArray : ArrayBase {
 		}
 		protected override async ValueTask<Array> DecodeSliceAsync(byte[] slice, CancellationToken cancellationToken = default) {
 				var systemType = GetSystemType();
-				var lengths = new int[Descriptor.Dimensions];
-				var lowerBounds = new int[Descriptor.Dimensions];
-				var index = 0;
+				int[] lengths = new int[Descriptor.Dimensions];
+				int[] lowerBounds = new int[Descriptor.Dimensions];
+				int index = 0;
 
-				for(var i = 0; i < Descriptor.Dimensions; i++) {
+				for(int i = 0; i < Descriptor.Dimensions; i++) {
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
@@ -345,11 +339,11 @@ internal sealed class GdsArray : ArrayBase {
 
 		private byte[] ReceiveSliceResponse(ArrayDesc desc) {
 				try {
-						var operation = _database.ReadOperation();
+						int operation = _database.ReadOperation();
 						if(operation == IscCodes.op_slice) {
-								var isVariying = false;
-								var elements = 0;
-								var length = _database.Xdr.ReadInt32();
+								bool isVariying = false;
+								int elements = 0;
+								int length = _database.Xdr.ReadInt32();
 
 								length = _database.Xdr.ReadInt32();
 
@@ -376,7 +370,7 @@ internal sealed class GdsArray : ArrayBase {
 								if(isVariying) {
 										using(var ms = new MemoryStream()) {
 												var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms));
-												for(var i = 0; i < elements; i++) {
+												for(int i = 0; i < elements; i++) {
 														SliceInner(xdr);
 												}
 												xdr.Flush();
@@ -388,7 +382,7 @@ internal sealed class GdsArray : ArrayBase {
 								}
 						}
 						else {
-								_database.ReadResponse(operation);
+								_ = _database.ReadResponse(operation);
 								return null;
 						}
 				}
@@ -406,11 +400,11 @@ internal sealed class GdsArray : ArrayBase {
 
 		private async ValueTask<byte[]> ReceiveSliceResponseAsync(ArrayDesc desc, CancellationToken cancellationToken = default) {
 				try {
-						var operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+						int operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 						if(operation == IscCodes.op_slice) {
-								var isVariying = false;
-								var elements = 0;
-								var length = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+								bool isVariying = false;
+								int elements = 0;
+								int length = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 
 								length = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 
@@ -437,9 +431,9 @@ internal sealed class GdsArray : ArrayBase {
 								if(isVariying) {
 										using(var ms = new MemoryStream()) {
 												var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms));
-												for(var i = 0; i < elements; i++) {
-														var elen = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
-														var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(elen);
+												for(int i = 0; i < elements; i++) {
+														int elen = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+														byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(elen);
 														try {
 																await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, elen), elen, cancellationToken).ConfigureAwait(false);
 																await xdr.WriteBufferAsync(rented.AsMemory(0, elen), cancellationToken).ConfigureAwait(false);
@@ -457,7 +451,7 @@ internal sealed class GdsArray : ArrayBase {
 								}
 						}
 						else {
-								await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false);
+								_ = await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false);
 								return null;
 						}
 				}
@@ -468,17 +462,17 @@ internal sealed class GdsArray : ArrayBase {
 
 		private byte[] EncodeSliceArray(Array sourceArray) {
 				var charset = _database.Charset;
-				var subType = (Descriptor.Scale < 0) ? 2 : 0;
+				int subType = (Descriptor.Scale < 0) ? 2 : 0;
 				using(var ms = new MemoryStream()) {
 						var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 						int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
 						DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, subType, Descriptor.Scale);
 
-						foreach(var source in sourceArray) {
+						foreach(object source in sourceArray) {
 								switch(dbType) {
 										case DbDataType.Char:
-												var buffer = charset.GetBytes(source.ToString());
+												byte[] buffer = charset.GetBytes(source.ToString());
 												xdr.WriteOpaque(buffer, Descriptor.Length);
 												break;
 
@@ -534,17 +528,17 @@ internal sealed class GdsArray : ArrayBase {
 		}
 		private async ValueTask<byte[]> EncodeSliceArrayAsync(Array sourceArray, CancellationToken cancellationToken = default) {
 				var charset = _database.Charset;
-				var subType = (Descriptor.Scale < 0) ? 2 : 0;
+				int subType = (Descriptor.Scale < 0) ? 2 : 0;
 				using(var ms = new MemoryStream()) {
 						var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 						int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
 						DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, subType, Descriptor.Scale);
 
-						foreach(var source in sourceArray) {
+						foreach(object source in sourceArray) {
 								switch(dbType) {
 										case DbDataType.Char:
-												var buffer = charset.GetBytes(source.ToString());
+												byte[] buffer = charset.GetBytes(source.ToString());
 												await xdr.WriteOpaqueAsync(buffer, Descriptor.Length, cancellationToken).ConfigureAwait(false);
 												break;
 
@@ -677,35 +671,27 @@ internal sealed class GdsArray : ArrayBase {
 		}
 
 		private static void Stuff(BinaryWriter sdl, short count, params object[] args) {
-				for(var i = 0; i < count; i++) {
+				for(int i = 0; i < count; i++) {
 						sdl.Write(Convert.ToByte(args[i], CultureInfo.InvariantCulture));
 				}
 		}
 
-		private static void Stuff(BinaryWriter sdl, byte[] args) {
-				sdl.Write(args);
-		}
+		private static void Stuff(BinaryWriter sdl, byte[] args) => sdl.Write(args);
 
-		private static void StuffSdl(BinaryWriter sdl, byte sdl_byte) {
-				Stuff(sdl, 1, sdl_byte);
-		}
+		private static void StuffSdl(BinaryWriter sdl, byte sdl_byte) => Stuff(sdl, 1, sdl_byte);
 
-		private static void StuffWord(BinaryWriter sdl, short word) {
-				Stuff(sdl, BitConverter.GetBytes(word));
-		}
+		private static void StuffWord(BinaryWriter sdl, short word) => Stuff(sdl, BitConverter.GetBytes(word));
 
-		private static void StuffLong(BinaryWriter sdl, int word) {
-				Stuff(sdl, BitConverter.GetBytes(word));
-		}
+		private static void StuffLong(BinaryWriter sdl, int word) => Stuff(sdl, BitConverter.GetBytes(word));
 
 		private static void StuffLiteral(BinaryWriter sdl, int literal) {
-				if(literal >= -128 && literal <= 127) {
+				if(literal is >= (-128) and <= 127) {
 						Stuff(sdl, 2, IscCodes.isc_sdl_tiny_integer, literal);
 
 						return;
 				}
 
-				if(literal >= -32768 && literal <= 32767) {
+				if(literal is >= (-32768) and <= 32767) {
 						StuffSdl(sdl, IscCodes.isc_sdl_short_integer);
 						StuffWord(sdl, (short)literal);
 
@@ -720,7 +706,7 @@ internal sealed class GdsArray : ArrayBase {
 				StuffSdl(sdl, (byte)constant);
 				StuffSdl(sdl, (byte)value.Length);
 
-				for(var i = 0; i < value.Length; i++) {
+				for(int i = 0; i < value.Length; i++) {
 						StuffSdl(sdl, (byte)value[i]);
 				}
 		}

@@ -37,7 +37,7 @@ public sealed class FbNRestore(string connectionString = null) : FbService(conne
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_nrest);
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								foreach(var file in BackupFiles) {
+								foreach(string file in BackupFiles) {
 										startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
 								}
 								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");
@@ -61,7 +61,7 @@ public sealed class FbNRestore(string connectionString = null) : FbService(conne
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_nrest);
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								foreach(var file in BackupFiles) {
+								foreach(string file in BackupFiles) {
 										startSpb.Append2(IscCodes.isc_spb_nbk_file, file);
 								}
 								startSpb.Append2(IscCodes.isc_spb_nbk_direct, DirectIO ? "ON" : "OFF");

@@ -32,9 +32,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 
 		#region Static Pool Handling Methods
 
-		public static void ClearAllPools() {
-				FbConnectionPoolManager.Instance.ClearAllPools();
-		}
+		public static void ClearAllPools() => FbConnectionPoolManager.Instance.ClearAllPools();
 
 		public static void ClearPool(FbConnection connection) {
 				ArgumentNullException.ThrowIfNull(connection);
@@ -149,7 +147,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 		[RefreshProperties(RefreshProperties.All)]
 		[DefaultValue("")]
 		public override string ConnectionString {
-				get { return _connectionString; }
+				get => _connectionString;
 				set {
 						if(_state == ConnectionState.Closed) {
 								value ??= string.Empty;
@@ -162,75 +160,45 @@ public sealed class FbConnection : DbConnection, ICloneable {
 		}
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override int ConnectionTimeout {
-				get { return _options.ConnectionTimeout; }
-		}
+		public override int ConnectionTimeout => _options.ConnectionTimeout;
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override string Database {
-				get { return _options.Database; }
-		}
+		public override string Database => _options.Database;
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override string DataSource {
-				get { return _options.DataSource; }
-		}
+		public override string DataSource => _options.DataSource;
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override string ServerVersion {
-				get {
-						if(_state == ConnectionState.Closed) {
-								throw new InvalidOperationException("The connection is closed.");
-						}
-
-						if(_innerConnection != null) {
-								return _innerConnection.Database.ServerVersion;
-						}
-
-						return string.Empty;
-				}
-		}
+		public override string ServerVersion => _state == ConnectionState.Closed
+								? throw new InvalidOperationException("The connection is closed.")
+								: _innerConnection != null ? _innerConnection.Database.ServerVersion : string.Empty;
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override ConnectionState State {
-				get { return _state; }
-		}
+		public override ConnectionState State => _state;
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int PacketSize {
-				get { return _options.PacketSize; }
-		}
+		public int PacketSize => _options.PacketSize;
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int CommandTimeout {
-				get { return _options.CommandTimeout; }
-		}
+		public int CommandTimeout => _options.CommandTimeout;
 
 		#endregion
 
 		#region Internal Properties
 
-		internal FbConnectionInternal InnerConnection {
-				get { return _innerConnection; }
-		}
+		internal FbConnectionInternal InnerConnection => _innerConnection;
 
-		internal ConnectionString ConnectionOptions {
-				get { return _options; }
-		}
+		internal ConnectionString ConnectionOptions => _options;
 
-		internal bool IsClosed {
-				get { return _state == ConnectionState.Closed; }
-		}
+		internal bool IsClosed => _state == ConnectionState.Closed;
 
 		#endregion
 
 		#region Protected Properties
 
-		protected override DbProviderFactory DbProviderFactory {
-				get { return FirebirdClientFactory.Instance; }
-		}
+		protected override DbProviderFactory DbProviderFactory => FirebirdClientFactory.Instance;
 
 		#endregion
 
@@ -278,9 +246,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 
 		#region ICloneable Methods
 
-		object ICloneable.Clone() {
-				return new FbConnection(ConnectionString);
-		}
+		object ICloneable.Clone() => new FbConnection(ConnectionString);
 
 		#endregion
 
@@ -352,30 +318,20 @@ public sealed class FbConnection : DbConnection, ICloneable {
 
 		#region Database Schema Methods
 
-		public override DataTable GetSchema() {
-				return GetSchema("MetaDataCollections");
-		}
+		public override DataTable GetSchema() => GetSchema("MetaDataCollections");
 #if NET48 || NETSTANDARD2_0 || NETSTANDARD2_1
 	public Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default)
 #else
-		public override Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default)
+		public override Task<DataTable> GetSchemaAsync(CancellationToken cancellationToken = default) => GetSchemaAsync("MetaDataCollections", cancellationToken);
 #endif
-		{
-				return GetSchemaAsync("MetaDataCollections", cancellationToken);
-		}
 
-		public override DataTable GetSchema(string collectionName) {
-				return GetSchema(collectionName, null);
-		}
+	public override DataTable GetSchema(string collectionName) => GetSchema(collectionName, null);
 #if NET48 || NETSTANDARD2_0 || NETSTANDARD2_1
 	public Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default)
 #else
-		public override Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default)
+		public override Task<DataTable> GetSchemaAsync(string collectionName, CancellationToken cancellationToken = default) => GetSchemaAsync(collectionName, null, cancellationToken);
 #endif
-		{
-				return GetSchemaAsync(collectionName, null, cancellationToken);
-		}
-		public override DataTable GetSchema(string collectionName, string[] restrictions) {
+	public override DataTable GetSchema(string collectionName, string[] restrictions) {
 				CheckClosed();
 
 				return _innerConnection.GetSchema(collectionName, restrictions);
@@ -391,31 +347,21 @@ public sealed class FbConnection : DbConnection, ICloneable {
 				return _innerConnection.GetSchemaAsync(collectionName, restrictions, cancellationToken);
 		}
 
-		#endregion
+#endregion
 
 		#region Methods
 
-		public new FbCommand CreateCommand() {
-				return (FbCommand)CreateDbCommand();
-		}
+		public new FbCommand CreateCommand() => (FbCommand)CreateDbCommand();
 
-		protected override DbCommand CreateDbCommand() {
-				return new FbCommand(null, this);
-		}
+		protected override DbCommand CreateDbCommand() => new FbCommand(null, this);
 
 #if NET6_0_OR_GREATER
-		public new DbBatch CreateBatch() {
-				throw new NotSupportedException("DbBatch is currently not supported. Use FbBatchCommand instead.");
-		}
+		public new DbBatch CreateBatch() => throw new NotSupportedException("DbBatch is currently not supported. Use FbBatchCommand instead.");
 
-		protected override DbBatch CreateDbBatch() {
-				return CreateBatch();
-		}
+		protected override DbBatch CreateDbBatch() => CreateBatch();
 #endif
 
-		public FbBatchCommand CreateBatchCommand() {
-				return new FbBatchCommand(null, this);
-		}
+		public FbBatchCommand CreateBatchCommand() => new FbBatchCommand(null, this);
 
 		public override void ChangeDatabase(string databaseName) {
 				CheckClosed();
@@ -424,7 +370,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 						throw new InvalidOperationException("Database name is not valid.");
 				}
 
-				var oldConnectionString = _connectionString;
+				string oldConnectionString = _connectionString;
 				try {
 						var csb = new FbConnectionStringBuilder(_connectionString);
 
@@ -455,7 +401,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 						throw new InvalidOperationException("Database name is not valid.");
 				}
 
-				var oldConnectionString = _connectionString;
+				string oldConnectionString = _connectionString;
 				try {
 						var csb = new FbConnectionStringBuilder(_connectionString);
 
@@ -488,7 +434,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 				try {
 						OnStateChange(_state, ConnectionState.Connecting);
 
-						var createdNew = default(bool);
+						bool createdNew = default;
 						if(_options.Pooling) {
 								_innerConnection = FbConnectionPoolManager.Instance.Get(_options, out createdNew);
 						}
@@ -565,7 +511,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 				try {
 						OnStateChange(_state, ConnectionState.Connecting);
 
-						var createdNew = default(bool);
+						bool createdNew = default;
 						if(_options.Pooling) {
 								_innerConnection = FbConnectionPoolManager.Instance.Get(_options, out createdNew);
 						}
@@ -637,9 +583,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 						try {
 								_innerConnection.CloseEventManager();
 
-								if(_innerConnection.Database != null) {
-										_innerConnection.Database.WarningMessage = null;
-								}
+								_innerConnection.Database?.WarningMessage = null;
 
 								_innerConnection.DisposeTransaction();
 
@@ -650,7 +594,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 												_innerConnection.EnableCancel();
 										}
 
-										var broken = _innerConnection.Database.ConnectionBroken;
+										bool broken = _innerConnection.Database.ConnectionBroken;
 										FbConnectionPoolManager.Instance.Release(_innerConnection, !broken);
 										if(broken) {
 												DisconnectEnlistedHelper();
@@ -687,9 +631,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 						try {
 								await _innerConnection.CloseEventManagerAsync(CancellationToken.None).ConfigureAwait(false);
 
-								if(_innerConnection.Database != null) {
-										_innerConnection.Database.WarningMessage = null;
-								}
+								_innerConnection.Database?.WarningMessage = null;
 
 								await _innerConnection.DisposeTransactionAsync(CancellationToken.None).ConfigureAwait(false);
 
@@ -700,7 +642,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 												await _innerConnection.EnableCancelAsync(CancellationToken.None).ConfigureAwait(false);
 										}
 
-										var broken = _innerConnection.Database.ConnectionBroken;
+										bool broken = _innerConnection.Database.ConnectionBroken;
 										FbConnectionPoolManager.Instance.Release(_innerConnection, !broken);
 										if(broken) {
 												await DisconnectEnlistedHelper().ConfigureAwait(false);
@@ -740,9 +682,7 @@ public sealed class FbConnection : DbConnection, ICloneable {
 
 		#region Event Handlers
 
-		private void OnWarningMessage(IscException warning) {
-				InfoMessage?.Invoke(this, new FbInfoMessageEventArgs(warning));
-		}
+		private void OnWarningMessage(IscException warning) => InfoMessage?.Invoke(this, new FbInfoMessageEventArgs(warning));
 
 		private void OnStateChange(ConnectionState originalState, ConnectionState currentState) {
 				_state = currentState;

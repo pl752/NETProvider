@@ -45,18 +45,18 @@ internal class GdsStatement : Version12.GdsStatement {
 						try {
 								var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
-								var count = _parameters.Count;
-								var bytesLen = (int)Math.Ceiling(count / 8d);
+								short count = _parameters.Count;
+								int bytesLen = (int)Math.Ceiling(count / 8d);
 								Span<byte> buffer = stackalloc byte[bytesLen];
 								buffer.Clear();
-								for(var i = 0; i < count; i++) {
+								for(int i = 0; i < count; i++) {
 										if(_parameters[i].DbValue.IsDBNull()) {
 												buffer[i / 8] |= (byte)(1 << (i % 8));
 										}
 								}
 								xdr.WriteOpaque(buffer);
 
-								for(var i = 0; i < _parameters.Count; i++) {
+								for(int i = 0; i < _parameters.Count; i++) {
 										var field = _parameters[i];
 										if(field.DbValue.IsDBNull()) {
 												continue;
@@ -80,11 +80,11 @@ internal class GdsStatement : Version12.GdsStatement {
 						try {
 								var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
-								var count = _parameters.Count;
-								var len = (int)Math.Ceiling(count / 8d);
-								var buffer = ArrayPool<byte>.Shared.Rent(len);
+								short count = _parameters.Count;
+								int len = (int)Math.Ceiling(count / 8d);
+								byte[] buffer = ArrayPool<byte>.Shared.Rent(len);
 								Array.Clear(buffer, 0, len);
-								for(var i = 0; i < count; i++) {
+								for(int i = 0; i < count; i++) {
 										if(_parameters[i].DbValue.IsDBNull()) {
 												buffer[i / 8] |= (byte)(1 << (i % 8));
 										}
@@ -96,7 +96,7 @@ internal class GdsStatement : Version12.GdsStatement {
 										ArrayPool<byte>.Shared.Return(buffer);
 								}
 
-								for(var i = 0; i < _parameters.Count; i++) {
+								for(int i = 0; i < _parameters.Count; i++) {
 										var field = _parameters[i];
 										if(field.DbValue.IsDBNull()) {
 												continue;
@@ -117,17 +117,17 @@ internal class GdsStatement : Version12.GdsStatement {
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 				try {
 						if(_fields.Count > 0) {
-								var len = (int)Math.Ceiling(_fields.Count / 8d);
-								var rented = ArrayPool<byte>.Shared.Rent(len);
+								int len = (int)Math.Ceiling(_fields.Count / 8d);
+								byte[] rented = ArrayPool<byte>.Shared.Rent(len);
 								try {
 										_database.Xdr.ReadOpaque(rented.AsSpan(0, len), len);
-										for(var i = 0; i < _fields.Count; i++) {
-												var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
+										for(int i = 0; i < _fields.Count; i++) {
+												bool isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
 												if(isNull) {
 														row[i] = new DbValue(this, _fields[i], null);
 												}
 												else {
-														var value = ReadRawValue(_database.Xdr, _fields[i]);
+														object value = ReadRawValue(_database.Xdr, _fields[i]);
 														row[i] = new DbValue(this, _fields[i], value);
 												}
 										}
@@ -146,17 +146,17 @@ internal class GdsStatement : Version12.GdsStatement {
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 				try {
 						if(_fields.Count > 0) {
-								var len = (int)Math.Ceiling(_fields.Count / 8d);
-								var rented = ArrayPool<byte>.Shared.Rent(len);
+								int len = (int)Math.Ceiling(_fields.Count / 8d);
+								byte[] rented = ArrayPool<byte>.Shared.Rent(len);
 								try {
 										await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
-										for(var i = 0; i < _fields.Count; i++) {
-												var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
+										for(int i = 0; i < _fields.Count; i++) {
+												bool isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
 												if(isNull) {
 														row[i] = new DbValue(this, _fields[i], null);
 												}
 												else {
-														var value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+														object value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
 														row[i] = new DbValue(this, _fields[i], value);
 												}
 										}

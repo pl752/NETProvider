@@ -47,15 +47,15 @@ internal class GdsEventManager(int handle, string ipAddress, int portNumber, int
 		public async Task StartWaitingForEvents(RemoteEvent remoteEvent) {
 				while(true) {
 						try {
-								var operation = await _database.ReadOperationAsync(CancellationToken.None).ConfigureAwait(false);
+								int operation = await _database.ReadOperationAsync(CancellationToken.None).ConfigureAwait(false);
 
 								switch(operation) {
 										case IscCodes.op_event:
-												var dbHandle = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
-												var buffer = await _database.Xdr.ReadBufferAsync(CancellationToken.None).ConfigureAwait(false);
-												var ast = new byte[8];
-												await _database.Xdr.ReadBytesAsync(ast, 8, CancellationToken.None).ConfigureAwait(false);
-												var eventId = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
+												int dbHandle = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
+												byte[] buffer = await _database.Xdr.ReadBufferAsync(CancellationToken.None).ConfigureAwait(false);
+												byte[] ast = new byte[8];
+												_ = await _database.Xdr.ReadBytesAsync(ast, 8, CancellationToken.None).ConfigureAwait(false);
+												int eventId = await _database.Xdr.ReadInt32Async(CancellationToken.None).ConfigureAwait(false);
 
 												remoteEvent.EventCounts(buffer);
 

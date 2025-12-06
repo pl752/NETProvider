@@ -43,33 +43,25 @@ internal sealed class DbField {
 
 		#region Properties
 
-		public DbDataType DbDataType {
-				get { return TypeHelper.GetDbDataTypeFromSqlType(SqlType, SubType, NumericScale, Length, Charset); }
+		public DbDataType DbDataType => TypeHelper.GetDbDataTypeFromSqlType(SqlType, SubType, NumericScale, Length, Charset);
+
+		public int SqlType => _dataType & ~1;
+
+		public short DataType { get => _dataType; set => _dataType = value;
 		}
 
-		public int SqlType {
-				get { return _dataType & ~1; }
-		}
-
-		public short DataType {
-				get { return _dataType; }
-				set { _dataType = value; }
-		}
-
-		public short NumericScale {
-				get { return _numericScale; }
-				set { _numericScale = value; }
+		public short NumericScale { get => _numericScale; set => _numericScale = value;
 		}
 
 		public short SubType {
-				get { return _subType; }
+				get => _subType;
 				set {
 						_subType = value;
 						if(IsCharacter()) {
 								// Bits 0-7 of sqlsubtype is charset_id (127 is a special value -
 								// current attachment charset).
 								// Bits 8-17 hold collation_id for this value.
-								var cs = BitConverter.GetBytes(value);
+								byte[] cs = BitConverter.GetBytes(value);
 								_charset = Charset.TryGetById(cs[0], out var charset)
 									? charset
 									: Charset.DefaultCharset;
@@ -78,7 +70,7 @@ internal sealed class DbField {
 		}
 
 		public short Length {
-				get { return _length; }
+				get => _length;
 				set {
 						_length = value;
 						if(IsCharacter()) {
@@ -87,38 +79,24 @@ internal sealed class DbField {
 				}
 		}
 
-		public short NullFlag {
-				get { return _nullFlag; }
-				set { _nullFlag = value; }
+		public short NullFlag { get => _nullFlag; set => _nullFlag = value;
 		}
 
-		public string Name {
-				get { return _name; }
-				set { _name = value.Trim(); }
+		public string Name { get => _name; set => _name = value.Trim();
 		}
 
-		public string Relation {
-				get { return _relation; }
-				set { _relation = value.Trim(); }
+		public string Relation { get => _relation; set => _relation = value.Trim();
 		}
 
-		public string Owner {
-				get { return _owner; }
-				set { _owner = value.Trim(); }
+		public string Owner { get => _owner; set => _owner = value.Trim();
 		}
 
-		public string Alias {
-				get { return _alias; }
-				set { _alias = value.Trim(); }
+		public string Alias { get => _alias; set => _alias = value.Trim();
 		}
 
-		public Charset Charset {
-				get { return _charset; }
-		}
+		public Charset Charset => _charset;
 
-		public int CharCount {
-				get { return _charCount; }
-		}
+		public int CharCount => _charCount;
 
 		public ArrayBase ArrayHandle {
 				get {
@@ -132,9 +110,7 @@ internal sealed class DbField {
 				}
 		}
 
-		public ref DbValue DbValue {
-				get { return ref _dbValue; }
-		}
+		public ref DbValue DbValue => ref _dbValue;
 
 		#endregion
 
@@ -153,82 +129,46 @@ internal sealed class DbField {
 
 		#region Methods
 
-		public bool IsNumeric() {
-				if(_dataType == 0) {
-						return false;
-				}
+		public bool IsNumeric() => _dataType == 0
+						? false
+						: DbDataType switch {
+								DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
+								_ => false,
+						};
 
-				return DbDataType switch {
-						DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
-						_ => false,
-				};
-		}
+		public bool IsDecimal() => _dataType == 0
+						? false
+						: DbDataType switch {
+								DbDataType.Numeric or DbDataType.Decimal => true,
+								_ => false,
+						};
 
-		public bool IsDecimal() {
-				if(_dataType == 0) {
-						return false;
-				}
+		public bool IsLong() => _dataType == 0
+						? false
+						: DbDataType switch {
+								DbDataType.Binary or DbDataType.Text => true,
+								_ => false,
+						};
 
-				return DbDataType switch {
-						DbDataType.Numeric or DbDataType.Decimal => true,
-						_ => false,
-				};
-		}
+		public bool IsCharacter() => _dataType == 0
+						? false
+						: DbDataType switch {
+								DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
+								_ => false,
+						};
 
-		public bool IsLong() {
-				if(_dataType == 0) {
-						return false;
-				}
+		public bool IsArray() => _dataType == 0
+						? false
+						: DbDataType switch {
+								DbDataType.Array => true,
+								_ => false,
+						};
 
-				return DbDataType switch {
-						DbDataType.Binary or DbDataType.Text => true,
-						_ => false,
-				};
-		}
+		public bool IsAliased() => Name != Alias;
 
-		public bool IsCharacter() {
-				if(_dataType == 0) {
-						return false;
-				}
+		public int GetSize() => IsLong() ? int.MaxValue : IsCharacter() ? CharCount : Length;
 
-				return DbDataType switch {
-						DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
-						_ => false,
-				};
-		}
-
-		public bool IsArray() {
-				if(_dataType == 0) {
-						return false;
-				}
-
-				return DbDataType switch {
-						DbDataType.Array => true,
-						_ => false,
-				};
-		}
-
-		public bool IsAliased() {
-				return Name != Alias;
-		}
-
-		public int GetSize() {
-				if(IsLong()) {
-						return int.MaxValue;
-				}
-				else {
-						if(IsCharacter()) {
-								return CharCount;
-						}
-						else {
-								return Length;
-						}
-				}
-		}
-
-		public bool AllowDBNull() {
-				return ((DataType & 1) == 1);
-		}
+		public bool AllowDBNull() => (DataType & 1) == 1;
 
 		public void SetValue(byte[] buffer) {
 				if(buffer == null || NullFlag == -1) {
@@ -246,7 +186,7 @@ internal sealed class DbField {
 														_dbValue.SetValue(buffer);
 												}
 												else {
-														var s = Charset.GetString(buffer, 0, buffer.Length);
+														string s = Charset.GetString(buffer, 0, buffer.Length);
 
 														var runes = s.EnumerateRunes().ToArray();
 														if((Length % Charset.BytesPerCharacter) == 0 &&
@@ -320,7 +260,7 @@ internal sealed class DbField {
 								case IscCodes.SQL_TIMESTAMP_TZ: {
 												var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
-												var tzId = BitConverter.ToUInt16(buffer, 8);
+												ushort tzId = BitConverter.ToUInt16(buffer, 8);
 												var dt = DateTime.SpecifyKind(date.Add(time), DateTimeKind.Utc);
 												_dbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, null));
 												break;
@@ -329,8 +269,8 @@ internal sealed class DbField {
 								case IscCodes.SQL_TIMESTAMP_TZ_EX: {
 												var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
-												var tzId = BitConverter.ToUInt16(buffer, 8);
-												var offset = BitConverter.ToInt16(buffer, 10);
+												ushort tzId = BitConverter.ToUInt16(buffer, 8);
+												short offset = BitConverter.ToInt16(buffer, 10);
 												var dt = DateTime.SpecifyKind(date.Add(time), DateTimeKind.Utc);
 												_dbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, offset));
 												break;
@@ -338,15 +278,15 @@ internal sealed class DbField {
 
 								case IscCodes.SQL_TIME_TZ: {
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
-												var tzId = BitConverter.ToUInt16(buffer, 4);
+												ushort tzId = BitConverter.ToUInt16(buffer, 4);
 												_dbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, null));
 												break;
 										}
 
 								case IscCodes.SQL_TIME_TZ_EX: {
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
-												var tzId = BitConverter.ToUInt16(buffer, 4);
-												var offset = BitConverter.ToInt16(buffer, 6);
+												ushort tzId = BitConverter.ToUInt16(buffer, 4);
+												short offset = BitConverter.ToInt16(buffer, 6);
 												_dbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, offset));
 												break;
 										}
@@ -452,13 +392,9 @@ internal sealed class DbField {
 				}
 		}
 
-		public Type GetSystemType() {
-				return TypeHelper.GetTypeFromDbDataType(DbDataType);
-		}
+		public Type GetSystemType() => TypeHelper.GetTypeFromDbDataType(DbDataType);
 
-		public bool HasDataType() {
-				return _dataType != 0;
-		}
+		public bool HasDataType() => _dataType != 0;
 
 		#endregion
 

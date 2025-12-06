@@ -38,11 +38,7 @@ internal class GdsStatement : Version15.GdsStatement {
 				await _database.Xdr.WriteAsync(timeout, cancellationToken).ConfigureAwait(false);
 		}
 
-		public override BatchBase CreateBatch() {
-				return new GdsBatch(this);
-		}
+		public override BatchBase CreateBatch() => new GdsBatch(this);
 
-		public override BatchParameterBuffer CreateBatchParameterBuffer() {
-				return new BatchParameterBuffer(Database.Charset.Encoding);
-		}
+		public override BatchParameterBuffer CreateBatchParameterBuffer() => new BatchParameterBuffer(Database.Charset.Encoding);
 }

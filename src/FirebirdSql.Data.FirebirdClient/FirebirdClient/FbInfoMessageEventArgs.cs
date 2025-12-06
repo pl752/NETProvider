@@ -30,13 +30,9 @@ public sealed class FbInfoMessageEventArgs : EventArgs {
 
 		#region Properties
 
-		public FbErrorCollection Errors {
-				get { return _errors; }
-		}
+		public FbErrorCollection Errors => _errors;
 
-		public string Message {
-				get { return _message; }
-		}
+		public string Message => _message;
 
 		#endregion
 
@@ -44,9 +40,9 @@ public sealed class FbInfoMessageEventArgs : EventArgs {
 
 		internal FbInfoMessageEventArgs(IscException ex) {
 				_message = ex.Message;
-				_errors = new FbErrorCollection();
+				_errors = [];
 				foreach(var error in ex.Errors) {
-						_errors.Add(error.Message, error.ErrorCode);
+						_ = _errors.Add(error.Message, error.ErrorCode);
 				}
 		}
 

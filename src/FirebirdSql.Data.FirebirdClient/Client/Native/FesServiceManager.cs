@@ -57,9 +57,9 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
+				int svcHandle = Handle;
 
-				_fbClient.isc_service_attach(
+				_ = _fbClient.isc_service_attach(
 					_statusVector,
 					(short)service.Length,
 					service,
@@ -76,9 +76,9 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
+				int svcHandle = Handle;
 
-				_fbClient.isc_service_attach(
+				_ = _fbClient.isc_service_attach(
 					_statusVector,
 					(short)service.Length,
 					service,
@@ -96,9 +96,9 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override void Detach() {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
+				int svcHandle = Handle;
 
-				_fbClient.isc_service_detach(_statusVector, ref svcHandle);
+				_ = _fbClient.isc_service_detach(_statusVector, ref svcHandle);
 
 				ProcessStatusVector();
 
@@ -107,9 +107,9 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override ValueTask DetachAsync(CancellationToken cancellationToken = default) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
+				int svcHandle = Handle;
 
-				_fbClient.isc_service_detach(_statusVector, ref svcHandle);
+				_ = _fbClient.isc_service_detach(_statusVector, ref svcHandle);
 
 				ProcessStatusVector();
 
@@ -121,10 +121,10 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override void Start(ServiceParameterBufferBase spb) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
-				var reserved = 0;
+				int svcHandle = Handle;
+				int reserved = 0;
 
-				_fbClient.isc_service_start(
+				_ = _fbClient.isc_service_start(
 					_statusVector,
 					ref svcHandle,
 					ref reserved,
@@ -136,10 +136,10 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
-				var reserved = 0;
+				int svcHandle = Handle;
+				int reserved = 0;
 
-				_fbClient.isc_service_start(
+				_ = _fbClient.isc_service_start(
 					_statusVector,
 					ref svcHandle,
 					ref reserved,
@@ -154,10 +154,10 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
-				var reserved = 0;
+				int svcHandle = Handle;
+				int reserved = 0;
 
-				_fbClient.isc_service_query(
+				_ = _fbClient.isc_service_query(
 					_statusVector,
 					ref svcHandle,
 					ref reserved,
@@ -173,10 +173,10 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 		public override ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default) {
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
-				var svcHandle = Handle;
-				var reserved = 0;
+				int svcHandle = Handle;
+				int reserved = 0;
 
-				_fbClient.isc_service_query(
+				_ = _fbClient.isc_service_query(
 					_statusVector,
 					ref svcHandle,
 					ref reserved,
@@ -192,21 +192,15 @@ internal sealed class FesServiceManager : ServiceManagerBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override ServiceParameterBufferBase CreateServiceParameterBuffer() {
-				return new ServiceParameterBuffer2(ParameterBufferEncoding);
-		}
+		public override ServiceParameterBufferBase CreateServiceParameterBuffer() => new ServiceParameterBuffer2(ParameterBufferEncoding);
 
 		#endregion
 
 		#region Private Methods
 
-		private void ProcessStatusVector() {
-				StatusVectorHelper.ProcessStatusVector(_statusVector, Charset, WarningMessage);
-		}
+		private void ProcessStatusVector() => StatusVectorHelper.ProcessStatusVector(_statusVector, Charset, WarningMessage);
 
-		private void ProcessStatusVector(Charset charset) {
-				StatusVectorHelper.ProcessStatusVector(_statusVector, charset, WarningMessage);
-		}
+		private void ProcessStatusVector(Charset charset) => StatusVectorHelper.ProcessStatusVector(_statusVector, charset, WarningMessage);
 
 		#endregion
 }

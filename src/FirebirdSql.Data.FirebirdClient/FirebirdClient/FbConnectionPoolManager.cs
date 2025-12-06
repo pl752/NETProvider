@@ -33,9 +33,7 @@ sealed class FbConnectionPoolManager : IDisposable {
 				public long Created { get; private set; } = created;
 				public FbConnectionInternal Connection { get; private set; } = connection;
 
-				public void Release() {
-						Connection.Disconnect();
-				}
+				public void Release() => Connection.Disconnect();
 		}
 
 		sealed class Pool(ConnectionString connectionString) : IDisposable {
@@ -43,7 +41,7 @@ sealed class FbConnectionPoolManager : IDisposable {
 				readonly object _syncRoot = new object();
 				readonly ConnectionString _connectionString = connectionString;
 				Stack<Item> _available = new Stack<Item>();
-				readonly List<FbConnectionInternal> _busy = new List<FbConnectionInternal>();
+				readonly List<FbConnectionInternal> _busy = [];
 
 				public void Dispose() {
 						lock(_syncRoot) {
@@ -69,7 +67,7 @@ sealed class FbConnectionPoolManager : IDisposable {
 						lock(_syncRoot) {
 								CheckDisposedImpl();
 
-								var removed = _busy.Remove(connection);
+								bool removed = _busy.Remove(connection);
 								if(removed && returnToAvailable) {
 										_available.Push(new Item(GetTicks(), connection));
 								}
@@ -80,17 +78,17 @@ sealed class FbConnectionPoolManager : IDisposable {
 						lock(_syncRoot) {
 								CheckDisposedImpl();
 
-								var now = GetTicks();
+								long now = GetTicks();
 								var available = _available.ToList();
 								if(available.Count <= _connectionString.MinPoolSize)
 										return;
 								var keep = available.Where(x => ConnectionPoolLifetimeHelper.IsAlive(_connectionString.ConnectionLifetime, x.Created, now)).ToList();
-								var keepCount = keep.Count;
+								int keepCount = keep.Count;
 								if(keepCount < _connectionString.MinPoolSize) {
 										keep = [.. keep, .. available.Except(keep).OrderByDescending(x => x.Created).Take(_connectionString.MinPoolSize - keepCount)];
 								}
 								var release = available.Except(keep).ToList();
-								Parallel.ForEach(release, x => x.Release());
+								_ = Parallel.ForEach(release, x => x.Release());
 								_available = new Stack<Item>(keep);
 						}
 				}
@@ -104,9 +102,7 @@ sealed class FbConnectionPoolManager : IDisposable {
 						}
 				}
 
-				void CleanConnectionsImpl() {
-						Parallel.ForEach(_available, x => x.Release());
-				}
+				void CleanConnectionsImpl() => Parallel.ForEach(_available, x => x.Release());
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				void CheckDisposedImpl() {
@@ -121,14 +117,14 @@ sealed class FbConnectionPoolManager : IDisposable {
 						}
 						else {
 								createdNew = true;
-								if(_busy.Count + 1 > _connectionString.MaxPoolSize)
-										throw new InvalidOperationException("Connection pool is full.");
-								return new FbConnectionInternal(_connectionString);
+								return _busy.Count + 1 > _connectionString.MaxPoolSize
+										?                    throw new InvalidOperationException("Connection pool is full.")
+										: new FbConnectionInternal(_connectionString);
 						}
 				}
 
 				static long GetTicks() {
-						var ticks = Environment.TickCount;
+						int ticks = Environment.TickCount;
 						return ticks + -(long)int.MinValue;
 				}
 		}
@@ -165,7 +161,7 @@ sealed class FbConnectionPoolManager : IDisposable {
 		internal void ClearAllPools() {
 				CheckDisposed();
 
-				Parallel.ForEach(_pools.Values, x => x.ClearPool());
+				_ = Parallel.ForEach(_pools.Values, x => x.ClearPool());
 		}
 
 		internal void ClearPool(ConnectionString connectionString) {
@@ -180,15 +176,13 @@ sealed class FbConnectionPoolManager : IDisposable {
 				if(Interlocked.Exchange(ref _disposed, 1) == 1)
 						return;
 				using(var mre = new ManualResetEvent(false)) {
-						_cleanupTimer.Dispose(mre);
-						mre.WaitOne();
+						_ = _cleanupTimer.Dispose(mre);
+						_ = mre.WaitOne();
 				}
-				Parallel.ForEach(_pools.Values, x => x.Dispose());
+				_ = Parallel.ForEach(_pools.Values, x => x.Dispose());
 		}
 
-		void CleanupCallback(object o) {
-				Parallel.ForEach(_pools.Values, x => x.PrunePool());
-		}
+		void CleanupCallback(object o) => Parallel.ForEach(_pools.Values, x => x.PrunePool());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void CheckDisposed() {

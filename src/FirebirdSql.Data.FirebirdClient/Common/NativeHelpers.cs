@@ -24,13 +24,13 @@ internal static class NativeHelpers {
 		private static readonly ConcurrentDictionary<string, bool> _cache = new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
 
 		public static void CallIfExists(string actionId, Action action) {
-				if(!_cache.TryGetValue(actionId, out var executionAllowed)) {
+				if(!_cache.TryGetValue(actionId, out bool executionAllowed)) {
 						try {
 								action();
-								_cache.TryAdd(actionId, true);
+								_ = _cache.TryAdd(actionId, true);
 						}
 						catch(EntryPointNotFoundException) {
-								_cache.TryAdd(actionId, false);
+								_ = _cache.TryAdd(actionId, false);
 						}
 				}
 				else if(executionAllowed) {

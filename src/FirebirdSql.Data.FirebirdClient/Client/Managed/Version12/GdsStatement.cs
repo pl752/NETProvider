@@ -47,7 +47,7 @@ internal class GdsStatement : Version11.GdsStatement {
 
 						_database.Xdr.Flush();
 
-						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
+						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
 						try {
 								SqlResponse sqlStoredProcedureResponse = null;
 								if(StatementType == DbStatementType.StoredProcedure) {
@@ -101,7 +101,7 @@ internal class GdsStatement : Version11.GdsStatement {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
+						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1;
 						try {
 								SqlResponse sqlStoredProcedureResponse = null;
 								if(StatementType == DbStatementType.StoredProcedure) {

@@ -36,7 +36,7 @@ public sealed class FbException : DbException {
 		#region Properties
 
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-		public FbErrorCollection Errors => _errors ??= new FbErrorCollection();
+		public FbErrorCollection Errors => _errors ??= [];
 
 		public override int ErrorCode => (InnerException as IscException)?.ErrorCode ?? 0;
 
@@ -76,7 +76,7 @@ public sealed class FbException : DbException {
 
 		private void ProcessIscExceptionErrors(IscException innerException) {
 				foreach(var error in innerException.Errors) {
-						Errors.Add(error.Message, error.ErrorCode);
+						_ = Errors.Add(error.Message, error.ErrorCode);
 				}
 		}
 

@@ -27,10 +27,8 @@ internal sealed class FesConnection {
 		public static Version GetClientVersion(IFbClient fbClient) {
 				var sb = new StringBuilder(64);
 				fbClient.isc_get_client_version(sb);
-				var version = sb.ToString();
+				string version = sb.ToString();
 				var m = Regex.Match(version, @"Firebird (\d+.\d+)");
-				if(!m.Success)
-						return null;
-				return new Version(m.Groups[1].Value);
+				return !m.Success ? null : new Version(m.Groups[1].Value);
 		}
 }

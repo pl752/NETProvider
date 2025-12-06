@@ -260,14 +260,12 @@ class DenselyPackedDecimalCodec {
 
 		// Decodes a densely packed decimal from a byte array to a BigInteger.
 		// Digits are read from the end of the array to the front.
-		public BigInteger DecodeValue(int signum, int firstDigit, byte[] decBytes) {
-				return DecodeValue(signum, firstDigit, decBytes, decBytes.Length - 1);
-		}
+		public BigInteger DecodeValue(int signum, int firstDigit, byte[] decBytes) => DecodeValue(signum, firstDigit, decBytes, decBytes.Length - 1);
 
 		// Decodes a densely packed decimal from a byte array to a BigInteger.
 		// Digits are read from `lsbIndex` of the array to the front.
 		public BigInteger DecodeValue(int signum, int firstDigit, byte[] decBytes, int lsbIndex) {
-				if(firstDigit < 0 || firstDigit > 9)
+				if(firstDigit is < 0 or > 9)
 						throw new ArgumentOutOfRangeException(nameof(firstDigit), $"{nameof(firstDigit)} must be in range 0 <= firstDigit <= 9, was {firstDigit}.");
 				ValidateLsbIndex(lsbIndex, decBytes.Length);
 				return DecodeValue0(signum, firstDigit, decBytes, lsbIndex);
@@ -276,9 +274,7 @@ class DenselyPackedDecimalCodec {
 		// Encodes a BigInteger to a densely packed decimal in a byte array.
 		// Digits are written from the end of the array to the front. The most significant digit is not encoded
 		// into the array, but instead returned to the caller.
-		public int EncodeValue(BigInteger value, byte[] decBytes) {
-				return EncodeValue(BigInteger.Abs(value), decBytes, decBytes.Length - 1);
-		}
+		public int EncodeValue(BigInteger value, byte[] decBytes) => EncodeValue(BigInteger.Abs(value), decBytes, decBytes.Length - 1);
 
 		// Encodes a BigInteger to a densely packed decimal in a byte array.
 		// Digits are written from `lsbIndex` of the array to the front. The most significant digit is not encoded
@@ -290,16 +286,16 @@ class DenselyPackedDecimalCodec {
 		}
 
 		BigInteger DecodeValue0(int signum, int firstDigit, byte[] decBytes, int lsbIndex) {
-				var digitChars = CreateZeroedCharArray();
-				for(var digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
+				char[] digitChars = CreateZeroedCharArray();
+				for(int digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
 						// Each digit group is 10 bits in two bytes in the array as [.., second, first, ..],
 						// moving to the left for next digit groups. If there are unconsumed bits in the second byte,
 						// the second byte becomes the first byte of the next group.
-						var digitBitsFromEnd = digitGroup * BitsPerGroup;
-						var firstByteBitOffset = digitBitsFromEnd % BitPerByte;
-						var firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
+						int digitBitsFromEnd = digitGroup * BitsPerGroup;
+						int firstByteBitOffset = digitBitsFromEnd % BitPerByte;
+						int firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
 
-						var dpdGroupBits = 0x3FF & (
+						int dpdGroupBits = 0x3FF & (
 								(decBytes[firstByteIndex] & 0xFF) >>> firstByteBitOffset
 										| decBytes[firstByteIndex - 1] << BitPerByte - firstByteBitOffset);
 
@@ -316,30 +312,30 @@ class DenselyPackedDecimalCodec {
 
 		int EncodeValue0(BigInteger value, byte[] decBytes, int lsbIndex) {
 				var remainingValue = value;
-				for(var digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
+				for(int digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
 						// Each digit group is 10 bits in two bytes in the array as [.., second, first, ..],
 						// moving to the left for next digit groups. If there are unconsumed bits in the second byte,
 						// the second byte becomes the first byte of the next group.
-						var digitBitsFromEnd = digitGroup * BitsPerGroup;
-						var firstByteBitOffset = digitBitsFromEnd % BitPerByte;
-						var firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
+						int digitBitsFromEnd = digitGroup * BitsPerGroup;
+						int firstByteBitOffset = digitBitsFromEnd % BitPerByte;
+						int firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
 
 						remainingValue = BigInteger.DivRem(remainingValue, OneThousand, out var remainder);
-						var currentGroup = Bin2DPD[(int)remainder];
+						int currentGroup = Bin2DPD[(int)remainder];
 
 						decBytes[firstByteIndex] =
 								(byte)(decBytes[firstByteIndex] | (currentGroup << firstByteBitOffset));
 						decBytes[firstByteIndex - 1] =
 								(byte)(decBytes[firstByteIndex - 1] | (currentGroup >>> BitPerByte - firstByteBitOffset));
 				}
-				var mostSignificantDigit = (int)remainingValue;
-				Debug.Assert(0 <= mostSignificantDigit && mostSignificantDigit <= 9, $"{nameof(mostSignificantDigit)} out of range, was {mostSignificantDigit}.");
+				int mostSignificantDigit = (int)remainingValue;
+				Debug.Assert(mostSignificantDigit is >= 0 and <= 9, $"{nameof(mostSignificantDigit)} out of range, was {mostSignificantDigit}.");
 				return mostSignificantDigit;
 		}
 
 		char[] CreateZeroedCharArray() {
-				var digitChars = new char[_numberOfDigits + 1];
-				for(var i = 0; i < digitChars.Length; i++) {
+				char[] digitChars = new char[_numberOfDigits + 1];
+				for(int i = 0; i < digitChars.Length; i++) {
 						digitChars[i] = '0';
 				}
 				return digitChars;
@@ -355,7 +351,7 @@ class DenselyPackedDecimalCodec {
 		}
 
 		static BigInteger ToBigInteger(int signum, char[] digitChars) {
-				var digitCharIndex = FindFirstNonZero(digitChars);
+				int digitCharIndex = FindFirstNonZero(digitChars);
 				if(digitCharIndex == -1) {
 						// All zeroes
 						return BigInteger.Zero;
@@ -363,12 +359,12 @@ class DenselyPackedDecimalCodec {
 				if(signum == NegativeSignum) {
 						digitChars[--digitCharIndex] = '-';
 				}
-				var s = new string(digitChars, digitCharIndex, digitChars.Length - digitCharIndex);
+				string s = new string(digitChars, digitCharIndex, digitChars.Length - digitCharIndex);
 				return BigInteger.Parse(s);
 		}
 
 		static int FindFirstNonZero(char[] digitChars) {
-				for(var index = 0; index < digitChars.Length; index++) {
+				for(int index = 0; index < digitChars.Length; index++) {
 						if(digitChars[index] != '0') {
 								return index;
 						}

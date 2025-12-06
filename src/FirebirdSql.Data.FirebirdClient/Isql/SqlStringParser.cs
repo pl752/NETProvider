@@ -27,10 +27,10 @@ class SqlStringParser(string targetString) {
 		string[] _tokens = [" "];
 
 		public string[] Tokens {
-				get { return _tokens; }
+				get => _tokens;
 				set {
 						ArgumentNullException.ThrowIfNull(value);
-						foreach(var item in value) {
+						foreach(string item in value) {
 								ArgumentNullException.ThrowIfNull(value);
 								if(string.IsNullOrEmpty(item))
 										throw new ArgumentException();
@@ -40,8 +40,8 @@ class SqlStringParser(string targetString) {
 		}
 
 		public IEnumerable<FbStatement> Parse() {
-				var lastYield = 0;
-				var index = 0;
+				int lastYield = 0;
+				int index = 0;
 				var rawResult = new StringBuilder();
 				while(true) {
 				Continue:
@@ -50,10 +50,10 @@ class SqlStringParser(string targetString) {
 								break;
 						}
 						if(GetChar(index) == '\'') {
-								rawResult.Append(GetChar(index));
+								_ = rawResult.Append(GetChar(index));
 								index++;
-								rawResult.Append(ProcessLiteral(ref index));
-								rawResult.Append(GetChar(index));
+								_ = rawResult.Append(ProcessLiteral(ref index));
+								_ = rawResult.Append(GetChar(index));
 								index++;
 						}
 						else if(GetChar(index) == '-' && GetNextChar(index) == '-') {
@@ -67,33 +67,33 @@ class SqlStringParser(string targetString) {
 								index++;
 						}
 						else {
-								foreach(var token in Tokens) {
+								foreach(string token in Tokens) {
 										if(string.Compare(_source, index, token, 0, token.Length, StringComparison.Ordinal) == 0) {
 												index += token.Length;
 												yield return new FbStatement(_source.Substring(lastYield, index - lastYield - token.Length), rawResult.ToString());
 												lastYield = index;
-												rawResult.Clear();
+												_ = rawResult.Clear();
 												goto Continue;
 										}
 								}
 								if(!(rawResult.Length == 0 && char.IsWhiteSpace(GetChar(index)))) {
-										rawResult.Append(GetChar(index));
+										_ = rawResult.Append(GetChar(index));
 								}
 								index++;
 						}
 				}
 
 				if(index >= _sourceLength) {
-						var parsed = _source[lastYield..];
+						string parsed = _source[lastYield..];
 						if(parsed.Trim() == string.Empty) {
 								yield break;
 						}
 						yield return new FbStatement(parsed, rawResult.ToString());
-						rawResult.Clear();
+						_ = rawResult.Clear();
 				}
 				else {
 						yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
-						rawResult.Clear();
+						_ = rawResult.Clear();
 				}
 		}
 
@@ -102,14 +102,14 @@ class SqlStringParser(string targetString) {
 				while(index < _sourceLength) {
 						if(GetChar(index) == '\'') {
 								if(GetNextChar(index) == '\'') {
-										sb.Append(GetChar(index));
+										_ = sb.Append(GetChar(index));
 										index++;
 								}
 								else {
 										break;
 								}
 						}
-						sb.Append(GetChar(index));
+						_ = sb.Append(GetChar(index));
 						index++;
 				}
 				return sb.ToString();
@@ -140,13 +140,9 @@ class SqlStringParser(string targetString) {
 				}
 		}
 
-		char GetChar(int index) {
-				return _source[index];
-		}
+		char GetChar(int index) => _source[index];
 
-		char? GetNextChar(int index) {
-				return index + 1 < _sourceLength
+		char? GetNextChar(int index) => index + 1 < _sourceLength
 					? _source[index + 1]
 					: (char?)null;
-		}
 }

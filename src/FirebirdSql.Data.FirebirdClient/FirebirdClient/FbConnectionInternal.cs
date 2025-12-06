@@ -35,7 +35,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		private DatabaseBase _db;
 		private FbTransaction _activeTransaction;
-		private readonly HashSet<IFbPreparedCommand> _preparedCommands = new HashSet<IFbPreparedCommand>();
+		private readonly HashSet<IFbPreparedCommand> _preparedCommands = [];
 		private ConnectionString _connectionStringOptions = options;
 		private FbConnection _owningConnection;
 		private FbEnlistmentNotification _enlistmentNotification;
@@ -44,33 +44,17 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Properties
 
-		public DatabaseBase Database {
-				get { return _db; }
-		}
+		public DatabaseBase Database => _db;
 
-		public bool HasActiveTransaction {
-				get {
-						return _activeTransaction != null && !_activeTransaction.IsCompleted;
-				}
-		}
+		public bool HasActiveTransaction => _activeTransaction != null && !_activeTransaction.IsCompleted;
 
-		public FbTransaction ActiveTransaction {
-				get { return _activeTransaction; }
-		}
+		public FbTransaction ActiveTransaction => _activeTransaction;
 
-		public FbConnection OwningConnection {
-				get { return _owningConnection; }
-		}
+		public FbConnection OwningConnection => _owningConnection;
 
-		public bool IsEnlisted {
-				get {
-						return _enlistmentNotification != null && !_enlistmentNotification.IsCompleted;
-				}
-		}
+		public bool IsEnlisted => _enlistmentNotification != null && !_enlistmentNotification.IsCompleted;
 
-		public ConnectionString ConnectionStringOptions {
-				get { return _connectionStringOptions; }
-		}
+		public ConnectionString ConnectionStringOptions => _connectionStringOptions;
 
 		public bool CancelDisabled { get; private set; }
 
@@ -100,7 +84,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 						dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 				}
 				dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
-				dpb.Append(IscCodes.isc_dpb_overwrite, (overwrite ? 1 : 0));
+				dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
 				if(pageSize > 0) {
 						if(!SizeHelper.IsValidPageSize(pageSize))
 								throw SizeHelper.InvalidSizeException("page size");
@@ -138,7 +122,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 						dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 				}
 				dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
-				dpb.Append(IscCodes.isc_dpb_overwrite, (overwrite ? 1 : 0));
+				dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
 				if(pageSize > 0) {
 						if(!SizeHelper.IsValidPageSize(pageSize))
 								throw SizeHelper.InvalidSizeException("page size");
@@ -385,9 +369,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 				}
 		}
 
-		private void EnlistmentCompleted(object sender, EventArgs e) {
-				_enlistmentNotification = null;
-		}
+		private void EnlistmentCompleted(object sender, EventArgs e) => _enlistmentNotification = null;
 
 		public FbTransaction BeginTransaction(System.Transactions.IsolationLevel isolationLevel) {
 				var il = isolationLevel switch {
@@ -418,12 +400,8 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Schema Methods
 
-		public DataTable GetSchema(string collectionName, string[] restrictions) {
-				return FbSchemaFactory.GetSchema(_owningConnection, collectionName, restrictions);
-		}
-		public Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
-				return FbSchemaFactory.GetSchemaAsync(_owningConnection, collectionName, restrictions, cancellationToken);
-		}
+		public DataTable GetSchema(string collectionName, string[] restrictions) => FbSchemaFactory.GetSchema(_owningConnection, collectionName, restrictions);
+		public Task<DataTable> GetSchemaAsync(string collectionName, string[] restrictions, CancellationToken cancellationToken = default) => FbSchemaFactory.GetSchemaAsync(_owningConnection, collectionName, restrictions, cancellationToken);
 
 		#endregion
 
@@ -432,12 +410,10 @@ internal class FbConnectionInternal(ConnectionString options) {
 		public void AddPreparedCommand(IFbPreparedCommand command) {
 				if(_preparedCommands.Contains(command))
 						return;
-				_preparedCommands.Add(command);
+				_ = _preparedCommands.Add(command);
 		}
 
-		public void RemovePreparedCommand(IFbPreparedCommand command) {
-				_preparedCommands.Remove(command);
-		}
+		public void RemovePreparedCommand(IFbPreparedCommand command) => _preparedCommands.Remove(command);
 
 		public void ReleasePreparedCommands() {
 				// copy the data because the collection will be modified via RemovePreparedCommand from Release
@@ -451,9 +427,9 @@ internal class FbConnectionInternal(ConnectionString options) {
 								// avoid it. (It maybe the connection to the server was down
 								// for unknown reasons.)
 						}
-						catch(IscException ex) when(ex.ErrorCode == IscCodes.isc_network_error
-							|| ex.ErrorCode == IscCodes.isc_net_read_err
-							|| ex.ErrorCode == IscCodes.isc_net_write_err) { }
+						catch(IscException ex) when(ex.ErrorCode is IscCodes.isc_network_error
+							or IscCodes.isc_net_read_err
+							or IscCodes.isc_net_write_err) { }
 				}
 		}
 		public async Task ReleasePreparedCommandsAsync(CancellationToken cancellationToken = default) {
@@ -468,9 +444,9 @@ internal class FbConnectionInternal(ConnectionString options) {
 								// avoid it. (It maybe the connection to the server was down
 								// for unknown reasons.)
 						}
-						catch(IscException ex) when(ex.ErrorCode == IscCodes.isc_network_error
-							|| ex.ErrorCode == IscCodes.isc_net_read_err
-							|| ex.ErrorCode == IscCodes.isc_net_write_err) { }
+						catch(IscException ex) when(ex.ErrorCode is IscCodes.isc_network_error
+							or IscCodes.isc_net_read_err
+							or IscCodes.isc_net_write_err) { }
 				}
 		}
 
@@ -483,12 +459,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 						_db.CloseEventManager();
 				}
 		}
-		public Task CloseEventManagerAsync(CancellationToken cancellationToken = default) {
-				if(_db != null && _db.HasRemoteEventSupport) {
-						return _db.CloseEventManagerAsync(cancellationToken).AsTask();
-				}
-				return Task.CompletedTask;
-		}
+		public Task CloseEventManagerAsync(CancellationToken cancellationToken = default) => _db != null && _db.HasRemoteEventSupport ? _db.CloseEventManagerAsync(cancellationToken).AsTask() : Task.CompletedTask;
 
 		#endregion
 
@@ -534,12 +505,9 @@ internal class FbConnectionInternal(ConnectionString options) {
 				return dpb;
 		}
 
-		private static string GetProcessName(ConnectionString options) {
-				if(!string.IsNullOrEmpty(options.ApplicationName)) {
-						return options.ApplicationName;
-				}
-				return GetSystemWebHostingPath() ?? GetRealProcessName() ?? string.Empty;
-		}
+		private static string GetProcessName(ConnectionString options) => !string.IsNullOrEmpty(options.ApplicationName)
+						? options.ApplicationName
+						: GetSystemWebHostingPath() ?? GetRealProcessName() ?? string.Empty;
 
 
 		private static string GetSystemWebHostingPath() {
@@ -576,9 +544,7 @@ internal class FbConnectionInternal(ConnectionString options) {
 				}
 		}
 
-		private static string GetClientVersion() {
-				return typeof(FbConnectionInternal).GetTypeInfo().Assembly.GetName().Version.ToString();
-		}
+		private static string GetClientVersion() => typeof(FbConnectionInternal).GetTypeInfo().Assembly.GetName().Version.ToString();
 		#endregion
 
 		#region Cancelation
@@ -600,12 +566,8 @@ internal class FbConnectionInternal(ConnectionString options) {
 				CancelDisabled = true;
 		}
 
-		public void CancelCommand() {
-				_db.CancelOperation(IscCodes.fb_cancel_raise);
-		}
-		public Task CancelCommandAsync(CancellationToken cancellationToken = default) {
-				return _db.CancelOperationAsync(IscCodes.fb_cancel_raise, cancellationToken).AsTask();
-		}
+		public void CancelCommand() => _db.CancelOperation(IscCodes.fb_cancel_raise);
+		public Task CancelCommandAsync(CancellationToken cancellationToken = default) => _db.CancelOperationAsync(IscCodes.fb_cancel_raise, cancellationToken).AsTask();
 		#endregion
 
 		#region Infrastructure

@@ -41,20 +41,13 @@ public readonly struct FbZonedDateTime : IEquatable<FbZonedDateTime>, IConvertib
 		public FbZonedDateTime(DateTime dateTime, string timeZone)
 			: this(dateTime, timeZone, null) { }
 
-		public override string ToString() {
-				if(Offset != null) {
-						return $"{DateTime} {TimeZone} ({Offset})";
-				}
-				return $"{DateTime} {TimeZone}";
-		}
+		public override string ToString() => Offset != null ? $"{DateTime} {TimeZone} ({Offset})" : $"{DateTime} {TimeZone}";
 
-		public override bool Equals(object obj) {
-				return obj is FbZonedDateTime fbZonedDateTime && Equals(fbZonedDateTime);
-		}
+		public override bool Equals(object obj) => obj is FbZonedDateTime fbZonedDateTime && Equals(fbZonedDateTime);
 
 		public override int GetHashCode() {
 				unchecked {
-						var hash = (int)2166136261;
+						int hash = (int)2166136261;
 						hash = (hash * 16777619) ^ DateTime.GetHashCode();
 						hash = (hash * 16777619) ^ TimeZone.GetHashCode();
 						if(Offset != null)

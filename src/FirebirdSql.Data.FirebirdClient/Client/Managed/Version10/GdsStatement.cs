@@ -43,12 +43,10 @@ internal class GdsStatement : StatementBase {
 
 		#region Properties
 
-		public override DatabaseBase Database {
-				get { return _database; }
-		}
+		public override DatabaseBase Database => _database;
 
 		public override TransactionBase Transaction {
-				get { return _transaction; }
+				get => _transaction;
 				set {
 						if(_transaction != value) {
 								if(TransactionUpdate != null && _transaction != null) {
@@ -68,23 +66,15 @@ internal class GdsStatement : StatementBase {
 				}
 		}
 
-		public override Descriptor Parameters {
-				get { return _parameters; }
-				set { _parameters = value; }
+		public override Descriptor Parameters { get => _parameters; set => _parameters = value;
 		}
 
-		public override Descriptor Fields {
-				get { return _fields; }
+		public override Descriptor Fields => _fields;
+
+		public override int FetchSize { get => _fetchSize; set => _fetchSize = value;
 		}
 
-		public override int FetchSize {
-				get { return _fetchSize; }
-				set { _fetchSize = value; }
-		}
-
-		public int Handle {
-				get { return _handle; }
-		}
+		public int Handle => _handle;
 
 		#endregion
 
@@ -150,13 +140,9 @@ internal class GdsStatement : StatementBase {
 
 		#region Blob Creation Metods
 
-		public override BlobBase CreateBlob() {
-				return new GdsBlob(_database, _transaction);
-		}
+		public override BlobBase CreateBlob() => new GdsBlob(_database, _transaction);
 
-		public override BlobBase CreateBlob(long blobId) {
-				return new GdsBlob(_database, _transaction, blobId);
-		}
+		public override BlobBase CreateBlob(long blobId) => new GdsBlob(_database, _transaction, blobId);
 
 		#endregion
 
@@ -197,13 +183,9 @@ internal class GdsStatement : StatementBase {
 
 		#region Batch Creation Methods
 
-		public override BatchBase CreateBatch() {
-				throw new NotSupportedException("Batching is not supported on this Firebird version.");
-		}
+		public override BatchBase CreateBatch() => throw new NotSupportedException("Batching is not supported on this Firebird version.");
 
-		public override BatchParameterBuffer CreateBatchParameterBuffer() {
-				throw new NotSupportedException("Batching is not supported on this Firebird version.");
-		}
+		public override BatchParameterBuffer CreateBatchParameterBuffer() => throw new NotSupportedException("Batching is not supported on this Firebird version.");
 
 		#endregion
 
@@ -337,7 +319,7 @@ internal class GdsStatement : StatementBase {
 				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
 						return null;
 				}
-				else if(StatementType != DbStatementType.Select && StatementType != DbStatementType.SelectForUpdate) {
+				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
 						return null;
 				}
 
@@ -350,9 +332,9 @@ internal class GdsStatement : StatementBase {
 								_database.Xdr.Write(_fetchSize); // p_sqldata_messages
 								_database.Xdr.Flush();
 
-								var operation = _database.ReadOperation();
+								int operation = _database.ReadOperation();
 								if(operation == IscCodes.op_fetch_response) {
-										var hasOperation = true;
+										bool hasOperation = true;
 										while(!_allRowsFetched) {
 												var response = hasOperation
 													? _database.ReadResponse(operation)
@@ -375,7 +357,7 @@ internal class GdsStatement : StatementBase {
 										}
 								}
 								else {
-										_database.ReadResponse(operation);
+										_ = _database.ReadResponse(operation);
 								}
 						}
 						catch(IOException ex) {
@@ -401,7 +383,7 @@ internal class GdsStatement : StatementBase {
 				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
 						return null;
 				}
-				else if(StatementType != DbStatementType.Select && StatementType != DbStatementType.SelectForUpdate) {
+				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
 						return null;
 				}
 
@@ -414,9 +396,9 @@ internal class GdsStatement : StatementBase {
 								await _database.Xdr.WriteAsync(_fetchSize, cancellationToken).ConfigureAwait(false); // p_sqldata_messages
 								await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-								var operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+								int operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 								if(operation == IscCodes.op_fetch_response) {
-										var hasOperation = true;
+										bool hasOperation = true;
 										while(!_allRowsFetched) {
 												var response = hasOperation
 													? await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false)
@@ -439,7 +421,7 @@ internal class GdsStatement : StatementBase {
 										}
 								}
 								else {
-										await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false);
+										_ = await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false);
 								}
 						}
 						catch(IOException ex) {
@@ -494,12 +476,8 @@ internal class GdsStatement : StatementBase {
 		}
 
 		// Span-based parsing to avoid intermediate arrays when possible
-		private Descriptor[] ParseSqlInfoSpan(ReadOnlySpan<byte> info, ReadOnlySpan<byte> items, Descriptor[] rowDescs) {
-				return ParseTruncSqlInfoSpan(info, items, rowDescs);
-		}
-		private ValueTask<Descriptor[]> ParseSqlInfoSpanAsync(ReadOnlyMemory<byte> info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) {
-				return ParseTruncSqlInfoSpanAsync(info, items, rowDescs, cancellationToken);
-		}
+		private Descriptor[] ParseSqlInfoSpan(ReadOnlySpan<byte> info, ReadOnlySpan<byte> items, Descriptor[] rowDescs) => ParseTruncSqlInfoSpan(info, items, rowDescs);
+		private ValueTask<Descriptor[]> ParseSqlInfoSpanAsync(ReadOnlyMemory<byte> info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) => ParseTruncSqlInfoSpanAsync(info, items, rowDescs, cancellationToken);
 		#endregion
 
 		#region op_info_sql methods
@@ -574,15 +552,9 @@ internal class GdsStatement : StatementBase {
 				await ProcessFreeResponseAsync(await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 		}
 
-		protected bool FreeNotNeeded(int option) {
+		protected bool FreeNotNeeded(int option) =>
 				// does not seem to be possible or necessary to close an execute procedure statement
-				if(StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close) {
-						return true;
-				}
-				else {
-						return false;
-				}
-		}
+				StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close;
 
 		protected void DoFreePacket(int option) {
 				try {
@@ -624,9 +596,7 @@ internal class GdsStatement : StatementBase {
 		}
 
 		protected static void ProcessFreeResponse(IResponse response) { }
-		protected static ValueTask ProcessFreeResponseAsync(IResponse response, CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		protected static ValueTask ProcessFreeResponseAsync(IResponse response, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 		#endregion
 
 		#region op_allocate_statement methods
@@ -673,7 +643,7 @@ internal class GdsStatement : StatementBase {
 				ReadOnlySpan<byte> bzero = zeroIntBuf;
 				ReadOnlySpan<byte> bone = oneIntBuf;
 				// this may throw error, so it needs to be before any writing
-				var parametersData = GetParameterData(descriptorFiller, 0);
+				byte[] parametersData = GetParameterData(descriptorFiller, 0);
 
 				if(StatementType == DbStatementType.StoredProcedure) {
 						_database.Xdr.WriteBytes(boe2);
@@ -704,7 +674,7 @@ internal class GdsStatement : StatementBase {
 		}
 		protected virtual async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
 				// this may throw error, so it needs to be before any writing
-				var parametersData = await GetParameterDataAsync(descriptorFiller, 0, cancellationToken).ConfigureAwait(false);
+				byte[] parametersData = await GetParameterDataAsync(descriptorFiller, 0, cancellationToken).ConfigureAwait(false);
 
 				if(StatementType == DbStatementType.StoredProcedure) {
 						await _database.Xdr.WriteBytesAsync(bufOpEx2, 4, cancellationToken).ConfigureAwait(false);
@@ -735,9 +705,7 @@ internal class GdsStatement : StatementBase {
 		}
 
 		protected static void ProcessExecuteResponse(GenericResponse response) { }
-		protected static ValueTask ProcessExecuteResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) {
-				return ValueTask2.CompletedTask;
-		}
+		protected static ValueTask ProcessExecuteResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
 		protected void ProcessStoredProcedureExecuteResponse(SqlResponse response) {
 				try {
@@ -771,17 +739,13 @@ internal class GdsStatement : StatementBase {
 				_allRowsFetched = false;
 		}
 
-		protected Descriptor[] ParseSqlInfo(byte[] info, byte[] items, Descriptor[] rowDescs) {
-				return ParseTruncSqlInfoSpan(info, items, rowDescs);
-		}
-		protected ValueTask<Descriptor[]> ParseSqlInfoAsync(byte[] info, byte[] items, Descriptor[] rowDescs, CancellationToken cancellationToken = default) {
-				return ParseTruncSqlInfoSpanAsync(info, items, rowDescs, cancellationToken);
-		}
+		protected Descriptor[] ParseSqlInfo(byte[] info, byte[] items, Descriptor[] rowDescs) => ParseTruncSqlInfoSpan(info, items, rowDescs);
+		protected ValueTask<Descriptor[]> ParseSqlInfoAsync(byte[] info, byte[] items, Descriptor[] rowDescs, CancellationToken cancellationToken = default) => ParseTruncSqlInfoSpanAsync(info, items, rowDescs, cancellationToken);
 
 		protected Descriptor[] ParseTruncSqlInfo(byte[] info, byte[] items, Descriptor[] rowDescs) {
-				var currentPosition = 0;
-				var currentDescriptorIndex = -1;
-				var currentItemIndex = 0;
+				int currentPosition = 0;
+				int currentDescriptorIndex = -1;
+				int currentItemIndex = 0;
 				while(info[currentPosition] != IscCodes.isc_info_end) {
 						byte item;
 						while((item = info[currentPosition++]) != IscCodes.isc_info_sql_describe_end) {
@@ -790,14 +754,14 @@ internal class GdsStatement : StatementBase {
 												currentItemIndex--;
 
 												var newItems = new List<byte>(items.Length);
-												var part = 0;
-												var chock = 0;
-												for(var i = 0; i < items.Length; i++) {
+												int part = 0;
+												int chock = 0;
+												for(int i = 0; i < items.Length; i++) {
 														if(items[i] == IscCodes.isc_info_sql_describe_end) {
 																newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 																newItems.Insert(chock + 1, 2);
 
-																var processedItems = (rowDescs[part] != null ? rowDescs[part].Count : (short)0);
+																short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
 																newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
 																newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
@@ -821,10 +785,10 @@ internal class GdsStatement : StatementBase {
 														break;
 
 												currentPosition++;
-												var len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
+												int len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 												currentPosition += 2;
 												if(rowDescs[currentDescriptorIndex] == null) {
-														var n = IscHelper.VaxInteger(info, currentPosition, len);
+														long n = IscHelper.VaxInteger(info, currentPosition, len);
 														rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 														if(n == 0) {
 																currentPosition += len;
@@ -908,9 +872,9 @@ internal class GdsStatement : StatementBase {
 				return rowDescs;
 		}
 		private Descriptor[] ParseTruncSqlInfoSpan(ReadOnlySpan<byte> info, ReadOnlySpan<byte> items, Descriptor[] rowDescs) {
-				var currentPosition = 0;
-				var currentDescriptorIndex = -1;
-				var currentItemIndex = 0;
+				int currentPosition = 0;
+				int currentDescriptorIndex = -1;
+				int currentItemIndex = 0;
 				while(info[currentPosition] != IscCodes.isc_info_end) {
 						byte item;
 						while((item = info[currentPosition++]) != IscCodes.isc_info_sql_describe_end) {
@@ -919,14 +883,14 @@ internal class GdsStatement : StatementBase {
 												currentItemIndex--;
 
 												var newItems = new List<byte>(items.Length);
-												var part = 0;
-												var chock = 0;
-												for(var i = 0; i < items.Length; i++) {
+												int part = 0;
+												int chock = 0;
+												for(int i = 0; i < items.Length; i++) {
 														if(items[i] == IscCodes.isc_info_sql_describe_end) {
 																newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 																newItems.Insert(chock + 1, 2);
 
-																var processedItems = (rowDescs[part] != null ? rowDescs[part].Count : (short)0);
+																short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
 																newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
 																newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
@@ -936,7 +900,7 @@ internal class GdsStatement : StatementBase {
 														newItems.Add(items[i]);
 												}
 
-												var refreshed = GetSqlInfo([.. newItems], info.Length);
+												byte[] refreshed = GetSqlInfo([.. newItems], info.Length);
 												info = refreshed;
 
 												currentPosition = 0;
@@ -951,10 +915,10 @@ internal class GdsStatement : StatementBase {
 														break;
 
 												currentPosition++;
-												var len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
+												int len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 												currentPosition += 2;
 												if(rowDescs[currentDescriptorIndex] == null) {
-														var n = IscHelper.VaxInteger(info, currentPosition, len);
+														long n = IscHelper.VaxInteger(info, currentPosition, len);
 														rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 														if(n == 0) {
 																currentPosition += len;
@@ -1039,9 +1003,9 @@ internal class GdsStatement : StatementBase {
 		}
 
 		private async ValueTask<Descriptor[]> ParseTruncSqlInfoSpanAsync(ReadOnlyMemory<byte> info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) {
-				var currentPosition = 0;
-				var currentDescriptorIndex = -1;
-				var currentItemIndex = 0;
+				int currentPosition = 0;
+				int currentDescriptorIndex = -1;
+				int currentItemIndex = 0;
 				while(info.Span[currentPosition] != IscCodes.isc_info_end) {
 						byte item;
 						while((item = info.Span[currentPosition++]) != IscCodes.isc_info_sql_describe_end) {
@@ -1050,14 +1014,14 @@ internal class GdsStatement : StatementBase {
 												currentItemIndex--;
 
 												var newItems = new List<byte>(items.Length);
-												var part = 0;
-												var chock = 0;
-												for(var i = 0; i < items.Length; i++) {
+												int part = 0;
+												int chock = 0;
+												for(int i = 0; i < items.Length; i++) {
 														if(items.Span[i] == IscCodes.isc_info_sql_describe_end) {
 																newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 																newItems.Insert(chock + 1, 2);
 
-																var processedItems = (rowDescs[part] != null ? rowDescs[part].Count : (short)0);
+																short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
 																newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
 																newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
@@ -1067,7 +1031,7 @@ internal class GdsStatement : StatementBase {
 														newItems.Add(items.Span[i]);
 												}
 
-												var refreshed = await GetSqlInfoAsync([.. newItems], info.Length, cancellationToken).ConfigureAwait(false);
+												byte[] refreshed = await GetSqlInfoAsync([.. newItems], info.Length, cancellationToken).ConfigureAwait(false);
 												info = refreshed;
 
 												currentPosition = 0;
@@ -1082,10 +1046,10 @@ internal class GdsStatement : StatementBase {
 														break;
 
 												currentPosition++;
-												var len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+												int len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 												currentPosition += 2;
 												if(rowDescs[currentDescriptorIndex] == null) {
-														var n = IscHelper.VaxInteger(info.Span, currentPosition, len);
+														long n = IscHelper.VaxInteger(info.Span, currentPosition, len);
 														rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 														if(n == 0) {
 																currentPosition += len;
@@ -1175,7 +1139,7 @@ internal class GdsStatement : StatementBase {
 
 				using(var ms = new MemoryStream(256)) {
 						var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-						for(var i = 0; i < _parameters.Count; i++) {
+						for(int i = 0; i < _parameters.Count; i++) {
 								var field = _parameters[i];
 								try {
 										WriteRawParameter(xdr, field);
@@ -1195,7 +1159,7 @@ internal class GdsStatement : StatementBase {
 
 				using(var ms = new MemoryStream(256)) {
 						var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-						for(var i = 0; i < _parameters.Count; i++) {
+						for(int i = 0; i < _parameters.Count; i++) {
 								var field = _parameters[i];
 								try {
 										await WriteRawParameterAsync(xdr, field, cancellationToken).ConfigureAwait(false);
@@ -1220,24 +1184,24 @@ internal class GdsStatement : StatementBase {
 												xdr.WriteOpaque(field.DbValue.GetBinary(), field.Length);
 										}
 										else {
-												var svalue = field.DbValue.GetString();
+												string svalue = field.DbValue.GetString();
 												if((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												var encoding = field.Charset.Encoding;
-												var byteCount = encoding.GetByteCount(svalue);
+												int byteCount = encoding.GetByteCount(svalue);
 												if(byteCount > field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												Span<byte> stack = byteCount <= 512 ? stackalloc byte[byteCount] : Span<byte>.Empty;
 												if(!stack.IsEmpty) {
-														encoding.GetBytes(svalue.AsSpan(), stack);
+														_ = encoding.GetBytes(svalue.AsSpan(), stack);
 														xdr.WriteOpaque(stack, field.Length);
 												}
 												else {
-														var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+														byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 														try {
-																var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
+																int written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 																xdr.WriteOpaque(rented.AsSpan(0, written), field.Length);
 														}
 														finally {
@@ -1252,21 +1216,21 @@ internal class GdsStatement : StatementBase {
 												xdr.WriteBuffer(field.DbValue.GetBinary());
 										}
 										else {
-												var svalue = field.DbValue.GetString();
+												string svalue = field.DbValue.GetString();
 												if((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												var encoding = field.Charset.Encoding;
-												var byteCount = encoding.GetByteCount(svalue);
+												int byteCount = encoding.GetByteCount(svalue);
 												Span<byte> stack = byteCount <= 512 ? stackalloc byte[byteCount] : Span<byte>.Empty;
 												if(!stack.IsEmpty) {
-														encoding.GetBytes(svalue.AsSpan(), stack);
+														_ = encoding.GetBytes(svalue.AsSpan(), stack);
 														xdr.WriteBuffer(stack);
 												}
 												else {
-														var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+														byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 														try {
-																var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
+																int written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 																xdr.WriteBuffer(rented.AsSpan(0, written));
 														}
 														finally {
@@ -1376,19 +1340,19 @@ internal class GdsStatement : StatementBase {
 												await xdr.WriteOpaqueAsync(await field.DbValue.GetBinaryAsync(cancellationToken).ConfigureAwait(false), field.Length, cancellationToken).ConfigureAwait(false);
 										}
 										else {
-												var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
+												string svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
 												if((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												var encoding = field.Charset.Encoding;
-												var byteCount = encoding.GetByteCount(svalue);
+												int byteCount = encoding.GetByteCount(svalue);
 												if(byteCount > field.Length) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												{
-														var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+														byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 														try {
-																var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
+																int written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 																await xdr.WriteOpaqueAsync(rented.AsMemory(0, written), written, cancellationToken).ConfigureAwait(false);
 														}
 														finally {
@@ -1403,16 +1367,16 @@ internal class GdsStatement : StatementBase {
 												await xdr.WriteBufferAsync(await field.DbValue.GetBinaryAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 										}
 										else {
-												var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
+												string svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
 												if((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount) {
 														throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 												}
 												var encoding = field.Charset.Encoding;
-												var byteCount = encoding.GetByteCount(svalue);
+												int byteCount = encoding.GetByteCount(svalue);
 												{
-														var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
+														byte[] rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 														try {
-																var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
+																int written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 																await xdr.WriteBufferAsync(rented.AsMemory(0, written), cancellationToken).ConfigureAwait(false);
 														}
 														finally {
@@ -1522,17 +1486,12 @@ internal class GdsStatement : StatementBase {
 										return xdr.ReadOpaque(field.Length);
 								}
 								else {
-										var s = xdr.ReadString(innerCharset, field.Length);
+										string s = xdr.ReadString(innerCharset, field.Length);
 										return TruncateStringByRuneCount(s, field);
 								}
 
 						case DbDataType.VarChar:
-								if(field.Charset.IsOctetsCharset) {
-										return xdr.ReadBuffer();
-								}
-								else {
-										return xdr.ReadString(innerCharset);
-								}
+								return field.Charset.IsOctetsCharset ? xdr.ReadBuffer() : xdr.ReadString(innerCharset);
 
 						case DbDataType.SmallInt:
 								return xdr.ReadInt16();
@@ -1605,17 +1564,14 @@ internal class GdsStatement : StatementBase {
 										return await xdr.ReadOpaqueAsync(field.Length, cancellationToken).ConfigureAwait(false);
 								}
 								else {
-										var s = await xdr.ReadStringAsync(innerCharset, field.Length, cancellationToken).ConfigureAwait(false);
+										string s = await xdr.ReadStringAsync(innerCharset, field.Length, cancellationToken).ConfigureAwait(false);
 										return TruncateStringByRuneCount(s, field);
 								}
 
 						case DbDataType.VarChar:
-								if(field.Charset.IsOctetsCharset) {
-										return await xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false);
-								}
-								else {
-										return await xdr.ReadStringAsync(innerCharset, cancellationToken).ConfigureAwait(false);
-								}
+								return field.Charset.IsOctetsCharset
+										? await xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false)
+										: await xdr.ReadStringAsync(innerCharset, cancellationToken).ConfigureAwait(false);
 
 						case DbDataType.SmallInt:
 								return await xdr.ReadInt16Async(cancellationToken).ConfigureAwait(false);
@@ -1701,17 +1657,16 @@ internal class GdsStatement : StatementBase {
 		protected virtual DbValue[] ReadRow() {
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 				try {
-						for(var i = 0; i < _fields.Count; i++) {
-								var value = ReadRawValue(_database.Xdr, _fields[i]);
-								var sqlInd = _database.Xdr.ReadInt32();
+						for(int i = 0; i < _fields.Count; i++) {
+								object value = ReadRawValue(_database.Xdr, _fields[i]);
+								int sqlInd = _database.Xdr.ReadInt32();
 								if(sqlInd == -1) {
 										row[i] = new DbValue(this, _fields[i], null);
 								}
-								else if(sqlInd == 0) {
-										row[i] = new DbValue(this, _fields[i], value);
-								}
 								else {
-										throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
+										row[i] = sqlInd == 0
+												? new DbValue(this, _fields[i], value)
+												: throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
 								}
 						}
 				}
@@ -1723,17 +1678,16 @@ internal class GdsStatement : StatementBase {
 		protected virtual async ValueTask<DbValue[]> ReadRowAsync(CancellationToken cancellationToken = default) {
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 				try {
-						for(var i = 0; i < _fields.Count; i++) {
-								var value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
-								var sqlInd = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+						for(int i = 0; i < _fields.Count; i++) {
+								object value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+								int sqlInd = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
 								if(sqlInd == -1) {
 										row[i] = new DbValue(this, _fields[i], null);
 								}
-								else if(sqlInd == 0) {
-										row[i] = new DbValue(this, _fields[i], value);
-								}
 								else {
-										throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
+										row[i] = sqlInd == 0
+												? new DbValue(this, _fields[i], value)
+												: throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
 								}
 						}
 				}
@@ -1748,17 +1702,13 @@ internal class GdsStatement : StatementBase {
 						return s;
 				}
 
-				var runeCount = CountRunes(s.AsSpan());
-				if(runeCount <= field.CharCount) {
-						return s;
-				}
-
-				return TruncateStringToRuneCount(s.AsSpan(), field.CharCount);
+				int runeCount = CountRunes(s.AsSpan());
+				return runeCount <= field.CharCount ? s : TruncateStringToRuneCount(s.AsSpan(), field.CharCount);
 		}
 
 		private static int CountRunes(ReadOnlySpan<char> text) {
-				var count = 0;
-				var i = 0;
+				int count = 0;
+				int i = 0;
 				while(i < text.Length) {
 						if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) {
 								i += 2;
@@ -1772,10 +1722,10 @@ internal class GdsStatement : StatementBase {
 		}
 
 		private static string TruncateStringToRuneCount(ReadOnlySpan<char> text, int maxRuneCount) {
-				var count = 0;
-				var i = 0;
+				int count = 0;
+				int i = 0;
 				while(i < text.Length && count < maxRuneCount) {
-						var nextI = i;
+						int nextI = i;
 						if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) {
 								nextI += 2;
 						}

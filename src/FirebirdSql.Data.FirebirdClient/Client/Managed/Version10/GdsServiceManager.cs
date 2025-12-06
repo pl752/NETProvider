@@ -38,13 +38,9 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 		public override bool UseUtf8ParameterBuffer => false;
 
-		public GdsConnection Connection {
-				get { return _connection; }
-		}
+		public GdsConnection Connection => _connection;
 
-		public GdsDatabase Database {
-				get { return _database; }
-		}
+		public GdsDatabase Database => _database;
 
 		#endregion
 
@@ -97,9 +93,7 @@ internal class GdsServiceManager : ServiceManagerBase {
 				await _database.Xdr.WriteBufferAsync(spb.ToArray(), cancellationToken).ConfigureAwait(false);
 		}
 
-		protected virtual void ProcessAttachResponse(GenericResponse response) {
-				Handle = response.ObjectHandle;
-		}
+		protected virtual void ProcessAttachResponse(GenericResponse response) => Handle = response.ObjectHandle;
 		protected virtual ValueTask ProcessAttachResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) {
 				Handle = response.ObjectHandle;
 				return ValueTask2.CompletedTask;
@@ -165,7 +159,7 @@ internal class GdsServiceManager : ServiceManagerBase {
 						_database.Xdr.Flush();
 
 						try {
-								_database.ReadResponse();
+								_ = _database.ReadResponse();
 						}
 						catch(IscException) {
 								throw;
@@ -184,7 +178,7 @@ internal class GdsServiceManager : ServiceManagerBase {
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
 						try {
-								await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+								_ = await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 						}
 						catch(IscException) {
 								throw;
@@ -208,7 +202,7 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						var response = (GenericResponse)_database.ReadResponse();
 
-						var responseLength = bufferLength;
+						int responseLength = bufferLength;
 
 						if(response.Data.Length < bufferLength) {
 								responseLength = response.Data.Length;
@@ -233,7 +227,7 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
-						var responseLength = bufferLength;
+						int responseLength = bufferLength;
 
 						if(response.Data.Length < bufferLength) {
 								responseLength = response.Data.Length;
@@ -246,17 +240,11 @@ internal class GdsServiceManager : ServiceManagerBase {
 				}
 		}
 
-		public override ServiceParameterBufferBase CreateServiceParameterBuffer() {
-				return new ServiceParameterBuffer2(Database.ParameterBufferEncoding);
-		}
+		public override ServiceParameterBufferBase CreateServiceParameterBuffer() => new ServiceParameterBuffer2(Database.ParameterBufferEncoding);
 
-		protected virtual GdsDatabase CreateDatabase(GdsConnection connection) {
-				return new GdsDatabase(connection);
-		}
+		protected virtual GdsDatabase CreateDatabase(GdsConnection connection) => new GdsDatabase(connection);
 
-		private void RewireWarningMessage() {
-				_database.WarningMessage = ex => WarningMessage?.Invoke(ex);
-		}
+		private void RewireWarningMessage() => _database.WarningMessage = ex => WarningMessage?.Invoke(ex);
 
 		#endregion
 }
