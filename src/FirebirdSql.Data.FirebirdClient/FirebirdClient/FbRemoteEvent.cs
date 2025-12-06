@@ -38,23 +38,27 @@ public sealed class FbRemoteEvent(string connectionString) : IDisposable
 		public string this[int index] => _revent != null ? _revent.Events[index] : throw new InvalidOperationException();
 		public int RemoteEventId => _revent != null ? _revent.RemoteId : throw new InvalidOperationException();
 
-		public void Open() {
-				if(_revent != null)
+		public void Open()
+		{
+				if (_revent != null)
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");
 
 				_connection.Connect();
-				_revent = new RemoteEvent(_connection.Database) {
+				_revent = new RemoteEvent(_connection.Database)
+				{
 						EventCountsCallback = OnRemoteEventCounts,
 						EventErrorCallback = OnRemoteEventError
 				};
 				_synchronizationContext = SynchronizationContext.Current ?? new SynchronizationContext();
 		}
-		public async Task OpenAsync(CancellationToken cancellationToken = default) {
-				if(_revent != null)
+		public async Task OpenAsync(CancellationToken cancellationToken = default)
+		{
+				if (_revent != null)
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");
 
 				await _connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-				_revent = new RemoteEvent(_connection.Database) {
+				_revent = new RemoteEvent(_connection.Database)
+				{
 						EventCountsCallback = OnRemoteEventCounts,
 						EventErrorCallback = OnRemoteEventError
 				};
@@ -66,56 +70,72 @@ public sealed class FbRemoteEvent(string connectionString) : IDisposable
 		public ValueTask DisposeAsync() => new ValueTask(_connection.DisconnectAsync(CancellationToken.None));
 #endif
 
-		public void QueueEvents(ICollection<string> events) {
-				if(_revent == null)
+		public void QueueEvents(ICollection<string> events)
+		{
+				if (_revent == null)
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} must be opened.");
 
-				try {
+				try
+				{
 						_revent.QueueEvents(events);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task QueueEventsAsync(ICollection<string> events, CancellationToken cancellationToken = default) {
-				if(_revent == null)
+		public async Task QueueEventsAsync(ICollection<string> events, CancellationToken cancellationToken = default)
+		{
+				if (_revent == null)
 						throw new InvalidOperationException($"{nameof(FbRemoteEvent)} must be opened.");
 
-				try {
+				try
+				{
 						await _revent.QueueEventsAsync(events, cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
 
-		public void CancelEvents() {
-				try {
+		public void CancelEvents()
+		{
+				try
+				{
 						_revent.CancelEvents();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task CancelEventsAsync(CancellationToken cancellationToken = default) {
-				try {
+		public async Task CancelEventsAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _revent.CancelEventsAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
 
-		private void OnRemoteEventCounts(string name, int count) {
+		private void OnRemoteEventCounts(string name, int count)
+		{
 				var args = new FbRemoteEventCountsEventArgs(name, count);
-				_synchronizationContext.Post(_ => {
+				_synchronizationContext.Post(_ =>
+				{
 						RemoteEventCounts?.Invoke(this, args);
 				}, null);
 		}
 
-		private void OnRemoteEventError(Exception error) {
+		private void OnRemoteEventError(Exception error)
+		{
 				var args = new FbRemoteEventErrorEventArgs(error);
-				_synchronizationContext.Post(_ => {
+				_synchronizationContext.Post(_ =>
+				{
 						RemoteEventError?.Invoke(this, args);
 				}, null);
 		}

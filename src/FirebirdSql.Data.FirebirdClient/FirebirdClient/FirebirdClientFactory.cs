@@ -19,7 +19,8 @@ using System.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public class FirebirdClientFactory : DbProviderFactory {
+public class FirebirdClientFactory : DbProviderFactory
+{
 		#region Static Properties
 
 		public static readonly FirebirdClientFactory Instance = new FirebirdClientFactory();

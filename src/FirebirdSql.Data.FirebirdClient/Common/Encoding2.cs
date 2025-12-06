@@ -21,17 +21,21 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class Encoding2 {
+internal static class Encoding2
+{
 		public static Encoding Default { get; } = GetANSIEncoding();
 
-		private static Encoding GetANSIEncoding() {
+		private static Encoding GetANSIEncoding()
+		{
 #if NET48
 		return Encoding.Default;
 #else
-				try {
+				try
+				{
 						return Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.ANSICodePage);
 				}
-				catch(Exception) {
+				catch (Exception)
+				{
 						return Encoding.Default;
 				}
 #endif

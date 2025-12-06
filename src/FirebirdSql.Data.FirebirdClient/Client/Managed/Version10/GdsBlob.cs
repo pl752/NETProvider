@@ -23,7 +23,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version10;
 
-internal sealed class GdsBlob : BlobBase {
+internal sealed class GdsBlob : BlobBase
+{
 		const int DataSegment = 0;
 		const int SeekMode = 0;
 
@@ -54,7 +55,8 @@ internal sealed class GdsBlob : BlobBase {
 			: this(database, transaction, 0) { }
 
 		public GdsBlob(GdsDatabase database, GdsTransaction transaction, long blobId)
-			: base(database) {
+			: base(database)
+		{
 				_database = database;
 				_transaction = transaction;
 				_position = 0;
@@ -66,45 +68,59 @@ internal sealed class GdsBlob : BlobBase {
 
 		#region Protected Methods
 
-		public override void Create() {
-				try {
+		public override void Create()
+		{
+				try
+				{
 						CreateOrOpen(IscCodes.op_create_blob, null);
 						RblAddValue(IscCodes.RBL_create);
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						throw;
 				}
 		}
-		public override async ValueTask CreateAsync(CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask CreateAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await CreateOrOpenAsync(IscCodes.op_create_blob, null, cancellationToken).ConfigureAwait(false);
 						RblAddValue(IscCodes.RBL_create);
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						throw;
 				}
 		}
 
-		public override void Open() {
-				try {
+		public override void Open()
+		{
+				try
+				{
 						CreateOrOpen(IscCodes.op_open_blob, null);
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						throw;
 				}
 		}
-		public override async ValueTask OpenAsync(CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask OpenAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await CreateOrOpenAsync(IscCodes.op_open_blob, null, cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						throw;
 				}
 		}
 
-		public override int GetLength() {
-				try {
-						if(!IsOpen)
+		public override int GetLength()
+		{
+				try
+				{
+						if (!IsOpen)
 								Open();
 
 						int bufferLength = 20;
@@ -117,29 +133,33 @@ internal sealed class GdsBlob : BlobBase {
 
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						var buffer = response.Data.Span[..responseLength];
 
 						long length = IscHelper.VaxInteger(buffer, 1, 2);
-						long size = IscHelper.VaxInteger(buffer, 3, (int)length);
+						long size = IscHelper.VaxInteger(buffer, 3, (int) length);
 
-						return (int)size;
+						return (int) size;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override async ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default) {
-				try {
-						if(!IsOpen)
+		public override async ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
+						if (!IsOpen)
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 
 						int bufferLength = 20;
@@ -152,49 +172,56 @@ internal sealed class GdsBlob : BlobBase {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						var buffer = response.Data.Span[..responseLength];
 
 						long length = IscHelper.VaxInteger(buffer, 1, 2);
-						long size = IscHelper.VaxInteger(buffer, 3, (int)length);
+						long size = IscHelper.VaxInteger(buffer, 3, (int) length);
 
-						return (int)size;
+						return (int) size;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void GetSegment(Stream stream) {
+		public override void GetSegment(Stream stream)
+		{
 				int requested = SegmentSize;
 
-				try {
+				try
+				{
 						_database.Xdr.WriteBytes(bufOpGetSegment);
 						_database.Xdr.Write(_blobHandle);
 						_database.Xdr.Write(requested < short.MaxValue - 12 ? requested : short.MaxValue - 12);
 						_database.Xdr.WriteBytes(zeroIntBuf);
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						RblRemoveValue(IscCodes.RBL_segment);
-						if(response.ObjectHandle == 1) {
+						if (response.ObjectHandle == 1)
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else if(response.ObjectHandle == 2) {
+						else if (response.ObjectHandle == 2)
+						{
 								RblAddValue(IscCodes.RBL_eof_pending);
 						}
 
 						var buffer = response.Data;
 
-						if(buffer.Length == 0) {
+						if (buffer.Length == 0)
+						{
 								// previous segment was last, this has no data
 								return;
 						}
@@ -202,41 +229,48 @@ internal sealed class GdsBlob : BlobBase {
 						int len = 0;
 						int srcpos = 0;
 
-						while(srcpos < buffer.Length) {
-								len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
+						while (srcpos < buffer.Length)
+						{
+								len = (int) IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 								srcpos += 2;
 
 								stream.Write(buffer.Span.Slice(srcpos, len));
 								srcpos += len;
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default) {
+		public override async ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default)
+		{
 				int requested = SegmentSize;
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteBytesAsync(bufOpGetSegment, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(requested < short.MaxValue - 12 ? requested : short.MaxValue - 12, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						RblRemoveValue(IscCodes.RBL_segment);
-						if(response.ObjectHandle == 1) {
+						if (response.ObjectHandle == 1)
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else if(response.ObjectHandle == 2) {
+						else if (response.ObjectHandle == 2)
+						{
 								RblAddValue(IscCodes.RBL_eof_pending);
 						}
 
 						var buffer = response.Data;
 
-						if(buffer.Length == 0) {
+						if (buffer.Length == 0)
+						{
 								//previous segment was last, this has no data
 								return;
 						}
@@ -244,42 +278,49 @@ internal sealed class GdsBlob : BlobBase {
 						int len = 0;
 						int srcpos = 0;
 
-						while(srcpos < buffer.Length) {
-								len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
+						while (srcpos < buffer.Length)
+						{
+								len = (int) IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 								srcpos += 2;
 
 								stream.Write(buffer.Span.Slice(srcpos, len));
 								srcpos += len;
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override byte[] GetSegment() {
+		public override byte[] GetSegment()
+		{
 				int requested = SegmentSize;
 
-				try {
+				try
+				{
 						_database.Xdr.WriteBytes(bufOpGetSegment);
 						_database.Xdr.Write(_blobHandle);
 						_database.Xdr.Write(requested < short.MaxValue - 12 ? requested : short.MaxValue - 12);
 						_database.Xdr.Write(DataSegment);
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						RblRemoveValue(IscCodes.RBL_segment);
-						if(response.ObjectHandle == 1) {
+						if (response.ObjectHandle == 1)
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else if(response.ObjectHandle == 2) {
+						else if (response.ObjectHandle == 2)
+						{
 								RblAddValue(IscCodes.RBL_eof_pending);
 						}
 
 						var buffer = response.Data;
 
-						if(buffer.Length == 0) {
+						if (buffer.Length == 0)
+						{
 								//previous segment was last, this has no data
 								return [];
 						}
@@ -288,8 +329,9 @@ internal sealed class GdsBlob : BlobBase {
 						int posInOutput = 0;
 
 						byte[] tmp = new byte[requested * 2];
-						while(posInInput < buffer.Length) {
-								int len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
+						while (posInInput < buffer.Length)
+						{
+								int len = (int) IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 								posInInput += 2;
 
 								buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
@@ -302,33 +344,39 @@ internal sealed class GdsBlob : BlobBase {
 
 						return actualBuffer;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default)
+		{
 				int requested = SegmentSize;
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteBytesAsync(bufOpGetSegment, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(requested < short.MaxValue - 12 ? requested : short.MaxValue - 12, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(DataSegment, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						RblRemoveValue(IscCodes.RBL_segment);
-						if(response.ObjectHandle == 1) {
+						if (response.ObjectHandle == 1)
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else if(response.ObjectHandle == 2) {
+						else if (response.ObjectHandle == 2)
+						{
 								RblAddValue(IscCodes.RBL_eof_pending);
 						}
 
 						var buffer = response.Data;
 
-						if(buffer.Length == 0) {
+						if (buffer.Length == 0)
+						{
 								// previous segment was last, this has no data
 								return [];
 						}
@@ -337,8 +385,9 @@ internal sealed class GdsBlob : BlobBase {
 						int posInOutput = 0;
 
 						byte[] tmp = new byte[requested * 2];
-						while(posInInput < buffer.Length) {
-								int len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
+						while (posInInput < buffer.Length)
+						{
+								int len = (int) IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 								posInInput += 2;
 
 								buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
@@ -351,13 +400,16 @@ internal sealed class GdsBlob : BlobBase {
 
 						return actualBuffer;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void PutSegment(byte[] buffer) {
-				try {
+		public override void PutSegment(byte[] buffer)
+		{
+				try
+				{
 						_database.Xdr.WriteBytes(bufOpBatchSegments);
 						_database.Xdr.Write(_blobHandle);
 						_database.Xdr.WriteBlobBuffer(buffer);
@@ -365,12 +417,15 @@ internal sealed class GdsBlob : BlobBase {
 
 						_ = _database.ReadResponse();
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteBytesAsync(bufOpBatchSegments, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteBlobBufferAsync(buffer, cancellationToken).ConfigureAwait(false);
@@ -378,40 +433,47 @@ internal sealed class GdsBlob : BlobBase {
 
 						_ = await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Seek(int offset, int seekMode) {
-				try {
+		public override void Seek(int offset, int seekMode)
+		{
+				try
+				{
 						_database.Xdr.WriteBytes(bufOpSeekBlob);
 						_database.Xdr.Write(_blobHandle);
 						_database.Xdr.Write(seekMode);
 						_database.Xdr.Write(offset);
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						_position = response.ObjectHandle;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask SeekAsync(int offset, int seekMode, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask SeekAsync(int offset, int seekMode, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteBytesAsync(bufOpSeekBlob, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(seekMode, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(offset, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						_position = response.ObjectHandle;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
@@ -426,43 +488,51 @@ internal sealed class GdsBlob : BlobBase {
 
 		#region Private API Methods
 
-		private void CreateOrOpen(int op, BlobParameterBuffer bpb) {
-				try {
+		private void CreateOrOpen(int op, BlobParameterBuffer bpb)
+		{
+				try
+				{
 						_database.Xdr.Write(op);
-						if(bpb != null) {
+						if (bpb != null)
+						{
 								_database.Xdr.WriteTyped(IscCodes.isc_bpb_version1, bpb.ToArray());
 						}
 						_database.Xdr.Write(_transaction.Handle);
 						_database.Xdr.Write(_blobId);
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						_blobId = response.BlobId;
 						_blobHandle = response.ObjectHandle;
 						_isOpen = true;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		private async ValueTask CreateOrOpenAsync(int op, BlobParameterBuffer bpb, CancellationToken cancellationToken = default) {
-				try {
+		private async ValueTask CreateOrOpenAsync(int op, BlobParameterBuffer bpb, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteAsync(op, cancellationToken).ConfigureAwait(false);
-						if(bpb != null) {
+						if (bpb != null)
+						{
 								await _database.Xdr.WriteTypedAsync(IscCodes.isc_bpb_version1, bpb.ToArray(), cancellationToken).ConfigureAwait(false);
 						}
 						await _database.Xdr.WriteAsync(_transaction.Handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_blobId, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						_blobId = response.BlobId;
 						_blobHandle = response.ObjectHandle;
 						_isOpen = true;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}

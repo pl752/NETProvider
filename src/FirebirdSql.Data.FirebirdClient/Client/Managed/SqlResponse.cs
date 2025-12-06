@@ -17,6 +17,7 @@
 
 namespace FirebirdSql.Data.Client.Managed;
 
-internal class SqlResponse(int count) : IResponse {
+internal class SqlResponse(int count) : IResponse
+{
 		public int Count { get; } = count;
 }

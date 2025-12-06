@@ -25,42 +25,51 @@ using WireCryptOption = FirebirdSql.Data.Client.Managed.Version13.WireCryptOptio
 
 namespace FirebirdSql.Data.Client;
 
-internal static class ClientFactory {
-		public static DatabaseBase CreateDatabase(ConnectionString options) => options.ServerType switch {
+internal static class ClientFactory
+{
+		public static DatabaseBase CreateDatabase(ConnectionString options) => options.ServerType switch
+		{
 				FbServerType.Default => CreateManagedDatabase(options),
 				FbServerType.Embedded => CreateNativeDatabase(options),
 				_ => throw IncorrectServerTypeException(),
 		};
-		public static ValueTask<DatabaseBase> CreateDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch {
+		public static ValueTask<DatabaseBase> CreateDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch
+		{
 				FbServerType.Default => CreateManagedDatabaseAsync(options, cancellationToken),
 				FbServerType.Embedded => CreateNativeDatabaseAsync(options),
 				_ => throw IncorrectServerTypeException(),
 		};
 
-		public static ServiceManagerBase CreateServiceManager(ConnectionString options) => options.ServerType switch {
+		public static ServiceManagerBase CreateServiceManager(ConnectionString options) => options.ServerType switch
+		{
 				FbServerType.Default => CreateManagedServiceManager(options),
 				FbServerType.Embedded => CreateNativeServiceManager(options),
 				_ => throw IncorrectServerTypeException(),
 		};
-		public static ValueTask<ServiceManagerBase> CreateServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch {
+		public static ValueTask<ServiceManagerBase> CreateServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default) => options.ServerType switch
+		{
 				FbServerType.Default => CreateManagedServiceManagerAsync(options, cancellationToken),
 				FbServerType.Embedded => CreateNativeServiceManagerAsync(options),
 				_ => throw IncorrectServerTypeException(),
 		};
 
-		private static DatabaseBase CreateManagedDatabase(ConnectionString options) {
+		private static DatabaseBase CreateManagedDatabase(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				var connection = new GdsConnection(options.UserID, options.Password, options.DataSource, options.Port, options.ConnectionTimeout, options.PacketSize, charset, options.Dialect, options.Compression, FbWireCryptToWireCryptOption(options.WireCrypt), options.CryptKey);
 				connection.Connect();
-				try {
+				try
+				{
 						connection.Identify(options.Database);
 				}
-				catch {
+				catch
+				{
 						connection.Disconnect();
 						throw;
 				}
-				return connection.ProtocolVersion switch {
+				return connection.ProtocolVersion switch
+				{
 						IscCodes.PROTOCOL_VERSION16 => new Managed.Version16.GdsDatabase(connection),
 						IscCodes.PROTOCOL_VERSION15 => new Managed.Version15.GdsDatabase(connection),
 						IscCodes.PROTOCOL_VERSION13 => new Managed.Version13.GdsDatabase(connection),
@@ -70,19 +79,23 @@ internal static class ClientFactory {
 						_ => throw UnsupportedProtocolException(),
 				};
 		}
-		private static async ValueTask<DatabaseBase> CreateManagedDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default) {
+		private static async ValueTask<DatabaseBase> CreateManagedDatabaseAsync(ConnectionString options, CancellationToken cancellationToken = default)
+		{
 				var charset = GetCharset(options);
 
 				var connection = new GdsConnection(options.UserID, options.Password, options.DataSource, options.Port, options.ConnectionTimeout, options.PacketSize, charset, options.Dialect, options.Compression, FbWireCryptToWireCryptOption(options.WireCrypt), options.CryptKey);
 				await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-				try {
+				try
+				{
 						await connection.IdentifyAsync(options.Database, cancellationToken).ConfigureAwait(false);
 				}
-				catch {
+				catch
+				{
 						await connection.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 						throw;
 				}
-				return connection.ProtocolVersion switch {
+				return connection.ProtocolVersion switch
+				{
 						IscCodes.PROTOCOL_VERSION16 => new Managed.Version16.GdsDatabase(connection),
 						IscCodes.PROTOCOL_VERSION15 => new Managed.Version15.GdsDatabase(connection),
 						IscCodes.PROTOCOL_VERSION13 => new Managed.Version13.GdsDatabase(connection),
@@ -93,30 +106,36 @@ internal static class ClientFactory {
 				};
 		}
 
-		private static DatabaseBase CreateNativeDatabase(ConnectionString options) {
+		private static DatabaseBase CreateNativeDatabase(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				return new Native.FesDatabase(options.ClientLibrary, charset, options.PacketSize, options.Dialect);
 		}
-		private static ValueTask<DatabaseBase> CreateNativeDatabaseAsync(ConnectionString options) {
+		private static ValueTask<DatabaseBase> CreateNativeDatabaseAsync(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				return ValueTask2.FromResult<DatabaseBase>(new Native.FesDatabase(options.ClientLibrary, charset, options.PacketSize, options.Dialect));
 		}
 
-		private static ServiceManagerBase CreateManagedServiceManager(ConnectionString options) {
+		private static ServiceManagerBase CreateManagedServiceManager(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				var connection = new GdsConnection(options.UserID, options.Password, options.DataSource, options.Port, options.ConnectionTimeout, options.PacketSize, charset, options.Dialect, options.Compression, FbWireCryptToWireCryptOption(options.WireCrypt), options.CryptKey);
 				connection.Connect();
-				try {
+				try
+				{
 						connection.Identify(!string.IsNullOrEmpty(options.Database) ? options.Database : string.Empty);
 				}
-				catch {
+				catch
+				{
 						connection.Disconnect();
 						throw;
 				}
-				return connection.ProtocolVersion switch {
+				return connection.ProtocolVersion switch
+				{
 						IscCodes.PROTOCOL_VERSION16 => new Managed.Version16.GdsServiceManager(connection),
 						IscCodes.PROTOCOL_VERSION15 => new Managed.Version15.GdsServiceManager(connection),
 						IscCodes.PROTOCOL_VERSION13 => new Managed.Version13.GdsServiceManager(connection),
@@ -126,19 +145,23 @@ internal static class ClientFactory {
 						_ => throw UnsupportedProtocolException(),
 				};
 		}
-		private static async ValueTask<ServiceManagerBase> CreateManagedServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default) {
+		private static async ValueTask<ServiceManagerBase> CreateManagedServiceManagerAsync(ConnectionString options, CancellationToken cancellationToken = default)
+		{
 				var charset = GetCharset(options);
 
 				var connection = new GdsConnection(options.UserID, options.Password, options.DataSource, options.Port, options.ConnectionTimeout, options.PacketSize, charset, options.Dialect, options.Compression, FbWireCryptToWireCryptOption(options.WireCrypt), options.CryptKey);
 				await connection.ConnectAsync(cancellationToken).ConfigureAwait(false);
-				try {
+				try
+				{
 						await connection.IdentifyAsync(!string.IsNullOrEmpty(options.Database) ? options.Database : string.Empty, cancellationToken).ConfigureAwait(false);
 				}
-				catch {
+				catch
+				{
 						await connection.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 						throw;
 				}
-				return connection.ProtocolVersion switch {
+				return connection.ProtocolVersion switch
+				{
 						IscCodes.PROTOCOL_VERSION16 => new Managed.Version16.GdsServiceManager(connection),
 						IscCodes.PROTOCOL_VERSION15 => new Managed.Version15.GdsServiceManager(connection),
 						IscCodes.PROTOCOL_VERSION13 => new Managed.Version13.GdsServiceManager(connection),
@@ -149,12 +172,14 @@ internal static class ClientFactory {
 				};
 		}
 
-		private static ServiceManagerBase CreateNativeServiceManager(ConnectionString options) {
+		private static ServiceManagerBase CreateNativeServiceManager(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				return new Native.FesServiceManager(options.ClientLibrary, charset);
 		}
-		private static ValueTask<ServiceManagerBase> CreateNativeServiceManagerAsync(ConnectionString options) {
+		private static ValueTask<ServiceManagerBase> CreateNativeServiceManagerAsync(ConnectionString options)
+		{
 				var charset = GetCharset(options);
 
 				return ValueTask2.FromResult<ServiceManagerBase>(new Native.FesServiceManager(options.ClientLibrary, charset));
@@ -166,7 +191,8 @@ internal static class ClientFactory {
 
 		private static Charset GetCharset(ConnectionString options) => !Charset.TryGetByName(options.Charset, out var charset) ? throw InvalidCharsetException() : charset;
 
-		private static WireCryptOption FbWireCryptToWireCryptOption(FbWireCrypt wireCrypt) => wireCrypt switch {
+		private static WireCryptOption FbWireCryptToWireCryptOption(FbWireCrypt wireCrypt) => wireCrypt switch
+		{
 				FbWireCrypt.Disabled => WireCryptOption.Disabled,
 				FbWireCrypt.Enabled => WireCryptOption.Enabled,
 				FbWireCrypt.Required => WireCryptOption.Required,

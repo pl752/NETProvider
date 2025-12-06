@@ -60,11 +60,13 @@
 //
 // -----------------------------------------------------------------------
 
-namespace Ionic.Zlib {
+namespace Ionic.Zlib
+{
 		/// <summary>
 		/// A bunch of constants used in the Zlib interface.
 		/// </summary>
-		internal static class ZlibConstants {
+		internal static class ZlibConstants
+		{
 				/// <summary>
 				/// The maximum number of window bits for the Deflate algorithm.
 				/// </summary>

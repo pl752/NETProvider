@@ -20,11 +20,14 @@ using System.Security.Cryptography;
 
 namespace FirebirdSql.Data.Client.Managed.Srp;
 
-internal sealed class SrpClient : SrpClientBase {
+internal sealed class SrpClient : SrpClientBase
+{
 		public override string Name => "Srp";
 
-		protected override byte[] ComputeHash(params byte[][] ba) {
-				using(var hash = SHA1.Create()) {
+		protected override byte[] ComputeHash(params byte[][] ba)
+		{
+				using (var hash = SHA1.Create())
+				{
 						return hash.ComputeHash([.. ba.SelectMany(x => x)]);
 				}
 		}

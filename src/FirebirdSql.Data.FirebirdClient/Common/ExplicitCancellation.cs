@@ -22,9 +22,12 @@ using System.Threading;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class ExplicitCancellation {
-		public static ExplicitCancel Enter(CancellationToken cancellationToken, Action explicitCancel) {
-				if(cancellationToken.IsCancellationRequested) {
+internal static class ExplicitCancellation
+{
+		public static ExplicitCancel Enter(CancellationToken cancellationToken, Action explicitCancel)
+		{
+				if (cancellationToken.IsCancellationRequested)
+				{
 						explicitCancel();
 						throw new OperationCanceledException(cancellationToken);
 				}
@@ -36,7 +39,8 @@ internal static class ExplicitCancellation {
 		static void ExitExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) => cancellationTokenRegistration.Dispose();
 
 		[StructLayout(LayoutKind.Auto)]
-		internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable {
+		internal readonly struct ExplicitCancel(CancellationTokenRegistration cancellationTokenRegistration) : IDisposable
+		{
 				readonly CancellationTokenRegistration _cancellationTokenRegistration = cancellationTokenRegistration;
 
 				public void Dispose() => ExitExplicitCancel(_cancellationTokenRegistration);

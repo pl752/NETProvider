@@ -19,8 +19,10 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class DatabaseParameterBufferBase : ParameterBuffer {
-		public DatabaseParameterBufferBase(int version, Encoding encoding) {
+internal abstract class DatabaseParameterBufferBase : ParameterBuffer
+{
+		public DatabaseParameterBufferBase(int version, Encoding encoding)
+		{
 				Encoding = encoding;
 				Append(version);
 		}

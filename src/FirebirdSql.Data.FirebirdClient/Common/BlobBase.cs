@@ -22,7 +22,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class BlobBase(DatabaseBase db) {
+internal abstract class BlobBase(DatabaseBase db)
+{
 		private int _rblFlags;
 		private readonly Charset _charset = db.Charset;
 		private readonly int _segmentSize = db.PacketSize;
@@ -42,27 +43,34 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 		public abstract DatabaseBase Database { get; }
 
-		public string ReadString() {
+		public string ReadString()
+		{
 				byte[] buffer = Read();
 				return _charset.GetString(buffer, 0, buffer.Length);
 		}
-		public async ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default) {
+		public async ValueTask<string> ReadStringAsync(CancellationToken cancellationToken = default)
+		{
 				byte[] buffer = await ReadAsync(cancellationToken).ConfigureAwait(false);
 				return _charset.GetString(buffer, 0, buffer.Length);
 		}
 
-		public byte[] Read() {
-				using(var ms = new MemoryStream()) {
-						try {
+		public byte[] Read()
+		{
+				using (var ms = new MemoryStream())
+				{
+						try
+						{
 								Open();
 
-								while(!EOF) {
+								while (!EOF)
+								{
 										GetSegment(ms);
 								}
 
 								Close();
 						}
-						catch {
+						catch
+						{
 								// Cancel the blob and rethrow the exception
 								Cancel();
 
@@ -72,18 +80,23 @@ internal abstract class BlobBase(DatabaseBase db) {
 						return ms.ToArray();
 				}
 		}
-		public async ValueTask<byte[]> ReadAsync(CancellationToken cancellationToken = default) {
-				using(var ms = new MemoryStream()) {
-						try {
+		public async ValueTask<byte[]> ReadAsync(CancellationToken cancellationToken = default)
+		{
+				using (var ms = new MemoryStream())
+				{
+						try
+						{
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 
-								while(!EOF) {
+								while (!EOF)
+								{
 										await GetSegmentAsync(ms, cancellationToken).ConfigureAwait(false);
 								}
 
 								await CloseAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch {
+						catch
+						{
 								// Cancel the blob and rethrow the exception
 								await CancelAsync(cancellationToken).ConfigureAwait(false);
 
@@ -100,8 +113,10 @@ internal abstract class BlobBase(DatabaseBase db) {
 		public void Write(byte[] buffer) => Write(buffer, 0, buffer.Length);
 		public ValueTask WriteAsync(byte[] buffer, CancellationToken cancellationToken = default) => WriteAsync(buffer, 0, buffer.Length, cancellationToken);
 
-		public void Write(byte[] buffer, int index, int count) {
-				try {
+		public void Write(byte[] buffer, int index, int count)
+		{
+				try
+				{
 						Create();
 
 						int length = count;
@@ -110,8 +125,10 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 						byte[] tmpBuffer = new byte[chunk];
 
-						while(length > 0) {
-								if(chunk > length) {
+						while (length > 0)
+						{
+								if (chunk > length)
+								{
 										chunk = length;
 										tmpBuffer = new byte[chunk];
 								}
@@ -125,15 +142,18 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 						Close();
 				}
-				catch {
+				catch
+				{
 						// Cancel the blob and rethrow the exception
 						Cancel();
 
 						throw;
 				}
 		}
-		public async ValueTask WriteAsync(byte[] buffer, int index, int count, CancellationToken cancellationToken = default) {
-				try {
+		public async ValueTask WriteAsync(byte[] buffer, int index, int count, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await CreateAsync(cancellationToken).ConfigureAwait(false);
 
 						int length = count;
@@ -142,8 +162,10 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 						byte[] tmpBuffer = new byte[chunk];
 
-						while(length > 0) {
-								if(chunk > length) {
+						while (length > 0)
+						{
+								if (chunk > length)
+								{
 										chunk = length;
 										tmpBuffer = new byte[chunk];
 								}
@@ -157,7 +179,8 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 						await CloseAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch {
+				catch
+				{
 						// Cancel the blob and rethrow the exception
 						await CancelAsync(cancellationToken).ConfigureAwait(false);
 

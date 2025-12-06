@@ -24,7 +24,8 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class IscException : Exception {
+internal sealed class IscException : Exception
+{
 		private string _message;
 
 		public List<IscError> Errors { get; private set; }
@@ -34,43 +35,50 @@ internal sealed class IscException : Exception {
 		public bool IsWarning => Errors.FirstOrDefault()?.IsWarning ?? false;
 
 		private IscException(Exception innerException = null)
-			: base(innerException?.Message, innerException) {
+			: base(innerException?.Message, innerException)
+		{
 				Errors = [];
 		}
 
 		public static IscException ForBuilding() => new IscException();
 
-		public static IscException ForErrorCode(int errorCode, Exception innerException = null) {
+		public static IscException ForErrorCode(int errorCode, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(IscCodes.isc_arg_gds, errorCode));
 				result.BuildExceptionData();
 				return result;
 		}
 
-		public static IscException ForErrorCodes(IEnumerable<int> errorCodes, Exception innerException = null) {
+		public static IscException ForErrorCodes(IEnumerable<int> errorCodes, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
-				foreach(int errorCode in errorCodes) {
+				foreach (int errorCode in errorCodes)
+				{
 						result.Errors.Add(new IscError(IscCodes.isc_arg_gds, errorCode));
 				}
 				result.BuildExceptionData();
 				return result;
 		}
 
-		public static IscException ForSQLSTATE(string sqlState, Exception innerException = null) {
+		public static IscException ForSQLSTATE(string sqlState, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(IscCodes.isc_arg_sql_state, sqlState));
 				result.BuildExceptionData();
 				return result;
 		}
 
-		public static IscException ForStrParam(string strParam, Exception innerException = null) {
+		public static IscException ForStrParam(string strParam, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(IscCodes.isc_arg_string, strParam));
 				result.BuildExceptionData();
 				return result;
 		}
 
-		public static IscException ForErrorCodeIntParam(int errorCode, int intParam, Exception innerException = null) {
+		public static IscException ForErrorCodeIntParam(int errorCode, int intParam, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(IscCodes.isc_arg_gds, errorCode));
 				result.Errors.Add(new IscError(IscCodes.isc_arg_number, intParam));
@@ -78,7 +86,8 @@ internal sealed class IscException : Exception {
 				return result;
 		}
 
-		public static IscException ForTypeErrorCodeStrParam(int type, int errorCode, string strParam, Exception innerException = null) {
+		public static IscException ForTypeErrorCodeStrParam(int type, int errorCode, string strParam, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(type, errorCode));
 				result.Errors.Add(new IscError(IscCodes.isc_arg_string, strParam));
@@ -86,7 +95,8 @@ internal sealed class IscException : Exception {
 				return result;
 		}
 
-		public static IscException ForTypeErrorCodeIntParamStrParam(int type, int errorCode, int intParam, string strParam, Exception innerException = null) {
+		public static IscException ForTypeErrorCodeIntParamStrParam(int type, int errorCode, int intParam, string strParam, Exception innerException = null)
+		{
 				var result = new IscException(innerException);
 				result.Errors.Add(new IscError(type, errorCode));
 				result.Errors.Add(new IscError(IscCodes.isc_arg_number, intParam));
@@ -97,7 +107,8 @@ internal sealed class IscException : Exception {
 
 		public static IscException ForIOException(IOException exception) => ForErrorCodes([IscCodes.isc_net_write_err, IscCodes.isc_net_read_err], exception);
 
-		public void BuildExceptionData() {
+		public void BuildExceptionData()
+		{
 				BuildErrorCode();
 				BuildSqlState();
 				BuildExceptionMessage();
@@ -105,7 +116,8 @@ internal sealed class IscException : Exception {
 
 		private void BuildErrorCode() => ErrorCode = Errors.Count != 0 ? Errors[0].ErrorCode : 0;
 
-		private void BuildSqlState() {
+		private void BuildSqlState()
+		{
 				var error = Errors.Find(e => e.Type == IscCodes.isc_arg_sql_state);
 				// step #1, maybe we already have a SQLSTATE stuffed in the status vector
 				SQLSTATE = error != null
@@ -116,11 +128,14 @@ internal sealed class IscException : Exception {
 							: string.Empty;
 		}
 
-		private void BuildExceptionMessage() {
+		private void BuildExceptionMessage()
+		{
 				var builder = new StringBuilder();
 
-				for(int i = 0; i < Errors.Count; i++) {
-						if(Errors[i].Type is IscCodes.isc_arg_gds or IscCodes.isc_arg_warning) {
+				for (int i = 0; i < Errors.Count; i++)
+				{
+						if (Errors[i].Type is IscCodes.isc_arg_gds or IscCodes.isc_arg_warning)
+						{
 								int code = Errors[i].ErrorCode;
 								string message = IscErrorMessages.TryGet(code, out string value)
 									? value
@@ -128,13 +143,16 @@ internal sealed class IscException : Exception {
 
 								var args = new List<string>();
 								int index = i + 1;
-								while(index < Errors.Count && Errors[index].IsArgument) {
+								while (index < Errors.Count && Errors[index].IsArgument)
+								{
 										args.Add(Errors[index++].StrParam);
 										i++;
 								}
 
-								try {
-										switch(code) {
+								try
+								{
+										switch (code)
+										{
 												case IscCodes.isc_except:
 														// Custom exception	add	the	first argument as error	code
 														ErrorCode = Convert.ToInt32(args[0], CultureInfo.InvariantCulture);
@@ -153,7 +171,8 @@ internal sealed class IscException : Exception {
 														break;
 										}
 								}
-								catch {
+								catch
+								{
 										message = BuildDefaultErrorMessage(code);
 										AppendMessage(builder, message, args);
 								}
@@ -161,7 +180,8 @@ internal sealed class IscException : Exception {
 				}
 
 				// Update error	collection only	with the main error
-				var mainError = new IscError(ErrorCode) {
+				var mainError = new IscError(ErrorCode)
+				{
 						Message = builder.ToString()
 				};
 
@@ -173,8 +193,10 @@ internal sealed class IscException : Exception {
 
 		private static string BuildDefaultErrorMessage(int code) => string.Format(CultureInfo.CurrentCulture, "No message for error code {0} found.", code);
 
-		private static void AppendMessage(StringBuilder builder, string message, List<string> args) {
-				if(builder.Length > 0) {
+		private static void AppendMessage(StringBuilder builder, string message, List<string> args)
+		{
+				if (builder.Length > 0)
+				{
 						_ = builder.Append(Environment.NewLine);
 				}
 				_ = builder.AppendFormat(CultureInfo.CurrentCulture, message, args.ToArray());

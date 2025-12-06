@@ -19,12 +19,14 @@ using System;
 
 namespace FirebirdSql.Data.Logging;
 
-public interface IFbLogger {
+public interface IFbLogger
+{
 		bool IsEnabled(FbLogLevel level);
 		void Log(FbLogLevel level, string msg, Exception exception = null);
 }
 
-public static class IFbLoggerExtensions {
+public static class IFbLoggerExtensions
+{
 		public static void Trace(this IFbLogger logger, string msg) => logger.Log(FbLogLevel.Trace, msg);
 		public static void Debug(this IFbLogger logger, string msg) => logger.Log(FbLogLevel.Debug, msg);
 		public static void Info(this IFbLogger logger, string msg) => logger.Log(FbLogLevel.Info, msg);

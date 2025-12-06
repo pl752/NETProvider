@@ -21,54 +21,67 @@ using System.Text;
 
 namespace FirebirdSql.Data.Isql;
 
-class SqlStringParser(string targetString) {
+class SqlStringParser(string targetString)
+{
 		readonly string _source = targetString;
 		readonly int _sourceLength = targetString.Length;
 		string[] _tokens = [" "];
 
-		public string[] Tokens {
+		public string[] Tokens
+		{
 				get => _tokens;
-				set {
+				set
+				{
 						ArgumentNullException.ThrowIfNull(value);
-						foreach(string item in value) {
+						foreach (string item in value)
+						{
 								ArgumentNullException.ThrowIfNull(value);
-								if(string.IsNullOrEmpty(item))
+								if (string.IsNullOrEmpty(item))
 										throw new ArgumentException();
 						}
 						_tokens = value;
 				}
 		}
 
-		public IEnumerable<FbStatement> Parse() {
+		public IEnumerable<FbStatement> Parse()
+		{
 				int lastYield = 0;
 				int index = 0;
 				var rawResult = new StringBuilder();
-				while(true) {
+				while (true)
+				{
 				Continue:
 						{ }
-						if(index >= _sourceLength) {
+						if (index >= _sourceLength)
+						{
 								break;
 						}
-						if(GetChar(index) == '\'') {
+						if (GetChar(index) == '\'')
+						{
 								_ = rawResult.Append(GetChar(index));
 								index++;
 								_ = rawResult.Append(ProcessLiteral(ref index));
 								_ = rawResult.Append(GetChar(index));
 								index++;
 						}
-						else if(GetChar(index) == '-' && GetNextChar(index) == '-') {
+						else if (GetChar(index) == '-' && GetNextChar(index) == '-')
+						{
 								index++;
 								ProcessSinglelineComment(ref index);
 								index++;
 						}
-						else if(GetChar(index) == '/' && GetNextChar(index) == '*') {
+						else if (GetChar(index) == '/' && GetNextChar(index) == '*')
+						{
 								index++;
 								ProcessMultilineComment(ref index);
 								index++;
 						}
-						else {
-								foreach(string token in Tokens) {
-										if(string.Compare(_source, index, token, 0, token.Length, StringComparison.Ordinal) == 0) {
+						else
+						{
+								foreach (string token in Tokens)
+								{
+										if (string.Compare(_source, index, token, 0, token.Length, StringComparison.Ordinal) == 0)
+										{
 												index += token.Length;
 												yield return new FbStatement(_source.Substring(lastYield, index - lastYield - token.Length), rawResult.ToString());
 												lastYield = index;
@@ -76,36 +89,45 @@ class SqlStringParser(string targetString) {
 												goto Continue;
 										}
 								}
-								if(!(rawResult.Length == 0 && char.IsWhiteSpace(GetChar(index)))) {
+								if (!(rawResult.Length == 0 && char.IsWhiteSpace(GetChar(index))))
+								{
 										_ = rawResult.Append(GetChar(index));
 								}
 								index++;
 						}
 				}
 
-				if(index >= _sourceLength) {
+				if (index >= _sourceLength)
+				{
 						string parsed = _source[lastYield..];
-						if(parsed.Trim() == string.Empty) {
+						if (parsed.Trim() == string.Empty)
+						{
 								yield break;
 						}
 						yield return new FbStatement(parsed, rawResult.ToString());
 						_ = rawResult.Clear();
 				}
-				else {
+				else
+				{
 						yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
 						_ = rawResult.Clear();
 				}
 		}
 
-		string ProcessLiteral(ref int index) {
+		string ProcessLiteral(ref int index)
+		{
 				var sb = new StringBuilder();
-				while(index < _sourceLength) {
-						if(GetChar(index) == '\'') {
-								if(GetNextChar(index) == '\'') {
+				while (index < _sourceLength)
+				{
+						if (GetChar(index) == '\'')
+						{
+								if (GetNextChar(index) == '\'')
+								{
 										_ = sb.Append(GetChar(index));
 										index++;
 								}
-								else {
+								else
+								{
 										break;
 								}
 						}
@@ -115,9 +137,12 @@ class SqlStringParser(string targetString) {
 				return sb.ToString();
 		}
 
-		void ProcessMultilineComment(ref int index) {
-				while(index < _sourceLength) {
-						if(GetChar(index) == '*' && GetNextChar(index) == '/') {
+		void ProcessMultilineComment(ref int index)
+		{
+				while (index < _sourceLength)
+				{
+						if (GetChar(index) == '*' && GetNextChar(index) == '/')
+						{
 								index++;
 								break;
 						}
@@ -125,13 +150,18 @@ class SqlStringParser(string targetString) {
 				}
 		}
 
-		void ProcessSinglelineComment(ref int index) {
-				while(index < _sourceLength) {
-						if(GetChar(index) == '\n') {
+		void ProcessSinglelineComment(ref int index)
+		{
+				while (index < _sourceLength)
+				{
+						if (GetChar(index) == '\n')
+						{
 								break;
 						}
-						if(GetChar(index) == '\r') {
-								if(GetNextChar(index) == '\n') {
+						if (GetChar(index) == '\r')
+						{
+								if (GetNextChar(index) == '\n')
+								{
 										index++;
 								}
 								break;
@@ -144,5 +174,5 @@ class SqlStringParser(string targetString) {
 
 		char? GetNextChar(int index) => index + 1 < _sourceLength
 					? _source[index + 1]
-					: (char?)null;
+					: (char?) null;
 }

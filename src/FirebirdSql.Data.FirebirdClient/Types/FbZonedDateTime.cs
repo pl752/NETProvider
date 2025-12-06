@@ -21,16 +21,18 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Types;
 
 [StructLayout(LayoutKind.Auto)]
-public readonly struct FbZonedDateTime : IEquatable<FbZonedDateTime>, IConvertible {
+public readonly struct FbZonedDateTime : IEquatable<FbZonedDateTime>, IConvertible
+{
 		public DateTime DateTime { get; }
 		public string TimeZone { get; }
 		public TimeSpan? Offset { get; }
 
-		internal FbZonedDateTime(DateTime dateTime, string timeZone, TimeSpan? offset) {
-				if(dateTime.Kind != DateTimeKind.Utc)
+		internal FbZonedDateTime(DateTime dateTime, string timeZone, TimeSpan? offset)
+		{
+				if (dateTime.Kind != DateTimeKind.Utc)
 						throw new ArgumentException("Value must be in UTC.", nameof(dateTime));
 				ArgumentNullException.ThrowIfNull(timeZone);
-				if(string.IsNullOrWhiteSpace(timeZone))
+				if (string.IsNullOrWhiteSpace(timeZone))
 						throw new ArgumentException(nameof(timeZone));
 
 				DateTime = dateTime;
@@ -45,12 +47,14 @@ public readonly struct FbZonedDateTime : IEquatable<FbZonedDateTime>, IConvertib
 
 		public override bool Equals(object obj) => obj is FbZonedDateTime fbZonedDateTime && Equals(fbZonedDateTime);
 
-		public override int GetHashCode() {
-				unchecked {
-						int hash = (int)2166136261;
+		public override int GetHashCode()
+		{
+				unchecked
+				{
+						int hash = (int) 2166136261;
 						hash = (hash * 16777619) ^ DateTime.GetHashCode();
 						hash = (hash * 16777619) ^ TimeZone.GetHashCode();
-						if(Offset != null)
+						if (Offset != null)
 								hash = (hash * 16777619) ^ Offset.GetHashCode();
 						return hash;
 				}

@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbViews : FbSchema {
+internal class FbViews : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -41,24 +43,29 @@ internal class FbViews : FbSchema {
 
 				_ = where.Append("rel.rdb$view_source IS NOT NULL");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* VIEW_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* VIEW_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* VIEW_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat(" AND rel.rdb$relation_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -67,10 +74,12 @@ internal class FbViews : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						row["IS_SYSTEM_VIEW"] = row["IS_SYSTEM_VIEW"] == DBNull.Value ||
 							Convert.ToInt32(row["IS_SYSTEM_VIEW"], CultureInfo.InvariantCulture) == 0
 								? false

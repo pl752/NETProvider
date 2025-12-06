@@ -24,7 +24,8 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IXdrReader {
+interface IXdrReader
+{
 		byte[] ReadBytes(byte[] buffer, int count);
 		void ReadBytes(Span<byte> buffer, int count);
 		ValueTask ReadBytesAsync(Memory<byte> buffer, int count, CancellationToken cancellationToken = default);

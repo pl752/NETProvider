@@ -22,6 +22,7 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbNBackupFlags {
+public enum FbNBackupFlags
+{
 		NoDatabaseTriggers = IscCodes.isc_spb_nbk_no_triggers,
 }

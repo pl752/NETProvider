@@ -20,7 +20,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbInfoMessageEventArgs : EventArgs {
+public sealed class FbInfoMessageEventArgs : EventArgs
+{
 		#region Fields
 
 		private readonly FbErrorCollection _errors;
@@ -38,10 +39,12 @@ public sealed class FbInfoMessageEventArgs : EventArgs {
 
 		#region Constructors
 
-		internal FbInfoMessageEventArgs(IscException ex) {
+		internal FbInfoMessageEventArgs(IscException ex)
+		{
 				_message = ex.Message;
 				_errors = [];
-				foreach(var error in ex.Errors) {
+				foreach (var error in ex.Errors)
+				{
 						_ = _errors.Add(error.Message, error.ErrorCode);
 				}
 		}

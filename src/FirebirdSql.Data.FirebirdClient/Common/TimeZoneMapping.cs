@@ -19,7 +19,8 @@ using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Common;
 
-internal class TimeZoneMapping {
+internal class TimeZoneMapping
+{
 		// select '{ ' || rdb$time_zone_id || ', "' || trim(rdb$time_zone_name) || '" },' from rdb$time_zones order by rdb$time_zone_id desc;
 		static readonly Dictionary<ushort, string> _idToName = new Dictionary<ushort, string>()
 			{

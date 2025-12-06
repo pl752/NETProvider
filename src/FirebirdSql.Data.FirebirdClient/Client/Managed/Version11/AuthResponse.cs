@@ -19,6 +19,7 @@ using System;
 
 namespace FirebirdSql.Data.Client.Managed.Version11;
 
-internal class AuthResponse(ReadOnlyMemory<byte> data) : IResponse {
+internal class AuthResponse(ReadOnlyMemory<byte> data) : IResponse
+{
 		public ReadOnlyMemory<byte> Data { get; } = data;
 }

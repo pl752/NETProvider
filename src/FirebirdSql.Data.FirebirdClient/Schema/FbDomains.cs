@@ -25,10 +25,12 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbDomains : FbSchema {
+internal class FbDomains : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -60,24 +62,29 @@ internal class FbDomains : FbSchema {
 
 				_ = where.Append("rdb$field_name NOT STARTING WITH 'RDB$'");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* DOMAIN_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* DOMAIN_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* DOMAIN_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat(" AND rdb$field_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -86,47 +93,56 @@ internal class FbDomains : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 				_ = schema.Columns.Add("IS_NULLABLE", typeof(bool));
 				_ = schema.Columns.Add("IS_ARRAY", typeof(bool));
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						int blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
 
 						int subType = 0;
-						if(row["DOMAIN_SUB_TYPE"] != DBNull.Value) {
+						if (row["DOMAIN_SUB_TYPE"] != DBNull.Value)
+						{
 								subType = Convert.ToInt32(row["DOMAIN_SUB_TYPE"], CultureInfo.InvariantCulture);
 						}
 
 						int scale = 0;
-						if(row["NUMERIC_SCALE"] != DBNull.Value) {
+						if (row["NUMERIC_SCALE"] != DBNull.Value)
+						{
 								scale = Convert.ToInt32(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
 						}
 
 						row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
 						row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
 
-						var dbType = (FbDbType)TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
-						row["DOMAIN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType)dbType).ToLowerInvariant();
+						var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
+						row["DOMAIN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
 
-						if(dbType is FbDbType.Char or FbDbType.VarChar) {
+						if (dbType is FbDbType.Char or FbDbType.VarChar)
+						{
 								row["DOMAIN_SIZE"] = row["CHARACTER_MAX_LENGTH"];
 						}
-						else {
+						else
+						{
 								row["CHARACTER_OCTET_LENGTH"] = 0;
 						}
 
-						if(dbType is FbDbType.Binary or FbDbType.Text) {
+						if (dbType is FbDbType.Binary or FbDbType.Text)
+						{
 								row["DOMAIN_SIZE"] = Int32.MaxValue;
 						}
 
-						if(row["NUMERIC_PRECISION"] == DBNull.Value) {
+						if (row["NUMERIC_PRECISION"] == DBNull.Value)
+						{
 								row["NUMERIC_PRECISION"] = 0;
 						}
 
-						if((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
-							(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0)) {
+						if ((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
+							(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0))
+						{
 								row["NUMERIC_PRECISION"] = row["DOMAIN_SIZE"];
 						}
 

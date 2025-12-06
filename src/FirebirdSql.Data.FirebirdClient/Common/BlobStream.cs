@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-public sealed class BlobStream : Stream {
+public sealed class BlobStream : Stream
+{
 		private readonly BlobBase _blobHandle;
 		private int _position;
 
@@ -14,41 +15,49 @@ public sealed class BlobStream : Stream {
 
 		private int Available => _currentSegment?.Length - _segmentPosition ?? 0;
 
-		internal BlobStream(BlobBase blob) {
+		internal BlobStream(BlobBase blob)
+		{
 				_blobHandle = blob;
 				_position = 0;
 		}
 
-		public override long Position {
+		public override long Position
+		{
 				get => _position;
 				set => Seek(value, SeekOrigin.Begin);
 		}
 
-		public override long Length {
-				get {
-						if(!_blobHandle.IsOpen)
+		public override long Length
+		{
+				get
+				{
+						if (!_blobHandle.IsOpen)
 								_blobHandle.Open();
 
 						return _blobHandle.GetLength();
 				}
 		}
 
-		public override void Flush() {
+		public override void Flush()
+		{
 		}
 
-		public override int Read(byte[] buffer, int offset, int count) {
+		public override int Read(byte[] buffer, int offset, int count)
+		{
 				ValidateBufferSize(buffer, offset, count);
 
-				if(!_blobHandle.IsOpen)
+				if (!_blobHandle.IsOpen)
 						_blobHandle.Open();
 
 				int copied = 0;
 				int remainingBufferSize = buffer.Length - offset;
-				do {
-						if(remainingBufferSize == 0)
+				do
+				{
+						if (remainingBufferSize == 0)
 								break;
 
-						if(Available > 0) {
+						if (Available > 0)
+						{
 								int toCopy = Math.Min(Available, remainingBufferSize);
 								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
 								copied += toCopy;
@@ -57,31 +66,35 @@ public sealed class BlobStream : Stream {
 								_position += toCopy;
 						}
 
-						if(_blobHandle.EOF)
+						if (_blobHandle.EOF)
 								break;
 
-						if(Available == 0) {
+						if (Available == 0)
+						{
 								_currentSegment = _blobHandle.GetSegment();
 								_segmentPosition = 0;
 						}
-				} while(copied < count);
+				} while (copied < count);
 
 				return copied;
 		}
 		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count,
-			CancellationToken cancellationToken) {
+			CancellationToken cancellationToken)
+		{
 				ValidateBufferSize(buffer, offset, count);
 
-				if(!_blobHandle.IsOpen)
+				if (!_blobHandle.IsOpen)
 						await _blobHandle.OpenAsync(cancellationToken).ConfigureAwait(false);
 
 				int copied = 0;
 				int remainingBufferSize = buffer.Length - offset;
-				do {
-						if(remainingBufferSize == 0)
+				do
+				{
+						if (remainingBufferSize == 0)
 								break;
 
-						if(Available > 0) {
+						if (Available > 0)
+						{
 								int toCopy = Math.Min(Available, remainingBufferSize);
 								Array.Copy(_currentSegment, _segmentPosition, buffer, offset + copied, toCopy);
 								copied += toCopy;
@@ -90,45 +103,52 @@ public sealed class BlobStream : Stream {
 								_position += toCopy;
 						}
 
-						if(_blobHandle.EOF)
+						if (_blobHandle.EOF)
 								break;
 
-						if(Available == 0) {
+						if (Available == 0)
+						{
 								_currentSegment = await _blobHandle.GetSegmentAsync(cancellationToken).ConfigureAwait(false);
 								_segmentPosition = 0;
 						}
-				} while(copied < count);
+				} while (copied < count);
 
 				return copied;
 		}
 
-		public override long Seek(long offset, SeekOrigin origin) {
-				if(!_blobHandle.IsOpen)
+		public override long Seek(long offset, SeekOrigin origin)
+		{
+				if (!_blobHandle.IsOpen)
 						_blobHandle.Open();
 
-				int seekMode = origin switch {
+				int seekMode = origin switch
+				{
 						SeekOrigin.Begin => IscCodes.isc_blb_seek_from_head,
 						SeekOrigin.Current => IscCodes.isc_blb_seek_relative,
 						SeekOrigin.End => IscCodes.isc_blb_seek_from_tail,
 						_ => throw new ArgumentOutOfRangeException(nameof(origin))
 				};
 
-				_blobHandle.Seek((int)offset, seekMode);
+				_blobHandle.Seek((int) offset, seekMode);
 				return _position = _blobHandle.Position;
 		}
 
 		public override void SetLength(long value) => throw new NotSupportedException();
 
-		public override void Write(byte[] buffer, int offset, int count) {
-				try {
-						if(!_blobHandle.IsOpen)
+		public override void Write(byte[] buffer, int offset, int count)
+		{
+				try
+				{
+						if (!_blobHandle.IsOpen)
 								_blobHandle.Create();
 
 						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
 						byte[] tmpBuffer = new byte[chunk];
 
-						while(count > 0) {
-								if(chunk > count) {
+						while (count > 0)
+						{
+								if (chunk > count)
+								{
 										chunk = count;
 										tmpBuffer = new byte[chunk];
 								}
@@ -141,21 +161,26 @@ public sealed class BlobStream : Stream {
 								_position += chunk;
 						}
 				}
-				catch {
+				catch
+				{
 						_blobHandle.Cancel();
 						throw;
 				}
 		}
-		public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
-				try {
-						if(!_blobHandle.IsOpen)
+		public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		{
+				try
+				{
+						if (!_blobHandle.IsOpen)
 								await _blobHandle.CreateAsync(cancellationToken).ConfigureAwait(false);
 
 						int chunk = count >= _blobHandle.SegmentSize ? _blobHandle.SegmentSize : count;
 						byte[] tmpBuffer = new byte[chunk];
 
-						while(count > 0) {
-								if(chunk > count) {
+						while (count > 0)
+						{
+								if (chunk > count)
+								{
 										chunk = count;
 										tmpBuffer = new byte[chunk];
 								}
@@ -168,7 +193,8 @@ public sealed class BlobStream : Stream {
 								_position += chunk;
 						}
 				}
-				catch {
+				catch
+				{
 						await _blobHandle.CancelAsync(cancellationToken).ConfigureAwait(false);
 						throw;
 				}
@@ -184,10 +210,11 @@ public sealed class BlobStream : Stream {
 		public override ValueTask DisposeAsync() => _blobHandle.CloseAsync();
 #endif
 
-		private static void ValidateBufferSize(byte[] buffer, int offset, int count) {
+		private static void ValidateBufferSize(byte[] buffer, int offset, int count)
+		{
 				ArgumentNullException.ThrowIfNull(buffer);
 
-				if(buffer.Length < offset + count)
+				if (buffer.Length < offset + count)
 						throw new InvalidOperationException();
 		}
 }

@@ -23,7 +23,8 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IXdrWriter {
+interface IXdrWriter
+{
 		void Flush();
 		ValueTask FlushAsync(CancellationToken cancellationToken = default);
 

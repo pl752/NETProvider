@@ -21,14 +21,16 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Types;
 
 [StructLayout(LayoutKind.Auto)]
-public readonly struct FbZonedTime : IEquatable<FbZonedTime>, IConvertible {
+public readonly struct FbZonedTime : IEquatable<FbZonedTime>, IConvertible
+{
 		public TimeSpan Time { get; }
 		public string TimeZone { get; }
 		public TimeSpan? Offset { get; }
 
-		internal FbZonedTime(TimeSpan time, string timeZone, TimeSpan? offset) {
+		internal FbZonedTime(TimeSpan time, string timeZone, TimeSpan? offset)
+		{
 				ArgumentNullException.ThrowIfNull(timeZone);
-				if(string.IsNullOrWhiteSpace(timeZone))
+				if (string.IsNullOrWhiteSpace(timeZone))
 						throw new ArgumentException(nameof(timeZone));
 
 				Time = time;
@@ -43,12 +45,14 @@ public readonly struct FbZonedTime : IEquatable<FbZonedTime>, IConvertible {
 
 		public override bool Equals(object obj) => obj is FbZonedTime fbZonedTime && Equals(fbZonedTime);
 
-		public override int GetHashCode() {
-				unchecked {
-						int hash = (int)2166136261;
+		public override int GetHashCode()
+		{
+				unchecked
+				{
+						int hash = (int) 2166136261;
 						hash = (hash * 16777619) ^ Time.GetHashCode();
 						hash = (hash * 16777619) ^ TimeZone.GetHashCode();
-						if(Offset != null)
+						if (Offset != null)
 								hash = (hash * 16777619) ^ Offset.GetHashCode();
 						return hash;
 				}

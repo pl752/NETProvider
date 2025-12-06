@@ -23,48 +23,59 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbStatistical(string connectionString = null) : FbService(connectionString) {
+public sealed class FbStatistical(string connectionString = null) : FbService(connectionString)
+{
 		public FbStatisticalFlags Options { get; set; }
 
-		public void Execute() {
+		public void Execute()
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								Open();
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_db_stats);
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
 								StartTask(startSpb);
 								ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 						}
-						finally {
+						finally
+						{
 								Close();
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_db_stats);
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
+								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
 								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 								await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 						}
-						finally {
+						finally
+						{
 								await CloseAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}

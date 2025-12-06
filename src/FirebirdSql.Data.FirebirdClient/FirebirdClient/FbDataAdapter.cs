@@ -24,7 +24,8 @@ using System.Data.Common;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [DefaultEvent("RowUpdated")]
-public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
+public sealed class FbDataAdapter : DbDataAdapter, ICloneable
+{
 		#region Static Fields
 
 		private static readonly object EventRowUpdated = new object();
@@ -34,12 +35,16 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 
 		#region Events
 
-		public event EventHandler<FbRowUpdatedEventArgs> RowUpdated { add => base.Events.AddHandler(EventRowUpdated, value);
+		public event EventHandler<FbRowUpdatedEventArgs> RowUpdated
+		{
+				add => base.Events.AddHandler(EventRowUpdated, value);
 
 				remove => base.Events.RemoveHandler(EventRowUpdated, value);
 		}
 
-		public event EventHandler<FbRowUpdatingEventArgs> RowUpdating { add => base.Events.AddHandler(EventRowUpdating, value);
+		public event EventHandler<FbRowUpdatingEventArgs> RowUpdating
+		{
+				add => base.Events.AddHandler(EventRowUpdating, value);
 
 				remove => base.Events.RemoveHandler(EventRowUpdating, value);
 		}
@@ -57,22 +62,30 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 
 		[Category("Fill")]
 		[DefaultValue(null)]
-		public new FbCommand SelectCommand { get => (FbCommand)base.SelectCommand; set => base.SelectCommand = value;
+		public new FbCommand SelectCommand
+		{
+				get => (FbCommand) base.SelectCommand; set => base.SelectCommand = value;
 		}
 
 		[Category("Update")]
 		[DefaultValue(null)]
-		public new FbCommand InsertCommand { get => (FbCommand)base.InsertCommand; set => base.InsertCommand = value;
+		public new FbCommand InsertCommand
+		{
+				get => (FbCommand) base.InsertCommand; set => base.InsertCommand = value;
 		}
 
 		[Category("Update")]
 		[DefaultValue(null)]
-		public new FbCommand UpdateCommand { get => (FbCommand)base.UpdateCommand; set => base.UpdateCommand = value;
+		public new FbCommand UpdateCommand
+		{
+				get => (FbCommand) base.UpdateCommand; set => base.UpdateCommand = value;
 		}
 
 		[Category("Update")]
 		[DefaultValue(null)]
-		public new FbCommand DeleteCommand { get => (FbCommand)base.DeleteCommand; set => base.DeleteCommand = value;
+		public new FbCommand DeleteCommand
+		{
+				get => (FbCommand) base.DeleteCommand; set => base.DeleteCommand = value;
 		}
 
 		#endregion
@@ -80,20 +93,24 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 		#region Constructors
 
 		public FbDataAdapter()
-			: base() {
+			: base()
+		{
 		}
 
 		public FbDataAdapter(FbCommand selectCommand)
-			: base() {
+			: base()
+		{
 				SelectCommand = selectCommand;
 		}
 
 		public FbDataAdapter(string selectCommandText, string selectConnectionString)
-			: this(selectCommandText, new FbConnection(selectConnectionString)) {
+			: this(selectCommandText, new FbConnection(selectConnectionString))
+		{
 		}
 
 		public FbDataAdapter(string selectCommandText, FbConnection selectConnection)
-			: base() {
+			: base()
+		{
 				SelectCommand = new FbCommand(selectCommandText, selectConnection);
 				_shouldDisposeSelectCommand = true;
 		}
@@ -102,11 +119,15 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 
 		#region IDisposable	Methods
 
-		protected override void Dispose(bool disposing) {
-				if(disposing) {
-						if(!_disposed) {
+		protected override void Dispose(bool disposing)
+		{
+				if (disposing)
+				{
+						if (!_disposed)
+						{
 								_disposed = true;
-								if(_shouldDisposeSelectCommand) {
+								if (_shouldDisposeSelectCommand)
+								{
 										SelectCommand?.Dispose();
 										SelectCommand = null;
 								}
@@ -131,23 +152,27 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 			StatementType statementType,
 			DataTableMapping tableMapping) => new FbRowUpdatedEventArgs(dataRow, command, statementType, tableMapping);
 
-		protected override void OnRowUpdating(RowUpdatingEventArgs value) {
-				EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>)Events[EventRowUpdating];
+		protected override void OnRowUpdating(RowUpdatingEventArgs value)
+		{
+				EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>) Events[EventRowUpdating];
 
-				if((null != handler) &&
+				if ((null != handler) &&
 			(value is FbRowUpdatingEventArgs) &&
-			(value != null)) {
-						handler(this, (FbRowUpdatingEventArgs)value);
+			(value != null))
+				{
+						handler(this, (FbRowUpdatingEventArgs) value);
 				}
 		}
 
-		protected override void OnRowUpdated(RowUpdatedEventArgs value) {
-				EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>)Events[EventRowUpdated];
+		protected override void OnRowUpdated(RowUpdatedEventArgs value)
+		{
+				EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>) Events[EventRowUpdated];
 
-				if((handler != null) &&
+				if ((handler != null) &&
 			(value is FbRowUpdatedEventArgs) &&
-			(value != null)) {
-						handler(this, (FbRowUpdatedEventArgs)value);
+			(value != null))
+				{
+						handler(this, (FbRowUpdatedEventArgs) value);
 				}
 		}
 
@@ -158,21 +183,25 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 		/// <summary>
 		/// Review .NET	Framework documentation.
 		/// </summary>
-		protected override int Update(DataRow[] dataRows, DataTableMapping tableMapping) {
+		protected override int Update(DataRow[] dataRows, DataTableMapping tableMapping)
+		{
 				int updated = 0;
 				IDbCommand command = null;
 				var statementType = StatementType.Insert;
 				ICollection<IDbConnection> connections = [];
 				RowUpdatingEventArgs updatingArgs = null;
-				foreach(var row in dataRows) {
+				foreach (var row in dataRows)
+				{
 						Exception updateException = null;
 
-						if(row.RowState is DataRowState.Detached or
-				DataRowState.Unchanged) {
+						if (row.RowState is DataRowState.Detached or
+				DataRowState.Unchanged)
+						{
 								continue;
 						}
 
-						switch(row.RowState) {
+						switch (row.RowState)
+						{
 								case DataRowState.Unchanged:
 								case DataRowState.Detached:
 										continue;
@@ -204,7 +233,8 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 						 * 7 AcceptChanges is called.
 						 */
 
-						try {
+						try
+						{
 								updatingArgs = CreateRowUpdatingEvent(row, command, statementType, tableMapping);
 
 								/* 1. Update Parameter values (It's	very similar to	what we
@@ -212,11 +242,14 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 								 *
 								 * Only	input parameters should	be updated.
 								 */
-								if(command != null && command.Parameters.Count > 0) {
-										try {
+								if (command != null && command.Parameters.Count > 0)
+								{
+										try
+										{
 												UpdateParameterValues(command, statementType, row, tableMapping);
 										}
-										catch(Exception ex) {
+										catch (Exception ex)
+										{
 												updatingArgs.Errors = ex;
 												updatingArgs.Status = UpdateStatus.ErrorsOccurred;
 										}
@@ -225,24 +258,31 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 								// 2. Raise	RowUpdating	event
 								OnRowUpdating(updatingArgs);
 
-								if(updatingArgs.Status == UpdateStatus.SkipAllRemainingRows) {
+								if (updatingArgs.Status == UpdateStatus.SkipAllRemainingRows)
+								{
 										break;
 								}
-								else if(updatingArgs.Status == UpdateStatus.ErrorsOccurred) {
-										if(updatingArgs.Errors == null) {
+								else if (updatingArgs.Status == UpdateStatus.ErrorsOccurred)
+								{
+										if (updatingArgs.Errors == null)
+										{
 												throw new InvalidOperationException("RowUpdatingEvent: Errors occurred; no additional information is available.");
 										}
 										throw updatingArgs.Errors;
 								}
-								else if(updatingArgs.Status == UpdateStatus.SkipCurrentRow) {
+								else if (updatingArgs.Status == UpdateStatus.SkipCurrentRow)
+								{
 										updated++;
 										continue;
 								}
-								else if(updatingArgs.Status == UpdateStatus.Continue) {
-										if(command != updatingArgs.Command) {
+								else if (updatingArgs.Status == UpdateStatus.Continue)
+								{
+										if (command != updatingArgs.Command)
+										{
 												command = updatingArgs.Command;
 										}
-										if(command == null) {
+										if (command == null)
+										{
 												/* Samples of exceptions thrown	by DbDataAdapter class
 												 *
 												 *	Update requires	a valid	InsertCommand when passed DataRow collection with new rows
@@ -253,21 +293,24 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 										}
 
 										// 3. Execute the command
-										if(command.Connection.State == ConnectionState.Closed) {
+										if (command.Connection.State == ConnectionState.Closed)
+										{
 												command.Connection.Open();
 												// Track command connection
 												connections.Add(command.Connection);
 										}
 
 										int rowsAffected = command.ExecuteNonQuery();
-										if(rowsAffected == 0) {
+										if (rowsAffected == 0)
+										{
 												throw new DBConcurrencyException(new DBConcurrencyException().Message, null, [row]);
 										}
 
 										updated++;
 
 										// http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=933212&SiteID=1
-										if(statementType == StatementType.Insert) {
+										if (statementType == StatementType.Insert)
+										{
 												row.AcceptChanges();
 										}
 
@@ -283,27 +326,32 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 										 *
 										 * Only	output parameters should be	updated
 										 */
-										if(command.UpdatedRowSource is UpdateRowSource.OutputParameters or
-											UpdateRowSource.Both) {
+										if (command.UpdatedRowSource is UpdateRowSource.OutputParameters or
+											UpdateRowSource.Both)
+										{
 												// Process output parameters
-												foreach(IDataParameter parameter in command.Parameters) {
-														if((parameter.Direction == ParameterDirection.Output ||
+												foreach (IDataParameter parameter in command.Parameters)
+												{
+														if ((parameter.Direction == ParameterDirection.Output ||
 															parameter.Direction == ParameterDirection.ReturnValue ||
 															parameter.Direction == ParameterDirection.InputOutput) &&
-															!string.IsNullOrEmpty(parameter.SourceColumn)) {
+															!string.IsNullOrEmpty(parameter.SourceColumn))
+														{
 																DataColumn column = null;
 
 																var columnMapping = tableMapping.GetColumnMappingBySchemaAction(
 																	parameter.SourceColumn,
 																	MissingMappingAction);
 
-																if(columnMapping != null) {
+																if (columnMapping != null)
+																{
 																		column = columnMapping.GetDataColumnBySchemaAction(
 																			row.Table,
 																			null,
 																			MissingSchemaAction);
 
-																		if(column != null) {
+																		if (column != null)
+																		{
 																				row[column] = parameter.Value;
 																		}
 																}
@@ -312,43 +360,54 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 										}
 								}
 						}
-						catch(Exception ex) {
+						catch (Exception ex)
+						{
 								row.RowError = ex.Message;
 								updateException = ex;
 						}
 
-						if(updatingArgs != null && updatingArgs.Status == UpdateStatus.Continue) {
+						if (updatingArgs != null && updatingArgs.Status == UpdateStatus.Continue)
+						{
 								// 6. Raise	RowUpdated event
 								var updatedArgs = CreateRowUpdatedEvent(row, command, statementType, tableMapping);
 								OnRowUpdated(updatedArgs);
 
-								if(updatedArgs.Status == UpdateStatus.SkipAllRemainingRows) {
+								if (updatedArgs.Status == UpdateStatus.SkipAllRemainingRows)
+								{
 										break;
 								}
-								else if(updatedArgs.Status == UpdateStatus.ErrorsOccurred) {
-										if(updatingArgs.Errors == null) {
+								else if (updatedArgs.Status == UpdateStatus.ErrorsOccurred)
+								{
+										if (updatingArgs.Errors == null)
+										{
 												throw new InvalidOperationException("RowUpdatedEvent: Errors occurred; no additional information available.");
 										}
 										throw updatedArgs.Errors;
 								}
-								else if(updatedArgs.Status == UpdateStatus.SkipCurrentRow) {
+								else if (updatedArgs.Status == UpdateStatus.SkipCurrentRow)
+								{
 								}
-								else if(updatingArgs.Status == UpdateStatus.Continue) {
+								else if (updatingArgs.Status == UpdateStatus.Continue)
+								{
 										// If the update result is an exception throw it
-										if(!ContinueUpdateOnError && updateException != null) {
+										if (!ContinueUpdateOnError && updateException != null)
+										{
 												CloseConnections(connections);
 												throw updateException;
 										}
 
 										// 7. Call AcceptChanges
-										if(AcceptChangesDuringUpdate && !row.HasErrors) {
+										if (AcceptChangesDuringUpdate && !row.HasErrors)
+										{
 												row.AcceptChanges();
 										}
 								}
 						}
-						else {
+						else
+						{
 								// If the update result is an exception throw it
-								if(!ContinueUpdateOnError && updateException != null) {
+								if (!ContinueUpdateOnError && updateException != null)
+								{
 										CloseConnections(connections);
 										throw updateException;
 								}
@@ -364,14 +423,16 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 
 		#region Private Methods
 
-		private static string CreateExceptionMessage(StatementType statementType) {
+		private static string CreateExceptionMessage(StatementType statementType)
+		{
 				var sb = new System.Text.StringBuilder();
 
 				_ = sb.Append("Update requires a valid ");
 				_ = sb.Append(statementType.ToString());
 				_ = sb.Append("Command when passed DataRow collection with ");
 
-				switch(statementType) {
+				switch (statementType)
+				{
 						case StatementType.Insert:
 								_ = sb.Append("new");
 								break;
@@ -394,11 +455,14 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 			IDbCommand command,
 			StatementType statementType,
 			DataRow row,
-			DataTableMapping tableMapping) {
-				foreach(DbParameter parameter in command.Parameters) {
+			DataTableMapping tableMapping)
+		{
+				foreach (DbParameter parameter in command.Parameters)
+				{
 						// Process only input parameters
-						if((parameter.Direction == ParameterDirection.Input || parameter.Direction == ParameterDirection.InputOutput) &&
-							!string.IsNullOrEmpty(parameter.SourceColumn)) {
+						if ((parameter.Direction == ParameterDirection.Input || parameter.Direction == ParameterDirection.InputOutput) &&
+							!string.IsNullOrEmpty(parameter.SourceColumn))
+						{
 
 								/* Get the DataColumnMapping that matches the given
 								 * column name
@@ -407,19 +471,24 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 					parameter.SourceColumn,
 					MissingMappingAction);
 
-								if(columnMapping != null) {
+								if (columnMapping != null)
+								{
 										DataColumn column = columnMapping.GetDataColumnBySchemaAction(row.Table, null, MissingSchemaAction);
 
-										if(column != null) {
+										if (column != null)
+										{
 												var dataRowVersion = DataRowVersion.Default;
 
-												if(statementType == StatementType.Insert) {
+												if (statementType == StatementType.Insert)
+												{
 														dataRowVersion = DataRowVersion.Current;
 												}
-												else if(statementType == StatementType.Update) {
+												else if (statementType == StatementType.Update)
+												{
 														dataRowVersion = parameter.SourceVersion;
 												}
-												else if(statementType == StatementType.Delete) {
+												else if (statementType == StatementType.Delete)
+												{
 														dataRowVersion = DataRowVersion.Original;
 												}
 
@@ -430,8 +499,10 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable {
 				}
 		}
 
-		private static void CloseConnections(ICollection<IDbConnection> connections) {
-				foreach(var c in connections) {
+		private static void CloseConnections(ICollection<IDbConnection> connections)
+		{
+				foreach (var c in connections)
+				{
 						c.Close();
 				}
 				connections.Clear();

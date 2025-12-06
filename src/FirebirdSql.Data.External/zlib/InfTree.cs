@@ -62,9 +62,11 @@
 
 
 using System;
-namespace Ionic.Zlib {
+namespace Ionic.Zlib
+{
 
-		sealed class InfTree {
+		sealed class InfTree
+		{
 
 				private const int MANY = 1440;
 
@@ -112,7 +114,8 @@ namespace Ionic.Zlib {
 				internal int[] u = null; // table stack
 				internal int[] x = null; // bit offsets, then code stack
 
-				private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn, int[] v) {
+				private int huft_build(int[] b, int bindex, int n, int s, int[] d, int[] e, int[] t, int[] m, int[] hp, int[] hn, int[] v)
+				{
 						// Given a list of code lengths and a maximum table size, make a set of
 						// tables to decode that set of codes.  Return Z_OK on success, Z_BUF_ERROR
 						// if the given code set is incomplete (the tables are still built in this
@@ -139,14 +142,16 @@ namespace Ionic.Zlib {
 
 						p = 0;
 						i = n;
-						do {
+						do
+						{
 								c[b[bindex + p]]++;
 								p++;
 								i--; // assume all entries <= BMAX
 						}
-						while(i != 0);
+						while (i != 0);
 
-						if(c[0] == n) {
+						if (c[0] == n)
+						{
 								// null input--all zero length codes
 								t[0] = -1;
 								m[0] = 0;
@@ -155,30 +160,36 @@ namespace Ionic.Zlib {
 
 						// Find minimum and maximum length, bound *m by those
 						l = m[0];
-						for(j = 1; j <= BMAX; j++)
-								if(c[j] != 0)
+						for (j = 1; j <= BMAX; j++)
+								if (c[j] != 0)
 										break;
 						k = j; // minimum code length
-						if(l < j) {
+						if (l < j)
+						{
 								l = j;
 						}
-						for(i = BMAX; i != 0; i--) {
-								if(c[i] != 0)
+						for (i = BMAX; i != 0; i--)
+						{
+								if (c[i] != 0)
 										break;
 						}
 						g = i; // maximum code length
-						if(l > i) {
+						if (l > i)
+						{
 								l = i;
 						}
 						m[0] = l;
 
 						// Adjust last length count to fill out codes, if needed
-						for(y = 1 << j; j < i; j++, y <<= 1) {
-								if((y -= c[j]) < 0) {
+						for (y = 1 << j; j < i; j++, y <<= 1)
+						{
+								if ((y -= c[j]) < 0)
+								{
 										return Z_DATA_ERROR;
 								}
 						}
-						if((y -= c[i]) < 0) {
+						if ((y -= c[i]) < 0)
+						{
 								return Z_DATA_ERROR;
 						}
 						c[i] += y;
@@ -187,7 +198,8 @@ namespace Ionic.Zlib {
 						x[1] = j = 0;
 						p = 1;
 						xp = 2;
-						while(--i != 0) {
+						while (--i != 0)
+						{
 								// note that i == g from above
 								x[xp] = j += c[p];
 								xp++;
@@ -197,13 +209,15 @@ namespace Ionic.Zlib {
 						// Make a table of values in order of bit lengths
 						i = 0;
 						p = 0;
-						do {
-								if((j = b[bindex + p]) != 0) {
+						do
+						{
+								if ((j = b[bindex + p]) != 0)
+								{
 										v[x[j]++] = i;
 								}
 								p++;
 						}
-						while(++i < n);
+						while (++i < n);
 						n = x[g]; // set n to length of v
 
 						// Generate the Huffman codes and for each, make the table entries
@@ -216,26 +230,32 @@ namespace Ionic.Zlib {
 						z = 0; // ditto
 
 						// go through the bit lengths (k already is bits in shortest code)
-						for(; k <= g; k++) {
+						for (; k <= g; k++)
+						{
 								a = c[k];
-								while(a-- != 0) {
+								while (a-- != 0)
+								{
 										// here i is the Huffman code of length k bits for value *p
 										// make tables up to required level
-										while(k > w + l) {
+										while (k > w + l)
+										{
 												h++;
 												w += l; // previous table always l bits
 																// compute minimum size table less than or equal to l bits
 												z = g - w;
 												z = (z > l) ? l : z; // table size upper limit
-												if((f = 1 << (j = k - w)) > a + 1) {
+												if ((f = 1 << (j = k - w)) > a + 1)
+												{
 														// try a k-w bit table
 														// too few codes for k-w bit table
 														f -= a + 1; // deduct codes from patterns left
 														xp = k;
-														if(j < z) {
-																while(++j < z) {
+														if (j < z)
+														{
+																while (++j < z)
+																{
 																		// try smaller tables up to z bits
-																		if((f <<= 1) <= c[++xp])
+																		if ((f <<= 1) <= c[++xp])
 																				break; // enough codes to use up j bits
 																		f -= c[xp]; // else deduct codes from patterns
 																}
@@ -244,7 +264,8 @@ namespace Ionic.Zlib {
 												z = 1 << j; // table entries for j-bit table
 
 												// allocate new table
-												if(hn[0] + z > MANY) {
+												if (hn[0] + z > MANY)
+												{
 														// (note: doesn't matter for fixed)
 														return Z_DATA_ERROR; // overflow of MANY
 												}
@@ -252,48 +273,56 @@ namespace Ionic.Zlib {
 												hn[0] += z;
 
 												// connect to last table, if there is one
-												if(h != 0) {
+												if (h != 0)
+												{
 														x[h] = i; // save pattern for backing up
-														r[0] = (sbyte)j; // bits in this table
-														r[1] = (sbyte)l; // bits to dump before this table
+														r[0] = (sbyte) j; // bits in this table
+														r[1] = (sbyte) l; // bits to dump before this table
 														j = SharedUtils.URShift(i, w - l);
-														r[2] = (int)(q - u[h - 1] - j); // offset to this table
+														r[2] = (int) (q - u[h - 1] - j); // offset to this table
 														Array.Copy(r, 0, hp, (u[h - 1] + j) * 3, 3); // connect to last table
 												}
-												else {
+												else
+												{
 														t[0] = q; // first table is returned result
 												}
 										}
 
 										// set up table entry in r
-										r[1] = (sbyte)(k - w);
-										if(p >= n) {
+										r[1] = (sbyte) (k - w);
+										if (p >= n)
+										{
 												r[0] = 128 + 64; // out of values--invalid code
 										}
-										else if(v[p] < s) {
-												r[0] = (sbyte)(v[p] < 256 ? 0 : 32 + 64); // 256 is end-of-block
+										else if (v[p] < s)
+										{
+												r[0] = (sbyte) (v[p] < 256 ? 0 : 32 + 64); // 256 is end-of-block
 												r[2] = v[p++]; // simple code is just the value
 										}
-										else {
-												r[0] = (sbyte)(e[v[p] - s] + 16 + 64); // non-simple--look up in lists
+										else
+										{
+												r[0] = (sbyte) (e[v[p] - s] + 16 + 64); // non-simple--look up in lists
 												r[2] = d[v[p++] - s];
 										}
 
 										// fill code-like entries with r
 										f = 1 << (k - w);
-										for(j = SharedUtils.URShift(i, w); j < z; j += f) {
+										for (j = SharedUtils.URShift(i, w); j < z; j += f)
+										{
 												Array.Copy(r, 0, hp, (q + j) * 3, 3);
 										}
 
 										// backwards increment the k-bit code i
-										for(j = 1 << (k - 1); (i & j) != 0; j = SharedUtils.URShift(j, 1)) {
+										for (j = 1 << (k - 1); (i & j) != 0; j = SharedUtils.URShift(j, 1))
+										{
 												i ^= j;
 										}
 										i ^= j;
 
 										// backup over finished tables
 										mask = (1 << w) - 1; // needed on HP, cc -O bug
-										while((i & mask) != x[h]) {
+										while ((i & mask) != x[h])
+										{
 												h--; // don't need to update q
 												w -= l;
 												mask = (1 << w) - 1;
@@ -304,34 +333,41 @@ namespace Ionic.Zlib {
 						return y != 0 && g != 1 ? Z_BUF_ERROR : Z_OK;
 				}
 
-				internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z) {
+				internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z)
+				{
 						int result;
 						initWorkArea(19);
 						hn[0] = 0;
 						result = huft_build(c, 0, 19, 19, null, null, tb, bb, hp, hn, v);
 
-						if(result == Z_DATA_ERROR) {
+						if (result == Z_DATA_ERROR)
+						{
 								z.Message = "oversubscribed dynamic bit lengths tree";
 						}
-						else if(result == Z_BUF_ERROR || bb[0] == 0) {
+						else if (result == Z_BUF_ERROR || bb[0] == 0)
+						{
 								z.Message = "incomplete dynamic bit lengths tree";
 								result = Z_DATA_ERROR;
 						}
 						return result;
 				}
 
-				internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp, ZlibCodec z) {
+				internal int inflate_trees_dynamic(int nl, int nd, int[] c, int[] bl, int[] bd, int[] tl, int[] td, int[] hp, ZlibCodec z)
+				{
 						int result;
 
 						// build literal/length tree
 						initWorkArea(288);
 						hn[0] = 0;
 						result = huft_build(c, 0, nl, 257, cplens, cplext, tl, bl, hp, hn, v);
-						if(result != Z_OK || bl[0] == 0) {
-								if(result == Z_DATA_ERROR) {
+						if (result != Z_OK || bl[0] == 0)
+						{
+								if (result == Z_DATA_ERROR)
+								{
 										z.Message = "oversubscribed literal/length tree";
 								}
-								else if(result != Z_MEM_ERROR) {
+								else if (result != Z_MEM_ERROR)
+								{
 										z.Message = "incomplete literal/length tree";
 										result = Z_DATA_ERROR;
 								}
@@ -342,15 +378,19 @@ namespace Ionic.Zlib {
 						initWorkArea(288);
 						result = huft_build(c, nl, nd, 0, cpdist, cpdext, td, bd, hp, hn, v);
 
-						if(result != Z_OK || (bd[0] == 0 && nl > 257)) {
-								if(result == Z_DATA_ERROR) {
+						if (result != Z_OK || (bd[0] == 0 && nl > 257))
+						{
+								if (result == Z_DATA_ERROR)
+								{
 										z.Message = "oversubscribed distance tree";
 								}
-								else if(result == Z_BUF_ERROR) {
+								else if (result == Z_BUF_ERROR)
+								{
 										z.Message = "incomplete distance tree";
 										result = Z_DATA_ERROR;
 								}
-								else if(result != Z_MEM_ERROR) {
+								else if (result != Z_MEM_ERROR)
+								{
 										z.Message = "empty distance tree with lengths";
 										result = Z_DATA_ERROR;
 								}
@@ -360,7 +400,8 @@ namespace Ionic.Zlib {
 						return Z_OK;
 				}
 
-				internal static int inflate_trees_fixed(int[] bl, int[] bd, int[][] tl, int[][] td, ZlibCodec z) {
+				internal static int inflate_trees_fixed(int[] bl, int[] bd, int[][] tl, int[][] td, ZlibCodec z)
+				{
 						bl[0] = fixed_bl;
 						bd[0] = fixed_bd;
 						tl[0] = fixed_tl;
@@ -368,8 +409,10 @@ namespace Ionic.Zlib {
 						return Z_OK;
 				}
 
-				private void initWorkArea(int vsize) {
-						if(hn == null) {
+				private void initWorkArea(int vsize)
+				{
+						if (hn == null)
+						{
 								hn = new int[1];
 								v = new int[vsize];
 								c = new int[BMAX + 1];
@@ -377,8 +420,10 @@ namespace Ionic.Zlib {
 								u = new int[BMAX];
 								x = new int[BMAX + 1];
 						}
-						else {
-								if(v.Length < vsize) {
+						else
+						{
+								if (v.Length < vsize)
+								{
 										v = new int[vsize];
 								}
 								Array.Clear(v, 0, vsize);

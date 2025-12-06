@@ -22,7 +22,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version11;
 
-internal class GdsStatement : Version10.GdsStatement {
+internal class GdsStatement : Version10.GdsStatement
+{
 		#region Constructors
 
 		public GdsStatement(GdsDatabase database)
@@ -35,12 +36,15 @@ internal class GdsStatement : Version10.GdsStatement {
 
 		#region Overriden Methods
 
-		public override void Prepare(string commandText) {
+		public override void Prepare(string commandText)
+		{
 				ClearAll();
 
-				try {
+				try
+				{
 						int numberOfResponses = 0;
-						if(State == StatementState.Deallocated) {
+						if (State == StatementState.Deallocated)
+						{
 								SendAllocateToBuffer();
 								numberOfResponses++;
 						}
@@ -53,43 +57,51 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						_database.Xdr.Flush();
 
-						try {
+						try
+						{
 								GenericResponse allocateResponse = null;
-								if(State == StatementState.Deallocated) {
+								if (State == StatementState.Deallocated)
+								{
 										numberOfResponses--;
-										allocateResponse = (GenericResponse)_database.ReadResponse();
+										allocateResponse = (GenericResponse) _database.ReadResponse();
 								}
 
 								numberOfResponses--;
-								var prepareResponse = (GenericResponse)_database.ReadResponse();
+								var prepareResponse = (GenericResponse) _database.ReadResponse();
 								bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 								numberOfResponses--;
-								var statementTypeResponse = (GenericResponse)_database.ReadResponse();
+								var statementTypeResponse = (GenericResponse) _database.ReadResponse();
 
-								if(allocateResponse != null) {
+								if (allocateResponse != null)
+								{
 										ProcessAllocateResponse(allocateResponse);
 								}
 								ProcessPrepareResponse(prepareResponse);
 								StatementType = ProcessStatementTypeInfoBuffer(ProcessInfoSqlResponse(statementTypeResponse));
 						}
-						finally {
+						finally
+						{
 								(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
 						}
 
 						State = StatementState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						State = State == StatementState.Allocated ? StatementState.Error : State;
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default) {
+		public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default)
+		{
 				ClearAll();
 
-				try {
+				try
+				{
 						int numberOfResponses = 0;
-						if(State == StatementState.Deallocated) {
+						if (State == StatementState.Deallocated)
+						{
 								await SendAllocateToBufferAsync(cancellationToken).ConfigureAwait(false);
 								numberOfResponses++;
 						}
@@ -102,50 +114,58 @@ internal class GdsStatement : Version10.GdsStatement {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						try {
+						try
+						{
 								GenericResponse allocateResponse = null;
-								if(State == StatementState.Deallocated) {
+								if (State == StatementState.Deallocated)
+								{
 										numberOfResponses--;
-										allocateResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+										allocateResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 								}
 
 								numberOfResponses--;
-								var prepareResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+								var prepareResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 								bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 								numberOfResponses--;
-								var statementTypeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+								var statementTypeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
-								if(allocateResponse != null) {
+								if (allocateResponse != null)
+								{
 										await ProcessAllocateResponseAsync(allocateResponse, cancellationToken).ConfigureAwait(false);
 								}
 								await ProcessPrepareResponseAsync(prepareResponse, cancellationToken).ConfigureAwait(false);
 								StatementType = ProcessStatementTypeInfoBuffer(await ProcessInfoSqlResponseAsync(statementTypeResponse, cancellationToken).ConfigureAwait(false));
 						}
-						finally {
+						finally
+						{
 								await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
 						}
 
 						State = StatementState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						State = State == StatementState.Allocated ? StatementState.Error : State;
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Execute(int timeout, IDescriptorFiller descriptorFiller) {
+		public override void Execute(int timeout, IDescriptorFiller descriptorFiller)
+		{
 				EnsureNotDeallocated();
 
 				Clear();
 
-				try {
+				try
+				{
 						RecordsAffected = -1;
 
 						SendExecuteToBuffer(timeout, descriptorFiller);
 
 						bool readRowsAffectedResponse = false;
-						if(DoRecordsAffected) {
+						if (DoRecordsAffected)
+						{
 								SendInfoSqlToBuffer(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
 
 								readRowsAffectedResponse = true;
@@ -154,51 +174,60 @@ internal class GdsStatement : Version10.GdsStatement {
 						_database.Xdr.Flush();
 
 						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
-						try {
+						try
+						{
 								SqlResponse sqlStoredProcedureResponse = null;
-								if(StatementType == DbStatementType.StoredProcedure) {
+								if (StatementType == DbStatementType.StoredProcedure)
+								{
 										numberOfResponses--;
-										sqlStoredProcedureResponse = (SqlResponse)_database.ReadResponse();
+										sqlStoredProcedureResponse = (SqlResponse) _database.ReadResponse();
 										ProcessStoredProcedureExecuteResponse(sqlStoredProcedureResponse);
 								}
 
 								numberOfResponses--;
-								var executeResponse = (GenericResponse)_database.ReadResponse();
+								var executeResponse = (GenericResponse) _database.ReadResponse();
 
 								GenericResponse rowsAffectedResponse = null;
-								if(readRowsAffectedResponse) {
+								if (readRowsAffectedResponse)
+								{
 										numberOfResponses--;
-										rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
+										rowsAffectedResponse = (GenericResponse) _database.ReadResponse();
 								}
 
 								ProcessExecuteResponse(executeResponse);
-								if(readRowsAffectedResponse) {
+								if (readRowsAffectedResponse)
+								{
 										RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse(rowsAffectedResponse));
 								}
 						}
-						finally {
+						finally
+						{
 								(Database as GdsDatabase).SafeFinishFetching(numberOfResponses);
 						}
 
 						State = StatementState.Executed;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						State = StatementState.Error;
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
+		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
+		{
 				EnsureNotDeallocated();
 
 				Clear();
 
-				try {
+				try
+				{
 						RecordsAffected = -1;
 
 						await SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
 
 						bool readRowsAffectedResponse = false;
-						if(DoRecordsAffected) {
+						if (DoRecordsAffected)
+						{
 								await SendInfoSqlToBufferAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 
 								readRowsAffectedResponse = true;
@@ -207,35 +236,41 @@ internal class GdsStatement : Version10.GdsStatement {
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
 						int numberOfResponses = (StatementType == DbStatementType.StoredProcedure ? 1 : 0) + 1 + (readRowsAffectedResponse ? 1 : 0);
-						try {
+						try
+						{
 								SqlResponse sqlStoredProcedureResponse = null;
-								if(StatementType == DbStatementType.StoredProcedure) {
+								if (StatementType == DbStatementType.StoredProcedure)
+								{
 										numberOfResponses--;
-										sqlStoredProcedureResponse = (SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+										sqlStoredProcedureResponse = (SqlResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 										await ProcessStoredProcedureExecuteResponseAsync(sqlStoredProcedureResponse, cancellationToken).ConfigureAwait(false);
 								}
 
 								numberOfResponses--;
-								var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+								var executeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 								GenericResponse rowsAffectedResponse = null;
-								if(readRowsAffectedResponse) {
+								if (readRowsAffectedResponse)
+								{
 										numberOfResponses--;
-										rowsAffectedResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+										rowsAffectedResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 								}
 
 								await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);
-								if(readRowsAffectedResponse) {
+								if (readRowsAffectedResponse)
+								{
 										RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync(rowsAffectedResponse, cancellationToken).ConfigureAwait(false));
 								}
 						}
-						finally {
+						finally
+						{
 								await (Database as GdsDatabase).SafeFinishFetchingAsync(numberOfResponses, cancellationToken).ConfigureAwait(false);
 						}
 
 						State = StatementState.Executed;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						State = StatementState.Error;
 						throw IscException.ForIOException(ex);
 				}
@@ -244,15 +279,17 @@ internal class GdsStatement : Version10.GdsStatement {
 		#endregion
 
 		#region Protected methods
-		protected override void Free(int option) {
-				if(FreeNotNeeded(option))
+		protected override void Free(int option)
+		{
+				if (FreeNotNeeded(option))
 						return;
 
 				DoFreePacket(option);
 				(Database as GdsDatabase).AppendDeferredPacket(ProcessFreeResponse);
 		}
-		protected override async ValueTask FreeAsync(int option, CancellationToken cancellationToken = default) {
-				if(FreeNotNeeded(option))
+		protected override async ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
+		{
+				if (FreeNotNeeded(option))
 						return;
 
 				await DoFreePacketAsync(option, cancellationToken).ConfigureAwait(false);

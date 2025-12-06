@@ -19,7 +19,8 @@ using System;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class SizeHelper {
+internal static class SizeHelper
+{
 		public static bool IsValidPageSize(int value) => value is 1024
 					or 2048
 					or 4096

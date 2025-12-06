@@ -23,8 +23,10 @@ using static FirebirdSql.Data.FirebirdClient.FbBatchNonQueryResult;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultItem> {
-		public sealed class FbBatchNonQueryResultItem {
+public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultItem>
+{
+		public sealed class FbBatchNonQueryResultItem
+		{
 				public int RecordsAffected { get; internal set; }
 				public bool IsSuccess { get; internal set; }
 				public FbException Exception { get; internal set; }
@@ -35,7 +37,8 @@ public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultIte
 		public bool AllSuccess => _items.TrueForAll(x => x.IsSuccess);
 		public int Count => _items.Count;
 
-		internal FbBatchNonQueryResult(ExecuteResultItem[] result) {
+		internal FbBatchNonQueryResult(ExecuteResultItem[] result)
+		{
 				_items = [.. result.Select(x => new FbBatchNonQueryResultItem()
 		{
 			RecordsAffected = x.RecordsAffected,
@@ -46,9 +49,10 @@ public sealed class FbBatchNonQueryResult : IEnumerable<FbBatchNonQueryResultIte
 
 		public FbBatchNonQueryResultItem this[int index] => _items[index];
 
-		public void EnsureSuccess() {
+		public void EnsureSuccess()
+		{
 				var indexes = _items.Select((e, i) => new { Element = e, Index = i }).Where(x => !x.Element.IsSuccess).Select(x => x.Index).ToList();
-				if(indexes.Count == 0)
+				if (indexes.Count == 0)
 						return;
 				throw FbException.Create($"Indexes {string.Join(", ", indexes)} failed in batch.");
 		}

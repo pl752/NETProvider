@@ -21,36 +21,42 @@ using System.Globalization;
 namespace FirebirdSql.Data.Common;
 
 [Serializable]
-internal sealed class IscError {
+internal sealed class IscError
+{
 		private readonly string _strParam;
 
 		public string Message { get; set; }
 		public int ErrorCode { get; }
 		public int Type { get; }
 
-		public string StrParam => Type switch {
+		public string StrParam => Type switch
+		{
 				IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_sql_state => _strParam,
 				IscCodes.isc_arg_number => ErrorCode.ToString(CultureInfo.InvariantCulture),
 				_ => string.Empty,
 		};
 
-		public bool IsArgument => Type switch {
+		public bool IsArgument => Type switch
+		{
 				IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_number => true,
 				_ => false,
 		};
 
 		public bool IsWarning => Type == IscCodes.isc_arg_warning;
 
-		internal IscError(int errorCode) {
+		internal IscError(int errorCode)
+		{
 				ErrorCode = errorCode;
 		}
 
-		internal IscError(int type, string strParam) {
+		internal IscError(int type, string strParam)
+		{
 				Type = type;
 				_strParam = strParam;
 		}
 
-		internal IscError(int type, int errorCode) {
+		internal IscError(int type, int errorCode)
+		{
 				Type = type;
 				ErrorCode = errorCode;
 		}

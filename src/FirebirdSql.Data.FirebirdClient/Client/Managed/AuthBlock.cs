@@ -28,7 +28,8 @@ using WireCryptOption = FirebirdSql.Data.Client.Managed.Version13.WireCryptOptio
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt) {
+sealed class AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt)
+{
 		Srp256Client _srp256 = new Srp256Client();
 		SrpClient _srp = new SrpClient();
 		SspiHelper _sspi = new SspiHelper();
@@ -51,38 +52,41 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 		public bool WireCryptInitialized { get; private set; }
 
-		public byte[] UserIdentificationData() {
-				using(var result = new MemoryStream(256)) {
+		public byte[] UserIdentificationData()
+		{
+				using (var result = new MemoryStream(256))
+				{
 						string userString = Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER") ?? string.Empty;
 						Span<byte> user = stackalloc byte[Encoding.UTF8.GetByteCount(userString)];
 						_ = Encoding.UTF8.TryGetBytes(userString, user, out int userLen);
 						result.WriteByte(IscCodes.CNCT_user);
-						result.WriteByte((byte)userLen);
+						result.WriteByte((byte) userLen);
 						result.Write(user);
 
 						string hostName = Dns.GetHostName();
 						Span<byte> host = stackalloc byte[Encoding.UTF8.GetByteCount(hostName)];
 						_ = Encoding.UTF8.TryGetBytes(hostName, host, out int hostLen);
 						result.WriteByte(IscCodes.CNCT_host);
-						result.WriteByte((byte)hostLen);
+						result.WriteByte((byte) hostLen);
 						result.Write(host);
 
 						result.WriteByte(IscCodes.CNCT_user_verification);
 						result.WriteByte(0);
 
-						if(!string.IsNullOrEmpty(User)) {
+						if (!string.IsNullOrEmpty(User))
+						{
 								{
 										Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(User)];
 										_ = Encoding.UTF8.TryGetBytes(User, bytes, out int len);
 										result.WriteByte(IscCodes.CNCT_login);
-										result.WriteByte((byte)len);
+										result.WriteByte((byte) len);
 										result.Write(bytes);
 								}
 								{
 										Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(_srp256.Name)];
 										_ = Encoding.UTF8.TryGetBytes(_srp256.Name, bytes, out int len);
 										result.WriteByte(IscCodes.CNCT_plugin_name);
-										result.WriteByte((byte)len);
+										result.WriteByte((byte) len);
 										result.Write(bytes[..len]);
 								}
 								{
@@ -98,7 +102,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 										_ = Encoding.UTF8.TryGetBytes(",", bytes2, out int l2);
 										_ = Encoding.UTF8.TryGetBytes(_srp.Name, bytes3, out int l3);
 										result.WriteByte(IscCodes.CNCT_plugin_list);
-										result.WriteByte((byte)(l1 + l2 + l3));
+										result.WriteByte((byte) (l1 + l2 + l3));
 										result.Write(bytes1);
 										result.Write(bytes2);
 										result.Write(bytes3);
@@ -112,18 +116,19 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 										result.Write(bytes);
 								}
 						}
-						else {
+						else
+						{
 								Span<byte> pluginNameBytes = stackalloc byte[Encoding.UTF8.GetByteCount(_sspi.Name)];
 								_ = Encoding.UTF8.TryGetBytes(_sspi.Name, pluginNameBytes, out int pluginNameLen);
 								result.WriteByte(IscCodes.CNCT_plugin_name);
-								result.WriteByte((byte)pluginNameLen);
+								result.WriteByte((byte) pluginNameLen);
 								result.Write(pluginNameBytes);
 
 								byte[] specificData = _sspi.InitializeClientSecurity();
 								WriteMultiPartHelper(result, IscCodes.CNCT_specific_data, specificData);
 
 								result.WriteByte(IscCodes.CNCT_plugin_list);
-								result.WriteByte((byte)pluginNameLen);
+								result.WriteByte((byte) pluginNameLen);
 								result.Write(pluginNameBytes);
 
 								result.WriteByte(IscCodes.CNCT_client_crypt);
@@ -137,14 +142,16 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				}
 		}
 
-		public void SendContAuthToBuffer() {
+		public void SendContAuthToBuffer()
+		{
 				Connection.Xdr.Write(IscCodes.op_cont_auth);
 				Connection.Xdr.WriteBuffer(HasClientData ? ClientData : PublicClientData); // p_data
 				Connection.Xdr.Write(AcceptPluginName); // p_name
 				Connection.Xdr.Write(AcceptPluginName); // p_list
 				Connection.Xdr.WriteBuffer(ServerKeys.Span); // p_keys
 		}
-		public async ValueTask SendContAuthToBufferAsync(CancellationToken cancellationToken = default) {
+		public async ValueTask SendContAuthToBufferAsync(CancellationToken cancellationToken = default)
+		{
 				await Connection.Xdr.WriteAsync(IscCodes.op_cont_auth, cancellationToken).ConfigureAwait(false);
 				await Connection.Xdr.WriteBufferAsync(HasClientData ? ClientData : PublicClientData, cancellationToken).ConfigureAwait(false); // p_data
 				await Connection.Xdr.WriteAsync(AcceptPluginName, cancellationToken).ConfigureAwait(false); // p_name
@@ -153,55 +160,67 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		}
 
 		// TODO: maybe more logic can be pulled up here
-		public IResponse ProcessContAuthResponse() {
+		public IResponse ProcessContAuthResponse()
+		{
 				int operation = Connection.Xdr.ReadOperation();
 				var response = Connection.ProcessOperation(operation);
 				response.HandleResponseException();
-				if(response is Version13.ContAuthResponse) {
+				if (response is Version13.ContAuthResponse)
+				{
 						return response;
 				}
-				else if(response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse) {
+				else if (response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse)
+				{
 						return response;
 				}
-				else if(response is GenericResponse genericResponse) {
+				else if (response is GenericResponse genericResponse)
+				{
 						ServerKeys = genericResponse.Data;
 						Complete();
 				}
-				else {
+				else
+				{
 						throw new InvalidOperationException($"Unexpected response ({operation}).");
 				}
 				return response;
 		}
-		public async ValueTask<IResponse> ProcessContAuthResponseAsync(CancellationToken cancellationToken = default) {
+		public async ValueTask<IResponse> ProcessContAuthResponseAsync(CancellationToken cancellationToken = default)
+		{
 				int operation = await Connection.Xdr.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 				var response = await Connection.ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
-				if(response is Version13.ContAuthResponse) {
+				if (response is Version13.ContAuthResponse)
+				{
 						return response;
 				}
-				else if(response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse) {
+				else if (response is Version13.CryptKeyCallbackResponse or Version15.CryptKeyCallbackResponse)
+				{
 						return response;
 				}
-				else if(response is GenericResponse genericResponse) {
+				else if (response is GenericResponse genericResponse)
+				{
 						ServerKeys = genericResponse.Data;
 						Complete();
 				}
-				else {
+				else
+				{
 						throw new InvalidOperationException($"Unexpected response ({operation}).");
 				}
 				return response;
 		}
 
-		public void SendWireCryptToBuffer() {
-				if(WireCrypt == WireCryptOption.Disabled)
+		public void SendWireCryptToBuffer()
+		{
+				if (WireCrypt == WireCryptOption.Disabled)
 						return;
 
 				Connection.Xdr.Write(IscCodes.op_crypt);
 				Connection.Xdr.Write(FirebirdNetworkHandlingWrapper.EncryptionName);
 				Connection.Xdr.Write(SessionKeyName);
 		}
-		public async ValueTask SendWireCryptToBufferAsync(CancellationToken cancellationToken = default) {
-				if(WireCrypt == WireCryptOption.Disabled)
+		public async ValueTask SendWireCryptToBufferAsync(CancellationToken cancellationToken = default)
+		{
+				if (WireCrypt == WireCryptOption.Disabled)
 						return;
 
 				await Connection.Xdr.WriteAsync(IscCodes.op_crypt, cancellationToken).ConfigureAwait(false);
@@ -209,8 +228,9 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				await Connection.Xdr.WriteAsync(SessionKeyName, cancellationToken).ConfigureAwait(false);
 		}
 
-		public void ProcessWireCryptResponse() {
-				if(WireCrypt == WireCryptOption.Disabled)
+		public void ProcessWireCryptResponse()
+		{
+				if (WireCrypt == WireCryptOption.Disabled)
 						return;
 
 				// after writing before reading
@@ -222,8 +242,9 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 
 				WireCryptInitialized = true;
 		}
-		public async ValueTask ProcessWireCryptResponseAsync(CancellationToken cancellationToken = default) {
-				if(WireCrypt == WireCryptOption.Disabled)
+		public async ValueTask ProcessWireCryptResponseAsync(CancellationToken cancellationToken = default)
+		{
+				if (WireCrypt == WireCryptOption.Disabled)
 						return;
 
 				// after writing before reading
@@ -236,109 +257,133 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				WireCryptInitialized = true;
 		}
 
-		public void WireCryptValidate(int protocolVersion) {
+		public void WireCryptValidate(int protocolVersion)
+		{
 				bool validProtocolVersion = protocolVersion is IscCodes.PROTOCOL_VERSION13
 					or IscCodes.PROTOCOL_VERSION15
 					or IscCodes.PROTOCOL_VERSION16;
-				if(validProtocolVersion && WireCrypt == WireCryptOption.Required && IsAuthenticated && !WireCryptInitialized) {
+				if (validProtocolVersion && WireCrypt == WireCryptOption.Required && IsAuthenticated && !WireCryptInitialized)
+				{
 						throw IscException.ForErrorCode(IscCodes.isc_wirecrypt_incompatible);
 				}
 		}
 
-		public void Start(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys) {
+		public void Start(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys)
+		{
 				ServerData = serverData;
 				AcceptPluginName = acceptPluginName;
 				IsAuthenticated = isAuthenticated;
 				ServerKeys = serverKeys;
 
 				bool hasServerData = ServerData.Length != 0;
-				if(AcceptPluginName.Equals(_srp256.Name, StringComparison.Ordinal)) {
+				if (AcceptPluginName.Equals(_srp256.Name, StringComparison.Ordinal))
+				{
 						PublicClientData = Encoding.UTF8.GetBytes(_srp256.PublicKeyHex);
-						if(hasServerData) {
+						if (hasServerData)
+						{
 								ClientData = Encoding.UTF8.GetBytes(_srp256.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
 						}
 						SessionKey = _srp256.SessionKey;
 						SessionKeyName = _srp256.SessionKeyName;
 				}
-				else if(AcceptPluginName.Equals(_srp.Name, StringComparison.Ordinal)) {
+				else if (AcceptPluginName.Equals(_srp.Name, StringComparison.Ordinal))
+				{
 						PublicClientData = Encoding.UTF8.GetBytes(_srp.PublicKeyHex);
-						if(hasServerData) {
+						if (hasServerData)
+						{
 								ClientData = Encoding.UTF8.GetBytes(_srp.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
 						}
 						SessionKey = _srp.SessionKey;
 						SessionKeyName = _srp.SessionKeyName;
 				}
-				else if(AcceptPluginName.Equals(_sspi.Name, StringComparison.Ordinal)) {
-						if(hasServerData) {
+				else if (AcceptPluginName.Equals(_sspi.Name, StringComparison.Ordinal))
+				{
+						if (hasServerData)
+						{
 								ClientData = _sspi.GetClientSecurity(ServerData.Span);
 						}
 				}
-				else {
+				else
+				{
 						throw new NotSupportedException($"Not supported plugin '{AcceptPluginName}'.");
 				}
 		}
 
-		public void Complete() {
+		public void Complete()
+		{
 				IsAuthenticated = true;
 				ReleaseAuth();
 		}
 
-		void ReleaseAuth() {
+		void ReleaseAuth()
+		{
 				_srp256 = null;
 				_srp = null;
 				_sspi?.Dispose();
 				_sspi = null;
 		}
 
-		static void WriteMultiPartHelper(MemoryStream stream, byte code, byte[] data) {
+		static void WriteMultiPartHelper(MemoryStream stream, byte code, byte[] data)
+		{
 				const int MaxLength = 255 - 1;
 				int part = 0;
-				for(int i = 0; i < data.Length; i += MaxLength) {
+				for (int i = 0; i < data.Length; i += MaxLength)
+				{
 						stream.WriteByte(code);
 						int length = Math.Min(data.Length - i, MaxLength);
-						stream.WriteByte((byte)(length + 1));
-						stream.WriteByte((byte)part);
+						stream.WriteByte((byte) (length + 1));
+						stream.WriteByte((byte) part);
 						stream.Write(data, i, length);
 						part++;
 				}
 		}
 
-		static void WriteMultiPartHelper(MemoryStream stream, byte code, ReadOnlySpan<byte> data) {
+		static void WriteMultiPartHelper(MemoryStream stream, byte code, ReadOnlySpan<byte> data)
+		{
 				const int MaxLength = 255 - 1;
 				int part = 0;
-				for(int i = 0; i < data.Length; i += MaxLength) {
+				for (int i = 0; i < data.Length; i += MaxLength)
+				{
 						stream.WriteByte(code);
 						int length = Math.Min(data.Length - i, MaxLength);
-						stream.WriteByte((byte)(length + 1));
-						stream.WriteByte((byte)part);
+						stream.WriteByte((byte) (length + 1));
+						stream.WriteByte((byte) part);
 						stream.Write(data[i..(i + length)]);
 						part++;
 				}
 		}
 
-		static int WireCryptOptionValue(WireCryptOption wireCrypt) => wireCrypt switch {
+		static int WireCryptOptionValue(WireCryptOption wireCrypt) => wireCrypt switch
+		{
 				WireCryptOption.Disabled => IscCodes.WIRE_CRYPT_DISABLED,
 				WireCryptOption.Enabled => IscCodes.WIRE_CRYPT_ENABLED,
 				WireCryptOption.Required => IscCodes.WIRE_CRYPT_REQUIRED,
 				_ => throw new ArgumentOutOfRangeException(nameof(wireCrypt), $"{nameof(wireCrypt)}={wireCrypt}"),
 		};
 
-		internal static string NormalizeLogin(string login) {
-				if(string.IsNullOrEmpty(login)) {
+		internal static string NormalizeLogin(string login)
+		{
+				if (string.IsNullOrEmpty(login))
+				{
 						return login;
 				}
-				if(login.Length > 2 && login[0] == '"' && login[login.Length - 1] == '"') {
+				if (login.Length > 2 && login[0] == '"' && login[login.Length - 1] == '"')
+				{
 						var sb = new StringBuilder(login, 1, login.Length - 2, login.Length - 2);
-						for(int idx = 0; idx < sb.Length; idx++) {
+						for (int idx = 0; idx < sb.Length; idx++)
+						{
 								// Double double quotes ("") escape a double quote in a quoted string
-								if(sb[idx] == '"') {
+								if (sb[idx] == '"')
+								{
 										// Strip double quote escape
 										_ = sb.Remove(idx, 1);
-										if(idx < sb.Length && sb[idx] == '"') {
+										if (idx < sb.Length && sb[idx] == '"')
+										{
 												// Retain escaped double quote
 												idx += 1;
 										}
-										else {
+										else
+										{
 												// The character after escape is not a double quote, we terminate the conversion and truncate.
 												// Firebird does this as well (see common/utils.cpp#dpbItemUpper)
 												sb.Length = idx;

@@ -19,7 +19,8 @@ using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class IscErrorMessages {
+internal static class IscErrorMessages
+{
 		static readonly Dictionary<int, string> _messages = new Dictionary<int, string>()
 			{
 	{335544320, ""},

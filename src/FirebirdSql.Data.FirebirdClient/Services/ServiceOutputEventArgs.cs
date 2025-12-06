@@ -19,6 +19,7 @@ using System;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class ServiceOutputEventArgs(string message) : EventArgs {
+public sealed class ServiceOutputEventArgs(string message) : EventArgs
+{
 		public string Message { get; } = message;
 }

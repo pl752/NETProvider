@@ -24,7 +24,8 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
 [ListBindable(false)]
-public sealed class FbErrorCollection : ICollection<FbError> {
+public sealed class FbErrorCollection : ICollection<FbError>
+{
 		#region Fields
 
 		private readonly List<FbError> _errors;
@@ -33,7 +34,8 @@ public sealed class FbErrorCollection : ICollection<FbError> {
 
 		#region Constructors
 
-		internal FbErrorCollection() {
+		internal FbErrorCollection()
+		{
 				_errors = [];
 		}
 
@@ -51,7 +53,8 @@ public sealed class FbErrorCollection : ICollection<FbError> {
 
 		internal int IndexOf(string errorMessage) => _errors.FindIndex(x => string.Equals(x.Message, errorMessage, StringComparison.CurrentCultureIgnoreCase));
 
-		internal FbError Add(FbError error) {
+		internal FbError Add(FbError error)
+		{
 				_errors.Add(error);
 
 				return error;

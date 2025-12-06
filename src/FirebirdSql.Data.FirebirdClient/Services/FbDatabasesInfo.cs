@@ -19,13 +19,15 @@ using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbDatabasesInfo {
+public class FbDatabasesInfo
+{
 		public int ConnectionCount { get; internal set; }
 
 		private readonly List<string> _databases;
 		public IReadOnlyList<string> Databases => _databases.AsReadOnly();
 
-		internal FbDatabasesInfo() {
+		internal FbDatabasesInfo()
+		{
 				_databases = [];
 		}
 

@@ -19,26 +19,31 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class TransactionParameterBuffer(Encoding encoding) : ParameterBuffer {
-		public void Append(int type, short value) {
+internal sealed class TransactionParameterBuffer(Encoding encoding) : ParameterBuffer
+{
+		public void Append(int type, short value)
+		{
 				WriteByte(type);
 				WriteByte(2);
 				Write(value);
 		}
 
-		public void Append(int type, int value) {
+		public void Append(int type, int value)
+		{
 				WriteByte(type);
 				WriteByte(4);
 				Write(value);
 		}
 
-		public void Append(int type, long value) {
+		public void Append(int type, long value)
+		{
 				WriteByte(type);
 				WriteByte(8);
 				Write(value);
 		}
 
-		public void Append(int type, byte[] buffer) {
+		public void Append(int type, byte[] buffer)
+		{
 				WriteByte(type);
 				WriteByte(buffer.Length);
 				Write(buffer);

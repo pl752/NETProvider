@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Common;
 
-internal enum DbDataType {
+internal enum DbDataType
+{
 		Array,
 		BigInt,
 		Binary,

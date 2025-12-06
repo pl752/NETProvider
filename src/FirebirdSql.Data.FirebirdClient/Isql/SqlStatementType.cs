@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.Isql;
 
 [Serializable]
-public enum SqlStatementType {
+public enum SqlStatementType
+{
 		AlterCharacterSet,
 		AlterDatabase,
 		AlterDomain,

@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
-public enum FbCharset {
+public enum FbCharset
+{
 		Default = -1,
 		None = 0,
 		Octets = 1,

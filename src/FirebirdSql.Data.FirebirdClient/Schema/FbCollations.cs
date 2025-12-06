@@ -19,10 +19,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbCollations : FbSchema {
+internal class FbCollations : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -36,24 +38,29 @@ internal class FbCollations : FbSchema {
 				FROM rdb$collations coll
 					LEFT JOIN rdb$character_sets cs ON coll.rdb$character_set_id = cs.rdb$character_set_id");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* COLLATION_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* COLLATION_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* COLLATION_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("coll.rdb$collation_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 

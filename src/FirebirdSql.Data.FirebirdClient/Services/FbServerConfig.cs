@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Services;
 
-public class FbServerConfig {
+public class FbServerConfig
+{
 		public int LockMemSize { get; internal set; }
 		public int LockSemCount { get; internal set; }
 		public int LockSignal { get; internal set; }

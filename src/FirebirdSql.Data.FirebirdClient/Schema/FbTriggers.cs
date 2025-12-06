@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbTriggers : FbSchema {
+internal class FbTriggers : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -43,25 +45,31 @@ internal class FbTriggers : FbSchema {
 					rdb$description AS DESCRIPTION
 				FROM rdb$triggers");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* TABLE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* TABLE_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("rdb$relation_name = @p{0}", index++);
 						}
 
 						/* TRIGGER_NAME */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								if(where.Length > 0) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
+								if (where.Length > 0)
+								{
 										_ = where.Append(" AND ");
 								}
 
@@ -69,7 +77,8 @@ internal class FbTriggers : FbSchema {
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -78,10 +87,12 @@ internal class FbTriggers : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						row["IS_SYSTEM_TRIGGER"] = row["IS_SYSTEM_TRIGGER"] == DBNull.Value ||
 							Convert.ToInt32(row["IS_SYSTEM_TRIGGER"], CultureInfo.InvariantCulture) == 0
 								? false

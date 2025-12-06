@@ -19,7 +19,8 @@ using System;
 
 namespace FirebirdSql.Data.Client.Managed.Version15;
 
-internal class CryptKeyCallbackResponse(ReadOnlyMemory<byte> data, int size) : IResponse {
+internal class CryptKeyCallbackResponse(ReadOnlyMemory<byte> data, int size) : IResponse
+{
 		public ReadOnlyMemory<byte> Data { get; } = data;
 		public int Size { get; } = size;
 }

@@ -22,7 +22,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class ServiceManagerBase(Charset charset) {
+internal abstract class ServiceManagerBase(Charset charset)
+{
 		public Action<IscException> WarningMessage { get; set; }
 
 		public abstract bool UseUtf8ParameterBuffer { get; }

@@ -26,7 +26,8 @@ using FirebirdSql.Data.Services;
 
 namespace FirebirdSql.Data.Schema;
 
-internal abstract class FbSchema {
+internal abstract class FbSchema
+{
 		#region Abstract Methods
 
 		protected abstract StringBuilder GetCommandText(string[] restrictions);
@@ -35,20 +36,26 @@ internal abstract class FbSchema {
 
 		#region Methods
 
-		public DataTable GetSchema(FbConnection connection, string collectionName, string[] restrictions) {
+		public DataTable GetSchema(FbConnection connection, string collectionName, string[] restrictions)
+		{
 				var dataTable = new DataTable(collectionName);
 				var command = BuildCommand(connection, collectionName, ParseRestrictions(restrictions));
-				try {
-						using(var adapter = new FbDataAdapter(command)) {
-								try {
+				try
+				{
+						using (var adapter = new FbDataAdapter(command))
+						{
+								try
+								{
 										adapter.Fill(dataTable);
 								}
-								catch(Exception ex) {
+								catch (Exception ex)
+								{
 										throw FbException.Create(ex);
 								}
 						}
 				}
-				finally {
+				finally
+				{
 #if NET48 || NETSTANDARD2_0
 			command.Dispose();
 #else
@@ -59,20 +66,26 @@ internal abstract class FbSchema {
 				ProcessResult(dataTable);
 				return dataTable;
 		}
-		public async Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default) {
+		public async Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default)
+		{
 				var dataTable = new DataTable(collectionName);
 				var command = BuildCommand(connection, collectionName, ParseRestrictions(restrictions));
-				try {
-						using(var adapter = new FbDataAdapter(command)) {
-								try {
+				try
+				{
+						using (var adapter = new FbDataAdapter(command))
+						{
+								try
+								{
 										adapter.Fill(dataTable);
 								}
-								catch(Exception ex) {
+								catch (Exception ex)
+								{
 										throw FbException.Create(ex);
 								}
 						}
 				}
-				finally {
+				finally
+				{
 #if NET48 || NETSTANDARD2_0
 			command.Dispose();
 			await Task.CompletedTask.ConfigureAwait(false);
@@ -89,7 +102,8 @@ internal abstract class FbSchema {
 
 		#region Protected Methods
 
-		protected FbCommand BuildCommand(FbConnection connection, string collectionName, string[] restrictions) {
+		protected FbCommand BuildCommand(FbConnection connection, string collectionName, string[] restrictions)
+		{
 				SetMajorVersionNumber(connection);
 				string filter = string.Format("CollectionName='{0}'", collectionName);
 				var builder = GetCommandText(restrictions);
@@ -97,14 +111,18 @@ internal abstract class FbSchema {
 				var transaction = connection.InnerConnection.ActiveTransaction;
 				var command = new FbCommand(builder.ToString(), connection, transaction);
 
-				if(restrictions != null && restrictions.Length > 0) {
+				if (restrictions != null && restrictions.Length > 0)
+				{
 						int index = 0;
 
-						for(int i = 0; i < restrictions.Length; i++) {
+						for (int i = 0; i < restrictions.Length; i++)
+						{
 								string rname = restriction[i]["RestrictionName"].ToString();
-								if(restrictions[i] != null) {
+								if (restrictions[i] != null)
+								{
 										// Catalog, Schema and TableType are no real restrictions
-										if(!rname.EndsWith("Catalog") && !rname.EndsWith("Schema") && rname != "TableType") {
+										if (!rname.EndsWith("Catalog") && !rname.EndsWith("Schema") && rname != "TableType")
+										{
 												string pname = string.Format("@p{0}", index++);
 
 												command.Parameters.Add(pname, FbDbType.VarChar, 255).Value = restrictions[i];
@@ -128,7 +146,8 @@ internal abstract class FbSchema {
 		/// Determines the major version number from the Serverversion on the inner connection.
 		/// </summary>
 		/// <param name="connection">an open connection, which is used to determine the version number of the connected database server</param>
-		private void SetMajorVersionNumber(FbConnection connection) {
+		private void SetMajorVersionNumber(FbConnection connection)
+		{
 				var serverVersion = FbServerProperties.ParseServerVersion(connection.ServerVersion);
 				MajorVersionNumber = serverVersion.Major;
 		}
@@ -136,13 +155,17 @@ internal abstract class FbSchema {
 
 		#region Private Static Methods
 
-		private static void TrimStringFields(DataTable schema) {
+		private static void TrimStringFields(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
-						for(int i = 0; i < schema.Columns.Count; i++) {
-								if(!row.IsNull(schema.Columns[i]) &&
-									schema.Columns[i].DataType == typeof(System.String)) {
+				foreach (DataRow row in schema.Rows)
+				{
+						for (int i = 0; i < schema.Columns.Count; i++)
+						{
+								if (!row.IsNull(schema.Columns[i]) &&
+									schema.Columns[i].DataType == typeof(System.String))
+								{
 										row[schema.Columns[i]] = row[schema.Columns[i]].ToString().Trim();
 								}
 						}

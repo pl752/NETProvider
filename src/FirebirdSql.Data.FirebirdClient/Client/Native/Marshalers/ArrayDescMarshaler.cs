@@ -22,12 +22,16 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native.Marshalers;
 
-internal static class ArrayDescMarshaler {
-		public static void CleanUpNativeData(ref IntPtr pNativeData) {
-				if(pNativeData != IntPtr.Zero) {
+internal static class ArrayDescMarshaler
+{
+		public static void CleanUpNativeData(ref IntPtr pNativeData)
+		{
+				if (pNativeData != IntPtr.Zero)
+				{
 						Marshal.DestroyStructure<ArrayDescMarshal>(pNativeData);
 
-						for(int i = 0; i < 16; i++) {
+						for (int i = 0; i < 16; i++)
+						{
 								Marshal.DestroyStructure<ArrayBoundMarshal>(pNativeData + ArrayDescMarshal.ComputeLength(i));
 						}
 
@@ -37,10 +41,12 @@ internal static class ArrayDescMarshaler {
 				}
 		}
 
-		public static IntPtr MarshalManagedToNative(ArrayDesc descriptor) {
-				var arrayDesc = new ArrayDescMarshal {
+		public static IntPtr MarshalManagedToNative(ArrayDesc descriptor)
+		{
+				var arrayDesc = new ArrayDescMarshal
+				{
 						DataType = descriptor.DataType,
-						Scale = (byte)descriptor.Scale,
+						Scale = (byte) descriptor.Scale,
 						Length = descriptor.Length,
 						FieldName = descriptor.FieldName,
 						RelationName = descriptor.RelationName,
@@ -50,20 +56,23 @@ internal static class ArrayDescMarshaler {
 
 				var arrayBounds = new ArrayBoundMarshal[descriptor.Bounds.Length];
 
-				for(int i = 0; i < descriptor.Dimensions; i++) {
-						arrayBounds[i].LowerBound = (short)descriptor.Bounds[i].LowerBound;
-						arrayBounds[i].UpperBound = (short)descriptor.Bounds[i].UpperBound;
+				for (int i = 0; i < descriptor.Dimensions; i++)
+				{
+						arrayBounds[i].LowerBound = (short) descriptor.Bounds[i].LowerBound;
+						arrayBounds[i].UpperBound = (short) descriptor.Bounds[i].UpperBound;
 				}
 
 				return MarshalManagedToNative(arrayDesc, arrayBounds);
 		}
 
-		public static IntPtr MarshalManagedToNative(ArrayDescMarshal arrayDesc, ArrayBoundMarshal[] arrayBounds) {
+		public static IntPtr MarshalManagedToNative(ArrayDescMarshal arrayDesc, ArrayBoundMarshal[] arrayBounds)
+		{
 				int size = ArrayDescMarshal.ComputeLength(arrayBounds.Length);
 				nint ptr = Marshal.AllocHGlobal(size);
 
 				Marshal.StructureToPtr(arrayDesc, ptr, true);
-				for(int i = 0; i < arrayBounds.Length; i++) {
+				for (int i = 0; i < arrayBounds.Length; i++)
+				{
 						Marshal.StructureToPtr(arrayBounds[i], ptr + ArrayDescMarshal.ComputeLength(i), true);
 				}
 

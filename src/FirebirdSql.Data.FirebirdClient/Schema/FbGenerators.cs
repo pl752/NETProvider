@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbGenerators : FbSchema {
+internal class FbGenerators : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -38,25 +40,31 @@ internal class FbGenerators : FbSchema {
 					rdb$generator_id AS GENERATOR_ID
 				FROM rdb$generators");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* GENERATOR_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* GENERATOR_SCHEMA	*/
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* GENERATOR_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("rdb$generator_name = @p{0}", index++);
 						}
 
 						/* IS_SYSTEM_GENERATOR	*/
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								if(where.Length > 0) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
+								if (where.Length > 0)
+								{
 										_ = where.Append(" AND ");
 								}
 
@@ -64,7 +72,8 @@ internal class FbGenerators : FbSchema {
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -73,10 +82,12 @@ internal class FbGenerators : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						row["IS_SYSTEM_GENERATOR"] = row["IS_SYSTEM_GENERATOR"] == DBNull.Value ||
 							Convert.ToInt32(row["IS_SYSTEM_GENERATOR"], CultureInfo.InvariantCulture) == 0
 								? false

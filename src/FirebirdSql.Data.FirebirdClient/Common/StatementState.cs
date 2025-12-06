@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.Common;
 
 [Serializable]
-internal enum StatementState {
+internal enum StatementState
+{
 		Deallocated,
 		Allocated,
 		Prepared,

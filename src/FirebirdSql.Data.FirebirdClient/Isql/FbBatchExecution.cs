@@ -23,7 +23,8 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Isql;
 
-public sealed class FbBatchExecution {
+public sealed class FbBatchExecution
+{
 		private static readonly string[] StandardParseTokens = [" ", "\r\n", "\n", "\r"];
 
 		/// <summary>
@@ -56,13 +57,16 @@ public sealed class FbBatchExecution {
 		/// connection.
 		/// </summary>
 		/// <param name="sqlConnection">A <see cref="FbConnection"/> object.</param>
-		public FbBatchExecution(FbConnection sqlConnection = null) {
+		public FbBatchExecution(FbConnection sqlConnection = null)
+		{
 				_statements = [];
-				if(sqlConnection == null) {
+				if (sqlConnection == null)
+				{
 						_sqlConnection = new FbConnection(); // do not specify the connection string
 						_connectionString = [];
 				}
-				else {
+				else
+				{
 						_sqlConnection = sqlConnection;
 						_connectionString = new FbConnectionStringBuilder(sqlConnection.ConnectionString);
 				}
@@ -78,32 +82,39 @@ public sealed class FbBatchExecution {
 		/// Starts the ordered execution of the SQL statements that are in <see cref="SqlStatements"/> collection.
 		/// </summary>
 		/// <param name="autoCommit">Specifies if the transaction should be committed after a DDL command execution</param>
-		public void Execute(bool autoCommit = true) {
-				if((_statements?.Count ?? 0) == 0) {
+		public void Execute(bool autoCommit = true)
+		{
+				if ((_statements?.Count ?? 0) == 0)
+				{
 						throw new InvalidOperationException("There are no commands for execution.");
 				}
 
 				_shouldClose = false;
 
-				foreach(var statement in Statements) {
-						if(statement.StatementType is not (SqlStatementType.Connect or
+				foreach (var statement in Statements)
+				{
+						if (statement.StatementType is not (SqlStatementType.Connect or
 							SqlStatementType.CreateDatabase or
 							SqlStatementType.Disconnect or
 							SqlStatementType.DropDatabase or
 							SqlStatementType.SetAutoDDL or
 							SqlStatementType.SetDatabase or
 							SqlStatementType.SetNames or
-							SqlStatementType.SetSQLDialect)) {
+							SqlStatementType.SetSQLDialect))
+						{
 								ProvideCommand();
 								_sqlCommand.CommandText = statement.Text;
-								if(_sqlTransaction == null && !(statement.StatementType == SqlStatementType.Commit || statement.StatementType == SqlStatementType.Rollback)) {
+								if (_sqlTransaction == null && !(statement.StatementType == SqlStatementType.Commit || statement.StatementType == SqlStatementType.Rollback))
+								{
 										_sqlTransaction = _sqlConnection.BeginTransaction(FbTransaction.DefaultIsolationLevel, null);
 								}
 								_sqlCommand.Transaction = _sqlTransaction;
 						}
 
-						try {
-								switch(statement.StatementType) {
+						try
+						{
+								switch (statement.StatementType)
+								{
 										case SqlStatementType.AlterCharacterSet:
 										case SqlStatementType.AlterDatabase:
 										case SqlStatementType.AlterDomain:
@@ -194,12 +205,14 @@ public sealed class FbBatchExecution {
 												OnCommandExecuting(_sqlCommand, statement.StatementType);
 
 												var dataReader = _sqlCommand.ExecuteReader(CommandBehavior.Default);
-												try {
+												try
+												{
 														_requiresNewConnection = false;
 
 														OnCommandExecuted(dataReader, statement.Text, statement.StatementType, -1);
 												}
-												finally {
+												finally
+												{
 #if NET48 || NETSTANDARD2_0
 							dataReader.Dispose();
 #else
@@ -299,7 +312,8 @@ public sealed class FbBatchExecution {
 												throw new NotImplementedException();
 								}
 						}
-						catch(Exception ex) {
+						catch (Exception ex)
+						{
 								DisposeCommand();
 								RollbackTransaction();
 								CloseConnection();
@@ -320,32 +334,39 @@ public sealed class FbBatchExecution {
 		/// Starts the ordered execution of the SQL statements that are in <see cref="SqlStatements"/> collection.
 		/// </summary>
 		/// <param name="autoCommit">Specifies if the transaction should be committed after a DDL command execution</param>
-		public async Task ExecuteAsync(bool autoCommit = true, CancellationToken cancellationToken = default) {
-				if((_statements?.Count ?? 0) == 0) {
+		public async Task ExecuteAsync(bool autoCommit = true, CancellationToken cancellationToken = default)
+		{
+				if ((_statements?.Count ?? 0) == 0)
+				{
 						throw new InvalidOperationException("There are no commands for execution.");
 				}
 
 				_shouldClose = false;
 
-				foreach(var statement in Statements) {
-						if(statement.StatementType is not (SqlStatementType.Connect or
+				foreach (var statement in Statements)
+				{
+						if (statement.StatementType is not (SqlStatementType.Connect or
 							SqlStatementType.CreateDatabase or
 							SqlStatementType.Disconnect or
 							SqlStatementType.DropDatabase or
 							SqlStatementType.SetAutoDDL or
 							SqlStatementType.SetDatabase or
 							SqlStatementType.SetNames or
-							SqlStatementType.SetSQLDialect)) {
+							SqlStatementType.SetSQLDialect))
+						{
 								await ProvideCommandAsync(cancellationToken).ConfigureAwait(false);
 								_sqlCommand.CommandText = statement.Text;
-								if(_sqlTransaction == null && !(statement.StatementType == SqlStatementType.Commit || statement.StatementType == SqlStatementType.Rollback)) {
+								if (_sqlTransaction == null && !(statement.StatementType == SqlStatementType.Commit || statement.StatementType == SqlStatementType.Rollback))
+								{
 										_sqlTransaction = await _sqlConnection.BeginTransactionAsync(FbTransaction.DefaultIsolationLevel, null, cancellationToken).ConfigureAwait(false);
 								}
 								_sqlCommand.Transaction = _sqlTransaction;
 						}
 
-						try {
-								switch(statement.StatementType) {
+						try
+						{
+								switch (statement.StatementType)
+								{
 										case SqlStatementType.AlterCharacterSet:
 										case SqlStatementType.AlterDatabase:
 										case SqlStatementType.AlterDomain:
@@ -435,12 +456,14 @@ public sealed class FbBatchExecution {
 												OnCommandExecuting(_sqlCommand, statement.StatementType);
 
 												var dataReader = await _sqlCommand.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-												try {
+												try
+												{
 														_requiresNewConnection = false;
 
 														OnCommandExecuted(dataReader, statement.Text, statement.StatementType, -1);
 												}
-												finally {
+												finally
+												{
 #if NET48 || NETSTANDARD2_0
 							dataReader.Dispose();
 #else
@@ -540,7 +563,8 @@ public sealed class FbBatchExecution {
 												throw new NotImplementedException();
 								}
 						}
-						catch(Exception ex) {
+						catch (Exception ex)
+						{
 								await DisposeCommandAsync(cancellationToken).ConfigureAwait(false);
 								await RollbackTransactionAsync(cancellationToken).ConfigureAwait(false);
 								await CloseConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -563,24 +587,30 @@ public sealed class FbBatchExecution {
 		/// to the database.
 		/// </summary>
 		/// <param name="connectDbStatement"></param>
-		private void ConnectToDatabase(string connectDbStatement) {
+		private void ConnectToDatabase(string connectDbStatement)
+		{
 				// CONNECT 'filespec'
 				// [USER 'username']
 				// [PASSWORD 'password']
 				// [CACHE int]
 				// [ROLE 'rolename']
-				var parser = new SqlStringParser(connectDbStatement) {
+				var parser = new SqlStringParser(connectDbStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "CONNECT") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "CONNECT")
+						{
 								throw new ArgumentException("Malformed isql CONNECT statement. Expected keyword CONNECT but something else was found.");
 						}
 						_ = enumerator.MoveNext();
 						_connectionString.Database = enumerator.Current.Text.Replace("'", string.Empty);
-						while(enumerator.MoveNext()) {
-								switch(enumerator.Current.Text.ToUpperInvariant()) {
+						while (enumerator.MoveNext())
+						{
+								switch (enumerator.Current.Text.ToUpperInvariant())
+								{
 										case "USER":
 												_ = enumerator.MoveNext();
 												_connectionString.UserID = enumerator.Current.Text.Replace("'", string.Empty);
@@ -614,24 +644,30 @@ public sealed class FbBatchExecution {
 		/// to the database.
 		/// </summary>
 		/// <param name="connectDbStatement"></param>
-		private async Task ConnectToDatabaseAsync(string connectDbStatement, CancellationToken cancellationToken = default) {
+		private async Task ConnectToDatabaseAsync(string connectDbStatement, CancellationToken cancellationToken = default)
+		{
 				// CONNECT 'filespec'
 				// [USER 'username']
 				// [PASSWORD 'password']
 				// [CACHE int]
 				// [ROLE 'rolename']
-				var parser = new SqlStringParser(connectDbStatement) {
+				var parser = new SqlStringParser(connectDbStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "CONNECT") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "CONNECT")
+						{
 								throw new ArgumentException("Malformed isql CONNECT statement. Expected keyword CONNECT but something else was found.");
 						}
 						_ = enumerator.MoveNext();
 						_connectionString.Database = enumerator.Current.Text.Replace("'", string.Empty);
-						while(enumerator.MoveNext()) {
-								switch(enumerator.Current.Text.ToUpperInvariant()) {
+						while (enumerator.MoveNext())
+						{
+								switch (enumerator.Current.Text.ToUpperInvariant())
+								{
 										case "USER":
 												_ = enumerator.MoveNext();
 												_connectionString.UserID = enumerator.Current.Text.Replace("'", string.Empty);
@@ -665,7 +701,8 @@ public sealed class FbBatchExecution {
 		/// Parses the isql statement CREATE DATABASE and creates the database and opens a connection to the recently created database.
 		/// </summary>
 		/// <param name="createDatabaseStatement">The create database statement.</param>
-		private void CreateDatabase(string createDatabaseStatement) {
+		private void CreateDatabase(string createDatabaseStatement)
+		{
 				// CREATE {DATABASE | SCHEMA} 'filespec'
 				// [USER 'username' [PASSWORD 'password']]
 				// [PAGE_SIZE [=] int]
@@ -673,19 +710,24 @@ public sealed class FbBatchExecution {
 				// [DEFAULT CHARACTER SET charset]
 				// [<secondary_file>];
 				int pageSize = 0;
-				var parser = new SqlStringParser(createDatabaseStatement) {
+				var parser = new SqlStringParser(createDatabaseStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "CREATE") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "CREATE")
+						{
 								throw new ArgumentException("Malformed isql CREATE statement. Expected keyword CREATE but something else was found.");
 						}
 						_ = enumerator.MoveNext(); // {DATABASE | SCHEMA}
 						_ = enumerator.MoveNext();
 						_connectionString.Database = enumerator.Current.Text.Replace("'", string.Empty);
-						while(enumerator.MoveNext()) {
-								switch(enumerator.Current.Text.ToUpperInvariant()) {
+						while (enumerator.MoveNext())
+						{
+								switch (enumerator.Current.Text.ToUpperInvariant())
+								{
 										case "USER":
 												_ = enumerator.MoveNext();
 												_connectionString.UserID = enumerator.Current.Text.Replace("'", string.Empty);
@@ -698,18 +740,18 @@ public sealed class FbBatchExecution {
 
 										case "PAGE_SIZE":
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text == "=")
+												if (enumerator.Current.Text == "=")
 														_ = enumerator.MoveNext();
 												_ = int.TryParse(enumerator.Current.Text, out pageSize);
 												break;
 
 										case "DEFAULT":
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text.ToUpperInvariant() != "CHARACTER")
+												if (enumerator.Current.Text.ToUpperInvariant() != "CHARACTER")
 														throw new ArgumentException("Expected the keyword CHARACTER but something else was found.");
 
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text.ToUpperInvariant() != "SET")
+												if (enumerator.Current.Text.ToUpperInvariant() != "SET")
 														throw new ArgumentException("Expected the keyword SET but something else was found.");
 
 												_ = enumerator.MoveNext();
@@ -726,7 +768,8 @@ public sealed class FbBatchExecution {
 		/// Parses the isql statement CREATE DATABASE and creates the database and opens a connection to the recently created database.
 		/// </summary>
 		/// <param name="createDatabaseStatement">The create database statement.</param>
-		private async Task CreateDatabaseAsync(string createDatabaseStatement, CancellationToken cancellationToken = default) {
+		private async Task CreateDatabaseAsync(string createDatabaseStatement, CancellationToken cancellationToken = default)
+		{
 				// CREATE {DATABASE | SCHEMA} 'filespec'
 				// [USER 'username' [PASSWORD 'password']]
 				// [PAGE_SIZE [=] int]
@@ -734,19 +777,24 @@ public sealed class FbBatchExecution {
 				// [DEFAULT CHARACTER SET charset]
 				// [<secondary_file>];
 				int pageSize = 0;
-				var parser = new SqlStringParser(createDatabaseStatement) {
+				var parser = new SqlStringParser(createDatabaseStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "CREATE") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "CREATE")
+						{
 								throw new ArgumentException("Malformed isql CREATE statement. Expected keyword CREATE but something else was found.");
 						}
 						_ = enumerator.MoveNext(); // {DATABASE | SCHEMA}
 						_ = enumerator.MoveNext();
 						_connectionString.Database = enumerator.Current.Text.Replace("'", string.Empty);
-						while(enumerator.MoveNext()) {
-								switch(enumerator.Current.Text.ToUpperInvariant()) {
+						while (enumerator.MoveNext())
+						{
+								switch (enumerator.Current.Text.ToUpperInvariant())
+								{
 										case "USER":
 												_ = enumerator.MoveNext();
 												_connectionString.UserID = enumerator.Current.Text.Replace("'", string.Empty);
@@ -759,18 +807,18 @@ public sealed class FbBatchExecution {
 
 										case "PAGE_SIZE":
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text == "=")
+												if (enumerator.Current.Text == "=")
 														_ = enumerator.MoveNext();
 												_ = int.TryParse(enumerator.Current.Text, out pageSize);
 												break;
 
 										case "DEFAULT":
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text.ToUpperInvariant() != "CHARACTER")
+												if (enumerator.Current.Text.ToUpperInvariant() != "CHARACTER")
 														throw new ArgumentException("Expected the keyword CHARACTER but something else was found.");
 
 												_ = enumerator.MoveNext();
-												if(enumerator.Current.Text.ToUpperInvariant() != "SET")
+												if (enumerator.Current.Text.ToUpperInvariant() != "SET")
 														throw new ArgumentException("Expected the keyword SET but something else was found.");
 
 												_ = enumerator.MoveNext();
@@ -788,27 +836,35 @@ public sealed class FbBatchExecution {
 		/// Parses the isql statement SET AUTODDL and sets the character set to current connection string.
 		/// </summary>
 		/// <param name="setAutoDdlStatement">The set names statement.</param>
-		private static void SetAutoDdl(string setAutoDdlStatement, ref bool autoCommit) {
+		private static void SetAutoDdl(string setAutoDdlStatement, ref bool autoCommit)
+		{
 				// SET AUTODDL [ON | OFF]
-				var parser = new SqlStringParser(setAutoDdlStatement) {
+				var parser = new SqlStringParser(setAutoDdlStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "SET") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "SET")
+						{
 								throw new ArgumentException("Malformed isql SET statement. Expected keyword SET but something else was found.");
 						}
 						_ = enumerator.MoveNext(); // AUTO
-						if(enumerator.MoveNext()) {
+						if (enumerator.MoveNext())
+						{
 								string onOff = enumerator.Current.Text.ToUpperInvariant();
-								if(onOff == "ON") {
+								if (onOff == "ON")
+								{
 										autoCommit = true;
 								}
-								else {
+								else
+								{
 										autoCommit = onOff == "OFF" ? false : throw new ArgumentException("Expected the ON or OFF but something else was found.");
 								}
 						}
-						else {
+						else
+						{
 								autoCommit = !autoCommit;
 						}
 				}
@@ -818,14 +874,18 @@ public sealed class FbBatchExecution {
 		/// Parses the isql statement SET NAMES and sets the character set to current connection string.
 		/// </summary>
 		/// <param name="setNamesStatement">The set names statement.</param>
-		private void SetNames(string setNamesStatement) {
+		private void SetNames(string setNamesStatement)
+		{
 				// SET NAMES charset
-				var parser = new SqlStringParser(setNamesStatement) {
+				var parser = new SqlStringParser(setNamesStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "SET") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "SET")
+						{
 								throw new ArgumentException("Malformed isql SET statement. Expected keyword SET but something else was found.");
 						}
 						_ = enumerator.MoveNext(); // NAMES
@@ -838,14 +898,18 @@ public sealed class FbBatchExecution {
 		/// Parses the isql statement SET SQL DIALECT and sets the dialect set to current connection string.
 		/// </summary>
 		/// <param name="setSqlDialectStatement">The set sql dialect statement.</param>
-		private void SetSqlDialect(string setSqlDialectStatement) {
+		private void SetSqlDialect(string setSqlDialectStatement)
+		{
 				// SET SQL DIALECT dialect
-				var parser = new SqlStringParser(setSqlDialectStatement) {
+				var parser = new SqlStringParser(setSqlDialectStatement)
+				{
 						Tokens = StandardParseTokens
 				};
-				using(var enumerator = parser.Parse().GetEnumerator()) {
+				using (var enumerator = parser.Parse().GetEnumerator())
+				{
 						_ = enumerator.MoveNext();
-						if(enumerator.Current.Text.ToUpperInvariant() != "SET") {
+						if (enumerator.Current.Text.ToUpperInvariant() != "SET")
+						{
 								throw new ArgumentException("Malformed isql SET statement. Expected keyword SET but something else was found.");
 						}
 						_ = enumerator.MoveNext(); // SQL
@@ -856,14 +920,16 @@ public sealed class FbBatchExecution {
 				}
 		}
 
-		private FbCommand ProvideCommand() {
+		private FbCommand ProvideCommand()
+		{
 				_sqlCommand ??= new FbCommand();
 
 				_sqlCommand.Connection = ProvideConnection();
 
 				return _sqlCommand;
 		}
-		private async Task<FbCommand> ProvideCommandAsync(CancellationToken cancellationToken = default) {
+		private async Task<FbCommand> ProvideCommandAsync(CancellationToken cancellationToken = default)
+		{
 				_sqlCommand ??= new FbCommand();
 
 				_sqlCommand.Connection = await ProvideConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -871,30 +937,38 @@ public sealed class FbBatchExecution {
 				return _sqlCommand;
 		}
 
-		private FbConnection ProvideConnection() {
-				if(_requiresNewConnection) {
-						if(_sqlConnection != null && _sqlConnection.State != ConnectionState.Closed) {
+		private FbConnection ProvideConnection()
+		{
+				if (_requiresNewConnection)
+				{
+						if (_sqlConnection != null && _sqlConnection.State != ConnectionState.Closed)
+						{
 								CloseConnection();
 						}
 						_sqlConnection = new FbConnection(_connectionString.ToString());
 				}
 
-				if(_sqlConnection.State == ConnectionState.Closed) {
+				if (_sqlConnection.State == ConnectionState.Closed)
+				{
 						_sqlConnection.Open();
 						_shouldClose = true;
 				}
 
 				return _sqlConnection;
 		}
-		private async Task<FbConnection> ProvideConnectionAsync(CancellationToken cancellationToken = default) {
-				if(_requiresNewConnection) {
-						if(_sqlConnection != null && _sqlConnection.State != ConnectionState.Closed) {
+		private async Task<FbConnection> ProvideConnectionAsync(CancellationToken cancellationToken = default)
+		{
+				if (_requiresNewConnection)
+				{
+						if (_sqlConnection != null && _sqlConnection.State != ConnectionState.Closed)
+						{
 								await CloseConnectionAsync(cancellationToken).ConfigureAwait(false);
 						}
 						_sqlConnection = new FbConnection(_connectionString.ToString());
 				}
 
-				if(_sqlConnection.State == ConnectionState.Closed) {
+				if (_sqlConnection.State == ConnectionState.Closed)
+				{
 						await _sqlConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
 						_shouldClose = true;
 				}
@@ -902,23 +976,29 @@ public sealed class FbBatchExecution {
 				return _sqlConnection;
 		}
 
-		private int ExecuteCommand(bool autoCommit) {
+		private int ExecuteCommand(bool autoCommit)
+		{
 				int rowsAffected = _sqlCommand.ExecuteNonQuery();
-				if(autoCommit && _sqlCommand.IsDDLCommand) {
+				if (autoCommit && _sqlCommand.IsDDLCommand)
+				{
 						CommitTransaction();
 				}
 				return rowsAffected;
 		}
-		private async Task<int> ExecuteCommandAsync(bool autoCommit, CancellationToken cancellationToken = default) {
+		private async Task<int> ExecuteCommandAsync(bool autoCommit, CancellationToken cancellationToken = default)
+		{
 				int rowsAffected = await _sqlCommand.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-				if(autoCommit && _sqlCommand.IsDDLCommand) {
+				if (autoCommit && _sqlCommand.IsDDLCommand)
+				{
 						await CommitTransactionAsync(cancellationToken).ConfigureAwait(false);
 				}
 				return rowsAffected;
 		}
 
-		private void CommitTransaction() {
-				if(_sqlTransaction != null) {
+		private void CommitTransaction()
+		{
+				if (_sqlTransaction != null)
+				{
 						_sqlTransaction.Commit();
 #if NET48 || NETSTANDARD2_0
 			_sqlTransaction.Dispose();
@@ -928,8 +1008,10 @@ public sealed class FbBatchExecution {
 						_sqlTransaction = null;
 				}
 		}
-		private async Task CommitTransactionAsync(CancellationToken cancellationToken = default) {
-				if(_sqlTransaction != null) {
+		private async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+		{
+				if (_sqlTransaction != null)
+				{
 						await _sqlTransaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 #if NET48 || NETSTANDARD2_0
 			_sqlTransaction.Dispose();
@@ -940,8 +1022,10 @@ public sealed class FbBatchExecution {
 				}
 		}
 
-		private void RollbackTransaction() {
-				if(_sqlTransaction != null) {
+		private void RollbackTransaction()
+		{
+				if (_sqlTransaction != null)
+				{
 						_sqlTransaction.Rollback();
 #if NET48 || NETSTANDARD2_0
 			_sqlTransaction.Dispose();
@@ -951,8 +1035,10 @@ public sealed class FbBatchExecution {
 						_sqlTransaction = null;
 				}
 		}
-		private async Task RollbackTransactionAsync(CancellationToken cancellationToken = default) {
-				if(_sqlTransaction != null) {
+		private async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+		{
+				if (_sqlTransaction != null)
+				{
 						await _sqlTransaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 #if NET48 || NETSTANDARD2_0
 			_sqlTransaction.Dispose();
@@ -963,20 +1049,26 @@ public sealed class FbBatchExecution {
 				}
 		}
 
-		private void CloseConnection() {
-				if(_shouldClose) {
+		private void CloseConnection()
+		{
+				if (_shouldClose)
+				{
 						_sqlConnection.Close();
 				}
 		}
-		private async Task CloseConnectionAsync(CancellationToken cancellationToken = default) {
-				if(_shouldClose) {
+		private async Task CloseConnectionAsync(CancellationToken cancellationToken = default)
+		{
+				if (_shouldClose)
+				{
 						await _sqlConnection.CloseAsync().ConfigureAwait(false);
 				}
 		}
 
 		private void DisposeCommand() => _sqlCommand?.Dispose();
-		private async Task DisposeCommandAsync(CancellationToken cancellationToken = default) {
-				if(_sqlCommand != null) {
+		private async Task DisposeCommandAsync(CancellationToken cancellationToken = default)
+		{
+				if (_sqlCommand != null)
+				{
 #if NET48 || NETSTANDARD2_0
 			_sqlCommand.Dispose();
 			await Task.CompletedTask.ConfigureAwait(false);

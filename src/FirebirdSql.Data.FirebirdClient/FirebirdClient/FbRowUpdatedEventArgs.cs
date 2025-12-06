@@ -24,10 +24,11 @@ public sealed class FbRowUpdatedEventArgs(
 	DataRow row,
 	IDbCommand command,
 	StatementType statementType,
-	DataTableMapping tableMapping) : RowUpdatedEventArgs(row, command, statementType, tableMapping) {
+	DataTableMapping tableMapping) : RowUpdatedEventArgs(row, command, statementType, tableMapping)
+{
 		#region Properties
 
-		public new FbCommand Command => (FbCommand)base.Command;
+		public new FbCommand Command => (FbCommand) base.Command;
 
 		#endregion
 		#region Constructors

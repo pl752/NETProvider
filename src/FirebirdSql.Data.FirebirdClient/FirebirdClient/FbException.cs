@@ -26,7 +26,8 @@ namespace FirebirdSql.Data.FirebirdClient;
 #if !NET8_0_OR_GREATER
 [Serializable]
 #endif
-public sealed class FbException : DbException {
+public sealed class FbException : DbException
+{
 		#region Fields
 
 		private FbErrorCollection _errors;
@@ -74,8 +75,10 @@ public sealed class FbException : DbException {
 
 		#region Private Methods
 
-		private void ProcessIscExceptionErrors(IscException innerException) {
-				foreach(var error in innerException.Errors) {
+		private void ProcessIscExceptionErrors(IscException innerException)
+		{
+				foreach (var error in innerException.Errors)
+				{
 						_ = Errors.Add(error.Message, error.ErrorCode);
 				}
 		}
@@ -84,19 +87,24 @@ public sealed class FbException : DbException {
 
 		internal static Exception Create(string message) => Create(message, null);
 		internal static Exception Create(Exception innerException) => Create(null, innerException);
-		internal static Exception Create(string message, Exception innerException) {
+		internal static Exception Create(string message, Exception innerException)
+		{
 				message ??= innerException?.Message;
-				if(innerException is IscException iscException) {
-						if(iscException.ErrorCode == IscCodes.isc_cancelled) {
+				if (innerException is IscException iscException)
+				{
+						if (iscException.ErrorCode == IscCodes.isc_cancelled)
+						{
 								return new OperationCanceledException(message, innerException);
 						}
-						else {
+						else
+						{
 								var result = new FbException(message, innerException);
 								result.ProcessIscExceptionErrors(iscException);
 								return result;
 						}
 				}
-				else {
+				else
+				{
 						return new FbException(message, innerException);
 				}
 		}

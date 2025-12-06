@@ -22,7 +22,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class ArrayBase {
+internal abstract class ArrayBase
+{
 		#region Fields
 
 		private ArrayDesc _descriptor;
@@ -48,13 +49,15 @@ internal abstract class ArrayBase {
 
 		#region Constructors
 
-		protected ArrayBase(ArrayDesc descriptor) {
+		protected ArrayBase(ArrayDesc descriptor)
+		{
 				_tableName = descriptor.RelationName;
 				_fieldName = descriptor.FieldName;
 				_descriptor = descriptor;
 		}
 
-		protected ArrayBase(string tableName, string fieldName) {
+		protected ArrayBase(string tableName, string fieldName)
+		{
 				_tableName = tableName;
 				_fieldName = fieldName;
 				_rdbFieldName = string.Empty;
@@ -67,28 +70,34 @@ internal abstract class ArrayBase {
 		public void Initialize() => LookupBounds();
 		public ValueTask InitializeAsync(CancellationToken cancellationToken = default) => LookupBoundsAsync(cancellationToken);
 
-		public Array Read() {
+		public Array Read()
+		{
 				byte[] slice = GetSlice(GetSliceLength(true));
 				return DecodeSlice(slice);
 		}
-		public async ValueTask<Array> ReadAsync(CancellationToken cancellationToken = default) {
+		public async ValueTask<Array> ReadAsync(CancellationToken cancellationToken = default)
+		{
 				byte[] slice = await GetSliceAsync(GetSliceLength(true), cancellationToken).ConfigureAwait(false);
 				return await DecodeSliceAsync(slice, cancellationToken).ConfigureAwait(false);
 		}
 
-		public void Write(Array sourceArray) {
+		public void Write(Array sourceArray)
+		{
 				SetDesc(sourceArray);
 				PutSlice(sourceArray, GetSliceLength(false));
 		}
-		public async ValueTask WriteAsync(Array sourceArray, CancellationToken cancellationToken = default) {
+		public async ValueTask WriteAsync(Array sourceArray, CancellationToken cancellationToken = default)
+		{
 				SetDesc(sourceArray);
 				await PutSliceAsync(sourceArray, GetSliceLength(false), cancellationToken).ConfigureAwait(false);
 		}
 
-		public void SetDesc(Array sourceArray) {
-				_descriptor.Dimensions = (short)sourceArray.Rank;
+		public void SetDesc(Array sourceArray)
+		{
+				_descriptor.Dimensions = (short) sourceArray.Rank;
 
-				for(int i = 0; i < sourceArray.Rank; i++) {
+				for (int i = 0; i < sourceArray.Rank; i++)
+				{
 						int lb = _descriptor.Bounds[i].LowerBound;
 						int ub = sourceArray.GetLength(i) - 1 + lb;
 
@@ -96,60 +105,71 @@ internal abstract class ArrayBase {
 				}
 		}
 
-		private void LookupBounds() {
+		private void LookupBounds()
+		{
 				LookupDesc();
 
 				var lookup = Database.CreateStatement(Transaction);
-				try {
+				try
+				{
 						lookup.Prepare(GetArrayBounds());
 						lookup.Execute(0, EmptyDescriptorFiller.Instance);
 
 						_descriptor.Bounds = new ArrayBound[16];
 						DbValue[] values;
 						int i = 0;
-						while((values = lookup.Fetch()) != null) {
+						while ((values = lookup.Fetch()) != null)
+						{
 								_descriptor.Bounds[i].LowerBound = values[0].GetInt32();
 								_descriptor.Bounds[i].UpperBound = values[1].GetInt32();
 
 								i++;
 						}
 				}
-				finally {
+				finally
+				{
 						lookup.Dispose2();
 				}
 		}
-		private async ValueTask LookupBoundsAsync(CancellationToken cancellationToken = default) {
+		private async ValueTask LookupBoundsAsync(CancellationToken cancellationToken = default)
+		{
 				await LookupDescAsync(cancellationToken).ConfigureAwait(false);
 
 				var lookup = Database.CreateStatement(Transaction);
-				try {
+				try
+				{
 						await lookup.PrepareAsync(GetArrayBounds(), cancellationToken).ConfigureAwait(false);
 						await lookup.ExecuteAsync(0, EmptyDescriptorFiller.Instance, cancellationToken).ConfigureAwait(false);
 
 						_descriptor.Bounds = new ArrayBound[16];
 						DbValue[] values;
 						int i = 0;
-						while((values = await lookup.FetchAsync(cancellationToken).ConfigureAwait(false)) != null) {
+						while ((values = await lookup.FetchAsync(cancellationToken).ConfigureAwait(false)) != null)
+						{
 								_descriptor.Bounds[i].LowerBound = values[0].GetInt32();
 								_descriptor.Bounds[i].UpperBound = values[1].GetInt32();
 
 								i++;
 						}
 				}
-				finally {
+				finally
+				{
 						await lookup.Dispose2Async(cancellationToken).ConfigureAwait(false);
 				}
 		}
 
-		private void LookupDesc() {
+		private void LookupDesc()
+		{
 				var lookup = Database.CreateStatement(Transaction);
-				try {
+				try
+				{
 						lookup.Prepare(GetArrayDesc());
 						lookup.Execute(0, EmptyDescriptorFiller.Instance);
 
 						_descriptor = new ArrayDesc();
 						var values = lookup.Fetch();
-						if(values != null && values.Length > 0) {
+						if (values != null && values.Length > 0)
+						{
 								_descriptor.RelationName = _tableName;
 								_descriptor.FieldName = _fieldName;
 								_descriptor.DataType = values[0].GetByte();
@@ -160,23 +180,28 @@ internal abstract class ArrayBase {
 
 								_rdbFieldName = values[4].GetString().Trim();
 						}
-						else {
+						else
+						{
 								throw new InvalidOperationException();
 						}
 				}
-				finally {
+				finally
+				{
 						lookup.Dispose2();
 				}
 		}
-		private async ValueTask LookupDescAsync(CancellationToken cancellationToken = default) {
+		private async ValueTask LookupDescAsync(CancellationToken cancellationToken = default)
+		{
 				var lookup = Database.CreateStatement(Transaction);
-				try {
+				try
+				{
 						await lookup.PrepareAsync(GetArrayDesc(), cancellationToken).ConfigureAwait(false);
 						await lookup.ExecuteAsync(0, EmptyDescriptorFiller.Instance, cancellationToken).ConfigureAwait(false);
 
 						_descriptor = new ArrayDesc();
 						var values = await lookup.FetchAsync(cancellationToken).ConfigureAwait(false);
-						if(values != null && values.Length > 0) {
+						if (values != null && values.Length > 0)
+						{
 								_descriptor.RelationName = _tableName;
 								_descriptor.FieldName = _fieldName;
 								_descriptor.DataType = values[0].GetByte();
@@ -187,11 +212,13 @@ internal abstract class ArrayBase {
 
 								_rdbFieldName = (await values[4].GetStringAsync(cancellationToken).ConfigureAwait(false)).Trim();
 						}
-						else {
+						else
+						{
 								throw new InvalidOperationException();
 						}
 				}
-				finally {
+				finally
+				{
 						await lookup.Dispose2Async(cancellationToken).ConfigureAwait(false);
 				}
 		}
@@ -200,16 +227,19 @@ internal abstract class ArrayBase {
 
 		#region Protected Methods
 
-		protected int GetSliceLength(bool read) {
+		protected int GetSliceLength(bool read)
+		{
 				int elements = 1;
-				for(int i = 0; i < _descriptor.Dimensions; i++) {
+				for (int i = 0; i < _descriptor.Dimensions; i++)
+				{
 						var bound = _descriptor.Bounds[i];
 						elements *= bound.UpperBound - bound.LowerBound + 1;
 				}
 
 				int length = elements * _descriptor.Length;
 
-				switch(_descriptor.DataType) {
+				switch (_descriptor.DataType)
+				{
 						case IscCodes.blr_varying:
 						case IscCodes.blr_varying2:
 								length += elements * 2;
@@ -242,7 +272,8 @@ internal abstract class ArrayBase {
 
 		#region Private Methods
 
-		private string GetArrayDesc() {
+		private string GetArrayDesc()
+		{
 				var sql = new StringBuilder();
 
 				_ = sql.Append(
@@ -250,23 +281,27 @@ internal abstract class ArrayBase {
 					"FROM RDB$RELATION_FIELDS X, RDB$FIELDS Y " +
 					"WHERE X.RDB$FIELD_SOURCE = Y.RDB$FIELD_NAME ");
 
-				if(_tableName != null && _tableName.Length != 0) {
+				if (_tableName != null && _tableName.Length != 0)
+				{
 						_ = sql.AppendFormat(" AND X.RDB$RELATION_NAME = '{0}'", _tableName);
 				}
 
-				if(_fieldName != null && _fieldName.Length != 0) {
+				if (_fieldName != null && _fieldName.Length != 0)
+				{
 						_ = sql.AppendFormat(" AND X.RDB$FIELD_NAME = '{0}'", _fieldName);
 				}
 
 				return sql.ToString();
 		}
 
-		private string GetArrayBounds() {
+		private string GetArrayBounds()
+		{
 				var sql = new StringBuilder();
 
 				_ = sql.Append("SELECT X.RDB$LOWER_BOUND, X.RDB$UPPER_BOUND FROM RDB$FIELD_DIMENSIONS X ");
 
-				if(_fieldName != null && _fieldName.Length != 0) {
+				if (_fieldName != null && _fieldName.Length != 0)
+				{
 						_ = sql.AppendFormat("WHERE X.RDB$FIELD_NAME = '{0}'", _rdbFieldName);
 				}
 

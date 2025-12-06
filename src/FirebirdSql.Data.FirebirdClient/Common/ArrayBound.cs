@@ -20,7 +20,8 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Common;
 
 [StructLayout(LayoutKind.Auto)]
-internal struct ArrayBound {
+internal struct ArrayBound
+{
 		public int LowerBound { get; set; }
 		public int UpperBound { get; set; }
 }

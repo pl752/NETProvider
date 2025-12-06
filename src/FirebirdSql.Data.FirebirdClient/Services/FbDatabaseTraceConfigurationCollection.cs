@@ -21,6 +21,7 @@ using System.Linq;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbDatabaseTraceConfigurationCollection : List<FbDatabaseTraceConfiguration> {
+public class FbDatabaseTraceConfigurationCollection : List<FbDatabaseTraceConfiguration>
+{
 		public string BuildConfiguration(FbTraceVersion version) => string.Join(Environment.NewLine, this.Select(x => x.BuildConfiguration(version)));
 }

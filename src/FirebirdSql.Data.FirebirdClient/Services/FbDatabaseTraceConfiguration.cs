@@ -20,8 +20,10 @@ using System.Text;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbDatabaseTraceConfiguration : FbTraceConfiguration {
-		public FbDatabaseTraceConfiguration() {
+public class FbDatabaseTraceConfiguration : FbTraceConfiguration
+{
+		public FbDatabaseTraceConfiguration()
+		{
 				Enabled = false;
 				ConnectionID = 0;
 				TimeThreshold = TimeSpan.FromMilliseconds(100);
@@ -53,23 +55,27 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration {
 		public string IncludeGdsCodes { get; set; }
 		public string ExcludeGdsCodes { get; set; }
 
-		public string BuildConfiguration(FbTraceVersion version) => version switch {
+		public string BuildConfiguration(FbTraceVersion version) => version switch
+		{
 				FbTraceVersion.Version1 => BuildConfiguration1(),
 				FbTraceVersion.Version2 => BuildConfiguration2(),
 				_ => throw new ArgumentOutOfRangeException(nameof(version)),
 		};
-		string BuildConfiguration1() {
+		string BuildConfiguration1()
+		{
 				var sb = new StringBuilder();
 				_ = sb.Append("<database");
 				_ = sb.Append(!string.IsNullOrEmpty(DatabaseName) ? $" {WriteRegEx(DatabaseName)}" : string.Empty);
 				_ = sb.AppendLine(">");
 				_ = sb.AppendFormat("enabled {0}", WriteBoolValue(Enabled));
 				_ = sb.AppendLine();
-				if(!string.IsNullOrEmpty(IncludeFilter)) {
+				if (!string.IsNullOrEmpty(IncludeFilter))
+				{
 						_ = sb.AppendFormat("include_filter {0}", WriteRegEx(IncludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeFilter)) {
+				if (!string.IsNullOrEmpty(ExcludeFilter))
+				{
 						_ = sb.AppendFormat("exclude_filter {0}", WriteRegEx(ExcludeFilter));
 						_ = sb.AppendLine();
 				}
@@ -117,7 +123,7 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration {
 				_ = sb.AppendLine();
 				_ = sb.AppendFormat("print_dyn {0}", WriteBoolValue(Events.HasFlag(FbDatabaseTraceEvents.PrintDYN)));
 				_ = sb.AppendLine();
-				_ = sb.AppendFormat("time_threshold {0}", WriteNumber((int)TimeThreshold.TotalMilliseconds));
+				_ = sb.AppendFormat("time_threshold {0}", WriteNumber((int) TimeThreshold.TotalMilliseconds));
 				_ = sb.AppendLine();
 				_ = sb.AppendFormat("max_sql_length {0}", WriteNumber(MaxSQLLength));
 				_ = sb.AppendLine();
@@ -132,26 +138,31 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration {
 				_ = sb.AppendLine("</database>");
 				return sb.ToString();
 		}
-		string BuildConfiguration2() {
+		string BuildConfiguration2()
+		{
 				var sb = new StringBuilder();
 				_ = sb.Append("database");
 				_ = sb.Append(!string.IsNullOrEmpty(DatabaseName) ? $" = {WriteRegEx(DatabaseName)}" : string.Empty);
 				_ = sb.AppendLine("{");
 				_ = sb.AppendFormat("enabled = {0}", WriteBoolValue(Enabled));
 				_ = sb.AppendLine();
-				if(!string.IsNullOrEmpty(IncludeFilter)) {
+				if (!string.IsNullOrEmpty(IncludeFilter))
+				{
 						_ = sb.AppendFormat("include_filter = {0}", WriteRegEx(IncludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeFilter)) {
+				if (!string.IsNullOrEmpty(ExcludeFilter))
+				{
 						_ = sb.AppendFormat("exclude_filter = {0}", WriteRegEx(ExcludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(IncludeGdsCodes)) {
+				if (!string.IsNullOrEmpty(IncludeGdsCodes))
+				{
 						_ = sb.AppendFormat("include_gds_codes = {0}", WriteString(IncludeGdsCodes));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeGdsCodes)) {
+				if (!string.IsNullOrEmpty(ExcludeGdsCodes))
+				{
 						_ = sb.AppendFormat("exclude_gds_codes = {0}", WriteString(ExcludeGdsCodes));
 						_ = sb.AppendLine();
 				}
@@ -205,7 +216,7 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration {
 				_ = sb.AppendLine();
 				_ = sb.AppendFormat("print_dyn = {0}", WriteBoolValue(Events.HasFlag(FbDatabaseTraceEvents.PrintDYN)));
 				_ = sb.AppendLine();
-				_ = sb.AppendFormat("time_threshold = {0}", WriteNumber((int)TimeThreshold.TotalMilliseconds));
+				_ = sb.AppendFormat("time_threshold = {0}", WriteNumber((int) TimeThreshold.TotalMilliseconds));
 				_ = sb.AppendLine();
 				_ = sb.AppendFormat("max_sql_length = {0}", WriteNumber(MaxSQLLength));
 				_ = sb.AppendLine();

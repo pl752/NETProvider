@@ -24,7 +24,8 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Types;
 
 [StructLayout(LayoutKind.Auto)]
-public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
+public readonly struct FbDecFloat : IEquatable<FbDecFloat>
+{
 		internal DecimalType Type { get; }
 		internal bool Negative { get; }
 		public BigInteger Coefficient { get; }
@@ -38,7 +39,8 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 		public static FbDecFloat PositiveSignalingNaN { get; } = new FbDecFloat(DecimalType.SignalingNaN, false, default, default);
 		public static FbDecFloat NegativeSignalingNaN { get; } = new FbDecFloat(DecimalType.SignalingNaN, true, default, default);
 
-		internal FbDecFloat(DecimalType type, bool negative, BigInteger coefficient, int exponent) {
+		internal FbDecFloat(DecimalType type, bool negative, BigInteger coefficient, int exponent)
+		{
 				Type = type;
 				Negative = negative;
 				Coefficient = coefficient;
@@ -56,13 +58,15 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 		public static implicit operator FbDecFloat(uint value) => new FbDecFloat(value);
 		public static implicit operator FbDecFloat(long value) => new FbDecFloat(value);
 		public static implicit operator FbDecFloat(ulong value) => new FbDecFloat(value);
-		public static explicit operator FbDecFloat(float value) => value switch {
+		public static explicit operator FbDecFloat(float value) => value switch
+		{
 				float.NaN => PositiveNaN,
 				float.PositiveInfinity => PositiveInfinity,
 				float.NegativeInfinity => NegativeInfinity,
 				_ => ParseNumber(value, "0.#######"),
 		};
-		public static explicit operator FbDecFloat(double value) => value switch {
+		public static explicit operator FbDecFloat(double value) => value switch
+		{
 				double.NaN => PositiveNaN,
 				double.PositiveInfinity => PositiveInfinity,
 				double.NegativeInfinity => NegativeInfinity,
@@ -70,20 +74,26 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 		};
 		public static explicit operator FbDecFloat(decimal value) => ParseNumber(value, "0.############################");
 
-		public override string ToString() {
-				if(this == NegativeZero) {
+		public override string ToString()
+		{
+				if (this == NegativeZero)
+				{
 						return "-0";
 				}
-				if(this == PositiveInfinity) {
+				if (this == PositiveInfinity)
+				{
 						return "inf";
 				}
-				if(this == NegativeInfinity) {
+				if (this == NegativeInfinity)
+				{
 						return "-inf";
 				}
-				if(this == PositiveNaN) {
+				if (this == PositiveNaN)
+				{
 						return "nan";
 				}
-				if(this == PositiveSignalingNaN) {
+				if (this == PositiveSignalingNaN)
+				{
 						return "snan";
 				}
 				return this == NegativeNaN ? "-nan" : this == NegativeSignalingNaN ? "-snan" : $"{Coefficient}E{Exponent}";
@@ -91,9 +101,11 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 
 		public override bool Equals(object obj) => obj is FbDecFloat fbDecFloat && Equals(fbDecFloat);
 
-		public override int GetHashCode() {
-				unchecked {
-						int hash = (int)2166136261;
+		public override int GetHashCode()
+		{
+				unchecked
+				{
+						int hash = (int) 2166136261;
 						hash = (hash * 16777619) ^ Type.GetHashCode();
 						hash = (hash * 16777619) ^ Negative.GetHashCode();
 						hash = (hash * 16777619) ^ Coefficient.GetHashCode();
@@ -102,17 +114,20 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 				}
 		}
 
-		public bool Equals(FbDecFloat other) {
-				if(!(Type.Equals(other.Type) && Negative.Equals(other.Negative)))
+		public bool Equals(FbDecFloat other)
+		{
+				if (!(Type.Equals(other.Type) && Negative.Equals(other.Negative)))
 						return false;
-				if(Coefficient.Equals(other.Coefficient) && Exponent.Equals(other.Exponent))
+				if (Coefficient.Equals(other.Coefficient) && Exponent.Equals(other.Exponent))
 						return true;
-				if(Exponent < other.Exponent) {
+				if (Exponent < other.Exponent)
+				{
 						int difference = other.Exponent - Exponent;
 						var value = other.Coefficient * BigInteger.Pow(10, difference);
 						return value.Equals(Coefficient);
 				}
-				if(Exponent > other.Exponent) {
+				if (Exponent > other.Exponent)
+				{
 						int difference = Exponent - other.Exponent;
 						var value = Coefficient * BigInteger.Pow(10, difference);
 						return value.Equals(other.Coefficient);
@@ -120,15 +135,18 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat> {
 				return false;
 		}
 
-		public static bool operator ==(FbDecFloat lhs, FbDecFloat rhs) {
+		public static bool operator ==(FbDecFloat lhs, FbDecFloat rhs)
+		{
 				return lhs.Equals(rhs);
 		}
 
-		public static bool operator !=(FbDecFloat lhs, FbDecFloat rhs) {
+		public static bool operator !=(FbDecFloat lhs, FbDecFloat rhs)
+		{
 				return lhs.Equals(rhs);
 		}
 
-		static FbDecFloat ParseNumber(IFormattable formattable, string format) {
+		static FbDecFloat ParseNumber(IFormattable formattable, string format)
+		{
 				string s = formattable.ToString(format, CultureInfo.InvariantCulture);
 				int pos = s.IndexOf('.');
 				return new FbDecFloat(BigInteger.Parse(s.Remove(pos, 1), CultureInfo.InvariantCulture), -(s.Length - pos - 1));

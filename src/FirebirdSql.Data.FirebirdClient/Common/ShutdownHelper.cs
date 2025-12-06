@@ -20,11 +20,13 @@ using System.Collections.Concurrent;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class ShutdownHelper {
+internal static class ShutdownHelper
+{
 		static readonly ConcurrentBag<Action> _pools;
 		static readonly ConcurrentBag<Action> _fbClients;
 
-		static ShutdownHelper() {
+		static ShutdownHelper()
+		{
 				_pools = [];
 				_fbClients = [];
 				AppDomain.CurrentDomain.DomainUnload += (sender, e) => HandleDomainUnload();
@@ -35,14 +37,16 @@ internal static class ShutdownHelper {
 
 		internal static void RegisterFbClientShutdown(Action item) => _fbClients.Add(item);
 
-		static void HandleDomainUnload() {
-				while(_pools.TryTake(out var item))
+		static void HandleDomainUnload()
+		{
+				while (_pools.TryTake(out var item))
 						item();
 		}
 
-		static void HandleProcessShutdown() {
+		static void HandleProcessShutdown()
+		{
 				HandleDomainUnload();
-				while(_fbClients.TryTake(out var item))
+				while (_fbClients.TryTake(out var item))
 						item();
 		}
 }

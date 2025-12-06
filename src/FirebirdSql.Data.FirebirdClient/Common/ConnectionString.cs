@@ -26,7 +26,8 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class ConnectionString {
+internal sealed class ConnectionString
+{
 		#region Constants
 		internal const string DefaultValueDataSource = "";
 		internal const int DefaultValuePortNumber = 3050;
@@ -245,12 +246,14 @@ internal sealed class ConnectionString {
 
 		#region Constructors
 
-		public ConnectionString() {
+		public ConnectionString()
+		{
 				SetDefaultOptions();
 		}
 
 		public ConnectionString(string connectionString)
-			: this() {
+			: this()
+		{
 				Load(connectionString);
 		}
 
@@ -258,33 +261,42 @@ internal sealed class ConnectionString {
 
 		#region Methods
 
-		public void Validate() {
-				if(
+		public void Validate()
+		{
+				if (
 					string.IsNullOrEmpty(Database) ||
 					(string.IsNullOrEmpty(DataSource) && ServerType != FbServerType.Embedded) ||
 					string.IsNullOrEmpty(Charset)
-					 ) {
+					 )
+				{
 						throw new ArgumentException("An invalid connection string argument has been supplied or a required connection string argument has not been supplied.");
 				}
-				if(Port is <= 0 or > 65535) {
+				if (Port is <= 0 or > 65535)
+				{
 						throw new ArgumentException("Incorrect port.");
 				}
-				if(MinPoolSize > MaxPoolSize) {
+				if (MinPoolSize > MaxPoolSize)
+				{
 						throw new ArgumentException("Incorrect pool size.");
 				}
-				if(Dialect is < 1 or > 3) {
+				if (Dialect is < 1 or > 3)
+				{
 						throw new ArgumentException("Incorrect database dialect it should be 1, 2, or 3.");
 				}
-				if(PacketSize is < 512 or > 32767) {
+				if (PacketSize is < 512 or > 32767)
+				{
 						throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "'Packet Size' value of {0} is not valid.{1}The value should be an integer >= 512 and <= 32767.", PacketSize, Environment.NewLine));
 				}
-				if(DbCachePages < 0) {
+				if (DbCachePages < 0)
+				{
 						throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "'Cache Pages' value of {0} is not valid.{1}The value should be an integer >= 0.", DbCachePages, Environment.NewLine));
 				}
-				if(Pooling && NoDatabaseTriggers) {
+				if (Pooling && NoDatabaseTriggers)
+				{
 						throw new ArgumentException("Cannot use Pooling and NoDatabaseTriggers together.");
 				}
-				if(ParallelWorkers < 0) {
+				if (ParallelWorkers < 0)
+				{
 						throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "'Parallel Workers' value of {0} is not valid.{1}The value should be an integer >= 0.", ParallelWorkers, Environment.NewLine));
 				}
 		}
@@ -293,14 +305,18 @@ internal sealed class ConnectionString {
 
 		#region Private Methods
 
-		private void Load(string connectionString) {
+		private void Load(string connectionString)
+		{
 				const string KeyPairsRegex = "(([\\w\\s\\d]*)\\s*?=\\s*?\"([^\"]*)\"|([\\w\\s\\d]*)\\s*?=\\s*?'([^']*)'|([\\w\\s\\d]*)\\s*?=\\s*?([^\"';][^;]*))";
 
-				if(!string.IsNullOrEmpty(connectionString)) {
+				if (!string.IsNullOrEmpty(connectionString))
+				{
 						var keyPairs = Regex.Matches(connectionString, KeyPairsRegex);
 
-						foreach(Match keyPair in keyPairs) {
-								if(keyPair.Groups.Count == 8) {
+						foreach (Match keyPair in keyPairs)
+						{
+								if (keyPair.Groups.Count == 8)
+								{
 										string[] values =
 										[
 							(keyPair.Groups[2].Success ? keyPair.Groups[2].Value
@@ -315,9 +331,12 @@ internal sealed class ConnectionString {
 							.Trim()
 										];
 
-										if(values.Length == 2 && !string.IsNullOrEmpty(values[0]) && !string.IsNullOrEmpty(values[1])) {
-												if(Synonyms.TryGetValue(values[0], out string key)) {
-														switch(key) {
+										if (values.Length == 2 && !string.IsNullOrEmpty(values[0]) && !string.IsNullOrEmpty(values[1]))
+										{
+												if (Synonyms.TryGetValue(values[0], out string key))
+												{
+														switch (key)
+														{
 																case DefaultKeyServerType:
 																		_options[key] = ParseEnum<FbServerType>(values[1], DefaultKeyServerType);
 																		break;
@@ -326,10 +345,12 @@ internal sealed class ConnectionString {
 																		break;
 																case DefaultKeyCryptKey:
 																		byte[] cryptKey = default;
-																		try {
+																		try
+																		{
 																				cryptKey = Convert.FromBase64String(values[1]);
 																		}
-																		catch {
+																		catch
+																		{
 																				throw NotSupported(DefaultKeyCryptKey);
 																		}
 																		_options[key] = cryptKey;
@@ -346,7 +367,8 @@ internal sealed class ConnectionString {
 								}
 						}
 
-						if(!string.IsNullOrEmpty(Database)) {
+						if (!string.IsNullOrEmpty(Database))
+						{
 								ParseConnectionInfo(Database);
 						}
 				}
@@ -355,13 +377,15 @@ internal sealed class ConnectionString {
 		private void SetDefaultOptions() => _options = new Dictionary<string, object>(DefaultValues);
 
 		// it is expected the hostname do be at least 2 characters to prevent possible ambiguity (DNET-892)
-		private void ParseConnectionInfo(string connectionInfo) {
+		private void ParseConnectionInfo(string connectionInfo)
+		{
 				connectionInfo = connectionInfo.Trim();
 
 				{
 						// URL style inet://[hostv6]:port/database
 						var match = Regex.Match(connectionInfo, "^inet://\\[(?<host>[A-Za-z0-9:]{2,})\\]:(?<port>\\d+)/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								_options[DefaultKeyPortNumber] = int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
@@ -371,7 +395,8 @@ internal sealed class ConnectionString {
 				{
 						// URL style inet://host:port/database
 						var match = Regex.Match(connectionInfo, "^inet://(?<host>[A-Za-z0-9\\.-]{2,}):(?<port>\\d+)/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								_options[DefaultKeyPortNumber] = int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
@@ -381,7 +406,8 @@ internal sealed class ConnectionString {
 				{
 						// URL style inet://host/database
 						var match = Regex.Match(connectionInfo, "^inet://(?<host>[A-Za-z0-9\\.:-]{2,})/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								return;
@@ -390,7 +416,8 @@ internal sealed class ConnectionString {
 				{
 						// URL style inet:///database
 						var match = Regex.Match(connectionInfo, "^inet:///(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = "localhost";
 								return;
@@ -399,7 +426,8 @@ internal sealed class ConnectionString {
 				{
 						// new style //[hostv6]:port/database
 						var match = Regex.Match(connectionInfo, "^//\\[(?<host>[A-Za-z0-9:]{2,})\\]:(?<port>\\d+)/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								_options[DefaultKeyPortNumber] = int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
@@ -409,7 +437,8 @@ internal sealed class ConnectionString {
 				{
 						// new style //host:port/database
 						var match = Regex.Match(connectionInfo, "^//(?<host>[A-Za-z0-9\\.-]{2,}):(?<port>\\d+)/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								_options[DefaultKeyPortNumber] = int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
@@ -419,7 +448,8 @@ internal sealed class ConnectionString {
 				{
 						// new style //host/database
 						var match = Regex.Match(connectionInfo, "^//(?<host>[A-Za-z0-9\\.:-]{2,})/(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								return;
@@ -428,7 +458,8 @@ internal sealed class ConnectionString {
 				{
 						// old style host:X:\database
 						var match = Regex.Match(connectionInfo, "^(?<host>[A-Za-z0-9\\.:-]{2,}):(?<database>[A-Za-z]:\\\\.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								return;
@@ -437,7 +468,8 @@ internal sealed class ConnectionString {
 				{
 						// old style host/port:database
 						var match = Regex.Match(connectionInfo, "^(?<host>[A-Za-z0-9\\.:-]{2,})/(?<port>\\d+):(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								_options[DefaultKeyPortNumber] = int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
@@ -447,7 +479,8 @@ internal sealed class ConnectionString {
 				{
 						// old style host:database
 						var match = Regex.Match(connectionInfo, "^(?<host>[A-Za-z0-9\\.:-]{2,}):(?<database>.+)$");
-						if(match.Success) {
+						if (match.Success)
+						{
 								_options[DefaultKeyCatalog] = match.Groups["database"].Value;
 								_options[DefaultKeyDataSource] = match.Groups["host"].Value;
 								return;
@@ -484,31 +517,32 @@ internal sealed class ConnectionString {
 					: defaultValue;
 
 		internal static byte[] GetBytes(string key, TryGetValueDelegate tryGetValue, byte[] defaultValue = default) => tryGetValue(key, out object value)
-					? (byte[])value
+					? (byte[]) value
 					: defaultValue;
 
 		internal static FbServerType GetServerType(string key, TryGetValueDelegate tryGetValue, FbServerType defaultValue = default) => tryGetValue(key, out object value)
-					? (FbServerType)value
+					? (FbServerType) value
 					: defaultValue;
 
 		internal static IsolationLevel GetIsolationLevel(string key, TryGetValueDelegate tryGetValue, IsolationLevel defaultValue = default) => tryGetValue(key, out object value)
-					? (IsolationLevel)value
+					? (IsolationLevel) value
 					: defaultValue;
 
 		internal static FbWireCrypt GetWireCrypt(string key, TryGetValueDelegate tryGetValue, FbWireCrypt defaultValue = default) => tryGetValue(key, out object value)
-					? (FbWireCrypt)value
+					? (FbWireCrypt) value
 					: defaultValue;
 
 		#endregion
 
 		#region Private Static Methods
 
-		private static string ExpandDataDirectory(string s) {
+		private static string ExpandDataDirectory(string s)
+		{
 				const string DataDirectoryKeyword = "|DataDirectory|";
-				if(s == null)
+				if (s == null)
 						return s;
 
-				string dataDirectoryLocation = (string)AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
+				string dataDirectoryLocation = (string) AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
 				string pattern = string.Format("{0}{1}?", Regex.Escape(DataDirectoryKeyword), Regex.Escape(Path.DirectorySeparatorChar.ToString()));
 				return Regex.Replace(s, pattern, dataDirectoryLocation + Path.DirectorySeparatorChar, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 		}

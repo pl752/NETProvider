@@ -19,10 +19,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbColumnPrivileges : FbSchema {
+internal class FbColumnPrivileges : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -40,39 +42,47 @@ internal class FbColumnPrivileges : FbSchema {
 
 				_ = where.Append("rdb$object_type = 0");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* TABLE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* TABLE_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat(" AND rdb$relation_name = @p{0}", index++);
 						}
 
 						/* COLUMN_NAME */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
 								_ = where.AppendFormat(" AND rdb$field_name = @p{0}", index++);
 						}
 
 						/* GRANTOR */
-						if(restrictions.Length >= 6 && restrictions[5] != null) {
+						if (restrictions.Length >= 6 && restrictions[5] != null)
+						{
 								_ = where.AppendFormat(" AND rdb$grantor = @p{0}", index++);
 						}
 
 						/* GRANTEE */
-						if(restrictions.Length >= 5 && restrictions[4] != null) {
+						if (restrictions.Length >= 5 && restrictions[4] != null)
+						{
 								_ = where.AppendFormat(" AND rdb$user = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 

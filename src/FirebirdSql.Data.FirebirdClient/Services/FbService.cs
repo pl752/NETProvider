@@ -25,7 +25,8 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public abstract class FbService {
+public abstract class FbService
+{
 		public event EventHandler<ServiceOutputEventArgs> ServiceOutput;
 
 		public event EventHandler<FbInfoMessageEventArgs> InfoMessage;
@@ -42,10 +43,13 @@ public abstract class FbService {
 		public int QueryBufferSize { get; set; }
 
 		private string _connectionString;
-		public string ConnectionString {
+		public string ConnectionString
+		{
 				get => _connectionString;
-				set {
-						if(_svc != null && State == FbServiceState.Open) {
+				set
+				{
+						if (_svc != null && State == FbServiceState.Open)
+						{
 								throw new InvalidOperationException("ConnectionString cannot be modified on open instances.");
 						}
 
@@ -55,47 +59,56 @@ public abstract class FbService {
 				}
 		}
 
-		private protected FbService(string connectionString = null) {
+		private protected FbService(string connectionString = null)
+		{
 				State = FbServiceState.Closed;
 				QueryBufferSize = IscCodes.DEFAULT_MAX_BUFFER_SIZE;
 				ConnectionString = connectionString;
 		}
 
-		private ServiceParameterBufferBase BuildSpb() {
+		private ServiceParameterBufferBase BuildSpb()
+		{
 				var spb = Service.CreateServiceParameterBuffer();
 				spb.AppendPreamble();
-				if(Service.UseUtf8ParameterBuffer) {
+				if (Service.UseUtf8ParameterBuffer)
+				{
 						spb.Append1(IscCodes.isc_spb_utf8_filename, [0]);
 				}
-				if(Service is Client.Managed.Version13.GdsServiceManager gdsSvc) {
-						if(!gdsSvc.Connection.AuthBlock.HasClientData) {
+				if (Service is Client.Managed.Version13.GdsServiceManager gdsSvc)
+				{
+						if (!gdsSvc.Connection.AuthBlock.HasClientData)
+						{
 								spb.Append1(IscCodes.isc_spb_auth_plugin_name, gdsSvc.Connection.AuthBlock.AcceptPluginName);
 								spb.Append1(IscCodes.isc_spb_specific_auth_data, gdsSvc.Connection.AuthBlock.PublicClientData);
 						}
-						else {
+						else
+						{
 								spb.Append1(IscCodes.isc_spb_specific_auth_data, gdsSvc.Connection.AuthBlock.ClientData);
 						}
 				}
-				else {
+				else
+				{
 						spb.Append1(IscCodes.isc_spb_user_name, _connectionStringOptions.UserID);
 						spb.Append1(IscCodes.isc_spb_password, _connectionStringOptions.Password);
 				}
 				spb.Append1(IscCodes.isc_spb_dummy_packet_interval, [120, 10, 0, 0]);
-				if((_connectionStringOptions?.Role.Length ?? 0) != 0) {
+				if ((_connectionStringOptions?.Role.Length ?? 0) != 0)
+				{
 						spb.Append1(IscCodes.isc_spb_sql_role_name, _connectionStringOptions.Role);
 				}
 				spb.Append1(IscCodes.isc_spb_expected_db, _connectionStringOptions.Database);
 				return spb;
 		}
 
-		private protected void Open() {
-				if(State != FbServiceState.Closed)
+		private protected void Open()
+		{
+				if (State != FbServiceState.Closed)
 						throw new InvalidOperationException("Service already open.");
-				if(string.IsNullOrEmpty(_connectionStringOptions.UserID))
+				if (string.IsNullOrEmpty(_connectionStringOptions.UserID))
 						throw new InvalidOperationException("No user name was specified.");
-				if(string.IsNullOrEmpty(_connectionStringOptions.Password))
+				if (string.IsNullOrEmpty(_connectionStringOptions.Password))
 						throw new InvalidOperationException("No user password was specified.");
-				if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+				if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 						throw new ArgumentException("Invalid character set specified.");
 
 				_svc ??= ClientFactory.CreateServiceManager(_connectionStringOptions);
@@ -103,14 +116,15 @@ public abstract class FbService {
 				_svc.WarningMessage = OnWarningMessage;
 				State = FbServiceState.Open;
 		}
-		private protected async Task OpenAsync(CancellationToken cancellationToken = default) {
-				if(State != FbServiceState.Closed)
+		private protected async Task OpenAsync(CancellationToken cancellationToken = default)
+		{
+				if (State != FbServiceState.Closed)
 						throw new InvalidOperationException("Service already open.");
-				if(string.IsNullOrEmpty(_connectionStringOptions.UserID))
+				if (string.IsNullOrEmpty(_connectionStringOptions.UserID))
 						throw new InvalidOperationException("No user name was specified.");
-				if(string.IsNullOrEmpty(_connectionStringOptions.Password))
+				if (string.IsNullOrEmpty(_connectionStringOptions.Password))
 						throw new InvalidOperationException("No user password was specified.");
-				if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+				if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 						throw new ArgumentException("Invalid character set specified.");
 
 				_svc ??= await ClientFactory.CreateServiceManagerAsync(_connectionStringOptions, cancellationToken).ConfigureAwait(false);
@@ -119,16 +133,20 @@ public abstract class FbService {
 				State = FbServiceState.Open;
 		}
 
-		private protected void Close() {
-				if(State != FbServiceState.Open) {
+		private protected void Close()
+		{
+				if (State != FbServiceState.Open)
+				{
 						return;
 				}
 				_svc.Detach();
 				_svc = null;
 				State = FbServiceState.Closed;
 		}
-		private protected async Task CloseAsync(CancellationToken cancellationToken = default) {
-				if(State != FbServiceState.Open) {
+		private protected async Task CloseAsync(CancellationToken cancellationToken = default)
+		{
+				if (State != FbServiceState.Open)
+				{
 						return;
 				}
 				await _svc.DetachAsync(cancellationToken).ConfigureAwait(false);
@@ -136,38 +154,48 @@ public abstract class FbService {
 				State = FbServiceState.Closed;
 		}
 
-		private protected void StartTask(ServiceParameterBufferBase spb) {
-				if(State == FbServiceState.Closed)
+		private protected void StartTask(ServiceParameterBufferBase spb)
+		{
+				if (State == FbServiceState.Closed)
 						throw new InvalidOperationException("Service is closed.");
 
 				Service.Start(spb);
 		}
-		private protected async Task StartTaskAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
-				if(State == FbServiceState.Closed)
+		private protected async Task StartTaskAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
+				if (State == FbServiceState.Closed)
 						throw new InvalidOperationException("Service is closed.");
 
 				await Service.StartAsync(spb, cancellationToken).ConfigureAwait(false);
 		}
 
-		private protected List<object> Query(byte[] items, ServiceParameterBufferBase spb) {
+		private protected List<object> Query(byte[] items, ServiceParameterBufferBase spb)
+		{
 				var result = new List<object>();
-				Query(items, spb, (truncated, item) => {
-						if(item is string stringItem) {
-								if(!truncated) {
+				Query(items, spb, (truncated, item) =>
+				{
+						if (item is string stringItem)
+						{
+								if (!truncated)
+								{
 										result.Add(stringItem);
 								}
-								else {
+								else
+								{
 										string lastValue = result[result.Count - 1] as string;
 										result[result.Count - 1] = lastValue + stringItem;
 								}
 								return;
 						}
 
-						if(item is byte[] byteArrayItem) {
-								if(!truncated) {
+						if (item is byte[] byteArrayItem)
+						{
+								if (!truncated)
+								{
 										result.Add(byteArrayItem);
 								}
-								else {
+								else
+								{
 										byte[] lastValue = result[result.Count - 1] as byte[];
 										int lastValueLength = lastValue.Length;
 										Array.Resize(ref lastValue, lastValue.Length + byteArrayItem.Length);
@@ -180,25 +208,33 @@ public abstract class FbService {
 				});
 				return result;
 		}
-		private protected async Task<List<object>> QueryAsync(byte[] items, ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
+		private protected async Task<List<object>> QueryAsync(byte[] items, ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
 				var result = new List<object>();
-				await QueryAsync(items, spb, (truncated, item) => {
-						if(item is string stringItem) {
-								if(!truncated) {
+				await QueryAsync(items, spb, (truncated, item) =>
+				{
+						if (item is string stringItem)
+						{
+								if (!truncated)
+								{
 										result.Add(stringItem);
 								}
-								else {
+								else
+								{
 										string lastValue = result[result.Count - 1] as string;
 										result[result.Count - 1] = lastValue + stringItem;
 								}
 								return Task.CompletedTask;
 						}
 
-						if(item is byte[] byteArrayItem) {
-								if(!truncated) {
+						if (item is byte[] byteArrayItem)
+						{
+								if (!truncated)
+								{
 										result.Add(byteArrayItem);
 								}
-								else {
+								else
+								{
 										byte[] lastValue = result[result.Count - 1] as byte[];
 										int lastValueLength = lastValue.Length;
 										Array.Resize(ref lastValue, lastValue.Length + byteArrayItem.Length);
@@ -214,29 +250,34 @@ public abstract class FbService {
 				return result;
 		}
 
-		private protected void Query(byte[] items, ServiceParameterBufferBase spb, Action<bool, object> queryResponseAction) {
+		private protected void Query(byte[] items, ServiceParameterBufferBase spb, Action<bool, object> queryResponseAction)
+		{
 				int pos = 0;
 				bool truncated = false;
 				byte[] buffer = QueryService(items, spb);
 
 				int type;
-				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						if(type == IscCodes.isc_info_truncated) {
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				{
+						if (type == IscCodes.isc_info_truncated)
+						{
 								buffer = QueryService(items, spb);
 								pos = 0;
 								truncated = true;
 								continue;
 						}
 
-						switch(type) {
+						switch (type)
+						{
 								case IscCodes.isc_info_svc_version:
 								case IscCodes.isc_info_svc_get_license_mask:
 								case IscCodes.isc_info_svc_capabilities:
-								case IscCodes.isc_info_svc_get_licensed_users: {
+								case IscCodes.isc_info_svc_get_licensed_users:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
-												queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4));
+												queryResponseAction(truncated, (int) IscHelper.VaxInteger(buffer, pos, 4));
 												pos += length;
 												truncated = false;
 												break;
@@ -248,18 +289,20 @@ public abstract class FbService {
 								case IscCodes.isc_info_svc_get_env_lock:
 								case IscCodes.isc_info_svc_get_env_msg:
 								case IscCodes.isc_info_svc_user_dbpath:
-								case IscCodes.isc_info_svc_line: {
+								case IscCodes.isc_info_svc_line:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length));
 												pos += length;
 												truncated = false;
 												break;
 										}
-								case IscCodes.isc_info_svc_to_eof: {
+								case IscCodes.isc_info_svc_to_eof:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												byte[] block = new byte[length];
 												Array.Copy(buffer, pos, block, 0, length);
@@ -269,41 +312,46 @@ public abstract class FbService {
 												break;
 										}
 
-								case IscCodes.isc_info_svc_svr_db_info: {
+								case IscCodes.isc_info_svc_svr_db_info:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset));
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_get_users: {
+								case IscCodes.isc_info_svc_get_users:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset));
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_get_config: {
+								case IscCodes.isc_info_svc_get_config:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset));
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_stdin: {
+								case IscCodes.isc_info_svc_stdin:
+										{
 												int length = GetLength(buffer, 4, ref pos);
 												queryResponseAction(truncated, length);
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_data_not_ready: {
+								case IscCodes.isc_info_data_not_ready:
+										{
 												queryResponseAction(truncated, typeof(void));
 												truncated = false;
 												break;
@@ -311,29 +359,34 @@ public abstract class FbService {
 						}
 				}
 		}
-		private protected async Task QueryAsync(byte[] items, ServiceParameterBufferBase spb, Func<bool, object, Task> queryResponseAction, CancellationToken cancellationToken = default) {
+		private protected async Task QueryAsync(byte[] items, ServiceParameterBufferBase spb, Func<bool, object, Task> queryResponseAction, CancellationToken cancellationToken = default)
+		{
 				int pos = 0;
 				bool truncated = false;
 				byte[] buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
 
 				int type;
-				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						if(type == IscCodes.isc_info_truncated) {
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				{
+						if (type == IscCodes.isc_info_truncated)
+						{
 								buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
 								pos = 0;
 								truncated = true;
 								continue;
 						}
 
-						switch(type) {
+						switch (type)
+						{
 								case IscCodes.isc_info_svc_version:
 								case IscCodes.isc_info_svc_get_license_mask:
 								case IscCodes.isc_info_svc_capabilities:
-								case IscCodes.isc_info_svc_get_licensed_users: {
+								case IscCodes.isc_info_svc_get_licensed_users:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
-												await queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
+												await queryResponseAction(truncated, (int) IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
 												pos += length;
 												truncated = false;
 												break;
@@ -345,18 +398,20 @@ public abstract class FbService {
 								case IscCodes.isc_info_svc_get_env_lock:
 								case IscCodes.isc_info_svc_get_env_msg:
 								case IscCodes.isc_info_svc_user_dbpath:
-								case IscCodes.isc_info_svc_line: {
+								case IscCodes.isc_info_svc_line:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												await queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length)).ConfigureAwait(false);
 												pos += length;
 												truncated = false;
 												break;
 										}
-								case IscCodes.isc_info_svc_to_eof: {
+								case IscCodes.isc_info_svc_to_eof:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												byte[] block = new byte[length];
 												Array.Copy(buffer, pos, block, 0, length);
@@ -366,41 +421,46 @@ public abstract class FbService {
 												break;
 										}
 
-								case IscCodes.isc_info_svc_svr_db_info: {
+								case IscCodes.isc_info_svc_svr_db_info:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												await queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_get_users: {
+								case IscCodes.isc_info_svc_get_users:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												await queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_get_config: {
+								case IscCodes.isc_info_svc_get_config:
+										{
 												int length = GetLength(buffer, 2, ref pos);
-												if(length == 0)
+												if (length == 0)
 														continue;
 												await queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_svc_stdin: {
+								case IscCodes.isc_info_svc_stdin:
+										{
 												int length = GetLength(buffer, 4, ref pos);
 												await queryResponseAction(truncated, length).ConfigureAwait(false);
 												truncated = false;
 												break;
 										}
 
-								case IscCodes.isc_info_data_not_ready: {
+								case IscCodes.isc_info_data_not_ready:
+										{
 												await queryResponseAction(truncated, typeof(void)).ConfigureAwait(false);
 												truncated = false;
 												break;
@@ -409,42 +469,51 @@ public abstract class FbService {
 				}
 		}
 
-		private protected void ProcessServiceOutput(ServiceParameterBufferBase spb) {
+		private protected void ProcessServiceOutput(ServiceParameterBufferBase spb)
+		{
 				string line;
-				while((line = GetNextLine(spb)) != null) {
+				while ((line = GetNextLine(spb)) != null)
+				{
 						OnServiceOutput(line);
 				}
 		}
-		private protected async Task ProcessServiceOutputAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
+		private protected async Task ProcessServiceOutputAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
 				string line;
-				while((line = await GetNextLineAsync(spb, cancellationToken).ConfigureAwait(false)) != null) {
+				while ((line = await GetNextLineAsync(spb, cancellationToken).ConfigureAwait(false)) != null)
+				{
 						OnServiceOutput(line);
 				}
 		}
 
-		private protected string GetNextLine(ServiceParameterBufferBase spb) {
+		private protected string GetNextLine(ServiceParameterBufferBase spb)
+		{
 				var info = Query([IscCodes.isc_info_svc_line], spb);
 				return info.Count == 0 ? null : info[0] as string;
 		}
-		private protected async Task<string> GetNextLineAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
+		private protected async Task<string> GetNextLineAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
 				var info = await QueryAsync([IscCodes.isc_info_svc_line], spb, cancellationToken).ConfigureAwait(false);
 				return info.Count == 0 ? null : info[0] as string;
 		}
 
 		private protected void OnServiceOutput(string message) => ServiceOutput?.Invoke(this, new ServiceOutputEventArgs(message));
 
-		private protected void EnsureDatabase() {
-				if(string.IsNullOrEmpty(ConnectionStringOptions.Database))
+		private protected void EnsureDatabase()
+		{
+				if (string.IsNullOrEmpty(ConnectionStringOptions.Database))
 						throw FbException.Create("Action should be executed against a specific database.");
 		}
 
-		private byte[] QueryService(byte[] items, ServiceParameterBufferBase spb) {
+		private byte[] QueryService(byte[] items, ServiceParameterBufferBase spb)
+		{
 				byte[] buffer = new byte[QueryBufferSize];
 				Service.Query(spb, items.Length, items, buffer.Length, buffer);
 				return buffer;
 
 		}
-		private async Task<byte[]> QueryServiceAsync(byte[] items, ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
+		private async Task<byte[]> QueryServiceAsync(byte[] items, ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
 				byte[] buffer = new byte[QueryBufferSize];
 				await Service.QueryAsync(spb, items.Length, items, buffer.Length, buffer, cancellationToken).ConfigureAwait(false);
 				return buffer;
@@ -452,19 +521,22 @@ public abstract class FbService {
 
 		private void OnWarningMessage(IscException warning) => InfoMessage?.Invoke(this, new FbInfoMessageEventArgs(warning));
 
-		private static FbServerConfig ParseServerConfig(byte[] buffer, ref int pos, Charset charset) {
+		private static FbServerConfig ParseServerConfig(byte[] buffer, ref int pos, Charset charset)
+		{
 				var config = new FbServerConfig();
 
 				pos = 1;
-				while(buffer[pos] != IscCodes.isc_info_flag_end) {
+				while (buffer[pos] != IscCodes.isc_info_flag_end)
+				{
 						pos++;
 
 						int key = buffer[pos - 1];
-						int keyValue = (int)IscHelper.VaxInteger(buffer, pos, 4);
+						int keyValue = (int) IscHelper.VaxInteger(buffer, pos, 4);
 
 						pos += 4;
 
-						switch(key) {
+						switch (key)
+						{
 								case IscCodes.ISCCFG_LOCKMEM_KEY:
 										config.LockMemSize = keyValue;
 										break;
@@ -548,15 +620,18 @@ public abstract class FbService {
 				return config;
 		}
 
-		private static FbDatabasesInfo ParseDatabasesInfo(byte[] buffer, ref int pos, Charset charset) {
+		private static FbDatabasesInfo ParseDatabasesInfo(byte[] buffer, ref int pos, Charset charset)
+		{
 				var dbInfo = new FbDatabasesInfo();
 				pos = 1;
 
 				int type;
-				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						switch(type) {
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				{
+						switch (type)
+						{
 								case IscCodes.isc_spb_num_att:
-										dbInfo.ConnectionCount = (int)IscHelper.VaxInteger(buffer, pos, 4);
+										dbInfo.ConnectionCount = (int) IscHelper.VaxInteger(buffer, pos, 4);
 										pos += 4;
 										break;
 
@@ -565,7 +640,7 @@ public abstract class FbService {
 										break;
 
 								case IscCodes.isc_spb_dbname:
-										int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+										int length = (int) IscHelper.VaxInteger(buffer, pos, 2);
 										pos += 2;
 										dbInfo.AddDatabase(charset.GetString(buffer, pos, length));
 										pos += length;
@@ -578,17 +653,22 @@ public abstract class FbService {
 				return dbInfo;
 		}
 
-		private static FbUserData[] ParseUserData(byte[] buffer, ref int pos, Charset charset) {
+		private static FbUserData[] ParseUserData(byte[] buffer, ref int pos, Charset charset)
+		{
 				var users = new List<FbUserData>();
 				FbUserData currentUser = null;
 				int type;
-				while((type = buffer[pos++]) != IscCodes.isc_info_end) {
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				{
 						int length;
-						switch(type) {
-								case IscCodes.isc_spb_sec_username: {
-												length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+						switch (type)
+						{
+								case IscCodes.isc_spb_sec_username:
+										{
+												length = (int) IscHelper.VaxInteger(buffer, pos, 2);
 												pos += 2;
-												currentUser = new FbUserData {
+												currentUser = new FbUserData
+												{
 														UserName = charset.GetString(buffer, pos, length)
 												};
 												pos += length;
@@ -598,33 +678,33 @@ public abstract class FbService {
 										break;
 
 								case IscCodes.isc_spb_sec_firstname:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+										length = (int) IscHelper.VaxInteger(buffer, pos, 2);
 										pos += 2;
 										currentUser.FirstName = charset.GetString(buffer, pos, length);
 										pos += length;
 										break;
 
 								case IscCodes.isc_spb_sec_middlename:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+										length = (int) IscHelper.VaxInteger(buffer, pos, 2);
 										pos += 2;
 										currentUser.MiddleName = charset.GetString(buffer, pos, length);
 										pos += length;
 										break;
 
 								case IscCodes.isc_spb_sec_lastname:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+										length = (int) IscHelper.VaxInteger(buffer, pos, 2);
 										pos += 2;
 										currentUser.LastName = charset.GetString(buffer, pos, length);
 										pos += length;
 										break;
 
 								case IscCodes.isc_spb_sec_userid:
-										currentUser.UserID = (int)IscHelper.VaxInteger(buffer, pos, 4);
+										currentUser.UserID = (int) IscHelper.VaxInteger(buffer, pos, 4);
 										pos += 4;
 										break;
 
 								case IscCodes.isc_spb_sec_groupid:
-										currentUser.GroupID = (int)IscHelper.VaxInteger(buffer, pos, 4);
+										currentUser.GroupID = (int) IscHelper.VaxInteger(buffer, pos, 4);
 										pos += 4;
 										break;
 						}
@@ -635,8 +715,9 @@ public abstract class FbService {
 				return [.. users];
 		}
 
-		private static int GetLength(byte[] buffer, int size, ref int pos) {
-				int result = (int)IscHelper.VaxInteger(buffer, pos, size);
+		private static int GetLength(byte[] buffer, int size, ref int pos)
+		{
+				int result = (int) IscHelper.VaxInteger(buffer, pos, size);
 				pos += size;
 				return result;
 		}

@@ -23,26 +23,30 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class TypeEncoder {
-		public static object EncodeDecimal(decimal d, int scale, int type) {
+internal static class TypeEncoder
+{
+		public static object EncodeDecimal(decimal d, int scale, int type)
+		{
 				int shift = scale < 0 ? -scale : scale;
 
-				return (type & ~1) switch {
-						IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
-						IscCodes.SQL_LONG => (int)DecimalShiftHelper.ShiftDecimalRight(d, shift),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long)DecimalShiftHelper.ShiftDecimalRight(d, shift),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double)d,
-						IscCodes.SQL_INT128 => (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+				return (type & ~1) switch
+				{
+						IscCodes.SQL_SHORT => (short) DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_LONG => (int) DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long) DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double) d,
+						IscCodes.SQL_INT128 => (BigInteger) DecimalShiftHelper.ShiftDecimalRight(d, shift),
 						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
 				};
 		}
 
-		public static int EncodeTime(TimeSpan t) => (int)(t.Ticks / 1000L);
+		public static int EncodeTime(TimeSpan t) => (int) (t.Ticks / 1000L);
 #if NET6_0_OR_GREATER
-		public static int EncodeTime(TimeOnly t) => (int)(t.Ticks / 1000L);
+		public static int EncodeTime(TimeOnly t) => (int) (t.Ticks / 1000L);
 #endif
 
-		public static int EncodeDate(DateTime d) {
+		public static int EncodeDate(DateTime d)
+		{
 				var calendar = new GregorianCalendar();
 				int day = calendar.GetDayOfMonth(d);
 				int month = calendar.GetMonth(d);
@@ -52,11 +56,14 @@ internal static class TypeEncoder {
 #if NET6_0_OR_GREATER
 		public static int EncodeDate(DateOnly d) => EncodeDateImpl(d.Year, d.Month, d.Day);
 #endif
-		static int EncodeDateImpl(int year, int month, int day) {
-				if(month > 2) {
+		static int EncodeDateImpl(int year, int month, int day)
+		{
+				if (month > 2)
+				{
 						month -= 3;
 				}
-				else {
+				else
+				{
 						month += 9;
 						year -= 1;
 				}
@@ -67,11 +74,12 @@ internal static class TypeEncoder {
 				return 146097 * c / 4 + 1461 * ya / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001;
 		}
 
-		public static byte[] EncodeBoolean(bool value) => [(byte)(value ? 1 : 0)];
+		public static byte[] EncodeBoolean(bool value) => [(byte) (value ? 1 : 0)];
 
-		public static void EncodeBoolean(bool value, Span<byte> destination) => destination[0] = (byte)(value ? 1 : 0);
+		public static void EncodeBoolean(bool value, Span<byte> destination) => destination[0] = (byte) (value ? 1 : 0);
 
-		public static byte[] EncodeGuid(Guid value) {
+		public static byte[] EncodeGuid(Guid value)
+		{
 				byte[] data = value.ToByteArray();
 				byte[] a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
 				byte[] b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
@@ -85,7 +93,8 @@ internal static class TypeEncoder {
 				];
 		}
 
-		public static void EncodeGuid(Guid value, Span<byte> destination) {
+		public static void EncodeGuid(Guid value, Span<byte> destination)
+		{
 				Span<byte> data = stackalloc byte[16];
 				_ = value.TryWriteBytes(data);
 
@@ -111,25 +120,31 @@ internal static class TypeEncoder {
 
 		public static void EncodeInt64(long value, Span<byte> destination) => BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value));
 
-		public static byte[] EncodeDec16(FbDecFloat value) {
+		public static byte[] EncodeDec16(FbDecFloat value)
+		{
 				byte[] result = DecimalCodec.DecFloat16.EncodeDecimal(value);
-				if(BitConverter.IsLittleEndian) {
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(result);
 				}
 				return result;
 		}
 
-		public static byte[] EncodeDec34(FbDecFloat value) {
+		public static byte[] EncodeDec34(FbDecFloat value)
+		{
 				byte[] result = DecimalCodec.DecFloat34.EncodeDecimal(value);
-				if(BitConverter.IsLittleEndian) {
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(result);
 				}
 				return result;
 		}
 
-		public static byte[] EncodeInt128(BigInteger value) {
+		public static byte[] EncodeInt128(BigInteger value)
+		{
 				byte[] result = Int128Helper.GetBytes(value);
-				if(BitConverter.IsLittleEndian) {
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(result);
 				}
 				return result;

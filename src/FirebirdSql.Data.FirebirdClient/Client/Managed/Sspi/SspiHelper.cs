@@ -27,12 +27,14 @@ namespace FirebirdSql.Data.Client.Managed.Sspi;
 /// </summary>
 /// <param name="securityPackage">Name of security package (e.g. NTLM, Kerberos, ...)</param>
 /// <param name="remotePrincipal">SPN of server (may be necessary for Kerberos</param>
-internal sealed partial class SspiHelper(string securityPackage, string remotePrincipal) : IDisposable {
+internal sealed partial class SspiHelper(string securityPackage, string remotePrincipal) : IDisposable
+{
 		public string Name { get; } = "Win_Sspi";
 
 		private const int SECBUFFER_VERSION = 0;
 
-		private enum SecBufferType {
+		private enum SecBufferType
+		{
 				SECBUFFER_EMPTY = 0,
 				SECBUFFER_DATA = 1,
 				SECBUFFER_TOKEN = 2,
@@ -42,7 +44,8 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		[StructLayout(LayoutKind.Sequential)]
 #pragma warning disable CS9113 // Параметр не прочитан.
-		public struct SecHandle(int? dummy = null) {
+		public struct SecHandle(int? dummy = null)
+		{
 #pragma warning restore CS9113 // Параметр не прочитан.
 				public IntPtr LowPart = IntPtr.Zero;
 				public IntPtr HighPart = IntPtr.Zero;
@@ -52,38 +55,46 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		[StructLayout(LayoutKind.Sequential)]
 #pragma warning disable CS9113 // Параметр не прочитан.
-		public struct SecInteger(int? dummy = null) {
+		public struct SecInteger(int? dummy = null)
+		{
 #pragma warning restore CS9113 // Параметр не прочитан.
 				public uint LowPart = 0;
 				public int HighPart = 0;
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
-		private struct SecBuffer(int bufferSize) : IDisposable {
+		private struct SecBuffer(int bufferSize) : IDisposable
+		{
 				private readonly int cbBuffer = bufferSize;
-				private readonly int bufferType = (int)SecBufferType.SECBUFFER_TOKEN;
+				private readonly int bufferType = (int) SecBufferType.SECBUFFER_TOKEN;
 				private IntPtr pvBuffer = Marshal.AllocHGlobal(bufferSize);
 
 				public SecBuffer(byte[] secBufferBytes)
-			: this(secBufferBytes.Length) {
+			: this(secBufferBytes.Length)
+				{
 						Marshal.Copy(secBufferBytes, 0, pvBuffer, cbBuffer);
 				}
 
 				public SecBuffer(byte[] secBufferBytes, SecBufferType bufferType)
-					: this(secBufferBytes) {
-						this.bufferType = (int)bufferType;
+					: this(secBufferBytes)
+				{
+						this.bufferType = (int) bufferType;
 				}
 
-				public void Dispose() {
-						if(pvBuffer != IntPtr.Zero) {
+				public void Dispose()
+				{
+						if (pvBuffer != IntPtr.Zero)
+						{
 								Marshal.FreeHGlobal(pvBuffer);
 								pvBuffer = IntPtr.Zero;
 						}
 				}
 
-				public readonly byte[] GetBytes() {
+				public readonly byte[] GetBytes()
+				{
 						byte[] buffer = null;
-						if(cbBuffer > 0) {
+						if (cbBuffer > 0)
+						{
 								buffer = new byte[cbBuffer];
 								Marshal.Copy(pvBuffer, buffer, 0, cbBuffer);
 						}
@@ -92,12 +103,14 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		}
 
 		[StructLayout(LayoutKind.Sequential)]
-		private struct SecBufferDesc : IDisposable {
+		private struct SecBufferDesc : IDisposable
+		{
 				public int ulVersion;
 				public int cBuffers;
 				public IntPtr pBuffers;
 
-				public SecBufferDesc(int bufferSize) {
+				public SecBufferDesc(int bufferSize)
+				{
 						ulVersion = SECBUFFER_VERSION;
 						cBuffers = 1;
 						var secBuffer = new SecBuffer(bufferSize);
@@ -105,7 +118,8 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 						Marshal.StructureToPtr(secBuffer, pBuffers, false);
 				}
 
-				public SecBufferDesc(byte[] secBufferBytes) {
+				public SecBufferDesc(byte[] secBufferBytes)
+				{
 						ulVersion = SECBUFFER_VERSION;
 						cBuffers = 1;
 						var secBuffer = new SecBuffer(secBufferBytes);
@@ -113,8 +127,10 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 						Marshal.StructureToPtr(secBuffer, pBuffers, false);
 				}
 
-				public void Dispose() {
-						if(pBuffers != IntPtr.Zero) {
+				public void Dispose()
+				{
+						if (pBuffers != IntPtr.Zero)
+						{
 								var secBuffer = Marshal.PtrToStructure<SecBuffer>(pBuffers);
 								secBuffer.Dispose();
 								Marshal.FreeHGlobal(pBuffers);
@@ -122,8 +138,9 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 						}
 				}
 
-				public readonly byte[] GetSecBufferBytes() {
-						if(pBuffers == IntPtr.Zero)
+				public readonly byte[] GetSecBufferBytes()
+				{
+						if (pBuffers == IntPtr.Zero)
 								throw new ObjectDisposedException(nameof(SecBufferDesc));
 						var secBuffer = Marshal.PtrToStructure<SecBuffer>(pBuffers);
 						return secBuffer.GetBytes();
@@ -265,13 +282,15 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		/// Creates client security context and returns "client token"
 		/// </summary>
 		/// <returns>Client authentication data to be sent to server</returns>
-		public byte[] InitializeClientSecurity() {
+		public byte[] InitializeClientSecurity()
+		{
 				EnsureDisposed();
 				CloseClientContext();
 				InitializeClientCredentials();
 				_clientContext = new SecHandle();
 				var clientTokenBuf = new SecBufferDesc(MAX_TOKEN_SIZE);
-				try {
+				try
+				{
 						int resCode = InitializeSecurityContext(
 							ref _clientCredentials,
 							IntPtr.Zero,
@@ -286,10 +305,11 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 							out uint contextAttributes,
 							out var expiry);
 						return resCode is not SEC_E_OK and not SEC_I_CONTINUE_NEEDED
-								?                throw new Exception($"{nameof(InitializeSecurityContext)} failed")
+								? throw new Exception($"{nameof(InitializeSecurityContext)} failed")
 								: clientTokenBuf.GetSecBufferBytes();
 				}
-				finally {
+				finally
+				{
 						clientTokenBuf.Dispose();
 				}
 		}
@@ -301,14 +321,17 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		/// </summary>
 		/// <param name="serverToken">Authentication data received from server</param>
 		/// <returns>Client authentication data to be sent to server</returns>
-		public byte[] GetClientSecurity(byte[] serverToken) {
+		public byte[] GetClientSecurity(byte[] serverToken)
+		{
 				EnsureDisposed();
-				if(_clientContext.IsInvalid)
+				if (_clientContext.IsInvalid)
 						throw new InvalidOperationException($"{nameof(InitializeClientSecurity)} not called");
 				var clientTokenBuf = new SecBufferDesc(MAX_TOKEN_SIZE);
-				try {
+				try
+				{
 						var serverTokenBuf = new SecBufferDesc(serverToken);
-						try {
+						try
+						{
 								int resCode = InitializeSecurityContext(
 									ref _clientCredentials,
 									ref _clientContext,
@@ -323,19 +346,22 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 									out uint contextAttributes,
 									out var expiry);
 								return resCode is not SEC_E_OK and not SEC_I_CONTINUE_NEEDED
-										?                    throw new Exception($"{nameof(InitializeSecurityContext)} failed")
+										? throw new Exception($"{nameof(InitializeSecurityContext)} failed")
 										: clientTokenBuf.GetSecBufferBytes();
 						}
-						finally {
+						finally
+						{
 								serverTokenBuf.Dispose();
 						}
 				}
-				finally {
+				finally
+				{
 						clientTokenBuf.Dispose();
 				}
 		}
 
-		public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken) {
+		public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken)
+		{
 				// Bridge for span-based callers; small and called infrequently in auth flow.
 				byte[] arr = serverToken.ToArray();
 				return GetClientSecurity(arr);
@@ -345,7 +371,8 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		#region Finalizer
 
-		~SspiHelper() {
+		~SspiHelper()
+		{
 				Dispose(false);
 		}
 
@@ -353,7 +380,8 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		#region IDisposable Members
 
-		public void Dispose() {
+		public void Dispose()
+		{
 				Dispose(true);
 				GC.SuppressFinalize(this);
 		}
@@ -362,35 +390,41 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 		#region Private methods
 
-		private void Dispose(bool disposing) {
-				if(!_disposed) {
+		private void Dispose(bool disposing)
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
 						CloseClientContext();
 						CloseClientCredentials();
 				}
 		}
 
-		private void InitializeClientCredentials() {
+		private void InitializeClientCredentials()
+		{
 				_clientCredentials = new SecHandle();
 				int resCode = AcquireCredentialsHandle(null, _securityPackage, SECPKG_CRED_OUTBOUND,
 					IntPtr.Zero, IntPtr.Zero, 0, IntPtr.Zero,
 					out _clientCredentials, out var expiry);
-				if(resCode != SEC_E_OK)
+				if (resCode != SEC_E_OK)
 						throw new Exception($"{nameof(AcquireCredentialsHandle)} failed");
 		}
 
-		private void CloseClientContext() {
-				if(!_clientContext.IsInvalid)
+		private void CloseClientContext()
+		{
+				if (!_clientContext.IsInvalid)
 						_ = DeleteSecurityContext(ref _clientContext);
 		}
 
-		private void CloseClientCredentials() {
-				if(!_clientCredentials.IsInvalid)
+		private void CloseClientCredentials()
+		{
+				if (!_clientCredentials.IsInvalid)
 						_ = FreeCredentialsHandle(ref _clientCredentials);
 		}
 
-		private void EnsureDisposed() {
-				if(_disposed)
+		private void EnsureDisposed()
+		{
+				if (_disposed)
 						throw new ObjectDisposedException(nameof(SspiHelper));
 		}
 

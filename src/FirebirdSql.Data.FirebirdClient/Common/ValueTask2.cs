@@ -19,7 +19,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class ValueTask2 {
+internal static class ValueTask2
+{
 		public static ValueTask<TResult> FromResult<TResult>(TResult result) =>
 #if NET48 || NETSTANDARD2_0 || NETSTANDARD2_1
 			new ValueTask<TResult>(result);

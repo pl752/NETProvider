@@ -25,7 +25,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version10;
 
-internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.Charset, connection.PacketSize, connection.Dialect) {
+internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.Charset, connection.PacketSize, connection.Dialect)
+{
 		protected const int PartnerIdentification = 0;
 		protected const int AddressOfAstRoutine = 0;
 		protected const int ArgumentToAstRoutine = 0;
@@ -61,34 +62,42 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Attach/Detach Methods
 
-		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
-				try {
+		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+		{
+				try
+				{
 						SendAttachToBuffer(dpb, database);
 						Xdr.Flush();
-						ProcessAttachResponse((GenericResponse)ReadResponse());
+						ProcessAttachResponse((GenericResponse) ReadResponse());
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						SafelyDetach();
 						throw;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						SafelyDetach();
 						throw IscException.ForIOException(ex);
 				}
 
 				AfterAttachActions();
 		}
-		public override async ValueTask AttachAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask AttachAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await SendAttachToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						await ProcessAttachResponseAsync((GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+						await ProcessAttachResponseAsync((GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException) {
+				catch (IscException)
+				{
 						await SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
 						throw;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						await SafelyDetachAsync(cancellationToken).ConfigureAwait(false);
 						throw IscException.ForIOException(ex);
 				}
@@ -96,19 +105,23 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 				await AfterAttachActionsAsync(cancellationToken).ConfigureAwait(false);
 		}
 
-		protected virtual void SendAttachToBuffer(DatabaseParameterBufferBase dpb, string database) {
+		protected virtual void SendAttachToBuffer(DatabaseParameterBufferBase dpb, string database)
+		{
 				Xdr.Write(IscCodes.op_attach);
 				Xdr.Write(DatabaseObjectId);
-				if(!string.IsNullOrEmpty(AuthBlock.Password)) {
+				if (!string.IsNullOrEmpty(AuthBlock.Password))
+				{
 						dpb.Append(IscCodes.isc_dpb_password, AuthBlock.Password);
 				}
 				Xdr.WriteBuffer(dpb.Encoding.GetBytes(database));
 				Xdr.WriteBuffer(dpb.ToArray());
 		}
-		protected virtual async ValueTask SendAttachToBufferAsync(DatabaseParameterBufferBase dpb, string database, CancellationToken cancellationToken = default) {
+		protected virtual async ValueTask SendAttachToBufferAsync(DatabaseParameterBufferBase dpb, string database, CancellationToken cancellationToken = default)
+		{
 				await Xdr.WriteAsync(IscCodes.op_attach, cancellationToken).ConfigureAwait(false);
 				await Xdr.WriteAsync(DatabaseObjectId, cancellationToken).ConfigureAwait(false);
-				if(!string.IsNullOrEmpty(AuthBlock.Password)) {
+				if (!string.IsNullOrEmpty(AuthBlock.Password))
+				{
 						dpb.Append(IscCodes.isc_dpb_password, AuthBlock.Password);
 				}
 				await Xdr.WriteBufferAsync(dpb.Encoding.GetBytes(database), cancellationToken).ConfigureAwait(false);
@@ -116,7 +129,8 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		}
 
 		protected virtual void ProcessAttachResponse(GenericResponse response) => _handle = response.ObjectHandle;
-		protected virtual ValueTask ProcessAttachResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) {
+		protected virtual ValueTask ProcessAttachResponseAsync(GenericResponse response, CancellationToken cancellationToken = default)
+		{
 				_handle = response.ObjectHandle;
 				return ValueTask2.CompletedTask;
 		}
@@ -127,35 +141,43 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => throw new NotSupportedException("Trusted Auth isn't supported on < FB2.1.");
 		public override ValueTask AttachWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => throw new NotSupportedException("Trusted Auth isn't supported on < FB2.1.");
 
-		public override void Detach() {
-				if(TransactionCount > 0) {
+		public override void Detach()
+		{
+				if (TransactionCount > 0)
+				{
 						throw IscException.ForErrorCodeIntParam(IscCodes.isc_open_trans, TransactionCount);
 				}
 
-				try {
+				try
+				{
 						CloseEventManager();
 
 						bool detach = _handle != -1;
-						if(detach) {
+						if (detach)
+						{
 								Xdr.Write(IscCodes.op_detach);
 								Xdr.Write(_handle);
 						}
 						Xdr.Write(IscCodes.op_disconnect);
 						Xdr.Flush();
-						if(detach) {
+						if (detach)
+						{
 								_ = ReadResponse();
 						}
 
 						CloseConnection();
 				}
-				catch(IOException ex) {
-						try {
+				catch (IOException ex)
+				{
+						try
+						{
 								CloseConnection();
 						}
-						catch(IOException) { }
+						catch (IOException) { }
 						throw IscException.ForIOException(ex);
 				}
-				finally {
+				finally
+				{
 						_connection = null;
 						_eventManager = null;
 						ServerVersion = null;
@@ -164,35 +186,43 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 						TransactionCount = 0;
 				}
 		}
-		public override async ValueTask DetachAsync(CancellationToken cancellationToken = default) {
-				if(TransactionCount > 0) {
+		public override async ValueTask DetachAsync(CancellationToken cancellationToken = default)
+		{
+				if (TransactionCount > 0)
+				{
 						throw IscException.ForErrorCodeIntParam(IscCodes.isc_open_trans, TransactionCount);
 				}
 
-				try {
+				try
+				{
 						await CloseEventManagerAsync(cancellationToken).ConfigureAwait(false);
 
 						bool detach = _handle != -1;
-						if(detach) {
+						if (detach)
+						{
 								await Xdr.WriteAsync(IscCodes.op_detach, cancellationToken).ConfigureAwait(false);
 								await Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						}
 						await Xdr.WriteAsync(IscCodes.op_disconnect, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						if(detach) {
+						if (detach)
+						{
 								_ = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 						}
 
 						await CloseConnectionAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
-						try {
+				catch (IOException ex)
+				{
+						try
+						{
 								await CloseConnectionAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch(IOException) { }
+						catch (IOException) { }
 						throw IscException.ForIOException(ex);
 				}
-				finally {
+				finally
+				{
 						_connection = null;
 						_eventManager = null;
 						ServerVersion = null;
@@ -202,14 +232,18 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 				}
 		}
 
-		protected internal void SafelyDetach() {
-				try {
+		protected internal void SafelyDetach()
+		{
+				try
+				{
 						Detach();
 				}
 				catch { }
 		}
-		protected internal async ValueTask SafelyDetachAsync(CancellationToken cancellationToken = default) {
-				try {
+		protected internal async ValueTask SafelyDetachAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await DetachAsync(cancellationToken).ConfigureAwait(false);
 				}
 				catch { }
@@ -219,40 +253,50 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Database Methods
 
-		public override void CreateDatabase(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
-				try {
+		public override void CreateDatabase(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+		{
+				try
+				{
 						SendCreateToBuffer(dpb, database);
 						Xdr.Flush();
-						ProcessCreateResponse((GenericResponse)ReadResponse());
+						ProcessCreateResponse((GenericResponse) ReadResponse());
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask CreateDatabaseAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask CreateDatabaseAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await SendCreateToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						await ProcessCreateResponseAsync((GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+						await ProcessCreateResponseAsync((GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		protected virtual void SendCreateToBuffer(DatabaseParameterBufferBase dpb, string database) {
+		protected virtual void SendCreateToBuffer(DatabaseParameterBufferBase dpb, string database)
+		{
 				Xdr.Write(IscCodes.op_create);
 				Xdr.Write(DatabaseObjectId);
-				if(!string.IsNullOrEmpty(AuthBlock.Password)) {
+				if (!string.IsNullOrEmpty(AuthBlock.Password))
+				{
 						dpb.Append(IscCodes.isc_dpb_password, AuthBlock.Password);
 				}
 				Xdr.WriteBuffer(dpb.Encoding.GetBytes(database));
 				Xdr.WriteBuffer(dpb.ToArray());
 		}
-		protected virtual async ValueTask SendCreateToBufferAsync(DatabaseParameterBufferBase dpb, string database, CancellationToken cancellationToken = default) {
+		protected virtual async ValueTask SendCreateToBufferAsync(DatabaseParameterBufferBase dpb, string database, CancellationToken cancellationToken = default)
+		{
 				await Xdr.WriteAsync(IscCodes.op_create, cancellationToken).ConfigureAwait(false);
 				await Xdr.WriteAsync(DatabaseObjectId, cancellationToken).ConfigureAwait(false);
-				if(!string.IsNullOrEmpty(AuthBlock.Password)) {
+				if (!string.IsNullOrEmpty(AuthBlock.Password))
+				{
 						dpb.Append(IscCodes.isc_dpb_password, AuthBlock.Password);
 				}
 				await Xdr.WriteBufferAsync(dpb.Encoding.GetBytes(database), cancellationToken).ConfigureAwait(false);
@@ -260,7 +304,8 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		}
 
 		protected void ProcessCreateResponse(GenericResponse response) => _handle = response.ObjectHandle;
-		protected ValueTask ProcessCreateResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) {
+		protected ValueTask ProcessCreateResponseAsync(GenericResponse response, CancellationToken cancellationToken = default)
+		{
 				_handle = response.ObjectHandle;
 				return ValueTask2.CompletedTask;
 		}
@@ -268,8 +313,10 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		public override void CreateDatabaseWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => throw new NotSupportedException("Trusted Auth isn't supported on < FB2.1.");
 		public override ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => throw new NotSupportedException("Trusted Auth isn't supported on < FB2.1.");
 
-		public override void DropDatabase() {
-				try {
+		public override void DropDatabase()
+		{
+				try
+				{
 						Xdr.Write(IscCodes.op_drop_database);
 						Xdr.Write(_handle);
 						Xdr.Flush();
@@ -278,12 +325,15 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						_handle = -1;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask DropDatabaseAsync(CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask DropDatabaseAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await Xdr.WriteAsync(IscCodes.op_drop_database, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -292,7 +342,8 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						_handle = -1;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
@@ -301,8 +352,10 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Auxiliary Connection Methods
 
-		public virtual (int auxHandle, string ipAddress, int portNumber, int timeout) ConnectionRequest() {
-				try {
+		public virtual (int auxHandle, string ipAddress, int portNumber, int timeout) ConnectionRequest()
+		{
+				try
+				{
 						Xdr.Write(IscCodes.op_connect_request);
 						Xdr.Write(IscCodes.P_REQ_async);
 						Xdr.Write(_handle);
@@ -326,7 +379,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						Span<byte> sin_port = stackalloc byte[2];
 						Xdr.ReadBytes(sin_port, 2);
-						ushort portNumber = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port));
+						ushort portNumber = (ushort) IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port));
 						respLen -= 2;
 
 						// * The address returned by the server may be incorrect if it is behind a NAT box
@@ -344,12 +397,15 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						return (auxHandle, ipAddress, portNumber, _connection.Timeout);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public virtual async ValueTask<(int auxHandle, string ipAddress, int portNumber, int timeout)> ConnectionRequestAsync(CancellationToken cancellationToken = default) {
-				try {
+		public virtual async ValueTask<(int auxHandle, string ipAddress, int portNumber, int timeout)> ConnectionRequestAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await Xdr.WriteAsync(IscCodes.op_connect_request, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(IscCodes.P_REQ_async, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
@@ -373,7 +429,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						byte[] sin_port = new byte[2];
 						_ = await Xdr.ReadBytesAsync(sin_port, 2, cancellationToken).ConfigureAwait(false);
-						ushort portNumber = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port, 0));
+						ushort portNumber = (ushort) IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port, 0));
 						respLen -= 2;
 
 						// * The address returned by the server may be incorrect if it is behind a NAT box
@@ -391,7 +447,8 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						return (auxHandle, ipAddress, portNumber, _connection.Timeout);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
@@ -407,20 +464,26 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Remote Events Methods
 
-		public override void CloseEventManager() {
+		public override void CloseEventManager()
+		{
 				_eventManager?.Close();
 				_eventManager = null;
 		}
-		public override async ValueTask CloseEventManagerAsync(CancellationToken cancellationToken = default) {
-				if(_eventManager != null) {
+		public override async ValueTask CloseEventManagerAsync(CancellationToken cancellationToken = default)
+		{
+				if (_eventManager != null)
+				{
 						await _eventManager.CloseAsync(cancellationToken).ConfigureAwait(false);
 						_eventManager = null;
 				}
 		}
 
-		public override void QueueEvents(RemoteEvent remoteEvent) {
-				try {
-						if(_eventManager == null) {
+		public override void QueueEvents(RemoteEvent remoteEvent)
+		{
+				try
+				{
+						if (_eventManager == null)
+						{
 								var (auxHandle, ipAddress, portNumber, timeout) = ConnectionRequest();
 								_eventManager = new GdsEventManager(auxHandle, ipAddress, portNumber, timeout);
 								_eventManager.Open();
@@ -441,17 +504,21 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						Xdr.Flush();
 
-						var response = (GenericResponse)ReadResponse();
+						var response = (GenericResponse) ReadResponse();
 
 						remoteEvent.RemoteId = response.ObjectHandle;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask QueueEventsAsync(RemoteEvent remoteEvent, CancellationToken cancellationToken = default) {
-				try {
-						if(_eventManager == null) {
+		public override async ValueTask QueueEventsAsync(RemoteEvent remoteEvent, CancellationToken cancellationToken = default)
+		{
+				try
+				{
+						if (_eventManager == null)
+						{
 								var (auxHandle, ipAddress, portNumber, timeout) = await ConnectionRequestAsync(cancellationToken).ConfigureAwait(false);
 								_eventManager = new GdsEventManager(auxHandle, ipAddress, portNumber, timeout);
 								await _eventManager.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -472,17 +539,20 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						remoteEvent.RemoteId = response.ObjectHandle;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void CancelEvents(RemoteEvent events) {
-				try {
+		public override void CancelEvents(RemoteEvent events)
+		{
+				try
+				{
 						Xdr.Write(IscCodes.op_cancel_events);
 						Xdr.Write(_handle);
 						Xdr.Write(events.LocalId);
@@ -491,12 +561,15 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						_ = ReadResponse();
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask CancelEventsAsync(RemoteEvent events, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask CancelEventsAsync(RemoteEvent events, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await Xdr.WriteAsync(IscCodes.op_cancel_events, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(events.LocalId, cancellationToken).ConfigureAwait(false);
@@ -505,7 +578,8 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						_ = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
@@ -514,14 +588,16 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Transaction Methods
 
-		public override TransactionBase BeginTransaction(TransactionParameterBuffer tpb) {
+		public override TransactionBase BeginTransaction(TransactionParameterBuffer tpb)
+		{
 				var transaction = new GdsTransaction(this);
 
 				transaction.BeginTransaction(tpb);
 
 				return transaction;
 		}
-		public override async ValueTask<TransactionBase> BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default) {
+		public override async ValueTask<TransactionBase> BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default)
+		{
 				var transaction = new GdsTransaction(this);
 
 				await transaction.BeginTransactionAsync(tpb, cancellationToken).ConfigureAwait(false);
@@ -542,7 +618,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (GdsTransaction)transaction);
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (GdsTransaction) transaction);
 
 		#endregion
 
@@ -561,12 +637,14 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		public override List<object> GetDatabaseInfo(byte[] items) => GetDatabaseInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
 		public override ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetDatabaseInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
-		public override List<object> GetDatabaseInfo(byte[] items, int bufferLength) {
+		public override List<object> GetDatabaseInfo(byte[] items, int bufferLength)
+		{
 				byte[] buffer = new byte[bufferLength];
 				DatabaseInfo(items, buffer, buffer.Length);
 				return IscHelper.ParseDatabaseInfo(buffer, Charset);
 		}
-		public override async ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
+		public override async ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+		{
 				byte[] buffer = new byte[bufferLength];
 				await DatabaseInfoAsync(items, buffer, buffer.Length, cancellationToken).ConfigureAwait(false);
 				return IscHelper.ParseDatabaseInfo(buffer, Charset);
@@ -576,32 +654,40 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Release Object
 
-		public virtual void ReleaseObject(int op, int id) {
-				try {
+		public virtual void ReleaseObject(int op, int id)
+		{
+				try
+				{
 						SendReleaseObjectToBuffer(op, id);
 						Xdr.Flush();
 						ProcessReleaseObjectResponse(ReadResponse());
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public virtual async ValueTask ReleaseObjectAsync(int op, int id, CancellationToken cancellationToken = default) {
-				try {
+		public virtual async ValueTask ReleaseObjectAsync(int op, int id, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await SendReleaseObjectToBufferAsync(op, id, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 						await ProcessReleaseObjectResponseAsync(await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		protected virtual void SendReleaseObjectToBuffer(int op, int id) {
+		protected virtual void SendReleaseObjectToBuffer(int op, int id)
+		{
 				Xdr.Write(op);
 				Xdr.Write(id);
 		}
-		protected virtual async ValueTask SendReleaseObjectToBufferAsync(int op, int id, CancellationToken cancellationToken = default) {
+		protected virtual async ValueTask SendReleaseObjectToBufferAsync(int op, int id, CancellationToken cancellationToken = default)
+		{
 				await Xdr.WriteAsync(op, cancellationToken).ConfigureAwait(false);
 				await Xdr.WriteAsync(id, cancellationToken).ConfigureAwait(false);
 		}
@@ -616,44 +702,54 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		public virtual int ReadOperation() => Xdr.ReadOperation();
 		public virtual ValueTask<int> ReadOperationAsync(CancellationToken cancellationToken = default) => Xdr.ReadOperationAsync(cancellationToken);
 
-		public virtual IResponse ReadResponse() {
+		public virtual IResponse ReadResponse()
+		{
 				var response = ReadSingleResponse();
 				response.HandleResponseException();
 				return response;
 		}
-		public virtual async ValueTask<IResponse> ReadResponseAsync(CancellationToken cancellationToken = default) {
+		public virtual async ValueTask<IResponse> ReadResponseAsync(CancellationToken cancellationToken = default)
+		{
 				var response = await ReadSingleResponseAsync(cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
 				return response;
 		}
 
-		public virtual IResponse ReadResponse(int operation) {
+		public virtual IResponse ReadResponse(int operation)
+		{
 				var response = ReadSingleResponse(operation);
 				response.HandleResponseException();
 				return response;
 		}
-		public virtual async ValueTask<IResponse> ReadResponseAsync(int operation, CancellationToken cancellationToken = default) {
+		public virtual async ValueTask<IResponse> ReadResponseAsync(int operation, CancellationToken cancellationToken = default)
+		{
 				var response = await ReadSingleResponseAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
 				return response;
 		}
 
-		public void SafeFinishFetching(int numberOfResponses) {
-				while(numberOfResponses > 0) {
+		public void SafeFinishFetching(int numberOfResponses)
+		{
+				while (numberOfResponses > 0)
+				{
 						numberOfResponses--;
-						try {
+						try
+						{
 								_ = ReadResponse();
 						}
-						catch(IscException) { }
+						catch (IscException) { }
 				}
 		}
-		public async ValueTask SafeFinishFetchingAsync(int numberOfResponses, CancellationToken cancellationToken = default) {
-				while(numberOfResponses > 0) {
+		public async ValueTask SafeFinishFetchingAsync(int numberOfResponses, CancellationToken cancellationToken = default)
+		{
+				while (numberOfResponses > 0)
+				{
 						numberOfResponses--;
-						try {
+						try
+						{
 								_ = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch(IscException) { }
+						catch (IscException) { }
 				}
 		}
 
@@ -664,12 +760,14 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		protected IResponse ReadSingleResponse() => ReadSingleResponse(ReadOperation());
 		protected async ValueTask<IResponse> ReadSingleResponseAsync(CancellationToken cancellationToken = default) => await ReadSingleResponseAsync(await ReadOperationAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 
-		protected virtual IResponse ReadSingleResponse(int operation) {
+		protected virtual IResponse ReadSingleResponse(int operation)
+		{
 				var response = _connection.ProcessOperation(operation);
 				response.HandleResponseWarning(WarningMessage);
 				return response;
 		}
-		protected virtual async ValueTask<IResponse> ReadSingleResponseAsync(int operation, CancellationToken cancellationToken = default) {
+		protected virtual async ValueTask<IResponse> ReadSingleResponseAsync(int operation, CancellationToken cancellationToken = default)
+		{
 				var response = await _connection.ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseWarning(WarningMessage);
 				return response;
@@ -679,8 +777,10 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 		#region Private Methods
 
-		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength) {
-				try {
+		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength)
+		{
+				try
+				{
 						Xdr.Write(IscCodes.op_info_database);
 						Xdr.Write(_handle);
 						Xdr.Write(Incarnation);
@@ -689,22 +789,26 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						Xdr.Flush();
 
-						var response = (GenericResponse)ReadResponse();
+						var response = (GenericResponse) ReadResponse();
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		private async ValueTask DatabaseInfoAsync(byte[] items, byte[] buffer, int bufferLength, CancellationToken cancellationToken = default) {
-				try {
+		private async ValueTask DatabaseInfoAsync(byte[] items, byte[] buffer, int bufferLength, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await Xdr.WriteAsync(IscCodes.op_info_database, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(Incarnation, cancellationToken).ConfigureAwait(false);
@@ -713,17 +817,19 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}

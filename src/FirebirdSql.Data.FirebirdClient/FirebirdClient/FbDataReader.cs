@@ -31,7 +31,8 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbDataReader : DbDataReader {
+public sealed class FbDataReader : DbDataReader
+{
 		#region Constants
 
 		private const int StartPosition = -1;
@@ -57,11 +58,13 @@ public sealed class FbDataReader : DbDataReader {
 
 		#region DbDataReader Indexers
 
-		public override object this[int i] {
+		public override object this[int i]
+		{
 				get { return GetValue(i); }
 		}
 
-		public override object this[string name] {
+		public override object this[string name]
+		{
 				get { return GetValue(GetOrdinal(name)); }
 		}
 
@@ -72,7 +75,8 @@ public sealed class FbDataReader : DbDataReader {
 		internal FbDataReader()
 			: base() { }
 
-		internal FbDataReader(FbCommand command, FbConnection connection, CommandBehavior commandBehavior) {
+		internal FbDataReader(FbCommand command, FbConnection connection, CommandBehavior commandBehavior)
+		{
 				_position = StartPosition;
 				_command = command;
 				_connection = connection;
@@ -86,8 +90,10 @@ public sealed class FbDataReader : DbDataReader {
 
 		#region DbDataReader overriden Properties
 
-		public override int Depth {
-				get {
+		public override int Depth
+		{
+				get
+				{
 						CheckState();
 
 						return 0;
@@ -98,8 +104,10 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override bool IsClosed => _isClosed;
 
-		public override int FieldCount {
-				get {
+		public override int FieldCount
+		{
+				get
+				{
 						CheckState();
 
 						return _fields.Count;
@@ -108,8 +116,10 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override int RecordsAffected => _recordsAffected;
 
-		public override int VisibleFieldCount {
-				get {
+		public override int VisibleFieldCount
+		{
+				get
+				{
 						CheckState();
 
 						return _fields.Count;
@@ -120,19 +130,25 @@ public sealed class FbDataReader : DbDataReader {
 
 		#region DbDataReader overriden methods
 
-		public override void Close() {
-				if(!IsClosed) {
+		public override void Close()
+		{
+				if (!IsClosed)
+				{
 						_isClosed = true;
-						if(_command != null && !_command.IsDisposed) {
-								if(_command.CommandType == CommandType.StoredProcedure) {
+						if (_command != null && !_command.IsDisposed)
+						{
+								if (_command.CommandType == CommandType.StoredProcedure)
+								{
 										_command.SetOutputParameters();
 								}
-								if(_command.HasImplicitTransaction) {
+								if (_command.HasImplicitTransaction)
+								{
 										_command.CommitImplicitTransaction();
 								}
 								_command.ActiveReader = null;
 						}
-						if(_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection)) {
+						if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
+						{
 								_connection.Close();
 						}
 						_position = StartPosition;
@@ -149,18 +165,23 @@ public sealed class FbDataReader : DbDataReader {
 		public override async Task CloseAsync()
 #endif
 		{
-				if(!IsClosed) {
+				if (!IsClosed)
+				{
 						_isClosed = true;
-						if(_command != null && !_command.IsDisposed) {
-								if(_command.CommandType == CommandType.StoredProcedure) {
+						if (_command != null && !_command.IsDisposed)
+						{
+								if (_command.CommandType == CommandType.StoredProcedure)
+								{
 										await _command.SetOutputParametersAsync(CancellationToken.None).ConfigureAwait(false);
 								}
-								if(_command.HasImplicitTransaction) {
+								if (_command.HasImplicitTransaction)
+								{
 										await _command.CommitImplicitTransactionAsync(CancellationToken.None).ConfigureAwait(false);
 								}
 								_command.ActiveReader = null;
 						}
-						if(_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection)) {
+						if (_connection != null && IsCommandBehavior(CommandBehavior.CloseConnection))
+						{
 								await _connection.CloseAsync().ConfigureAwait(false);
 						}
 						_position = StartPosition;
@@ -172,58 +193,75 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		protected override void Dispose(bool disposing) {
-				if(disposing) {
+		protected override void Dispose(bool disposing)
+		{
+				if (disposing)
+				{
 						Close();
 				}
 		}
 #if !(NET48 || NETSTANDARD2_0)
-		public override async ValueTask DisposeAsync() {
+		public override async ValueTask DisposeAsync()
+		{
 				await CloseAsync().ConfigureAwait(false);
 				await base.DisposeAsync().ConfigureAwait(false);
 		}
 #endif
 
-		public override bool Read() {
+		public override bool Read()
+		{
 				CheckState();
 
-				if(IsCommandBehavior(CommandBehavior.SchemaOnly)) {
+				if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+				{
 						return false;
 				}
-				else if(IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition) {
+				else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
+				{
 						return false;
 				}
-				else {
-						using(var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command.Cancel)) {
+				else
+				{
+						using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command.Cancel))
+						{
 								_row = _command.Fetch();
-								if(_row != null) {
+								if (_row != null)
+								{
 										_position++;
 										return true;
 								}
-								else {
+								else
+								{
 										_eof = true;
 										return false;
 								}
 						}
 				}
 		}
-		public override async Task<bool> ReadAsync(CancellationToken cancellationToken) {
+		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
+		{
 				CheckState();
 
-				if(IsCommandBehavior(CommandBehavior.SchemaOnly)) {
+				if (IsCommandBehavior(CommandBehavior.SchemaOnly))
+				{
 						return false;
 				}
-				else if(IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition) {
+				else if (IsCommandBehavior(CommandBehavior.SingleRow) && _position != StartPosition)
+				{
 						return false;
 				}
-				else {
-						using(var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel)) {
+				else
+				{
+						using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel))
+						{
 								_row = await _command.FetchAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
-								if(_row != null) {
+								if (_row != null)
+								{
 										_position++;
 										return true;
 								}
-								else {
+								else
+								{
 										_eof = true;
 										return false;
 								}
@@ -231,10 +269,12 @@ public sealed class FbDataReader : DbDataReader {
 				}
 		}
 
-		public override DataTable GetSchemaTable() {
+		public override DataTable GetSchemaTable()
+		{
 				CheckState();
 
-				if(_schemaTable != null) {
+				if (_schemaTable != null)
+				{
 						return _schemaTable;
 				}
 
@@ -246,14 +286,16 @@ public sealed class FbDataReader : DbDataReader {
 
 				/* Prepare statement for schema fields information	*/
 				var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
-				try {
+				try
+				{
 						schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
 						schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
 						schemaCmd.Prepare();
 
 						_schemaTable.BeginLoadData();
 
-						for(int i = 0; i < _fields.Count; i++) {
+						for (int i = 0; i < _fields.Count; i++)
+						{
 								bool isKeyColumn = false;
 								bool isUnique = false;
 								bool isReadOnly = false;
@@ -265,8 +307,10 @@ public sealed class FbDataReader : DbDataReader {
 								schemaCmd.Parameters[1].Value = _fields[i].Name;
 
 								var reader = schemaCmd.ExecuteReader(CommandBehavior.Default);
-								try {
-										if(reader.Read()) {
+								try
+								{
+										if (reader.Read())
+										{
 												isReadOnly = IsReadOnly(reader) || IsExpression(reader);
 												isKeyColumn = reader.GetInt32(2) == 1;
 												isUnique = reader.GetInt32(3) == 1;
@@ -274,7 +318,8 @@ public sealed class FbDataReader : DbDataReader {
 												isExpression = IsExpression(reader);
 										}
 								}
-								finally {
+								finally
+								{
 #if NET48 || NETSTANDARD2_0
 					reader.Dispose();
 #else
@@ -288,9 +333,11 @@ public sealed class FbDataReader : DbDataReader {
 								schemaRow["ColumnName"] = GetName(i);
 								schemaRow["ColumnOrdinal"] = i;
 								schemaRow["ColumnSize"] = _fields[i].GetSize();
-								if(_fields[i].IsDecimal()) {
+								if (_fields[i].IsDecimal())
+								{
 										schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
-										if(precision > 0) {
+										if (precision > 0)
+										{
 												schemaRow["NumericPrecision"] = precision;
 										}
 										schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
@@ -313,7 +360,8 @@ public sealed class FbDataReader : DbDataReader {
 
 								_schemaTable.Rows.Add(schemaRow);
 
-								if(!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation) {
+								if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
+								{
 										tableCount++;
 										currentTable = _fields[i].Relation;
 								}
@@ -321,8 +369,10 @@ public sealed class FbDataReader : DbDataReader {
 								schemaCmd.Close();
 						}
 
-						if(tableCount > 1) {
-								foreach(DataRow row in _schemaTable.Rows) {
+						if (tableCount > 1)
+						{
+								foreach (DataRow row in _schemaTable.Rows)
+								{
 										row["IsKey"] = false;
 										row["IsUnique"] = false;
 								}
@@ -330,7 +380,8 @@ public sealed class FbDataReader : DbDataReader {
 
 						_schemaTable.EndLoadData();
 				}
-				finally {
+				finally
+				{
 #if NET48 || NETSTANDARD2_0
 			schemaCmd.Dispose();
 #else
@@ -348,7 +399,8 @@ public sealed class FbDataReader : DbDataReader {
 		{
 				CheckState();
 
-				if(_schemaTable != null) {
+				if (_schemaTable != null)
+				{
 						return _schemaTable;
 				}
 
@@ -360,14 +412,16 @@ public sealed class FbDataReader : DbDataReader {
 
 				/* Prepare statement for schema fields information	*/
 				var schemaCmd = new FbCommand(GetSchemaCommandText(), _command.Connection, _command.Connection.InnerConnection.ActiveTransaction);
-				try {
+				try
+				{
 						schemaCmd.Parameters.Add("@TABLE_NAME", FbDbType.Char, 31);
 						schemaCmd.Parameters.Add("@COLUMN_NAME", FbDbType.Char, 31);
 						await schemaCmd.PrepareAsync(cancellationToken).ConfigureAwait(false);
 
 						_schemaTable.BeginLoadData();
 
-						for(int i = 0; i < _fields.Count; i++) {
+						for (int i = 0; i < _fields.Count; i++)
+						{
 								bool isKeyColumn = false;
 								bool isUnique = false;
 								bool isReadOnly = false;
@@ -379,8 +433,10 @@ public sealed class FbDataReader : DbDataReader {
 								schemaCmd.Parameters[1].Value = _fields[i].Name;
 
 								var reader = await schemaCmd.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
-								try {
-										if(await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) {
+								try
+								{
+										if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+										{
 												isReadOnly = IsReadOnly(reader) || IsExpression(reader);
 												isKeyColumn = reader.GetInt32(2) == 1;
 												isUnique = reader.GetInt32(3) == 1;
@@ -388,7 +444,8 @@ public sealed class FbDataReader : DbDataReader {
 												isExpression = IsExpression(reader);
 										}
 								}
-								finally {
+								finally
+								{
 #if NET48 || NETSTANDARD2_0
 					reader.Dispose();
 #else
@@ -402,9 +459,11 @@ public sealed class FbDataReader : DbDataReader {
 								schemaRow["ColumnName"] = GetName(i);
 								schemaRow["ColumnOrdinal"] = i;
 								schemaRow["ColumnSize"] = _fields[i].GetSize();
-								if(_fields[i].IsDecimal()) {
+								if (_fields[i].IsDecimal())
+								{
 										schemaRow["NumericPrecision"] = schemaRow["ColumnSize"];
-										if(precision > 0) {
+										if (precision > 0)
+										{
 												schemaRow["NumericPrecision"] = precision;
 										}
 										schemaRow["NumericScale"] = _fields[i].NumericScale * (-1);
@@ -427,7 +486,8 @@ public sealed class FbDataReader : DbDataReader {
 
 								_schemaTable.Rows.Add(schemaRow);
 
-								if(!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation) {
+								if (!string.IsNullOrEmpty(_fields[i].Relation) && currentTable != _fields[i].Relation)
+								{
 										tableCount++;
 										currentTable = _fields[i].Relation;
 								}
@@ -435,8 +495,10 @@ public sealed class FbDataReader : DbDataReader {
 								await schemaCmd.CloseAsync().ConfigureAwait(false);
 						}
 
-						if(tableCount > 1) {
-								foreach(DataRow row in _schemaTable.Rows) {
+						if (tableCount > 1)
+						{
+								foreach (DataRow row in _schemaTable.Rows)
+								{
 										row["IsKey"] = false;
 										row["IsUnique"] = false;
 								}
@@ -444,7 +506,8 @@ public sealed class FbDataReader : DbDataReader {
 
 						_schemaTable.EndLoadData();
 				}
-				finally {
+				finally
+				{
 #if NET48 || NETSTANDARD2_0
 			schemaCmd.Dispose();
 #else
@@ -455,27 +518,31 @@ public sealed class FbDataReader : DbDataReader {
 				return _schemaTable;
 		}
 
-		public override int GetOrdinal(string name) {
+		public override int GetOrdinal(string name)
+		{
 				CheckState();
 
 				return GetColumnIndex(name);
 		}
 
-		public override string GetName(int i) {
+		public override string GetName(int i)
+		{
 				CheckState();
 				CheckIndex(i);
 
 				return _fields[i].Alias.Length > 0 ? _fields[i].Alias : _fields[i].Name;
 		}
 
-		public override string GetDataTypeName(int i) {
+		public override string GetDataTypeName(int i)
+		{
 				CheckState();
 				CheckIndex(i);
 
 				return TypeHelper.GetDataTypeName(_fields[i].DbDataType);
 		}
 
-		public override Type GetFieldType(int i) {
+		public override Type GetFieldType(int i)
+		{
 				CheckState();
 				CheckIndex(i);
 
@@ -488,20 +555,26 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override int GetProviderSpecificValues(object[] values) => GetValues(values);
 
-		public override object GetValue(int i) {
+		public override object GetValue(int i)
+		{
 				// type coercions for EF
-				if(_command.ExpectedColumnTypes != null) {
+				if (_command.ExpectedColumnTypes != null)
+				{
 						var type = _command.ExpectedColumnTypes.ElementAtOrDefault(i);
 						var nullableUnderlying = Nullable.GetUnderlyingType(type);
-						if(nullableUnderlying != null) {
-								if(IsDBNull(i)) {
+						if (nullableUnderlying != null)
+						{
+								if (IsDBNull(i))
+								{
 										return null;
 								}
-								if(nullableUnderlying == typeof(bool)) {
+								if (nullableUnderlying == typeof(bool))
+								{
 										return GetFieldValue<bool>(i);
 								}
 						}
-						if(type == typeof(bool)) {
+						if (type == typeof(bool))
+						{
 								return GetFieldValue<bool>(i);
 						}
 				}
@@ -509,172 +582,222 @@ public sealed class FbDataReader : DbDataReader {
 				return GetFieldValue<object>(i);
 		}
 
-		public override int GetValues(object[] values) {
+		public override int GetValues(object[] values)
+		{
 				int count = Math.Min(_fields.Count, values.Length);
-				for(int i = 0; i < count; i++) {
+				for (int i = 0; i < count; i++)
+				{
 						values[i] = GetValue(i);
 				}
 				return count;
 		}
 
-		public override T GetFieldValue<T>(int i) {
+		public override T GetFieldValue<T>(int i)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
 
 				var type = typeof(T);
 				type = Nullable.GetUnderlyingType(type) ?? type;
-				try {
-						if(type == typeof(bool)) {
-								return (T)(object)_row[i].GetBoolean();
+				try
+				{
+						if (type == typeof(bool))
+						{
+								return (T) (object) _row[i].GetBoolean();
 						}
-						else if(type == typeof(byte)) {
-								return (T)(object)_row[i].GetByte();
+						else if (type == typeof(byte))
+						{
+								return (T) (object) _row[i].GetByte();
 						}
-						else if(type == typeof(char)) {
-								return (T)(object)_row[i].GetChar();
+						else if (type == typeof(char))
+						{
+								return (T) (object) _row[i].GetChar();
 						}
-						else if(type == typeof(Guid)) {
-								return (T)(object)_row[i].GetGuid();
+						else if (type == typeof(Guid))
+						{
+								return (T) (object) _row[i].GetGuid();
 						}
-						else if(type == typeof(short)) {
-								return (T)(object)_row[i].GetInt16();
+						else if (type == typeof(short))
+						{
+								return (T) (object) _row[i].GetInt16();
 						}
-						else if(type == typeof(int)) {
-								return (T)(object)_row[i].GetInt32();
+						else if (type == typeof(int))
+						{
+								return (T) (object) _row[i].GetInt32();
 						}
-						else if(type == typeof(long)) {
-								return (T)(object)_row[i].GetInt64();
+						else if (type == typeof(long))
+						{
+								return (T) (object) _row[i].GetInt64();
 						}
-						else if(type == typeof(float)) {
-								return (T)(object)_row[i].GetFloat();
+						else if (type == typeof(float))
+						{
+								return (T) (object) _row[i].GetFloat();
 						}
-						else if(type == typeof(double)) {
-								return (T)(object)_row[i].GetDouble();
+						else if (type == typeof(double))
+						{
+								return (T) (object) _row[i].GetDouble();
 						}
-						else if(type == typeof(string)) {
-								return (T)(object)_row[i].GetString();
+						else if (type == typeof(string))
+						{
+								return (T) (object) _row[i].GetString();
 						}
-						else if(type == typeof(decimal)) {
-								return (T)(object)_row[i].GetDecimal();
+						else if (type == typeof(decimal))
+						{
+								return (T) (object) _row[i].GetDecimal();
 						}
-						else if(type == typeof(DateTime)) {
-								return (T)(object)_row[i].GetDateTime();
+						else if (type == typeof(DateTime))
+						{
+								return (T) (object) _row[i].GetDateTime();
 						}
-						else if(type == typeof(TimeSpan)) {
-								return (T)(object)_row[i].GetTimeSpan();
+						else if (type == typeof(TimeSpan))
+						{
+								return (T) (object) _row[i].GetTimeSpan();
 						}
-						else if(type == typeof(byte[])) {
-								return (T)(object)_row[i].GetBinary();
+						else if (type == typeof(byte[]))
+						{
+								return (T) (object) _row[i].GetBinary();
 						}
-						else if(type == typeof(FbDecFloat)) {
-								return (T)(object)_row[i].GetDecFloat();
+						else if (type == typeof(FbDecFloat))
+						{
+								return (T) (object) _row[i].GetDecFloat();
 						}
-						else if(type == typeof(BigInteger)) {
-								return (T)(object)_row[i].GetInt128();
+						else if (type == typeof(BigInteger))
+						{
+								return (T) (object) _row[i].GetInt128();
 						}
-						else if(type == typeof(FbZonedDateTime)) {
-								return (T)(object)_row[i].GetZonedDateTime();
+						else if (type == typeof(FbZonedDateTime))
+						{
+								return (T) (object) _row[i].GetZonedDateTime();
 						}
-						else if(type == typeof(FbZonedTime)) {
-								return (T)(object)_row[i].GetZonedTime();
+						else if (type == typeof(FbZonedTime))
+						{
+								return (T) (object) _row[i].GetZonedTime();
 						}
 #if NET6_0_OR_GREATER
-						else if(type == typeof(DateOnly)) {
-								return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
+						else if (type == typeof(DateOnly))
+						{
+								return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
 						}
 #endif
 #if NET6_0_OR_GREATER
-						else if(type == typeof(TimeOnly)) {
-								return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+						else if (type == typeof(TimeOnly))
+						{
+								return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
 						}
 #endif
-						else {
-								return (T)_row[i].GetValue();
+						else
+						{
+								return (T) _row[i].GetValue();
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
 
-		public override async Task<T> GetFieldValueAsync<T>(int i, CancellationToken cancellationToken) {
+		public override async Task<T> GetFieldValueAsync<T>(int i, CancellationToken cancellationToken)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
 
 				var type = typeof(T);
 				type = Nullable.GetUnderlyingType(type) ?? type;
-				try {
-						if(type == typeof(bool)) {
-								return (T)(object)_row[i].GetBoolean();
+				try
+				{
+						if (type == typeof(bool))
+						{
+								return (T) (object) _row[i].GetBoolean();
 						}
-						else if(type == typeof(byte)) {
-								return (T)(object)_row[i].GetByte();
+						else if (type == typeof(byte))
+						{
+								return (T) (object) _row[i].GetByte();
 						}
-						else if(type == typeof(char)) {
-								return (T)(object)_row[i].GetChar();
+						else if (type == typeof(char))
+						{
+								return (T) (object) _row[i].GetChar();
 						}
-						else if(type == typeof(Guid)) {
-								return (T)(object)_row[i].GetGuid();
+						else if (type == typeof(Guid))
+						{
+								return (T) (object) _row[i].GetGuid();
 						}
-						else if(type == typeof(short)) {
-								return (T)(object)_row[i].GetInt16();
+						else if (type == typeof(short))
+						{
+								return (T) (object) _row[i].GetInt16();
 						}
-						else if(type == typeof(int)) {
-								return (T)(object)_row[i].GetInt32();
+						else if (type == typeof(int))
+						{
+								return (T) (object) _row[i].GetInt32();
 						}
-						else if(type == typeof(long)) {
-								return (T)(object)_row[i].GetInt64();
+						else if (type == typeof(long))
+						{
+								return (T) (object) _row[i].GetInt64();
 						}
-						else if(type == typeof(float)) {
-								return (T)(object)_row[i].GetFloat();
+						else if (type == typeof(float))
+						{
+								return (T) (object) _row[i].GetFloat();
 						}
-						else if(type == typeof(double)) {
-								return (T)(object)_row[i].GetDouble();
+						else if (type == typeof(double))
+						{
+								return (T) (object) _row[i].GetDouble();
 						}
-						else if(type == typeof(string)) {
-								return (T)(object)await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
+						else if (type == typeof(string))
+						{
+								return (T) (object) await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
 						}
-						else if(type == typeof(decimal)) {
-								return (T)(object)_row[i].GetDecimal();
+						else if (type == typeof(decimal))
+						{
+								return (T) (object) _row[i].GetDecimal();
 						}
-						else if(type == typeof(DateTime)) {
-								return (T)(object)_row[i].GetDateTime();
+						else if (type == typeof(DateTime))
+						{
+								return (T) (object) _row[i].GetDateTime();
 						}
-						else if(type == typeof(TimeSpan)) {
-								return (T)(object)_row[i].GetTimeSpan();
+						else if (type == typeof(TimeSpan))
+						{
+								return (T) (object) _row[i].GetTimeSpan();
 						}
-						else if(type == typeof(byte[])) {
-								return (T)(object)await _row[i].GetBinaryAsync().ConfigureAwait(false);
+						else if (type == typeof(byte[]))
+						{
+								return (T) (object) await _row[i].GetBinaryAsync().ConfigureAwait(false);
 						}
-						else if(type == typeof(FbDecFloat)) {
-								return (T)(object)_row[i].GetDecFloat();
+						else if (type == typeof(FbDecFloat))
+						{
+								return (T) (object) _row[i].GetDecFloat();
 						}
-						else if(type == typeof(BigInteger)) {
-								return (T)(object)_row[i].GetInt128();
+						else if (type == typeof(BigInteger))
+						{
+								return (T) (object) _row[i].GetInt128();
 						}
-						else if(type == typeof(FbZonedDateTime)) {
-								return (T)(object)_row[i].GetZonedDateTime();
+						else if (type == typeof(FbZonedDateTime))
+						{
+								return (T) (object) _row[i].GetZonedDateTime();
 						}
-						else if(type == typeof(FbZonedTime)) {
-								return (T)(object)_row[i].GetZonedTime();
+						else if (type == typeof(FbZonedTime))
+						{
+								return (T) (object) _row[i].GetZonedTime();
 						}
 #if NET6_0_OR_GREATER
-						else if(type == typeof(DateOnly)) {
-								return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
+						else if (type == typeof(DateOnly))
+						{
+								return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
 						}
 #endif
 #if NET6_0_OR_GREATER
-						else if(type == typeof(TimeOnly)) {
-								return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+						else if (type == typeof(TimeOnly))
+						{
+								return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
 						}
 #endif
-						else {
-								return (T)await _row[i].GetValueAsync().ConfigureAwait(false);
+						else
+						{
+								return (T) await _row[i].GetValueAsync().ConfigureAwait(false);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
@@ -683,26 +806,30 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override byte GetByte(int i) => GetFieldValue<byte>(i);
 
-		public override long GetBytes(int i, long dataIndex, byte[] buffer, int bufferIndex, int length) {
+		public override long GetBytes(int i, long dataIndex, byte[] buffer, int bufferIndex, int length)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
 				int realLength = length;
 
-				if(buffer == null) {
+				if (buffer == null)
+				{
 						return IsDBNull(i) ? 0 : GetFieldValue<byte[]>(i).Length;
 				}
-				else {
+				else
+				{
 						byte[] byteArray = GetFieldValue<byte[]>(i);
 
-						if(length > (byteArray.Length - dataIndex)) {
-								realLength = byteArray.Length - (int)dataIndex;
+						if (length > (byteArray.Length - dataIndex))
+						{
+								realLength = byteArray.Length - (int) dataIndex;
 						}
 
-						Array.Copy(byteArray, (int)dataIndex, buffer, bufferIndex, realLength);
+						Array.Copy(byteArray, (int) dataIndex, buffer, bufferIndex, realLength);
 
 
-						int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int)dataIndex : length;
+						int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int) dataIndex : length;
 
 						return bytesRead;
 				}
@@ -710,28 +837,32 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override char GetChar(int i) => GetFieldValue<char>(i);
 
-		public override long GetChars(int i, long dataIndex, char[] buffer, int bufferIndex, int length) {
+		public override long GetChars(int i, long dataIndex, char[] buffer, int bufferIndex, int length)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
 
-				if(buffer == null) {
+				if (buffer == null)
+				{
 						return IsDBNull(i) ? 0 : GetFieldValue<string>(i).ToCharArray().Length;
 				}
-				else {
+				else
+				{
 
 						char[] charArray = GetFieldValue<string>(i).ToCharArray();
 						int realLength = length;
 
-						if(length > (charArray.Length - dataIndex)) {
-								realLength = charArray.Length - (int)dataIndex;
+						if (length > (charArray.Length - dataIndex))
+						{
+								realLength = charArray.Length - (int) dataIndex;
 						}
 
-						Array.Copy(charArray, (int)dataIndex, buffer,
+						Array.Copy(charArray, (int) dataIndex, buffer,
 							bufferIndex, realLength);
 
 
-						int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int)dataIndex : length;
+						int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int) dataIndex : length;
 
 						return charsRead;
 				}
@@ -755,7 +886,8 @@ public sealed class FbDataReader : DbDataReader {
 
 		public override DateTime GetDateTime(int i) => GetFieldValue<DateTime>(i);
 
-		public override Stream GetStream(int i) {
+		public override Stream GetStream(int i)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
@@ -763,14 +895,16 @@ public sealed class FbDataReader : DbDataReader {
 				return _row[i].GetBinaryStream();
 		}
 
-		public override bool IsDBNull(int i) {
+		public override bool IsDBNull(int i)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
 
 				return _row[i].IsDBNull();
 		}
-		public override Task<bool> IsDBNullAsync(int i, CancellationToken cancellationToken) {
+		public override Task<bool> IsDBNullAsync(int i, CancellationToken cancellationToken)
+		{
 				CheckState();
 				CheckPosition();
 				CheckIndex(i);
@@ -787,26 +921,32 @@ public sealed class FbDataReader : DbDataReader {
 
 		#region Private Methods
 
-		private void CheckPosition() {
-				if(_eof || _position == StartPosition)
+		private void CheckPosition()
+		{
+				if (_eof || _position == StartPosition)
 						throw new InvalidOperationException("There are no data to read.");
 		}
 
-		private void CheckState() {
-				if(IsClosed)
+		private void CheckState()
+		{
+				if (IsClosed)
 						throw new InvalidOperationException("Invalid attempt of read when the reader is closed.");
 		}
 
-		private void CheckIndex(int i) {
-				if(i < 0 || i >= FieldCount)
+		private void CheckIndex(int i)
+		{
+				if (i < 0 || i >= FieldCount)
 						throw new IndexOutOfRangeException("Could not find specified column in results.");
 		}
 
-		private FbDbType GetProviderType(int i) => (FbDbType)_fields[i].DbDataType;
+		private FbDbType GetProviderType(int i) => (FbDbType) _fields[i].DbDataType;
 
-		private void UpdateRecordsAffected() {
-				if(_command != null && !_command.IsDisposed) {
-						if(_command.RecordsAffected != -1) {
+		private void UpdateRecordsAffected()
+		{
+				if (_command != null && !_command.IsDisposed)
+				{
+						if (_command.RecordsAffected != -1)
+						{
 								_recordsAffected = _recordsAffected == -1 ? 0 : _recordsAffected;
 								_recordsAffected += _command.RecordsAffected;
 						}
@@ -815,22 +955,26 @@ public sealed class FbDataReader : DbDataReader {
 
 		private bool IsCommandBehavior(CommandBehavior behavior) => _commandBehavior.HasFlag(behavior);
 
-		private void InitializeColumnsIndexes() {
+		private void InitializeColumnsIndexes()
+		{
 				_columnsIndexesOrdinal = new Dictionary<string, int>(_fields.Count, StringComparer.Ordinal);
 				_columnsIndexesOrdinalCI = new Dictionary<string, int>(_fields.Count, StringComparer.OrdinalIgnoreCase);
-				for(int i = 0; i < _fields.Count; i++) {
+				for (int i = 0; i < _fields.Count; i++)
+				{
 						string fieldName = _fields[i].Alias;
 						_ = _columnsIndexesOrdinal.TryAdd(fieldName, i);
 						_ = _columnsIndexesOrdinalCI.TryAdd(fieldName, i);
 				}
 		}
 
-		private int GetColumnIndex(string name) {
-				if(_columnsIndexesOrdinal == null || _columnsIndexesOrdinalCI == null) {
+		private int GetColumnIndex(string name)
+		{
+				if (_columnsIndexesOrdinal == null || _columnsIndexesOrdinalCI == null)
+				{
 						InitializeColumnsIndexes();
 				}
-				if(!_columnsIndexesOrdinal.TryGetValue(name, out int index))
-						if(!_columnsIndexesOrdinalCI.TryGetValue(name, out index))
+				if (!_columnsIndexesOrdinal.TryGetValue(name, out int index))
+						if (!_columnsIndexesOrdinalCI.TryGetValue(name, out index))
 								throw new IndexOutOfRangeException($"Could not find specified column '{name}' in results.");
 				return index;
 		}
@@ -847,7 +991,8 @@ public sealed class FbDataReader : DbDataReader {
 */
 				!r.IsDBNull(0) || !r.IsDBNull(1);
 
-		private static DataTable GetSchemaTableStructure() {
+		private static DataTable GetSchemaTableStructure()
+		{
 				var schema = new DataTable("Schema");
 
 				// Schema table structure
@@ -875,7 +1020,8 @@ public sealed class FbDataReader : DbDataReader {
 				return schema;
 		}
 
-		private static string GetSchemaCommandText() {
+		private static string GetSchemaCommandText()
+		{
 				const string sql =
 					@"SELECT
 					fld.rdb$computed_blr AS computed_blr,
@@ -903,11 +1049,14 @@ public sealed class FbDataReader : DbDataReader {
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static T CheckedGetValue2<T>(Func<T> getter) {
-				try {
+		private static T CheckedGetValue2<T>(Func<T> getter)
+		{
+				try
+				{
 						return getter();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}

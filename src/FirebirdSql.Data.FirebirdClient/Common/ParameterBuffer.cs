@@ -21,12 +21,14 @@ using System.Net;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class ParameterBuffer {
+internal abstract class ParameterBuffer
+{
 		private readonly List<byte> _data;
 
-		public short Length => (short)_data.Count;
+		public short Length => (short) _data.Count;
 
-		protected ParameterBuffer() {
+		protected ParameterBuffer()
+		{
 				_data = [];
 		}
 
@@ -34,14 +36,16 @@ internal abstract class ParameterBuffer {
 
 		public void Append(int type) => WriteByte(type);
 
-		protected void WriteByte(int value) => WriteByte((byte)value);
+		protected void WriteByte(int value) => WriteByte((byte) value);
 
 		protected void WriteByte(byte value) => _data.Add(value);
 
 		protected void Write(byte value) => WriteByte(value);
 
-		protected void Write(short value) {
-				if(!BitConverter.IsLittleEndian) {
+		protected void Write(short value)
+		{
+				if (!BitConverter.IsLittleEndian)
+				{
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[2];
@@ -49,8 +53,10 @@ internal abstract class ParameterBuffer {
 				Write(buffer);
 		}
 
-		protected void Write(int value) {
-				if(!BitConverter.IsLittleEndian) {
+		protected void Write(int value)
+		{
+				if (!BitConverter.IsLittleEndian)
+				{
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[4];
@@ -58,8 +64,10 @@ internal abstract class ParameterBuffer {
 				Write(buffer);
 		}
 
-		protected void Write(long value) {
-				if(!BitConverter.IsLittleEndian) {
+		protected void Write(long value)
+		{
+				if (!BitConverter.IsLittleEndian)
+				{
 						value = IPAddress.NetworkToHostOrder(value);
 				}
 				Span<byte> buffer = stackalloc byte[8];

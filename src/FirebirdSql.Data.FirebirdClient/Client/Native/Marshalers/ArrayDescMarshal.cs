@@ -20,7 +20,8 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct ArrayDescMarshal {
+internal struct ArrayDescMarshal
+{
 		public byte DataType;
 		public byte Scale;
 		public short Length;

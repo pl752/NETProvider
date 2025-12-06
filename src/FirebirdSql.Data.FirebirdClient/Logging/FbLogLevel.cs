@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Logging;
 
-public enum FbLogLevel {
+public enum FbLogLevel
+{
 		Trace = 1,
 		Debug = 2,
 		Info = 3,

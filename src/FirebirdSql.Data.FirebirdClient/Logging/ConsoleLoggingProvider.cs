@@ -21,21 +21,25 @@ using System.Text;
 namespace FirebirdSql.Data.Logging;
 
 [Obsolete("Use ConsoleLoggingProvider instead.")]
-public class ConsoleLoggerProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : ConsoleLoggingProvider(minimumLevel) {
+public class ConsoleLoggerProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : ConsoleLoggingProvider(minimumLevel)
+{
 }
 
-public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : IFbLoggingProvider {
+public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) : IFbLoggingProvider
+{
 		readonly FbLogLevel _minimumLevel = minimumLevel;
 
 		public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
 
-		sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger {
+		sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger
+		{
 				readonly FbLogLevel _minimumLevel = minimumLevel;
 
 				public bool IsEnabled(FbLogLevel level) => level >= _minimumLevel;
 
-				public void Log(FbLogLevel level, string msg, Exception exception = null) {
-						if(!IsEnabled(level))
+				public void Log(FbLogLevel level, string msg, Exception exception = null)
+				{
+						if (!IsEnabled(level))
 								return;
 
 						var sb = new StringBuilder();
@@ -45,7 +49,7 @@ public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) :
 
 						_ = sb.AppendLine(msg);
 
-						if(exception != null)
+						if (exception != null)
 								_ = sb.AppendLine(exception.ToString());
 
 						Console.Error.Write(sb.ToString());

@@ -28,7 +28,8 @@ namespace FirebirdSql.Data.Client.Native;
 /// IFbClient and FbClientactory classes are implemented to support this feature.
 /// Public visibility added, because auto-generated assembly can't work with internal types
 /// </summary>
-public interface IFbClient {
+public interface IFbClient
+{
 #pragma warning disable IDE1006
 
 		IntPtr isc_array_get_slice(

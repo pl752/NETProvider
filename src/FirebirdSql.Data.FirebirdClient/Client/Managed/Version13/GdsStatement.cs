@@ -24,7 +24,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class GdsStatement : Version12.GdsStatement {
+internal class GdsStatement : Version12.GdsStatement
+{
 		#region Constructors
 
 		public GdsStatement(GdsDatabase database)
@@ -37,28 +38,35 @@ internal class GdsStatement : Version12.GdsStatement {
 
 		#region Overriden Methods
 
-		protected override byte[] WriteParameters() {
-				if(_parameters == null)
+		protected override byte[] WriteParameters()
+		{
+				if (_parameters == null)
 						return null;
 
-				using(var ms = new MemoryStream(256)) {
-						try {
+				using (var ms = new MemoryStream(256))
+				{
+						try
+						{
 								var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 								short count = _parameters.Count;
-								int bytesLen = (int)Math.Ceiling(count / 8d);
+								int bytesLen = (int) Math.Ceiling(count / 8d);
 								Span<byte> buffer = stackalloc byte[bytesLen];
 								buffer.Clear();
-								for(int i = 0; i < count; i++) {
-										if(_parameters[i].DbValue.IsDBNull()) {
-												buffer[i / 8] |= (byte)(1 << (i % 8));
+								for (int i = 0; i < count; i++)
+								{
+										if (_parameters[i].DbValue.IsDBNull())
+										{
+												buffer[i / 8] |= (byte) (1 << (i % 8));
 										}
 								}
 								xdr.WriteOpaque(buffer);
 
-								for(int i = 0; i < _parameters.Count; i++) {
+								for (int i = 0; i < _parameters.Count; i++)
+								{
 										var field = _parameters[i];
-										if(field.DbValue.IsDBNull()) {
+										if (field.DbValue.IsDBNull())
+										{
 												continue;
 										}
 										WriteRawParameter(xdr, field);
@@ -67,38 +75,48 @@ internal class GdsStatement : Version12.GdsStatement {
 								xdr.Flush();
 								return ms.ToArray();
 						}
-						catch(IOException ex) {
+						catch (IOException ex)
+						{
 								throw IscException.ForIOException(ex);
 						}
 				}
 		}
-		protected override async ValueTask<byte[]> WriteParametersAsync(CancellationToken cancellationToken = default) {
-				if(_parameters == null)
+		protected override async ValueTask<byte[]> WriteParametersAsync(CancellationToken cancellationToken = default)
+		{
+				if (_parameters == null)
 						return null;
 
-				using(var ms = new MemoryStream(256)) {
-						try {
+				using (var ms = new MemoryStream(256))
+				{
+						try
+						{
 								var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 								short count = _parameters.Count;
-								int len = (int)Math.Ceiling(count / 8d);
+								int len = (int) Math.Ceiling(count / 8d);
 								byte[] buffer = ArrayPool<byte>.Shared.Rent(len);
 								Array.Clear(buffer, 0, len);
-								for(int i = 0; i < count; i++) {
-										if(_parameters[i].DbValue.IsDBNull()) {
-												buffer[i / 8] |= (byte)(1 << (i % 8));
+								for (int i = 0; i < count; i++)
+								{
+										if (_parameters[i].DbValue.IsDBNull())
+										{
+												buffer[i / 8] |= (byte) (1 << (i % 8));
 										}
 								}
-								try {
+								try
+								{
 										await xdr.WriteOpaqueAsync(buffer, len, cancellationToken).ConfigureAwait(false);
 								}
-								finally {
+								finally
+								{
 										ArrayPool<byte>.Shared.Return(buffer);
 								}
 
-								for(int i = 0; i < _parameters.Count; i++) {
+								for (int i = 0; i < _parameters.Count; i++)
+								{
 										var field = _parameters[i];
-										if(field.DbValue.IsDBNull()) {
+										if (field.DbValue.IsDBNull())
+										{
 												continue;
 										}
 										await WriteRawParameterAsync(xdr, field, cancellationToken).ConfigureAwait(false);
@@ -107,66 +125,85 @@ internal class GdsStatement : Version12.GdsStatement {
 								await xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 								return ms.ToArray();
 						}
-						catch(IOException ex) {
+						catch (IOException ex)
+						{
 								throw IscException.ForIOException(ex);
 						}
 				}
 		}
 
-		protected override DbValue[] ReadRow() {
+		protected override DbValue[] ReadRow()
+		{
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
-				try {
-						if(_fields.Count > 0) {
-								int len = (int)Math.Ceiling(_fields.Count / 8d);
+				try
+				{
+						if (_fields.Count > 0)
+						{
+								int len = (int) Math.Ceiling(_fields.Count / 8d);
 								byte[] rented = ArrayPool<byte>.Shared.Rent(len);
-								try {
+								try
+								{
 										_database.Xdr.ReadOpaque(rented.AsSpan(0, len), len);
-										for(int i = 0; i < _fields.Count; i++) {
+										for (int i = 0; i < _fields.Count; i++)
+										{
 												bool isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-												if(isNull) {
+												if (isNull)
+												{
 														row[i] = new DbValue(this, _fields[i], null);
 												}
-												else {
+												else
+												{
 														object value = ReadRawValue(_database.Xdr, _fields[i]);
 														row[i] = new DbValue(this, _fields[i], value);
 												}
 										}
 								}
-								finally {
+								finally
+								{
 										ArrayPool<byte>.Shared.Return(rented);
 								}
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 				return row;
 		}
-		protected override async ValueTask<DbValue[]> ReadRowAsync(CancellationToken cancellationToken = default) {
+		protected override async ValueTask<DbValue[]> ReadRowAsync(CancellationToken cancellationToken = default)
+		{
 				var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
-				try {
-						if(_fields.Count > 0) {
-								int len = (int)Math.Ceiling(_fields.Count / 8d);
+				try
+				{
+						if (_fields.Count > 0)
+						{
+								int len = (int) Math.Ceiling(_fields.Count / 8d);
 								byte[] rented = ArrayPool<byte>.Shared.Rent(len);
-								try {
+								try
+								{
 										await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
-										for(int i = 0; i < _fields.Count; i++) {
+										for (int i = 0; i < _fields.Count; i++)
+										{
 												bool isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-												if(isNull) {
+												if (isNull)
+												{
 														row[i] = new DbValue(this, _fields[i], null);
 												}
-												else {
+												else
+												{
 														object value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
 														row[i] = new DbValue(this, _fields[i], value);
 												}
 										}
 								}
-								finally {
+								finally
+								{
 										ArrayPool<byte>.Shared.Return(rented);
 								}
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 				return row;

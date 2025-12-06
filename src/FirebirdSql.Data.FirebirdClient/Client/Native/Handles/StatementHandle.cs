@@ -22,11 +22,14 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Client.Native.Handles;
 
 // public visibility added, because auto-generated assembly can't work with internal types
-public class StatementHandle : FirebirdHandle {
-		protected override bool ReleaseHandle() {
+public class StatementHandle : FirebirdHandle
+{
+		protected override bool ReleaseHandle()
+		{
 				Contract.Requires(FbClient != null);
 
-				if(IsClosed) {
+				if (IsClosed)
+				{
 						return true;
 				}
 

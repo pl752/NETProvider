@@ -22,7 +22,8 @@ using System.Numerics;
 namespace FirebirdSql.Data.Common;
 
 // based on Jaybird's implementation
-class DenselyPackedDecimalCodec {
+class DenselyPackedDecimalCodec
+{
 		internal const int DigitsPerGroup = 3;
 		internal const int BitsPerGroup = 10;
 		internal const int NegativeSignum = -1;
@@ -251,8 +252,9 @@ class DenselyPackedDecimalCodec {
 		// Creates a densely packed decimal coder for the specified number of digits.
 		// Current implementation only supports decoding and encoding `n * 3 + 1` number of digits with
 		// `n > 0`, where the most significant digit is provided by the caller during decoding.
-		public DenselyPackedDecimalCodec(int numberOfDigits) {
-				if(numberOfDigits / DigitsPerGroup <= 0 || numberOfDigits % DigitsPerGroup != 1)
+		public DenselyPackedDecimalCodec(int numberOfDigits)
+		{
+				if (numberOfDigits / DigitsPerGroup <= 0 || numberOfDigits % DigitsPerGroup != 1)
 						throw new ArgumentOutOfRangeException(nameof(numberOfDigits), $"{nameof(numberOfDigits)} must be of form n * 3 + 1 with n > 0, was {numberOfDigits}.");
 				_numberOfDigits = numberOfDigits;
 				_digitGroups = numberOfDigits / DigitsPerGroup;
@@ -264,8 +266,9 @@ class DenselyPackedDecimalCodec {
 
 		// Decodes a densely packed decimal from a byte array to a BigInteger.
 		// Digits are read from `lsbIndex` of the array to the front.
-		public BigInteger DecodeValue(int signum, int firstDigit, byte[] decBytes, int lsbIndex) {
-				if(firstDigit is < 0 or > 9)
+		public BigInteger DecodeValue(int signum, int firstDigit, byte[] decBytes, int lsbIndex)
+		{
+				if (firstDigit is < 0 or > 9)
 						throw new ArgumentOutOfRangeException(nameof(firstDigit), $"{nameof(firstDigit)} must be in range 0 <= firstDigit <= 9, was {firstDigit}.");
 				ValidateLsbIndex(lsbIndex, decBytes.Length);
 				return DecodeValue0(signum, firstDigit, decBytes, lsbIndex);
@@ -279,15 +282,18 @@ class DenselyPackedDecimalCodec {
 		// Encodes a BigInteger to a densely packed decimal in a byte array.
 		// Digits are written from `lsbIndex` of the array to the front. The most significant digit is not encoded
 		// into the array, but instead returned to the caller.
-		public int EncodeValue(BigInteger value, byte[] decBytes, int lsbIndex) {
+		public int EncodeValue(BigInteger value, byte[] decBytes, int lsbIndex)
+		{
 				ValidateLsbIndex(lsbIndex, decBytes.Length);
 
 				return EncodeValue0(BigInteger.Abs(value), decBytes, lsbIndex);
 		}
 
-		BigInteger DecodeValue0(int signum, int firstDigit, byte[] decBytes, int lsbIndex) {
+		BigInteger DecodeValue0(int signum, int firstDigit, byte[] decBytes, int lsbIndex)
+		{
 				char[] digitChars = CreateZeroedCharArray();
-				for(int digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
+				for (int digitGroup = 0; digitGroup < _digitGroups; digitGroup++)
+				{
 						// Each digit group is 10 bits in two bytes in the array as [.., second, first, ..],
 						// moving to the left for next digit groups. If there are unconsumed bits in the second byte,
 						// the second byte becomes the first byte of the next group.
@@ -299,20 +305,24 @@ class DenselyPackedDecimalCodec {
 								(decBytes[firstByteIndex] & 0xFF) >>> firstByteBitOffset
 										| decBytes[firstByteIndex - 1] << BitPerByte - firstByteBitOffset);
 
-						if(dpdGroupBits != 0) {
+						if (dpdGroupBits != 0)
+						{
 								Array.Copy(DPDGroupBits2Digits, dpdGroupBits * DigitsPerGroup, digitChars, digitChars.Length - (digitGroup + 1) * DigitsPerGroup, DigitsPerGroup);
 						}
 				}
-				if(firstDigit != 0) {
+				if (firstDigit != 0)
+				{
 						digitChars[1] = char.Parse(firstDigit.ToString());
 				}
 
 				return ToBigInteger(signum, digitChars);
 		}
 
-		int EncodeValue0(BigInteger value, byte[] decBytes, int lsbIndex) {
+		int EncodeValue0(BigInteger value, byte[] decBytes, int lsbIndex)
+		{
 				var remainingValue = value;
-				for(int digitGroup = 0; digitGroup < _digitGroups; digitGroup++) {
+				for (int digitGroup = 0; digitGroup < _digitGroups; digitGroup++)
+				{
 						// Each digit group is 10 bits in two bytes in the array as [.., second, first, ..],
 						// moving to the left for next digit groups. If there are unconsumed bits in the second byte,
 						// the second byte becomes the first byte of the next group.
@@ -321,51 +331,62 @@ class DenselyPackedDecimalCodec {
 						int firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
 
 						remainingValue = BigInteger.DivRem(remainingValue, OneThousand, out var remainder);
-						int currentGroup = Bin2DPD[(int)remainder];
+						int currentGroup = Bin2DPD[(int) remainder];
 
 						decBytes[firstByteIndex] =
-								(byte)(decBytes[firstByteIndex] | (currentGroup << firstByteBitOffset));
+								(byte) (decBytes[firstByteIndex] | (currentGroup << firstByteBitOffset));
 						decBytes[firstByteIndex - 1] =
-								(byte)(decBytes[firstByteIndex - 1] | (currentGroup >>> BitPerByte - firstByteBitOffset));
+								(byte) (decBytes[firstByteIndex - 1] | (currentGroup >>> BitPerByte - firstByteBitOffset));
 				}
-				int mostSignificantDigit = (int)remainingValue;
+				int mostSignificantDigit = (int) remainingValue;
 				Debug.Assert(mostSignificantDigit is >= 0 and <= 9, $"{nameof(mostSignificantDigit)} out of range, was {mostSignificantDigit}.");
 				return mostSignificantDigit;
 		}
 
-		char[] CreateZeroedCharArray() {
+		char[] CreateZeroedCharArray()
+		{
 				char[] digitChars = new char[_numberOfDigits + 1];
-				for(int i = 0; i < digitChars.Length; i++) {
+				for (int i = 0; i < digitChars.Length; i++)
+				{
 						digitChars[i] = '0';
 				}
 				return digitChars;
 		}
 
-		void ValidateLsbIndex(int lsbIndex, int decBytesLength) {
-				if(lsbIndex < 0 || lsbIndex >= decBytesLength) {
+		void ValidateLsbIndex(int lsbIndex, int decBytesLength)
+		{
+				if (lsbIndex < 0 || lsbIndex >= decBytesLength)
+				{
 						throw new IndexOutOfRangeException($"{nameof(lsbIndex)} must be within array {nameof(decBytesLength)} with length of {decBytesLength}, was {lsbIndex}.");
 				}
-				if((lsbIndex + 1) * BitPerByte < BitsPerGroup * _digitGroups) {
+				if ((lsbIndex + 1) * BitPerByte < BitsPerGroup * _digitGroups)
+				{
 						throw new ArgumentException($"Need at least {(BitsPerGroup * _digitGroups + 7) / BitPerByte} bytes for value, have {lsbIndex + 1} (lsbIndex = {lsbIndex})");
 				}
 		}
 
-		static BigInteger ToBigInteger(int signum, char[] digitChars) {
+		static BigInteger ToBigInteger(int signum, char[] digitChars)
+		{
 				int digitCharIndex = FindFirstNonZero(digitChars);
-				if(digitCharIndex == -1) {
+				if (digitCharIndex == -1)
+				{
 						// All zeroes
 						return BigInteger.Zero;
 				}
-				if(signum == NegativeSignum) {
+				if (signum == NegativeSignum)
+				{
 						digitChars[--digitCharIndex] = '-';
 				}
 				string s = new string(digitChars, digitCharIndex, digitChars.Length - digitCharIndex);
 				return BigInteger.Parse(s);
 		}
 
-		static int FindFirstNonZero(char[] digitChars) {
-				for(int index = 0; index < digitChars.Length; index++) {
-						if(digitChars[index] != '0') {
+		static int FindFirstNonZero(char[] digitChars)
+		{
+				for (int index = 0; index < digitChars.Length; index++)
+				{
+						if (digitChars[index] != '0')
+						{
 								return index;
 						}
 				}

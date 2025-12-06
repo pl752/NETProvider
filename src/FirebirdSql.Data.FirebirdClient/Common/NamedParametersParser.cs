@@ -21,12 +21,15 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class NamedParametersParser {
-		public static (string sql, IReadOnlyList<string> parameters) Parse(string sql) {
+internal static class NamedParametersParser
+{
+		public static (string sql, IReadOnlyList<string> parameters) Parse(string sql)
+		{
 				var sqlBuilder = new StringBuilder(sql.Length);
 				var paramBuilder = new StringBuilder();
 
-				if(sql.IndexOf('@') == -1) {
+				if (sql.IndexOf('@') == -1)
+				{
 						return (sql, Array.Empty<string>());
 				}
 
@@ -34,14 +37,18 @@ internal static class NamedParametersParser {
 				bool inSingleQuotes = false;
 				bool inDoubleQuotes = false;
 				bool inParam = false;
-				for(int i = 0; i < sql.Length; i++) {
+				for (int i = 0; i < sql.Length; i++)
+				{
 						char sym = sql[i];
 
-						if(inParam) {
-								if(char.IsLetterOrDigit(sym) || sym == '_' || sym == '$') {
+						if (inParam)
+						{
+								if (char.IsLetterOrDigit(sym) || sym == '_' || sym == '$')
+								{
 										_ = paramBuilder.Append(sym);
 								}
-								else {
+								else
+								{
 										namedParameters.Add(paramBuilder.ToString());
 										paramBuilder.Length = 0;
 										_ = sqlBuilder.Append('?');
@@ -49,14 +56,18 @@ internal static class NamedParametersParser {
 										inParam = false;
 								}
 						}
-						else {
-								if(sym == '\'' && !inDoubleQuotes) {
+						else
+						{
+								if (sym == '\'' && !inDoubleQuotes)
+								{
 										inSingleQuotes = !inSingleQuotes;
 								}
-								else if(sym == '\"' && !inSingleQuotes) {
+								else if (sym == '\"' && !inSingleQuotes)
+								{
 										inDoubleQuotes = !inDoubleQuotes;
 								}
-								else if(!(inSingleQuotes || inDoubleQuotes) && sym == '@') {
+								else if (!(inSingleQuotes || inDoubleQuotes) && sym == '@')
+								{
 										inParam = true;
 										_ = paramBuilder.Append(sym);
 										continue;
@@ -66,7 +77,8 @@ internal static class NamedParametersParser {
 						}
 				}
 
-				if(inParam) {
+				if (inParam)
+				{
 						namedParameters.Add(paramBuilder.ToString());
 						_ = sqlBuilder.Append('?');
 				}

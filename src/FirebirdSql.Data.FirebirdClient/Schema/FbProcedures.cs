@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbProcedures : FbSchema {
+internal class FbProcedures : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -43,24 +45,29 @@ internal class FbProcedures : FbSchema {
 				FROM rdb$procedures",
 					MajorVersionNumber >= 3 ? "rdb$package_name" : "null");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* PROCEDURE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* PROCEDURE_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* PROCEDURE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("rdb$procedure_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -69,14 +76,18 @@ internal class FbProcedures : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
-						if(row["INPUTS"] == DBNull.Value) {
+				foreach (DataRow row in schema.Rows)
+				{
+						if (row["INPUTS"] == DBNull.Value)
+						{
 								row["INPUTS"] = 0;
 						}
-						if(row["OUTPUTS"] == DBNull.Value) {
+						if (row["OUTPUTS"] == DBNull.Value)
+						{
 								row["OUTPUTS"] = 0;
 						}
 						row["IS_SYSTEM_PROCEDURE"] = row["IS_SYSTEM_PROCEDURE"] == DBNull.Value ||

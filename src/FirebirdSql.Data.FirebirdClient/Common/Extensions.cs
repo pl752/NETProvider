@@ -23,8 +23,9 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class Extensions {
-		public static int AsInt(this IntPtr ptr) => (int)ptr.ToInt64();
+internal static class Extensions
+{
+		public static int AsInt(this IntPtr ptr) => (int) ptr.ToInt64();
 
 		public static IntPtr ReadIntPtr(this BinaryReader self) => IntPtr.Size == sizeof(int)
 						? new IntPtr(self.ReadInt32())
@@ -38,8 +39,10 @@ internal static class Extensions {
 #endif
 
 
-		public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size) {
-				for(int i = 0; i < (float)array.Length / size; i++) {
+		public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
+		{
+				for (int i = 0; i < (float) array.Length / size; i++)
+				{
 						yield return array.Skip(i * size).Take(size);
 				}
 		}
@@ -48,17 +51,20 @@ internal static class Extensions {
 	public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new HashSet<T>(source);
 #endif
 
-		public static IEnumerable<char> RunesToChars(this IEnumerable<Rune> s) {
+		public static IEnumerable<char> RunesToChars(this IEnumerable<Rune> s)
+		{
 				char[] chars = new char[2];
-				foreach(var rune in s) {
+				foreach (var rune in s)
+				{
 						int n = rune.EncodeToUtf16(chars);
 						yield return chars[0];
-						if(n > 1)
+						if (n > 1)
 								yield return chars[1];
 				}
 		}
 
-		public static IEnumerable<char[]> EnumerateRunesEx(this string s) {
+		public static IEnumerable<char[]> EnumerateRunesEx(this string s)
+		{
 				ArgumentNullException.ThrowIfNull(s);
 
 #if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
@@ -76,7 +82,8 @@ internal static class Extensions {
 		}
 
 #else
-				return s.EnumerateRunes().Select(r => {
+				return s.EnumerateRunes().Select(r =>
+				{
 						char[] result = new char[r.Utf16SequenceLength];
 						r.EncodeToUtf16(result);
 						return result;

@@ -20,7 +20,8 @@ using System.Transactions;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
+internal sealed class FbEnlistmentNotification : IEnlistmentNotification
+{
 		#region Events
 
 		public event EventHandler Completed;
@@ -45,7 +46,8 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 
 		#region Constructors
 
-		public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction) {
+		public FbEnlistmentNotification(FbConnectionInternal connection, Transaction systemTransaction)
+		{
 				_connection = connection;
 				_transaction = connection.BeginTransaction(systemTransaction.IsolationLevel);
 				_systemTransaction = systemTransaction;
@@ -57,15 +59,19 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 
 		#region IEnlistmentNotification Members
 
-		public void Commit(Enlistment enlistment) {
-				if(_transaction != null && !_transaction.IsCompleted) {
+		public void Commit(Enlistment enlistment)
+		{
+				if (_transaction != null && !_transaction.IsCompleted)
+				{
 						_transaction.Commit();
 						_transaction = null;
 
 						Completed?.Invoke(this, new EventArgs());
 
-						if(_connection != null) {
-								if(!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed)) {
+						if (_connection != null)
+						{
+								if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
+								{
 										_connection.Disconnect();
 								}
 						}
@@ -81,15 +87,19 @@ internal sealed class FbEnlistmentNotification : IEnlistmentNotification {
 
 		public void Prepare(PreparingEnlistment preparingEnlistment) => preparingEnlistment.Prepared();
 
-		public void Rollback(Enlistment enlistment) {
-				if(_transaction != null && !_transaction.IsCompleted) {
+		public void Rollback(Enlistment enlistment)
+		{
+				if (_transaction != null && !_transaction.IsCompleted)
+				{
 						_transaction.Rollback();
 						_transaction = null;
 
 						Completed?.Invoke(this, new EventArgs());
 
-						if(_connection != null) {
-								if(!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed)) {
+						if (_connection != null)
+						{
+								if (!_connection.ConnectionStringOptions.Pooling && (_connection.OwningConnection == null || _connection.OwningConnection.IsClosed))
+								{
 										_connection.Disconnect();
 								}
 						}

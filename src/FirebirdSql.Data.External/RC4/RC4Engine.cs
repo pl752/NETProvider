@@ -3,7 +3,8 @@ using System;
 using Org.BouncyCastle.Crypto.Parameters;
 //using Org.BouncyCastle.Utilities;
 
-namespace Org.BouncyCastle.Crypto.Engines {
+namespace Org.BouncyCastle.Crypto.Engines
+{
 		internal class RC4Engine
 		//: IStreamCipher
 		{
@@ -29,14 +30,16 @@ namespace Org.BouncyCastle.Crypto.Engines {
         */
 				public virtual void Init(
 						bool forEncryption,
-						ICipherParameters parameters) {
-						if(parameters is KeyParameter) {
+						ICipherParameters parameters)
+				{
+						if (parameters is KeyParameter)
+						{
 								/*
                 * RC4 encryption and decryption is completely
                 * symmetrical, so the 'forEncryption' is
                 * irrelevant.
                 */
-								workingKey = ((KeyParameter)parameters).GetKey();
+								workingKey = ((KeyParameter) parameters).GetKey();
 								SetKey(workingKey);
 
 								return;
@@ -49,7 +52,8 @@ namespace Org.BouncyCastle.Crypto.Engines {
 				public virtual string AlgorithmName => "RC4";
 
 				public virtual byte ReturnByte(
-			byte input) {
+			byte input)
+				{
 						x = (x + 1) & 0xff;
 						y = (engineState[x] + y) & 0xff;
 
@@ -59,7 +63,7 @@ namespace Org.BouncyCastle.Crypto.Engines {
 						engineState[y] = tmp;
 
 						// xor
-						return (byte)(input ^ engineState[(engineState[x] + engineState[y]) & 0xff]);
+						return (byte) (input ^ engineState[(engineState[x] + engineState[y]) & 0xff]);
 				}
 
 				public virtual void ProcessBytes(
@@ -67,11 +71,13 @@ namespace Org.BouncyCastle.Crypto.Engines {
 						int inOff,
 						int length,
 						byte[] output,
-						int outOff) {
+						int outOff)
+				{
 						//Check.DataLength(input, inOff, length, "input buffer too short");
 						//Check.OutputLength(output, outOff, length, "output buffer too short");
 
-						for(int i = 0; i < length; i++) {
+						for (int i = 0; i < length; i++)
+						{
 								x = (x + 1) & 0xff;
 								y = (engineState[x] + y) & 0xff;
 
@@ -81,7 +87,7 @@ namespace Org.BouncyCastle.Crypto.Engines {
 								engineState[y] = tmp;
 
 								// xor
-								output[i + outOff] = (byte)(input[i + inOff]
+								output[i + outOff] = (byte) (input[i + inOff]
 												^ engineState[(engineState[x] + engineState[y]) & 0xff]);
 						}
 				}
@@ -91,7 +97,8 @@ namespace Org.BouncyCastle.Crypto.Engines {
 				// Private implementation
 
 				private void SetKey(
-			byte[] keyBytes) {
+			byte[] keyBytes)
+				{
 						workingKey = keyBytes;
 
 						// System.out.println("the key length is ; "+ workingKey.Length);
@@ -102,14 +109,16 @@ namespace Org.BouncyCastle.Crypto.Engines {
 						engineState ??= new byte[STATE_LENGTH];
 
 						// reset the state of the engine
-						for(int i = 0; i < STATE_LENGTH; i++) {
-								engineState[i] = (byte)i;
+						for (int i = 0; i < STATE_LENGTH; i++)
+						{
+								engineState[i] = (byte) i;
 						}
 
 						int i1 = 0;
 						int i2 = 0;
 
-						for(int i = 0; i < STATE_LENGTH; i++) {
+						for (int i = 0; i < STATE_LENGTH; i++)
+						{
 								i2 = ((keyBytes[i1] & 0xff) + engineState[i] + i2) & 0xff;
 								// do the byte-swap inline
 								byte tmp = engineState[i];

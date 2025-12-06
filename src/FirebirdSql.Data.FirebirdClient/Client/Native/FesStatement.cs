@@ -25,7 +25,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesStatement : StatementBase {
+internal sealed class FesStatement : StatementBase
+{
 		#region Fields
 
 		private StatementHandle _handle;
@@ -44,20 +45,26 @@ internal sealed class FesStatement : StatementBase {
 
 		public override DatabaseBase Database => _database;
 
-		public override TransactionBase Transaction {
+		public override TransactionBase Transaction
+		{
 				get => _transaction;
-				set {
-						if(_transaction != value) {
-								if(TransactionUpdate != null && _transaction != null) {
+				set
+				{
+						if (_transaction != value)
+						{
+								if (TransactionUpdate != null && _transaction != null)
+								{
 										_transaction.Update -= TransactionUpdate;
 										TransactionUpdate = null;
 								}
 
-								if(value == null) {
+								if (value == null)
+								{
 										_transaction = null;
 								}
-								else {
-										_transaction = (FesTransaction)value;
+								else
+								{
+										_transaction = (FesTransaction) value;
 										TransactionUpdate = new EventHandler(TransactionUpdated);
 										_transaction.Update += TransactionUpdate;
 								}
@@ -65,12 +72,15 @@ internal sealed class FesStatement : StatementBase {
 				}
 		}
 
-		public override Descriptor Parameters { get => _parameters; set => _parameters = value;
+		public override Descriptor Parameters
+		{
+				get => _parameters; set => _parameters = value;
 		}
 
 		public override Descriptor Fields => _fields;
 
-		public override int FetchSize {
+		public override int FetchSize
+		{
 				get => 200;
 				set { }
 		}
@@ -80,17 +90,20 @@ internal sealed class FesStatement : StatementBase {
 		#region Constructors
 
 		public FesStatement(FesDatabase database)
-			: this(database, null) {
+			: this(database, null)
+		{
 		}
 
-		public FesStatement(FesDatabase database, FesTransaction transaction) {
+		public FesStatement(FesDatabase database, FesTransaction transaction)
+		{
 				_database = database;
 				_handle = new StatementHandle();
 				OutputParameters = new Queue<DbValue[]>();
 				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 				_fetchSqlDa = IntPtr.Zero;
 
-				if(transaction != null) {
+				if (transaction != null)
+				{
 						Transaction = transaction;
 				}
 		}
@@ -99,8 +112,10 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Dispose2
 
-		public override void Dispose2() {
-				if(!_disposed) {
+		public override void Dispose2()
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
 						Release();
 						Clear();
@@ -116,8 +131,10 @@ internal sealed class FesStatement : StatementBase {
 						base.Dispose2();
 				}
 		}
-		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default) {
-				if(!_disposed) {
+		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
 						await ReleaseAsync(cancellationToken).ConfigureAwait(false);
 						Clear();
@@ -146,32 +163,38 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Array Creation Methods
 
-		public override ArrayBase CreateArray(ArrayDesc descriptor) {
+		public override ArrayBase CreateArray(ArrayDesc descriptor)
+		{
 				var array = new FesArray(descriptor);
 				return array;
 		}
-		public override ValueTask<ArrayBase> CreateArrayAsync(ArrayDesc descriptor, CancellationToken cancellationToken = default) {
+		public override ValueTask<ArrayBase> CreateArrayAsync(ArrayDesc descriptor, CancellationToken cancellationToken = default)
+		{
 				var array = new FesArray(descriptor);
 				return ValueTask2.FromResult<ArrayBase>(array);
 		}
 
-		public override ArrayBase CreateArray(string tableName, string fieldName) {
+		public override ArrayBase CreateArray(string tableName, string fieldName)
+		{
 				var array = new FesArray(_database, _transaction, tableName, fieldName);
 				array.Initialize();
 				return array;
 		}
-		public override async ValueTask<ArrayBase> CreateArrayAsync(string tableName, string fieldName, CancellationToken cancellationToken = default) {
+		public override async ValueTask<ArrayBase> CreateArrayAsync(string tableName, string fieldName, CancellationToken cancellationToken = default)
+		{
 				var array = new FesArray(_database, _transaction, tableName, fieldName);
 				await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
 				return array;
 		}
 
-		public override ArrayBase CreateArray(long handle, string tableName, string fieldName) {
+		public override ArrayBase CreateArray(long handle, string tableName, string fieldName)
+		{
 				var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
 				array.Initialize();
 				return array;
 		}
-		public override async ValueTask<ArrayBase> CreateArrayAsync(long handle, string tableName, string fieldName, CancellationToken cancellationToken = default) {
+		public override async ValueTask<ArrayBase> CreateArrayAsync(long handle, string tableName, string fieldName, CancellationToken cancellationToken = default)
+		{
 				var array = new FesArray(_database, _transaction, handle, tableName, fieldName);
 				await array.InitializeAsync(cancellationToken).ConfigureAwait(false);
 				return array;
@@ -185,34 +208,40 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Methods
 
-		public override void Release() {
+		public override void Release()
+		{
 				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 				base.Release();
 		}
-		public override ValueTask ReleaseAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask ReleaseAsync(CancellationToken cancellationToken = default)
+		{
 				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 				return base.ReleaseAsync(cancellationToken);
 		}
 
-		public override void Close() {
+		public override void Close()
+		{
 				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 				base.Close();
 		}
-		public override ValueTask CloseAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
+		{
 				XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 				return base.CloseAsync(cancellationToken);
 		}
 
-		public override void Prepare(string commandText) {
+		public override void Prepare(string commandText)
+		{
 				ClearAll();
 
 				ClearStatusVector();
 
-				if(State == StatementState.Deallocated) {
+				if (State == StatementState.Deallocated)
+				{
 						Allocate();
 				}
 
@@ -227,7 +256,7 @@ internal sealed class FesStatement : StatementBase {
 					_statusVector,
 					ref trHandle,
 					ref _handle,
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer,
 					_database.Dialect,
 					sqlda);
@@ -240,11 +269,14 @@ internal sealed class FesStatement : StatementBase {
 
 				_fields = descriptor;
 
-				if(_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count) {
+				if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
+				{
 						Describe();
 				}
-				else {
-						if(_fields.ActualCount == 0) {
+				else
+				{
+						if (_fields.ActualCount == 0)
+						{
 								_fields = new Descriptor(0);
 						}
 				}
@@ -257,12 +289,14 @@ internal sealed class FesStatement : StatementBase {
 
 				State = StatementState.Prepared;
 		}
-		public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default) {
+		public override async ValueTask PrepareAsync(string commandText, CancellationToken cancellationToken = default)
+		{
 				ClearAll();
 
 				ClearStatusVector();
 
-				if(State == StatementState.Deallocated) {
+				if (State == StatementState.Deallocated)
+				{
 						Allocate();
 				}
 
@@ -277,7 +311,7 @@ internal sealed class FesStatement : StatementBase {
 					_statusVector,
 					ref trHandle,
 					ref _handle,
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer,
 					_database.Dialect,
 					sqlda);
@@ -290,11 +324,14 @@ internal sealed class FesStatement : StatementBase {
 
 				_fields = descriptor;
 
-				if(_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count) {
+				if (_fields.ActualCount > 0 && _fields.ActualCount != _fields.Count)
+				{
 						Describe();
 				}
-				else {
-						if(_fields.ActualCount == 0) {
+				else
+				{
+						if (_fields.ActualCount == 0)
+						{
 								_fields = new Descriptor(0);
 						}
 				}
@@ -308,7 +345,8 @@ internal sealed class FesStatement : StatementBase {
 				State = StatementState.Prepared;
 		}
 
-		public override void Execute(int timeout, IDescriptorFiller descriptorFiller) {
+		public override void Execute(int timeout, IDescriptorFiller descriptorFiller)
+		{
 				EnsureNotDeallocated();
 
 				descriptorFiller.Fill(_parameters, 0);
@@ -316,8 +354,9 @@ internal sealed class FesStatement : StatementBase {
 				ClearStatusVector();
 				NativeHelpers.CallIfExists(
 					nameof(IFbClient.fb_dsql_set_timeout),
-					() => {
-							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
+					() =>
+					{
+							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
 							_database.ProcessStatusVector(_statusVector);
 					});
 
@@ -326,10 +365,12 @@ internal sealed class FesStatement : StatementBase {
 				nint inSqlda = IntPtr.Zero;
 				nint outSqlda = IntPtr.Zero;
 
-				if(_parameters != null) {
+				if (_parameters != null)
+				{
 						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
 				}
-				if(StatementType == DbStatementType.StoredProcedure) {
+				if (StatementType == DbStatementType.StoredProcedure)
+				{
 						Fields.ResetValues();
 						outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				}
@@ -344,12 +385,14 @@ internal sealed class FesStatement : StatementBase {
 					inSqlda,
 					outSqlda);
 
-				if(outSqlda != IntPtr.Zero) {
+				if (outSqlda != IntPtr.Zero)
+				{
 						var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
 
 						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
 
-						for(int i = 0; i < values.Length; i++) {
+						for (int i = 0; i < values.Length; i++)
+						{
 								var d = descriptor[i];
 								object value = d.DbValue.GetValue();
 								values[i] = new DbValue(this, d, value);
@@ -367,7 +410,8 @@ internal sealed class FesStatement : StatementBase {
 
 				State = StatementState.Executed;
 		}
-		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
+		public override async ValueTask ExecuteAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
+		{
 				EnsureNotDeallocated();
 
 				await descriptorFiller.FillAsync(_parameters, 0, cancellationToken).ConfigureAwait(false);
@@ -375,8 +419,9 @@ internal sealed class FesStatement : StatementBase {
 				ClearStatusVector();
 				NativeHelpers.CallIfExists(
 					nameof(IFbClient.fb_dsql_set_timeout),
-					() => {
-							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
+					() =>
+					{
+							_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
 							_database.ProcessStatusVector(_statusVector);
 					});
 
@@ -385,10 +430,12 @@ internal sealed class FesStatement : StatementBase {
 				nint inSqlda = IntPtr.Zero;
 				nint outSqlda = IntPtr.Zero;
 
-				if(_parameters != null) {
+				if (_parameters != null)
+				{
 						inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
 				}
-				if(StatementType == DbStatementType.StoredProcedure) {
+				if (StatementType == DbStatementType.StoredProcedure)
+				{
 						Fields.ResetValues();
 						outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				}
@@ -403,12 +450,14 @@ internal sealed class FesStatement : StatementBase {
 					inSqlda,
 					outSqlda);
 
-				if(outSqlda != IntPtr.Zero) {
+				if (outSqlda != IntPtr.Zero)
+				{
 						var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
 
 						var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : [];
 
-						for(int i = 0; i < values.Length; i++) {
+						for (int i = 0; i < values.Length; i++)
+						{
 								var d = descriptor[i];
 								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
 								values[i] = new DbValue(this, d, value);
@@ -427,46 +476,57 @@ internal sealed class FesStatement : StatementBase {
 				State = StatementState.Executed;
 		}
 
-		public override DbValue[] Fetch() {
+		public override DbValue[] Fetch()
+		{
 				EnsureNotDeallocated();
 
-				if(StatementType == DbStatementType.StoredProcedure && !_allRowsFetched) {
+				if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
+				{
 						_allRowsFetched = true;
 						return GetOutputParameters();
 				}
-				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
+				else if (StatementType == DbStatementType.Insert && _allRowsFetched)
+				{
 						return null;
 				}
-				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
+				else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
+				{
 						return null;
 				}
 
-				if(_allRowsFetched) {
+				if (_allRowsFetched)
+				{
 						return null;
 				}
 
 				_fields.ResetValues();
 
-				if(_fetchSqlDa == IntPtr.Zero) {
+				if (_fetchSqlDa == IntPtr.Zero)
+				{
 						_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				}
 
 				ClearStatusVector();
 
 				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
-				if(status == new IntPtr(100)) {
+				if (status == new IntPtr(100))
+				{
 						_allRowsFetched = true;
 
 						XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 						return null;
 				}
-				else {
+				else
+				{
 						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
 
-						if(_fields.Count == rowDesc.Count) {
-								for(int i = 0; i < _fields.Count; i++) {
-										if(_fields[i].IsArray() && _fields[i].ArrayHandle != null) {
+						if (_fields.Count == rowDesc.Count)
+						{
+								for (int i = 0; i < _fields.Count; i++)
+								{
+										if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
+										{
 												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
 										}
 								}
@@ -477,7 +537,8 @@ internal sealed class FesStatement : StatementBase {
 						_database.ProcessStatusVector(_statusVector);
 
 						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for(int i = 0; i < row.Length; i++) {
+						for (int i = 0; i < row.Length; i++)
+						{
 								var d = _fields[i];
 								object value = d.DbValue.GetValue();
 								row[i] = new DbValue(this, d, value);
@@ -485,46 +546,57 @@ internal sealed class FesStatement : StatementBase {
 						return row;
 				}
 		}
-		public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureNotDeallocated();
 
-				if(StatementType == DbStatementType.StoredProcedure && !_allRowsFetched) {
+				if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
+				{
 						_allRowsFetched = true;
 						return GetOutputParameters();
 				}
-				else if(StatementType == DbStatementType.Insert && _allRowsFetched) {
+				else if (StatementType == DbStatementType.Insert && _allRowsFetched)
+				{
 						return null;
 				}
-				else if(StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate) {
+				else if (StatementType is not DbStatementType.Select and not DbStatementType.SelectForUpdate)
+				{
 						return null;
 				}
 
-				if(_allRowsFetched) {
+				if (_allRowsFetched)
+				{
 						return null;
 				}
 
 				_fields.ResetValues();
 
-				if(_fetchSqlDa == IntPtr.Zero) {
+				if (_fetchSqlDa == IntPtr.Zero)
+				{
 						_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
 				}
 
 				ClearStatusVector();
 
 				nint status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
-				if(status == new IntPtr(100)) {
+				if (status == new IntPtr(100))
+				{
 						_allRowsFetched = true;
 
 						XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
 
 						return null;
 				}
-				else {
+				else
+				{
 						var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
 
-						if(_fields.Count == rowDesc.Count) {
-								for(int i = 0; i < _fields.Count; i++) {
-										if(_fields[i].IsArray() && _fields[i].ArrayHandle != null) {
+						if (_fields.Count == rowDesc.Count)
+						{
+								for (int i = 0; i < _fields.Count; i++)
+								{
+										if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
+										{
 												rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
 										}
 								}
@@ -535,7 +607,8 @@ internal sealed class FesStatement : StatementBase {
 						_database.ProcessStatusVector(_statusVector);
 
 						var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : [];
-						for(int i = 0; i < row.Length; i++) {
+						for (int i = 0; i < row.Length; i++)
+						{
 								var d = _fields[i];
 								object value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
 								row[i] = new DbValue(this, d, value);
@@ -548,10 +621,12 @@ internal sealed class FesStatement : StatementBase {
 
 		#region Protected Methods
 
-		protected override void Free(int option) {
+		protected override void Free(int option)
+		{
 				// Does	not	seem to	be possible	or necessary to	close
 				// an execute procedure	statement.
-				if(StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close) {
+				if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
+				{
 						return;
 				}
 
@@ -560,9 +635,10 @@ internal sealed class FesStatement : StatementBase {
 				_ = _database.FbClient.isc_dsql_free_statement(
 					_statusVector,
 					ref _handle,
-					(short)option);
+					(short) option);
 
-				if(option == IscCodes.DSQL_drop) {
+				if (option == IscCodes.DSQL_drop)
+				{
 						_parameters = null;
 						_fields = null;
 				}
@@ -572,10 +648,12 @@ internal sealed class FesStatement : StatementBase {
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		protected override ValueTask FreeAsync(int option, CancellationToken cancellationToken = default) {
+		protected override ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
+		{
 				// Does	not	seem to	be possible	or necessary to	close
 				// an execute procedure	statement.
-				if(StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close) {
+				if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
+				{
 						return ValueTask2.CompletedTask;
 				}
 
@@ -584,9 +662,10 @@ internal sealed class FesStatement : StatementBase {
 				_ = _database.FbClient.isc_dsql_free_statement(
 					_statusVector,
 					ref _handle,
-					(short)option);
+					(short) option);
 
-				if(option == IscCodes.DSQL_drop) {
+				if (option == IscCodes.DSQL_drop)
+				{
 						_parameters = null;
 						_fields = null;
 				}
@@ -599,8 +678,10 @@ internal sealed class FesStatement : StatementBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		protected override void TransactionUpdated(object sender, EventArgs e) {
-				if(Transaction != null && TransactionUpdate != null) {
+		protected override void TransactionUpdated(object sender, EventArgs e)
+		{
+				if (Transaction != null && TransactionUpdate != null)
+				{
 						Transaction.Update -= TransactionUpdate;
 				}
 				Clear();
@@ -609,7 +690,8 @@ internal sealed class FesStatement : StatementBase {
 				_allRowsFetched = false;
 		}
 
-		protected override byte[] GetSqlInfo(byte[] items, int bufferLength) {
+		protected override byte[] GetSqlInfo(byte[] items, int bufferLength)
+		{
 				ClearStatusVector();
 
 				byte[] buffer = new byte[bufferLength];
@@ -617,16 +699,17 @@ internal sealed class FesStatement : StatementBase {
 				_ = _database.FbClient.isc_dsql_sql_info(
 					_statusVector,
 					ref _handle,
-					(short)items.Length,
+					(short) items.Length,
 					items,
-					(short)bufferLength,
+					(short) bufferLength,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
 
 				return buffer;
 		}
-		protected override ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
+		protected override ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				byte[] buffer = new byte[bufferLength];
@@ -634,9 +717,9 @@ internal sealed class FesStatement : StatementBase {
 				_ = _database.FbClient.isc_dsql_sql_info(
 					_statusVector,
 					ref _handle,
-					(short)items.Length,
+					(short) items.Length,
 					items,
-					(short)bufferLength,
+					(short) bufferLength,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
@@ -652,14 +735,16 @@ internal sealed class FesStatement : StatementBase {
 
 		private void Clear() => OutputParameters?.Clear();
 
-		private void ClearAll() {
+		private void ClearAll()
+		{
 				Clear();
 
 				_parameters = null;
 				_fields = null;
 		}
 
-		private void Allocate() {
+		private void Allocate()
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
@@ -676,7 +761,8 @@ internal sealed class FesStatement : StatementBase {
 				StatementType = DbStatementType.None;
 		}
 
-		private void Describe() {
+		private void Describe()
+		{
 				ClearStatusVector();
 
 				_fields = new Descriptor(_fields.ActualCount);
@@ -698,7 +784,8 @@ internal sealed class FesStatement : StatementBase {
 				_fields = descriptor;
 		}
 
-		private void DescribeParameters() {
+		private void DescribeParameters()
+		{
 				ClearStatusVector();
 
 				_parameters = new Descriptor(1);
@@ -716,7 +803,8 @@ internal sealed class FesStatement : StatementBase {
 
 				_database.ProcessStatusVector(_statusVector);
 
-				if(descriptor.ActualCount != 0 && descriptor.Count != descriptor.ActualCount) {
+				if (descriptor.ActualCount != 0 && descriptor.Count != descriptor.ActualCount)
+				{
 						short n = descriptor.ActualCount;
 						descriptor = new Descriptor(n);
 
@@ -736,13 +824,16 @@ internal sealed class FesStatement : StatementBase {
 
 						_database.ProcessStatusVector(_statusVector);
 				}
-				else {
-						if(descriptor.ActualCount == 0) {
+				else
+				{
+						if (descriptor.ActualCount == 0)
+						{
 								descriptor = new Descriptor(0);
 						}
 				}
 
-				if(sqlda != IntPtr.Zero) {
+				if (sqlda != IntPtr.Zero)
+				{
 						XsqldaMarshaler.CleanUpNativeData(ref sqlda);
 				}
 

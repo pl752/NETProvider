@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
-public enum FbDbType {
+public enum FbDbType
+{
 		Array,
 		BigInt,
 		Binary,

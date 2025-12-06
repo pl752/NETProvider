@@ -19,7 +19,8 @@
 
 namespace FirebirdSql.Data.Common;
 
-internal static class IscCodes {
+internal static class IscCodes
+{
 		#region General
 
 		public const int SQLDA_VERSION1 = 1;
@@ -1127,7 +1128,8 @@ internal static class IscCodes {
 
 		#endregion
 
-		public static class Batch {
+		public static class Batch
+		{
 				public const int VERSION1 = 1;
 
 				public const int TAG_MULTIERROR = 1;

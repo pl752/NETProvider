@@ -19,7 +19,8 @@ using System.Collections.Generic;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class SqlStateMapping {
+internal static class SqlStateMapping
+{
 		static readonly Dictionary<int, string> _mapping = new Dictionary<int, string>()
 			{
 	{335544321, "22000"}, //   1 arith_except

@@ -21,21 +21,27 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Logging;
 
-static class LogMessages {
-		public static void CommandExecution(IFbLogger log, FbCommand command) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+static class LogMessages
+{
+		public static void CommandExecution(IFbLogger log, FbCommand command)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
 				_ = sb.AppendLine("Command execution:");
 				_ = sb.AppendLine(command.CommandText);
-				if(FbLogManager.IsParameterLoggingEnabled) {
+				if (FbLogManager.IsParameterLoggingEnabled)
+				{
 						_ = sb.AppendLine("Parameters:");
-						if(!command.HasParameters) {
+						if (!command.HasParameters)
+						{
 								_ = sb.AppendLine("<no parameters>");
 						}
-						else {
-								foreach(FbParameter parameter in command.Parameters) {
+						else
+						{
+								foreach (FbParameter parameter in command.Parameters)
+								{
 										string name = parameter.ParameterName;
 										var type = parameter.FbDbType;
 										object value = !IsNullParameterValue(parameter.InternalValue) ? parameter.InternalValue : "<null>";
@@ -45,21 +51,27 @@ static class LogMessages {
 				}
 				log.Debug(sb.ToString());
 		}
-		public static void CommandExecution(IFbLogger log, FbBatchCommand command) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void CommandExecution(IFbLogger log, FbBatchCommand command)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
 				_ = sb.AppendLine("Command execution:");
 				_ = sb.AppendLine(command.CommandText);
-				if(FbLogManager.IsParameterLoggingEnabled) {
+				if (FbLogManager.IsParameterLoggingEnabled)
+				{
 						_ = sb.AppendLine("Parameters:");
-						if(command.HasParameters) {
+						if (command.HasParameters)
+						{
 								_ = sb.AppendLine("<no parameters>");
 						}
-						else {
-								foreach(var batchParameter in command.BatchParameters) {
-										foreach(FbParameter parameter in batchParameter) {
+						else
+						{
+								foreach (var batchParameter in command.BatchParameters)
+								{
+										foreach (FbParameter parameter in batchParameter)
+										{
 												string name = parameter.ParameterName;
 												var type = parameter.FbDbType;
 												object value = !IsNullParameterValue(parameter.InternalValue) ? parameter.InternalValue : "<null>";
@@ -71,8 +83,9 @@ static class LogMessages {
 				log.Debug(sb.ToString());
 		}
 
-		public static void ConnectionOpening(IFbLogger log, FbConnection connection) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void ConnectionOpening(IFbLogger log, FbConnection connection)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -80,8 +93,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Connection String: {connection.ConnectionString}");
 				log.Debug(sb.ToString());
 		}
-		public static void ConnectionOpened(IFbLogger log, FbConnection connection) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void ConnectionOpened(IFbLogger log, FbConnection connection)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -89,8 +103,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Connection String: {connection.ConnectionString}");
 				log.Debug(sb.ToString());
 		}
-		public static void ConnectionClosing(IFbLogger log, FbConnection connection) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void ConnectionClosing(IFbLogger log, FbConnection connection)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -98,8 +113,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Connection String: {connection.ConnectionString}");
 				log.Debug(sb.ToString());
 		}
-		public static void ConnectionClosed(IFbLogger log, FbConnection connection) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void ConnectionClosed(IFbLogger log, FbConnection connection)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -108,8 +124,9 @@ static class LogMessages {
 				log.Debug(sb.ToString());
 		}
 
-		public static void TransactionBeginning(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionBeginning(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -117,8 +134,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionBegan(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionBegan(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -126,8 +144,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionCommitting(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionCommitting(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -135,8 +154,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionCommitted(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionCommitted(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -144,8 +164,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRollingBack(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRollingBack(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -153,8 +174,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRolledBack(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRolledBack(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -162,8 +184,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionSaving(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionSaving(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -171,8 +194,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionSaved(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionSaved(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -180,8 +204,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionReleasingSavepoint(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionReleasingSavepoint(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -189,8 +214,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionReleasedSavepoint(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionReleasedSavepoint(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -198,8 +224,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRollingBackSavepoint(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRollingBackSavepoint(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -207,8 +234,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRolledBackSavepoint(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRolledBackSavepoint(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -216,8 +244,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionCommittingRetaining(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionCommittingRetaining(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -225,8 +254,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionCommittedRetaining(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionCommittedRetaining(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -234,8 +264,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRollingBackRetaining(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRollingBackRetaining(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();
@@ -243,8 +274,9 @@ static class LogMessages {
 				_ = sb.AppendLine($"Isolation Level: {transaction.IsolationLevel}");
 				log.Debug(sb.ToString());
 		}
-		public static void TransactionRolledBackRetaining(IFbLogger log, FbTransaction transaction) {
-				if(!log.IsEnabled(FbLogLevel.Debug))
+		public static void TransactionRolledBackRetaining(IFbLogger log, FbTransaction transaction)
+		{
+				if (!log.IsEnabled(FbLogLevel.Debug))
 						return;
 
 				var sb = new StringBuilder();

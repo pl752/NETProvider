@@ -23,11 +23,14 @@ using System.Globalization;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbCommandBuilder : DbCommandBuilder {
+public sealed class FbCommandBuilder : DbCommandBuilder
+{
 		#region Static Methods
 
-		public static void DeriveParameters(FbCommand command) {
-				if(command.CommandType != CommandType.StoredProcedure) {
+		public static void DeriveParameters(FbCommand command)
+		{
+				if (command.CommandType != CommandType.StoredProcedure)
+				{
 						throw new InvalidOperationException("DeriveParameters only supports CommandType.StoredProcedure.");
 				}
 
@@ -46,12 +49,14 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 				// SP has zero params. or not exist
 				// so check whether exists, else thow exception
-				if(spSchema.Rows.Count == 0) {
-						if(command.Connection.GetSchema("Procedures", [null, null, spName]).Rows.Count == 0)
+				if (spSchema.Rows.Count == 0)
+				{
+						if (command.Connection.GetSchema("Procedures", [null, null, spName]).Rows.Count == 0)
 								throw new InvalidOperationException("Stored procedure doesn't exist.");
 				}
 
-				foreach(DataRow row in spSchema.Rows) {
+				foreach (DataRow row in spSchema.Rows)
+				{
 						dataTypes.RowFilter = string.Format(
 							"TypeName = '{0}'",
 							row["PARAMETER_DATA_TYPE"]);
@@ -60,18 +65,21 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 							"@" + row["PARAMETER_NAME"].ToString().Trim(),
 							FbDbType.VarChar);
 
-						parameter.FbDbType = (FbDbType)dataTypes[0]["ProviderDbType"];
+						parameter.FbDbType = (FbDbType) dataTypes[0]["ProviderDbType"];
 
-						parameter.Direction = (ParameterDirection)row["PARAMETER_DIRECTION"];
+						parameter.Direction = (ParameterDirection) row["PARAMETER_DIRECTION"];
 
 						parameter.Size = Convert.ToInt32(row["PARAMETER_SIZE"], CultureInfo.InvariantCulture);
 
-						if(parameter.FbDbType is FbDbType.Decimal or
-							FbDbType.Numeric) {
-								if(row["NUMERIC_PRECISION"] != DBNull.Value) {
+						if (parameter.FbDbType is FbDbType.Decimal or
+							FbDbType.Numeric)
+						{
+								if (row["NUMERIC_PRECISION"] != DBNull.Value)
+								{
 										parameter.Precision = Convert.ToByte(row["NUMERIC_PRECISION"], CultureInfo.InvariantCulture);
 								}
-								if(row["NUMERIC_SCALE"] != DBNull.Value) {
+								if (row["NUMERIC_SCALE"] != DBNull.Value)
+								{
 										parameter.Scale = Convert.ToByte(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
 								}
 						}
@@ -91,17 +99,23 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override string QuotePrefix { get => base.QuotePrefix; set => base.QuotePrefix = string.IsNullOrEmpty(value) ? value : "\"";
+		public override string QuotePrefix
+		{
+				get => base.QuotePrefix; set => base.QuotePrefix = string.IsNullOrEmpty(value) ? value : "\"";
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override string QuoteSuffix { get => base.QuoteSuffix; set => base.QuoteSuffix = string.IsNullOrEmpty(value) ? value : "\"";
+		public override string QuoteSuffix
+		{
+				get => base.QuoteSuffix; set => base.QuoteSuffix = string.IsNullOrEmpty(value) ? value : "\"";
 		}
 
 		[DefaultValue(null)]
-		public new FbDataAdapter DataAdapter { get => (FbDataAdapter)base.DataAdapter; set => base.DataAdapter = value;
+		public new FbDataAdapter DataAdapter
+		{
+				get => (FbDataAdapter) base.DataAdapter; set => base.DataAdapter = value;
 		}
 
 		#endregion
@@ -109,11 +123,13 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 		#region Constructors
 
 		public FbCommandBuilder()
-			: this(null) {
+			: this(null)
+		{
 		}
 
 		public FbCommandBuilder(FbDataAdapter adapter)
-			: base() {
+			: base()
+		{
 				DataAdapter = adapter;
 				QuotePrefix = "\"";
 				QuoteSuffix = "\"";
@@ -136,21 +152,25 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 		public new FbCommand GetDeleteCommand(bool useColumnsForParameterNames) => base.GetDeleteCommand(useColumnsForParameterNames) as FbCommand;
 
-		public override string QuoteIdentifier(string unquotedIdentifier) {
+		public override string QuoteIdentifier(string unquotedIdentifier)
+		{
 				ArgumentNullException.ThrowIfNull(unquotedIdentifier);
 
 				return string.Format("{0}{1}{2}", QuotePrefix, unquotedIdentifier, QuoteSuffix);
 		}
 
-		public override string UnquoteIdentifier(string quotedIdentifier) {
+		public override string UnquoteIdentifier(string quotedIdentifier)
+		{
 				ArgumentNullException.ThrowIfNull(quotedIdentifier);
 
 				string unquotedIdentifier = quotedIdentifier.Trim();
 
-				if(unquotedIdentifier.StartsWith(QuotePrefix)) {
+				if (unquotedIdentifier.StartsWith(QuotePrefix))
+				{
 						unquotedIdentifier = unquotedIdentifier[1..];
 				}
-				if(unquotedIdentifier.EndsWith(QuoteSuffix)) {
+				if (unquotedIdentifier.EndsWith(QuoteSuffix))
+				{
 						unquotedIdentifier = unquotedIdentifier[..^1];
 				}
 
@@ -161,17 +181,20 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 		#region Protected DbCommandBuilder methods
 
-		protected override void ApplyParameterInfo(DbParameter p, DataRow row, StatementType statementType, bool whereClause) {
-				var parameter = (FbParameter)p;
+		protected override void ApplyParameterInfo(DbParameter p, DataRow row, StatementType statementType, bool whereClause)
+		{
+				var parameter = (FbParameter) p;
 
 				parameter.Size = int.Parse(row["ColumnSize"].ToString());
-				if(row["NumericPrecision"] != DBNull.Value) {
+				if (row["NumericPrecision"] != DBNull.Value)
+				{
 						parameter.Precision = byte.Parse(row["NumericPrecision"].ToString());
 				}
-				if(row["NumericScale"] != DBNull.Value) {
+				if (row["NumericScale"] != DBNull.Value)
+				{
 						parameter.Scale = byte.Parse(row["NumericScale"].ToString());
 				}
-				parameter.FbDbType = (FbDbType)row["ProviderType"];
+				parameter.FbDbType = (FbDbType) row["ProviderType"];
 		}
 
 		protected override string GetParameterName(int parameterOrdinal) => string.Format("@p{0}", parameterOrdinal);
@@ -180,13 +203,15 @@ public sealed class FbCommandBuilder : DbCommandBuilder {
 
 		protected override string GetParameterPlaceholder(int parameterOrdinal) => GetParameterName(parameterOrdinal);
 
-		protected override void SetRowUpdatingHandler(DbDataAdapter adapter) {
-				if(adapter is not FbDataAdapter) {
+		protected override void SetRowUpdatingHandler(DbDataAdapter adapter)
+		{
+				if (adapter is not FbDataAdapter)
+				{
 						throw new ArgumentException($"Argument needs to be a {nameof(FbDataAdapter)}.", nameof(adapter));
 				}
 
 				_rowUpdatingHandler = new EventHandler<FbRowUpdatingEventArgs>(RowUpdatingHandler);
-				((FbDataAdapter)adapter).RowUpdating += _rowUpdatingHandler;
+				((FbDataAdapter) adapter).RowUpdating += _rowUpdatingHandler;
 		}
 
 		#endregion

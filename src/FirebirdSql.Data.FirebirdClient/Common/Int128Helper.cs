@@ -21,27 +21,34 @@ using System.Numerics;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class Int128Helper {
-		public static BigInteger GetInt128(byte[] value) {
+internal static class Int128Helper
+{
+		public static BigInteger GetInt128(byte[] value)
+		{
 				Debug.Assert(value.Length == 16);
-				if(!BitConverter.IsLittleEndian) {
+				if (!BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(value);
 				}
 				return new BigInteger(value);
 		}
 
-		public static byte[] GetBytes(BigInteger value) {
+		public static byte[] GetBytes(BigInteger value)
+		{
 				byte[] result = value.ToByteArray();
-				if(result.Length > 16) {
+				if (result.Length > 16)
+				{
 						throw new ArgumentOutOfRangeException("Value too big for Int128.");
 				}
-				if(result.Length < 16) {
-						byte padding = value.Sign == -1 ? (byte)255 : (byte)0;
+				if (result.Length < 16)
+				{
+						byte padding = value.Sign == -1 ? (byte) 255 : (byte) 0;
 						byte[] tmp = [padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding];
 						Buffer.BlockCopy(result, 0, tmp, 0, result.Length);
 						result = tmp;
 				}
-				if(!BitConverter.IsLittleEndian) {
+				if (!BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(result);
 				}
 				return result;

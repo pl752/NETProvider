@@ -31,7 +31,8 @@ namespace FirebirdSql.Data.Client.Native;
 /// This class generates a dynamic class that implements the <see cref="IFbClient"/> interface and
 /// calls the native methods in a given "fbembed.dll" (though you can name it anything you like).
 /// </summary>
-internal static class FbClientFactory {
+internal static class FbClientFactory
+{
 		private static readonly string DefaultDllName = "fbembed";
 
 		/// <summary>
@@ -45,7 +46,8 @@ internal static class FbClientFactory {
 		/// <summary>
 		/// Static constructor sets up member variables.
 		/// </summary>
-		static FbClientFactory() {
+		static FbClientFactory()
+		{
 				cache = [];
 				cacheLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 				injectionTypes = new HashSet<Type>(typeof(FbClientFactory).Assembly.GetTypes()
@@ -60,30 +62,38 @@ internal static class FbClientFactory {
 		/// </summary>
 		/// <param name="dllName">The name of the DLL to load (e.g. "fbembed", "C:\path\to\fbembed.dll", etc)</param>
 		/// <returns>A class that implements <see cref="IFbClient"/> and calls into the native library you specify.</returns>
-		public static IFbClient Create(string dllName) {
-				if(string.IsNullOrEmpty(dllName)) {
+		public static IFbClient Create(string dllName)
+		{
+				if (string.IsNullOrEmpty(dllName))
+				{
 						dllName = DefaultDllName;
 				}
 
 				cacheLock.EnterUpgradeableReadLock();
-				try {
-						if(cache.TryGetValue(dllName, out var result)) {
+				try
+				{
+						if (cache.TryGetValue(dllName, out var result))
+						{
 								return result;
 						}
-						else {
+						else
+						{
 								cacheLock.EnterWriteLock();
-								try {
+								try
+								{
 										result = BuildFbClient(dllName);
 										cache.Add(dllName, result);
 										ShutdownHelper.RegisterFbClientShutdown(() => NativeHelpers.CallIfExists(nameof(IFbClient.fb_shutdown), () => result.fb_shutdown(0, 0)));
 										return result;
 								}
-								finally {
+								finally
+								{
 										cacheLock.ExitWriteLock();
 								}
 						}
 				}
-				finally {
+				finally
+				{
 						cacheLock.ExitUpgradeableReadLock();
 				}
 		}
@@ -99,7 +109,8 @@ internal static class FbClientFactory {
 		/// <para>Note: To be completly generic, we actually reflect through <see cref="IFbClient"/>
 		/// to get the methods and parameters to generate.</para>
 		/// </remarks>
-		private static IFbClient BuildFbClient(string dllName) {
+		private static IFbClient BuildFbClient(string dllName)
+		{
 				// Get the initial TypeBuilder, with a "blank" class definition
 				var tb = CreateTypeBuilder(dllName);
 
@@ -108,7 +119,8 @@ internal static class FbClientFactory {
 
 				// Now, go through all the methods in IFbClient and generate the corresponding methods
 				// in our dynamic type.
-				foreach(var mi in typeof(IFbClient).GetMethods()) {
+				foreach (var mi in typeof(IFbClient).GetMethods())
+				{
 						GenerateMethod(tb, mi, dllName);
 				}
 
@@ -122,14 +134,16 @@ internal static class FbClientFactory {
 		/// <param name="tb">The <see cref="TypeBuilder"/> we're generating our type with.</param>
 		/// <param name="mi">The <see cref="MethodInfo"/> which represents the "template" method.</param>
 		/// <param name="dllName">The path to the DLL that we'll put in the <see cref="DllImportAttribute"/>.</param>
-		private static void GenerateMethod(TypeBuilder tb, MethodInfo mi, string dllName) {
+		private static void GenerateMethod(TypeBuilder tb, MethodInfo mi, string dllName)
+		{
 				// These are all the parameters in our method
 				var pis = new List<ParameterInfo>(mi.GetParameters());
 
 				// We need to keep the parameter types and attributes in a separate array.
 				var ptypes = new Type[pis.Count];
 				var attrs = new ParameterAttributes[pis.Count];
-				for(int i = 0; i < pis.Count; i++) {
+				for (int i = 0; i < pis.Count; i++)
+				{
 						ptypes[i] = pis[i].ParameterType;
 						attrs[i] = pis[i].Attributes;
 				}
@@ -153,7 +167,8 @@ internal static class FbClientFactory {
 				smb.SetCustomAttribute(cab);
 
 				// Also, any attributes on the actual parameters need to be copied to the P/Invoke declaration as well.
-				for(int i = 0; i < attrs.Length; i++) {
+				for (int i = 0; i < attrs.Length; i++)
+				{
 						_ = smb.DefineParameter(i + 1, attrs[i], pis[i].Name);
 				}
 
@@ -165,14 +180,16 @@ internal static class FbClientFactory {
 					mi.ReturnType, ptypes);
 
 				// Also, any attributes on the actual parameters need to be copied to the P/Invoke declaration as well.
-				for(int i = 0; i < attrs.Length; i++) {
+				for (int i = 0; i < attrs.Length; i++)
+				{
 						_ = mb.DefineParameter(i + 1, attrs[i], pis[i].Name);
 				}
 
 				// We need to generate a little IL here to actually call the P/Invoke declaration. Luckily for us, since we're just
 				// going to pass our parameters to the P/Invoke method as-is, we don't need to muck with the eval stack ;-)
 				var il = mb.GetILGenerator();
-				for(int i = 1; i <= pis.Count; i++) {
+				for (int i = 1; i <= pis.Count; i++)
+				{
 						EmitLdarg(il, i);
 				}
 
@@ -189,13 +206,17 @@ internal static class FbClientFactory {
 		private static void EmitClientInjectionToFirebirdHandleOjects(
 			Type returnType,
 			List<ParameterInfo> pis,
-			ILGenerator il) {
+			ILGenerator il)
+		{
 				bool injectProperties = pis.Select(x => x.ParameterType).Intersect(injectionTypes).Any();
-				if(injectProperties) {
+				if (injectProperties)
+				{
 						_ = il.DeclareLocal(returnType);
 						il.Emit(OpCodes.Stloc_0);
-						for(int i = 0; i < pis.Count; i++) {
-								if(injectionTypes.Contains(pis[i].ParameterType)) {
+						for (int i = 0; i < pis.Count; i++)
+						{
+								if (injectionTypes.Contains(pis[i].ParameterType))
+								{
 										EmitLdarg(il, i + 1);
 										il.Emit(OpCodes.Ldind_Ref);
 										il.Emit(OpCodes.Ldarg_0);
@@ -208,18 +229,23 @@ internal static class FbClientFactory {
 				}
 		}
 
-		private static void EmitLdarg(ILGenerator il, int i) {
-				if(i == 1) {
+		private static void EmitLdarg(ILGenerator il, int i)
+		{
+				if (i == 1)
+				{
 						il.Emit(OpCodes.Ldarg_1);
 				}
-				else if(i == 2) {
+				else if (i == 2)
+				{
 						il.Emit(OpCodes.Ldarg_2);
 				}
-				else if(i == 3) {
+				else if (i == 3)
+				{
 						il.Emit(OpCodes.Ldarg_3);
 				}
-				else {
-						il.Emit(OpCodes.Ldarg_S, (short)i);
+				else
+				{
+						il.Emit(OpCodes.Ldarg_S, (short) i);
 				}
 		}
 
@@ -228,7 +254,8 @@ internal static class FbClientFactory {
 		/// </summary>
 		/// <param name="tb">The <see cref="TypeBuilder"/> that we created our type with.</param>
 		/// <returns>An instance of our type, cast as an <see cref="IFbClient"/>.</returns>
-		private static IFbClient CreateInstance(TypeBuilder tb) {
+		private static IFbClient CreateInstance(TypeBuilder tb)
+		{
 				var t = tb.CreateTypeInfo().AsType();
 
 #if DEBUG
@@ -238,7 +265,7 @@ internal static class FbClientFactory {
 #endif
 #endif
 
-				return (IFbClient)Activator.CreateInstance(t);
+				return (IFbClient) Activator.CreateInstance(t);
 		}
 
 		/// <summary>
@@ -252,11 +279,13 @@ internal static class FbClientFactory {
 		/// passed into <see cref="BuildFbClient"/>. This might be inefficient, but since we're mostly
 		/// only ever going to have one (or maybe two) different <c>dllName</c>s, it's not a big deal.</para>
 		/// </remarks>
-		private static TypeBuilder CreateTypeBuilder(string baseName) {
+		private static TypeBuilder CreateTypeBuilder(string baseName)
+		{
 				baseName = SanitizeBaseName(baseName);
 
 				// Generate a name for our assembly, based on the name of the DLL.
-				var assemblyName = new AssemblyName {
+				var assemblyName = new AssemblyName
+				{
 						Name = baseName + "_Assembly"
 				};
 

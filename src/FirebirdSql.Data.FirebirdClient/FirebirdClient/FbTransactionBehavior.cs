@@ -21,7 +21,8 @@ namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
 [Flags]
-public enum FbTransactionBehavior {
+public enum FbTransactionBehavior
+{
 		Consistency = 1 << 0,
 		Concurrency = 1 << 1,
 		Shared = 1 << 2,

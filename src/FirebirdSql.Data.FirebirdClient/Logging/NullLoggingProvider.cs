@@ -19,10 +19,12 @@ using System;
 
 namespace FirebirdSql.Data.Logging;
 
-sealed class NullLoggingProvider : IFbLoggingProvider {
+sealed class NullLoggingProvider : IFbLoggingProvider
+{
 		public IFbLogger CreateLogger(string name) => NullLogger.Instance;
 
-		sealed class NullLogger : IFbLogger {
+		sealed class NullLogger : IFbLogger
+		{
 				internal static NullLogger Instance = new NullLogger();
 
 				NullLogger() { }

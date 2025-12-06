@@ -24,7 +24,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version10;
 
-internal class GdsTransaction : TransactionBase {
+internal class GdsTransaction : TransactionBase
+{
 		#region Fields
 
 		private int _handle;
@@ -41,7 +42,8 @@ internal class GdsTransaction : TransactionBase {
 
 		#region Constructors
 
-		public GdsTransaction(GdsDatabase database) {
+		public GdsTransaction(GdsDatabase database)
+		{
 				_database = database;
 				State = TransactionState.NoTransaction;
 		}
@@ -50,10 +52,13 @@ internal class GdsTransaction : TransactionBase {
 
 		#region Dispose2
 
-		public override void Dispose2() {
-				if(!_disposed) {
+		public override void Dispose2()
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
-						if(State != TransactionState.NoTransaction) {
+						if (State != TransactionState.NoTransaction)
+						{
 								Rollback();
 						}
 						_database = null;
@@ -62,10 +67,13 @@ internal class GdsTransaction : TransactionBase {
 						base.Dispose2();
 				}
 		}
-		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default) {
-				if(!_disposed) {
+		public override async ValueTask Dispose2Async(CancellationToken cancellationToken = default)
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
-						if(State != TransactionState.NoTransaction) {
+						if (State != TransactionState.NoTransaction)
+						{
 								await RollbackAsync(cancellationToken).ConfigureAwait(false);
 						}
 						_database = null;
@@ -79,55 +87,65 @@ internal class GdsTransaction : TransactionBase {
 
 		#region Methods
 
-		public override void BeginTransaction(TransactionParameterBuffer tpb) {
-				if(State != TransactionState.NoTransaction) {
+		public override void BeginTransaction(TransactionParameterBuffer tpb)
+		{
+				if (State != TransactionState.NoTransaction)
+				{
 						throw new InvalidOperationException();
 				}
 
-				try {
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_transaction);
 						_database.Xdr.Write(_database.Handle);
 						_database.Xdr.WriteBuffer(tpb.ToArray());
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						_database.TransactionCount++;
 
 						_handle = response.ObjectHandle;
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default) {
-				if(State != TransactionState.NoTransaction) {
+		public override async ValueTask BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default)
+		{
+				if (State != TransactionState.NoTransaction)
+				{
 						throw new InvalidOperationException();
 				}
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_transaction, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_database.Handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteBufferAsync(tpb.ToArray(), cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						_database.TransactionCount++;
 
 						_handle = response.ObjectHandle;
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Commit() {
+		public override void Commit()
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_commit);
 						_database.Xdr.Write(_handle);
 						_database.Xdr.Flush();
@@ -140,14 +158,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.NoTransaction;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask CommitAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask CommitAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_commit, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -160,15 +181,18 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.NoTransaction;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Rollback() {
+		public override void Rollback()
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_rollback);
 						_database.Xdr.Write(_handle);
 						_database.Xdr.Flush();
@@ -181,14 +205,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.NoTransaction;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask RollbackAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask RollbackAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_rollback, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -201,15 +228,18 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.NoTransaction;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void CommitRetaining() {
+		public override void CommitRetaining()
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_commit_retaining);
 						_database.Xdr.Write(_handle);
 						_database.Xdr.Flush();
@@ -218,14 +248,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask CommitRetainingAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask CommitRetainingAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_commit_retaining, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -234,15 +267,18 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void RollbackRetaining() {
+		public override void RollbackRetaining()
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_rollback_retaining);
 						_database.Xdr.Write(_handle);
 						_database.Xdr.Flush();
@@ -251,14 +287,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask RollbackRetainingAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask RollbackRetainingAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_rollback_retaining, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -267,15 +306,18 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Active;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Prepare() {
+		public override void Prepare()
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						State = TransactionState.NoTransaction;
 
 						_database.Xdr.Write(IscCodes.op_prepare);
@@ -286,14 +328,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask PrepareAsync(CancellationToken cancellationToken = default) {
+		public override async ValueTask PrepareAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						State = TransactionState.NoTransaction;
 
 						await _database.Xdr.WriteAsync(IscCodes.op_prepare, cancellationToken).ConfigureAwait(false);
@@ -304,15 +349,18 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Prepare(byte[] buffer) {
+		public override void Prepare(byte[] buffer)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						State = TransactionState.NoTransaction;
 
 						_database.Xdr.Write(IscCodes.op_prepare2);
@@ -324,14 +372,17 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default) {
+		public override async ValueTask PrepareAsync(byte[] buffer, CancellationToken cancellationToken = default)
+		{
 				EnsureActiveTransactionState();
 
-				try {
+				try
+				{
 						State = TransactionState.NoTransaction;
 
 						await _database.Xdr.WriteAsync(IscCodes.op_prepare2, cancellationToken).ConfigureAwait(false);
@@ -343,7 +394,8 @@ internal class GdsTransaction : TransactionBase {
 
 						State = TransactionState.Prepared;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
@@ -351,12 +403,14 @@ internal class GdsTransaction : TransactionBase {
 		public override List<object> GetTransactionInfo(byte[] items) => GetTransactionInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
 		public override ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetTransactionInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
-		public override List<object> GetTransactionInfo(byte[] items, int bufferLength) {
+		public override List<object> GetTransactionInfo(byte[] items, int bufferLength)
+		{
 				byte[] buffer = new byte[bufferLength];
 				DatabaseInfo(items, buffer, buffer.Length);
 				return IscHelper.ParseTransactionInfo(buffer, _database.Charset);
 		}
-		public override async ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
+		public override async ValueTask<List<object>> GetTransactionInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+		{
 				byte[] buffer = new byte[bufferLength];
 				await DatabaseInfoAsync(items, buffer, buffer.Length, cancellationToken).ConfigureAwait(false);
 				return IscHelper.ParseTransactionInfo(buffer, _database.Charset);
@@ -366,8 +420,10 @@ internal class GdsTransaction : TransactionBase {
 
 		#region Private Methods
 
-		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength) {
-				try {
+		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength)
+		{
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_info_transaction);
 						_database.Xdr.Write(_handle);
 						_database.Xdr.Write(GdsDatabase.Incarnation);
@@ -376,22 +432,26 @@ internal class GdsTransaction : TransactionBase {
 
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		private async ValueTask DatabaseInfoAsync(byte[] items, byte[] buffer, int bufferLength, CancellationToken cancellationToken = default) {
-				try {
+		private async ValueTask DatabaseInfoAsync(byte[] items, byte[] buffer, int bufferLength, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_info_transaction, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(GdsDatabase.Incarnation, cancellationToken).ConfigureAwait(false);
@@ -400,17 +460,19 @@ internal class GdsTransaction : TransactionBase {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}

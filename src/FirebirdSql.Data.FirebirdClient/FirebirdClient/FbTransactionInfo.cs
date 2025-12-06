@@ -23,7 +23,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbTransactionInfo(FbTransaction transaction = null) {
+public sealed class FbTransactionInfo(FbTransaction transaction = null)
+{
 		#region Properties
 
 		public FbTransaction Transaction { get; set; } = transaction;
@@ -42,7 +43,8 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 
 		#region Private Methods
 
-		private T GetValue<T>(byte item) {
+		private T GetValue<T>(byte item)
+		{
 				FbTransaction.EnsureActive(Transaction);
 
 				byte[] items =
@@ -53,7 +55,8 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 				var info = Transaction.Transaction.GetTransactionInfo(items);
 				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
 		}
-		private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default) {
+		private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default)
+		{
 				FbTransaction.EnsureActive(Transaction);
 
 				byte[] items =
@@ -65,7 +68,8 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
 		}
 
-		private List<T> GetList<T>(byte item) {
+		private List<T> GetList<T>(byte item)
+		{
 				FbTransaction.EnsureActive(Transaction);
 
 				byte[] items =
@@ -76,7 +80,8 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 
 				return [.. Transaction.Transaction.GetTransactionInfo(items).Select(InfoValuesHelper.ConvertValue<T>)];
 		}
-		private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default) {
+		private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default)
+		{
 				FbTransaction.EnsureActive(Transaction);
 
 				byte[] items =

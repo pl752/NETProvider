@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Client.Managed.Version15;
 
-internal class GdsStatement : Version13.GdsStatement {
+internal class GdsStatement : Version13.GdsStatement
+{
 		public GdsStatement(GdsDatabase database)
 			: base(database) { }
 

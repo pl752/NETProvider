@@ -22,14 +22,17 @@ using System.ComponentModel;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [ListBindable(false)]
-public sealed class FbBatchParameterCollection : IList<FbParameterCollection> {
+public sealed class FbBatchParameterCollection : IList<FbParameterCollection>
+{
 		readonly List<FbParameterCollection> _inner;
 
-		internal FbBatchParameterCollection() {
+		internal FbBatchParameterCollection()
+		{
 				_inner = [];
 		}
 
-		public FbParameterCollection this[int index] {
+		public FbParameterCollection this[int index]
+		{
 				get => _inner[index];
 				set => _inner[index] = value;
 		}

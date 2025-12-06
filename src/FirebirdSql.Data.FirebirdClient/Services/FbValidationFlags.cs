@@ -21,7 +21,8 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbValidationFlags {
+public enum FbValidationFlags
+{
 		ValidateDatabase = IscCodes.isc_spb_rpr_validate_db,
 		SweepDatabase = IscCodes.isc_spb_rpr_sweep_db,
 		MendDatabase = IscCodes.isc_spb_rpr_mend_db,

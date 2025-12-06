@@ -20,7 +20,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class EmptyDescriptorFiller : IDescriptorFiller {
+internal sealed class EmptyDescriptorFiller : IDescriptorFiller
+{
 		public static readonly EmptyDescriptorFiller Instance = new EmptyDescriptorFiller();
 
 		private EmptyDescriptorFiller() { }

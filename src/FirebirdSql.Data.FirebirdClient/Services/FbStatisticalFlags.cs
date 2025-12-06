@@ -23,7 +23,8 @@ namespace FirebirdSql.Data.Services;
 /// Flags used by FbStatistical.Options
 /// </summary>
 [Flags]
-public enum FbStatisticalFlags {
+public enum FbStatisticalFlags
+{
 		/// <summary>
 		/// analyze data pages
 		/// </summary>

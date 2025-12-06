@@ -24,7 +24,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesBlob : BlobBase {
+internal sealed class FesBlob : BlobBase
+{
 		#region Fields
 
 		private readonly FesDatabase _database;
@@ -44,11 +45,13 @@ internal sealed class FesBlob : BlobBase {
 		#region Constructors
 
 		public FesBlob(FesDatabase database, FesTransaction transaction)
-			: this(database, transaction, 0) {
+			: this(database, transaction, 0)
+		{
 		}
 
 		public FesBlob(FesDatabase database, FesTransaction transaction, long blobId)
-			: base(database) {
+			: base(database)
+		{
 				_database = database;
 				_transaction = transaction;
 				_position = 0;
@@ -61,11 +64,12 @@ internal sealed class FesBlob : BlobBase {
 
 		#region Protected Methods
 
-		public override void Create() {
+		public override void Create()
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction)_transaction).HandlePtr;
+				var trHandle = ((FesTransaction) _transaction).HandlePtr;
 
 				_ = _database.FbClient.isc_create_blob2(
 					_statusVector,
@@ -82,11 +86,12 @@ internal sealed class FesBlob : BlobBase {
 
 				RblAddValue(IscCodes.RBL_create);
 		}
-		public override ValueTask CreateAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask CreateAsync(CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction)_transaction).HandlePtr;
+				var trHandle = ((FesTransaction) _transaction).HandlePtr;
 
 				_ = _database.FbClient.isc_create_blob2(
 					_statusVector,
@@ -106,11 +111,12 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override void Open() {
+		public override void Open()
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction)_transaction).HandlePtr;
+				var trHandle = ((FesTransaction) _transaction).HandlePtr;
 
 				_ = _database.FbClient.isc_open_blob2(
 					_statusVector,
@@ -125,11 +131,12 @@ internal sealed class FesBlob : BlobBase {
 
 				_isOpen = true;
 		}
-		public override ValueTask OpenAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask OpenAsync(CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
-				var trHandle = ((FesTransaction)_transaction).HandlePtr;
+				var trHandle = ((FesTransaction) _transaction).HandlePtr;
 
 				_ = _database.FbClient.isc_open_blob2(
 					_statusVector,
@@ -147,7 +154,8 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override int GetLength() {
+		public override int GetLength()
+		{
 				ClearStatusVector();
 
 				byte[] buffer = new byte[20];
@@ -157,18 +165,19 @@ internal sealed class FesBlob : BlobBase {
 					ref _blobHandle,
 					1,
 					[IscCodes.isc_info_blob_total_length],
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
 
 				long length = IscHelper.VaxInteger(buffer, 1, 2);
-				long size = IscHelper.VaxInteger(buffer, 3, (int)length);
+				long size = IscHelper.VaxInteger(buffer, 3, (int) length);
 
-				return (int)size;
+				return (int) size;
 		}
 
-		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				byte[] buffer = new byte[20];
@@ -178,19 +187,20 @@ internal sealed class FesBlob : BlobBase {
 					ref _blobHandle,
 					1,
 					[IscCodes.isc_info_blob_total_length],
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
 
 				long length = IscHelper.VaxInteger(buffer, 1, 2);
-				long size = IscHelper.VaxInteger(buffer, 3, (int)length);
+				long size = IscHelper.VaxInteger(buffer, 3, (int) length);
 
-				return ValueTask2.FromResult((int)size);
+				return ValueTask2.FromResult((int) size);
 		}
 
-		public override void GetSegment(Stream stream) {
-				short requested = (short)SegmentSize;
+		public override void GetSegment(Stream stream)
+		{
+				short requested = (short) SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
@@ -206,23 +216,28 @@ internal sealed class FesBlob : BlobBase {
 
 				RblRemoveValue(IscCodes.RBL_segment);
 
-				if(_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof)) {
+				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
+				{
 						RblAddValue(IscCodes.RBL_eof_pending);
 						return;
 				}
-				else {
-						if(status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment)) {
+				else
+				{
+						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else {
+						else
+						{
 								_database.ProcessStatusVector(_statusVector);
 						}
 				}
 
 				stream.Write(tmp, 0, segmentLength);
 		}
-		public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default) {
-				short requested = (short)SegmentSize;
+		public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default)
+		{
+				short requested = (short) SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
@@ -239,15 +254,19 @@ internal sealed class FesBlob : BlobBase {
 
 				RblRemoveValue(IscCodes.RBL_segment);
 
-				if(_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof)) {
+				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
+				{
 						RblAddValue(IscCodes.RBL_eof_pending);
 						return ValueTask2.CompletedTask;
 				}
-				else {
-						if(status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment)) {
+				else
+				{
+						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else {
+						else
+						{
 								_database.ProcessStatusVector(_statusVector);
 						}
 				}
@@ -257,8 +276,9 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override byte[] GetSegment() {
-				short requested = (short)(SegmentSize - 2);
+		public override byte[] GetSegment()
+		{
+				short requested = (short) (SegmentSize - 2);
 				short segmentLength = 0;
 
 				ClearStatusVector();
@@ -275,20 +295,24 @@ internal sealed class FesBlob : BlobBase {
 
 				RblRemoveValue(IscCodes.RBL_segment);
 
-				if(_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof)) {
+				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
+				{
 						RblAddValue(IscCodes.RBL_eof_pending);
 						return [];
 				}
 
-				if(status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment)) {
+				if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+				{
 						RblAddValue(IscCodes.RBL_segment);
 				}
-				else {
+				else
+				{
 						_database.ProcessStatusVector(_statusVector);
 				}
 
 				byte[] actualSegment = tmp;
-				if(actualSegment.Length != segmentLength) {
+				if (actualSegment.Length != segmentLength)
+				{
 						tmp = new byte[segmentLength];
 						Array.Copy(actualSegment, tmp, segmentLength);
 						actualSegment = tmp;
@@ -296,8 +320,9 @@ internal sealed class FesBlob : BlobBase {
 
 				return actualSegment;
 		}
-		public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default) {
-				short requested = (short)SegmentSize;
+		public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default)
+		{
+				short requested = (short) SegmentSize;
 				short segmentLength = 0;
 
 				ClearStatusVector();
@@ -314,21 +339,26 @@ internal sealed class FesBlob : BlobBase {
 
 				RblRemoveValue(IscCodes.RBL_segment);
 
-				if(_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof)) {
+				if (_statusVector[1] == new IntPtr(IscCodes.isc_segstr_eof))
+				{
 						RblAddValue(IscCodes.RBL_eof_pending);
 						return ValueTask2.FromResult(Array.Empty<byte>());
 				}
-				else {
-						if(status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment)) {
+				else
+				{
+						if (status == IntPtr.Zero || _statusVector[1] == new IntPtr(IscCodes.isc_segment))
+						{
 								RblAddValue(IscCodes.RBL_segment);
 						}
-						else {
+						else
+						{
 								_database.ProcessStatusVector(_statusVector);
 						}
 				}
 
 				byte[] actualSegment = tmp;
-				if(actualSegment.Length != segmentLength) {
+				if (actualSegment.Length != segmentLength)
+				{
 						tmp = new byte[segmentLength];
 						Array.Copy(actualSegment, tmp, segmentLength);
 						actualSegment = tmp;
@@ -337,24 +367,26 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.FromResult(actualSegment);
 		}
 
-		public override void PutSegment(byte[] buffer) {
+		public override void PutSegment(byte[] buffer)
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_put_segment(
 					_statusVector,
 					ref _blobHandle,
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default) {
+		public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_put_segment(
 					_statusVector,
 					ref _blobHandle,
-					(short)buffer.Length,
+					(short) buffer.Length,
 					buffer);
 
 				_database.ProcessStatusVector(_statusVector);
@@ -362,27 +394,29 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override void Seek(int position, int seekOperation) {
+		public override void Seek(int position, int seekOperation)
+		{
 				ClearStatusVector();
 
 				int resultingPosition = 0;
 				_ = _database.FbClient.isc_seek_blob(
 					_statusVector,
 					ref _blobHandle,
-					(short)seekOperation,
+					(short) seekOperation,
 					position,
 					ref resultingPosition);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default) {
+		public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				int resultingPosition = 0;
 				_ = _database.FbClient.isc_seek_blob(
 					_statusVector,
 					ref _blobHandle,
-					(short)seekOperation,
+					(short) seekOperation,
 					position,
 					ref resultingPosition);
 
@@ -391,14 +425,16 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override void Close() {
+		public override void Close()
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		public override ValueTask CloseAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_close_blob(_statusVector, ref _blobHandle);
@@ -408,14 +444,16 @@ internal sealed class FesBlob : BlobBase {
 				return ValueTask2.CompletedTask;
 		}
 
-		public override void Cancel() {
+		public override void Cancel()
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		public override ValueTask CancelAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask CancelAsync(CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				_ = _database.FbClient.isc_cancel_blob(_statusVector, ref _blobHandle);

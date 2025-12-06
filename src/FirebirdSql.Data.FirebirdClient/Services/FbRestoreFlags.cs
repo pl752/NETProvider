@@ -22,7 +22,8 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbRestoreFlags {
+public enum FbRestoreFlags
+{
 		DeactivateIndexes = IscCodes.isc_spb_res_deactivate_idx,
 		NoShadow = IscCodes.isc_spb_res_no_shadow,
 		NoValidity = IscCodes.isc_spb_res_no_validity,

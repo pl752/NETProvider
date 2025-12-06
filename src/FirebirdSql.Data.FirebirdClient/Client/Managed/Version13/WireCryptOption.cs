@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal enum WireCryptOption {
+internal enum WireCryptOption
+{
 		Disabled,
 		Enabled,
 		Required,

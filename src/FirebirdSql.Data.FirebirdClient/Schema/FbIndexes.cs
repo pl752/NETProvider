@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbIndexes : FbSchema {
+internal class FbIndexes : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -46,25 +48,31 @@ internal class FbIndexes : FbSchema {
 					idx.rdb$description AS DESCRIPTION
 				FROM rdb$indices idx");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* TABLE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* TABLE_SCHEMA	*/
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("idx.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* INDEX_NAME */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								if(where.Length > 0) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
+								if (where.Length > 0)
+								{
 										_ = where.Append(" AND ");
 								}
 
@@ -72,7 +80,8 @@ internal class FbIndexes : FbSchema {
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -81,11 +90,13 @@ internal class FbIndexes : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 				_ = schema.Columns.Add("IS_PRIMARY", typeof(bool));
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						row["IS_UNIQUE"] = !(row["IS_UNIQUE"] == DBNull.Value || Convert.ToInt32(row["IS_UNIQUE"], CultureInfo.InvariantCulture) == 0);
 
 						row["IS_PRIMARY"] = !(row["PRIMARY_KEY"] == DBNull.Value || Convert.ToInt32(row["PRIMARY_KEY"], CultureInfo.InvariantCulture) == 0);

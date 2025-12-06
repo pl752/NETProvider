@@ -26,7 +26,8 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbDatabaseInfo(FbConnection connection = null) {
+public sealed class FbDatabaseInfo(FbConnection connection = null)
+{
 		#region Properties
 
 		public FbConnection Connection { get; set; } = connection;
@@ -189,7 +190,8 @@ public sealed class FbDatabaseInfo(FbConnection connection = null) {
 
 		#region Private Methods
 
-		private T GetValue<T>(byte item) {
+		private T GetValue<T>(byte item)
+		{
 				FbConnection.EnsureOpen(Connection);
 
 				byte[] items =
@@ -200,7 +202,8 @@ public sealed class FbDatabaseInfo(FbConnection connection = null) {
 				var info = Connection.InnerConnection.Database.GetDatabaseInfo(items);
 				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
 		}
-		private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default) {
+		private async Task<T> GetValueAsync<T>(byte item, CancellationToken cancellationToken = default)
+		{
 				FbConnection.EnsureOpen(Connection);
 
 				byte[] items =
@@ -212,7 +215,8 @@ public sealed class FbDatabaseInfo(FbConnection connection = null) {
 				return info.Any() ? InfoValuesHelper.ConvertValue<T>(info[0]) : default;
 		}
 
-		private List<T> GetList<T>(byte item) {
+		private List<T> GetList<T>(byte item)
+		{
 				FbConnection.EnsureOpen(Connection);
 
 				byte[] items =
@@ -223,7 +227,8 @@ public sealed class FbDatabaseInfo(FbConnection connection = null) {
 
 				return [.. Connection.InnerConnection.Database.GetDatabaseInfo(items).Select(InfoValuesHelper.ConvertValue<T>)];
 		}
-		private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default) {
+		private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default)
+		{
 				FbConnection.EnsureOpen(Connection);
 
 				byte[] items =

@@ -26,7 +26,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesArray : ArrayBase {
+internal sealed class FesArray : ArrayBase
+{
 		#region Fields
 
 		private long _handle;
@@ -38,13 +39,19 @@ internal sealed class FesArray : ArrayBase {
 
 		#region Properties
 
-		public override long Handle { get => _handle; set => _handle = value;
+		public override long Handle
+		{
+				get => _handle; set => _handle = value;
 		}
 
-		public override DatabaseBase Database { get => _database; set => _database = (FesDatabase)value;
+		public override DatabaseBase Database
+		{
+				get => _database; set => _database = (FesDatabase) value;
 		}
 
-		public override TransactionBase Transaction { get => _transaction; set => _transaction = (FesTransaction)value;
+		public override TransactionBase Transaction
+		{
+				get => _transaction; set => _transaction = (FesTransaction) value;
 		}
 
 		#endregion
@@ -52,7 +59,8 @@ internal sealed class FesArray : ArrayBase {
 		#region Constructors
 
 		public FesArray(ArrayDesc descriptor)
-			: base(descriptor) {
+			: base(descriptor)
+		{
 				_statusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 		}
 
@@ -60,7 +68,8 @@ internal sealed class FesArray : ArrayBase {
 			: this(database, transaction, -1, tableName, fieldName) { }
 
 		public FesArray(FesDatabase database, FesTransaction transaction, long handle, string tableName, string fieldName)
-			: base(tableName, fieldName) {
+			: base(tableName, fieldName)
+		{
 				_database = database;
 				_transaction = transaction;
 				_handle = handle;
@@ -71,7 +80,8 @@ internal sealed class FesArray : ArrayBase {
 
 		#region Methods
 
-		public override byte[] GetSlice(int sliceLength) {
+		public override byte[] GetSlice(int sliceLength)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
@@ -96,7 +106,8 @@ internal sealed class FesArray : ArrayBase {
 
 				return buffer;
 		}
-		public override ValueTask<byte[]> GetSliceAsync(int sliceLength, CancellationToken cancellationToken = default) {
+		public override ValueTask<byte[]> GetSliceAsync(int sliceLength, CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
@@ -122,7 +133,8 @@ internal sealed class FesArray : ArrayBase {
 				return ValueTask2.FromResult(buffer);
 		}
 
-		public override void PutSlice(Array sourceArray, int sliceLength) {
+		public override void PutSlice(Array sourceArray, int sliceLength)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
@@ -133,10 +145,12 @@ internal sealed class FesArray : ArrayBase {
 				var systemType = GetSystemType();
 
 				byte[] buffer = new byte[sliceLength];
-				if(systemType.GetTypeInfo().IsPrimitive) {
+				if (systemType.GetTypeInfo().IsPrimitive)
+				{
 						Buffer.BlockCopy(sourceArray, 0, buffer, 0, buffer.Length);
 				}
-				else {
+				else
+				{
 						buffer = EncodeSlice(Descriptor, sourceArray, sliceLength);
 				}
 
@@ -153,7 +167,8 @@ internal sealed class FesArray : ArrayBase {
 
 				_database.ProcessStatusVector(_statusVector);
 		}
-		public override ValueTask PutSliceAsync(Array sourceArray, int sliceLength, CancellationToken cancellationToken = default) {
+		public override ValueTask PutSliceAsync(Array sourceArray, int sliceLength, CancellationToken cancellationToken = default)
+		{
 				ClearStatusVector();
 
 				var dbHandle = _database.HandlePtr;
@@ -164,10 +179,12 @@ internal sealed class FesArray : ArrayBase {
 				var systemType = GetSystemType();
 
 				byte[] buffer = new byte[sliceLength];
-				if(systemType.GetTypeInfo().IsPrimitive) {
+				if (systemType.GetTypeInfo().IsPrimitive)
+				{
 						Buffer.BlockCopy(sourceArray, 0, buffer, 0, buffer.Length);
 				}
-				else {
+				else
+				{
 						buffer = EncodeSlice(Descriptor, sourceArray, sliceLength);
 				}
 
@@ -191,18 +208,21 @@ internal sealed class FesArray : ArrayBase {
 
 		#region Protected Methods
 
-		protected override Array DecodeSlice(byte[] slice) {
+		protected override Array DecodeSlice(byte[] slice)
+		{
 				int slicePosition = 0;
 				var systemType = GetSystemType();
 				var charset = _database.Charset;
 				int[] lengths = new int[Descriptor.Dimensions];
 				int[] lowerBounds = new int[Descriptor.Dimensions];
 
-				for(int i = 0; i < Descriptor.Dimensions; i++) {
+				for (int i = 0; i < Descriptor.Dimensions; i++)
+				{
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
-						if(lowerBounds[i] == 0) {
+						if (lowerBounds[i] == 0)
+						{
 								lengths[i]++;
 						}
 				}
@@ -216,20 +236,25 @@ internal sealed class FesArray : ArrayBase {
 
 				int itemLength = Descriptor.Length;
 
-				for(int i = 0; i < tempData.Length; i++) {
-						if(slicePosition >= slice.Length) {
+				for (int i = 0; i < tempData.Length; i++)
+				{
+						if (slicePosition >= slice.Length)
+						{
 								break;
 						}
 
-						switch(dbType) {
+						switch (dbType)
+						{
 								case DbDataType.Char:
 										tempData.SetValue(charset.GetString(slice, slicePosition, itemLength), i);
 										break;
 
-								case DbDataType.VarChar: {
+								case DbDataType.VarChar:
+										{
 												int index = slicePosition;
 												int count = 0;
-												while(slice[index++] != 0) {
+												while (slice[index++] != 0)
+												{
 														count++;
 												}
 												tempData.SetValue(charset.GetString(slice, slicePosition, count), i);
@@ -251,10 +276,12 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Decimal:
-								case DbDataType.Numeric: {
+								case DbDataType.Numeric:
+										{
 												object evalue = null;
 
-												switch(type) {
+												switch (type)
+												{
 														case IscCodes.SQL_SHORT:
 																evalue = BitConverter.ToInt16(slice, slicePosition);
 																break;
@@ -283,7 +310,8 @@ internal sealed class FesArray : ArrayBase {
 										tempData.SetValue(BitConverter.ToSingle(slice, slicePosition), i);
 										break;
 
-								case DbDataType.Date: {
+								case DbDataType.Date:
+										{
 												int idate = BitConverter.ToInt32(slice, slicePosition);
 
 												var date = TypeDecoder.DecodeDate(idate);
@@ -292,7 +320,8 @@ internal sealed class FesArray : ArrayBase {
 										}
 										break;
 
-								case DbDataType.Time: {
+								case DbDataType.Time:
+										{
 												int itime = BitConverter.ToInt32(slice, slicePosition);
 
 												var time = TypeDecoder.DecodeTime(itime);
@@ -301,7 +330,8 @@ internal sealed class FesArray : ArrayBase {
 										}
 										break;
 
-								case DbDataType.TimeStamp: {
+								case DbDataType.TimeStamp:
+										{
 												int idate = BitConverter.ToInt32(slice, slicePosition);
 												int itime = BitConverter.ToInt32(slice, slicePosition + 4);
 
@@ -318,28 +348,33 @@ internal sealed class FesArray : ArrayBase {
 						slicePosition += itemLength;
 				}
 
-				if(systemType.GetTypeInfo().IsPrimitive) {
+				if (systemType.GetTypeInfo().IsPrimitive)
+				{
 						// For primitive types we can use System.Buffer	to copy	generated data to destination array
 						Buffer.BlockCopy(tempData, 0, sliceData, 0, Buffer.ByteLength(tempData));
 				}
-				else {
+				else
+				{
 						sliceData = tempData;
 				}
 
 				return sliceData;
 		}
-		protected override ValueTask<Array> DecodeSliceAsync(byte[] slice, CancellationToken cancellationToken = default) {
+		protected override ValueTask<Array> DecodeSliceAsync(byte[] slice, CancellationToken cancellationToken = default)
+		{
 				int slicePosition = 0;
 				var systemType = GetSystemType();
 				var charset = _database.Charset;
 				int[] lengths = new int[Descriptor.Dimensions];
 				int[] lowerBounds = new int[Descriptor.Dimensions];
 
-				for(int i = 0; i < Descriptor.Dimensions; i++) {
+				for (int i = 0; i < Descriptor.Dimensions; i++)
+				{
 						lowerBounds[i] = Descriptor.Bounds[i].LowerBound;
 						lengths[i] = Descriptor.Bounds[i].UpperBound;
 
-						if(lowerBounds[i] == 0) {
+						if (lowerBounds[i] == 0)
+						{
 								lengths[i]++;
 						}
 				}
@@ -353,20 +388,25 @@ internal sealed class FesArray : ArrayBase {
 
 				int itemLength = Descriptor.Length;
 
-				for(int i = 0; i < tempData.Length; i++) {
-						if(slicePosition >= slice.Length) {
+				for (int i = 0; i < tempData.Length; i++)
+				{
+						if (slicePosition >= slice.Length)
+						{
 								break;
 						}
 
-						switch(dbType) {
+						switch (dbType)
+						{
 								case DbDataType.Char:
 										tempData.SetValue(charset.GetString(slice, slicePosition, itemLength), i);
 										break;
 
-								case DbDataType.VarChar: {
+								case DbDataType.VarChar:
+										{
 												int index = slicePosition;
 												int count = 0;
-												while(slice[index++] != 0) {
+												while (slice[index++] != 0)
+												{
 														count++;
 												}
 												tempData.SetValue(charset.GetString(slice, slicePosition, count), i);
@@ -388,10 +428,12 @@ internal sealed class FesArray : ArrayBase {
 										break;
 
 								case DbDataType.Decimal:
-								case DbDataType.Numeric: {
+								case DbDataType.Numeric:
+										{
 												object evalue = null;
 
-												switch(type) {
+												switch (type)
+												{
 														case IscCodes.SQL_SHORT:
 																evalue = BitConverter.ToInt16(slice, slicePosition);
 																break;
@@ -420,7 +462,8 @@ internal sealed class FesArray : ArrayBase {
 										tempData.SetValue(BitConverter.ToSingle(slice, slicePosition), i);
 										break;
 
-								case DbDataType.Date: {
+								case DbDataType.Date:
+										{
 												int idate = BitConverter.ToInt32(slice, slicePosition);
 
 												var date = TypeDecoder.DecodeDate(idate);
@@ -429,7 +472,8 @@ internal sealed class FesArray : ArrayBase {
 										}
 										break;
 
-								case DbDataType.Time: {
+								case DbDataType.Time:
+										{
 												int itime = BitConverter.ToInt32(slice, slicePosition);
 
 												var time = TypeDecoder.DecodeTime(itime);
@@ -438,7 +482,8 @@ internal sealed class FesArray : ArrayBase {
 										}
 										break;
 
-								case DbDataType.TimeStamp: {
+								case DbDataType.TimeStamp:
+										{
 												int idate = BitConverter.ToInt32(slice, slicePosition);
 												int itime = BitConverter.ToInt32(slice, slicePosition + 4);
 
@@ -455,11 +500,13 @@ internal sealed class FesArray : ArrayBase {
 						slicePosition += itemLength;
 				}
 
-				if(systemType.GetTypeInfo().IsPrimitive) {
+				if (systemType.GetTypeInfo().IsPrimitive)
+				{
 						// For primitive types we can use System.Buffer	to copy	generated data to destination array
 						Buffer.BlockCopy(tempData, 0, sliceData, 0, Buffer.ByteLength(tempData));
 				}
-				else {
+				else
+				{
 						sliceData = tempData;
 				}
 
@@ -472,9 +519,12 @@ internal sealed class FesArray : ArrayBase {
 
 		private void ClearStatusVector() => Array.Clear(_statusVector, 0, _statusVector.Length);
 
-		private byte[] EncodeSlice(ArrayDesc desc, Array sourceArray, int length) {
-				using(var ms = new MemoryStream()) {
-						using(var writer = new BinaryWriter(ms)) {
+		private byte[] EncodeSlice(ArrayDesc desc, Array sourceArray, int length)
+		{
+				using (var ms = new MemoryStream())
+				{
+						using (var writer = new BinaryWriter(ms))
+						{
 								var charset = _database.Charset;
 								var dbType = DbDataType.Array;
 								int subType = (Descriptor.Scale < 0) ? 2 : 0;
@@ -483,73 +533,83 @@ internal sealed class FesArray : ArrayBase {
 								type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
 								dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, subType, Descriptor.Scale);
 
-								foreach(object source in sourceArray) {
-										switch(dbType) {
-												case DbDataType.Char: {
-																string value = source != null ? (string)source : string.Empty;
+								foreach (object source in sourceArray)
+								{
+										switch (dbType)
+										{
+												case DbDataType.Char:
+														{
+																string value = source != null ? (string) source : string.Empty;
 																byte[] buffer = charset.GetBytes(value);
 
 																writer.Write(buffer);
 
-																if(desc.Length > buffer.Length) {
-																		for(int j = buffer.Length; j < desc.Length; j++) {
-																				writer.Write((byte)32);
+																if (desc.Length > buffer.Length)
+																{
+																		for (int j = buffer.Length; j < desc.Length; j++)
+																		{
+																				writer.Write((byte) 32);
 																		}
 																}
 														}
 														break;
 
-												case DbDataType.VarChar: {
-																string value = source != null ? (string)source : string.Empty;
+												case DbDataType.VarChar:
+														{
+																string value = source != null ? (string) source : string.Empty;
 
 																byte[] buffer = charset.GetBytes(value);
 																writer.Write(buffer);
 
-																if(desc.Length > buffer.Length) {
-																		for(int j = buffer.Length; j < desc.Length; j++) {
-																				writer.Write((byte)0);
+																if (desc.Length > buffer.Length)
+																{
+																		for (int j = buffer.Length; j < desc.Length; j++)
+																		{
+																				writer.Write((byte) 0);
 																		}
 																}
-																writer.Write((short)0);
+																writer.Write((short) 0);
 														}
 														break;
 
 												case DbDataType.SmallInt:
-														writer.Write((short)source);
+														writer.Write((short) source);
 														break;
 
 												case DbDataType.Integer:
-														writer.Write((int)source);
+														writer.Write((int) source);
 														break;
 
 												case DbDataType.BigInt:
-														writer.Write((long)source);
+														writer.Write((long) source);
 														break;
 
 												case DbDataType.Float:
-														writer.Write((float)source);
+														writer.Write((float) source);
 														break;
 
 												case DbDataType.Double:
-														writer.Write((double)source);
+														writer.Write((double) source);
 														break;
 
 												case DbDataType.Numeric:
-												case DbDataType.Decimal: {
-																object numeric = TypeEncoder.EncodeDecimal((decimal)source, desc.Scale, type);
+												case DbDataType.Decimal:
+														{
+																object numeric = TypeEncoder.EncodeDecimal((decimal) source, desc.Scale, type);
 
-																switch(type) {
+																switch (type)
+																{
 																		case IscCodes.SQL_SHORT:
-																				writer.Write((short)numeric);
+																				writer.Write((short) numeric);
 																				break;
 
 																		case IscCodes.SQL_LONG:
-																				writer.Write((int)numeric);
+																				writer.Write((int) numeric);
 																				break;
 
 																		case IscCodes.SQL_QUAD:
 																		case IscCodes.SQL_INT64:
-																				writer.Write((long)numeric);
+																				writer.Write((long) numeric);
 																				break;
 																}
 														}
@@ -560,7 +620,7 @@ internal sealed class FesArray : ArrayBase {
 														break;
 
 												case DbDataType.Time:
-														writer.Write(TypeEncoder.EncodeTime((TimeSpan)source));
+														writer.Write(TypeEncoder.EncodeTime((TimeSpan) source));
 														break;
 
 												case DbDataType.TimeStamp:
@@ -570,7 +630,7 @@ internal sealed class FesArray : ArrayBase {
 														break;
 
 												default:
-														throw TypeHelper.InvalidDataType((int)dbType);
+														throw TypeHelper.InvalidDataType((int) dbType);
 										}
 								}
 

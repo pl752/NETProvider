@@ -20,8 +20,10 @@ using System.Text;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbServiceTraceConfiguration : FbTraceConfiguration {
-		public FbServiceTraceConfiguration() {
+public class FbServiceTraceConfiguration : FbTraceConfiguration
+{
+		public FbServiceTraceConfiguration()
+		{
 				Enabled = false;
 		}
 
@@ -35,21 +37,25 @@ public class FbServiceTraceConfiguration : FbTraceConfiguration {
 		public string IncludeGdsCodes { get; set; }
 		public string ExcludeGdsCodes { get; set; }
 
-		public string BuildConfiguration(FbTraceVersion version) => version switch {
+		public string BuildConfiguration(FbTraceVersion version) => version switch
+		{
 				FbTraceVersion.Version1 => BuildConfiguration1(),
 				FbTraceVersion.Version2 => BuildConfiguration2(),
 				_ => throw new ArgumentOutOfRangeException(nameof(version)),
 		};
-		string BuildConfiguration1() {
+		string BuildConfiguration1()
+		{
 				var sb = new StringBuilder();
 				_ = sb.AppendLine("<services>");
 				_ = sb.AppendFormat("enabled {0}", WriteBoolValue(Enabled));
 				_ = sb.AppendLine();
-				if(!string.IsNullOrEmpty(IncludeFilter)) {
+				if (!string.IsNullOrEmpty(IncludeFilter))
+				{
 						_ = sb.AppendFormat("include_filter {0}", WriteRegEx(IncludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeFilter)) {
+				if (!string.IsNullOrEmpty(ExcludeFilter))
+				{
 						_ = sb.AppendFormat("exclude_filter {0}", WriteRegEx(ExcludeFilter));
 						_ = sb.AppendLine();
 				}
@@ -66,25 +72,30 @@ public class FbServiceTraceConfiguration : FbTraceConfiguration {
 				_ = sb.AppendLine("</services>");
 				return sb.ToString();
 		}
-		string BuildConfiguration2() {
+		string BuildConfiguration2()
+		{
 				var sb = new StringBuilder();
 				_ = sb.AppendLine("services");
 				_ = sb.AppendLine("{");
 				_ = sb.AppendFormat("enabled = {0}", WriteBoolValue(Enabled));
 				_ = sb.AppendLine();
-				if(!string.IsNullOrEmpty(IncludeFilter)) {
+				if (!string.IsNullOrEmpty(IncludeFilter))
+				{
 						_ = sb.AppendFormat("include_filter = {0}", WriteRegEx(IncludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeFilter)) {
+				if (!string.IsNullOrEmpty(ExcludeFilter))
+				{
 						_ = sb.AppendFormat("exclude_filter = {0}", WriteRegEx(ExcludeFilter));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(IncludeGdsCodes)) {
+				if (!string.IsNullOrEmpty(IncludeGdsCodes))
+				{
 						_ = sb.AppendFormat("include_gds_codes = {0}", WriteString(IncludeGdsCodes));
 						_ = sb.AppendLine();
 				}
-				if(!string.IsNullOrEmpty(ExcludeGdsCodes)) {
+				if (!string.IsNullOrEmpty(ExcludeGdsCodes))
+				{
 						_ = sb.AppendFormat("exclude_gds_codes = {0}", WriteString(ExcludeGdsCodes));
 						_ = sb.AppendLine();
 				}

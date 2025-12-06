@@ -19,6 +19,7 @@ using System;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class InfoValuesHelper {
-		public static T ConvertValue<T>(object value) => value is IConvertible ? (T)Convert.ChangeType(value, typeof(T)) : (T)value;
+internal static class InfoValuesHelper
+{
+		public static T ConvertValue<T>(object value) => value is IConvertible ? (T) Convert.ChangeType(value, typeof(T)) : (T) value;
 }

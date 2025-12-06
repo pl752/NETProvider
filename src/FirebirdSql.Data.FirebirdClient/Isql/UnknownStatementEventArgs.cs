@@ -19,7 +19,8 @@ using System;
 
 namespace FirebirdSql.Data.Isql;
 
-public class UnknownStatementEventArgs(FbStatement statement) : EventArgs {
+public class UnknownStatementEventArgs(FbStatement statement) : EventArgs
+{
 		public FbStatement Statement { get; private set; } = statement;
 		public bool Handled { get; set; } = false;
 		public bool Ignore { get; set; } = false;

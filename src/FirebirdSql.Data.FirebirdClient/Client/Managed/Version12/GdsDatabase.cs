@@ -22,39 +22,48 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version12;
 
-internal class GdsDatabase(GdsConnection connection) : Version11.GdsDatabase(connection) {
+internal class GdsDatabase(GdsConnection connection) : Version11.GdsDatabase(connection)
+{
 		public override bool UseUtf8ParameterBuffer => true;
 
 		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
 
-		public override void CancelOperation(short kind) {
-				try {
+		public override void CancelOperation(short kind)
+		{
+				try
+				{
 						SendCancelOperationToBuffer(kind);
 						Xdr.Flush();
 						// no response, this is out-of-band
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask CancelOperationAsync(short kind, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask CancelOperationAsync(short kind, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await SendCancelOperationToBufferAsync(kind, cancellationToken).ConfigureAwait(false);
 						await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 						// no response, this is out-of-band
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		protected void SendCancelOperationToBuffer(short kind) {
+		protected void SendCancelOperationToBuffer(short kind)
+		{
 				Xdr.Write(IscCodes.op_cancel);
 				Xdr.Write(kind);
 		}
-		protected async ValueTask SendCancelOperationToBufferAsync(int kind, CancellationToken cancellationToken = default) {
+		protected async ValueTask SendCancelOperationToBufferAsync(int kind, CancellationToken cancellationToken = default)
+		{
 				await Xdr.WriteAsync(IscCodes.op_cancel, cancellationToken).ConfigureAwait(false);
 				await Xdr.WriteAsync(kind, cancellationToken).ConfigureAwait(false);
 		}

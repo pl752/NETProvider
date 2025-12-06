@@ -19,26 +19,31 @@ using System;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbUserData {
+public sealed class FbUserData
+{
 		private string _userName;
-		public string UserName {
+		public string UserName
+		{
 				get => _userName;
-				set {
-						if(value == null)
+				set
+				{
+						if (value == null)
 								throw new InvalidOperationException("The user name cannot be null.");
-						if(value.Length > 31)
+						if (value.Length > 31)
 								throw new InvalidOperationException("The user name cannot have more than 31 characters.");
 						_userName = value;
 				}
 		}
 
 		private string _userPassword;
-		public string UserPassword {
+		public string UserPassword
+		{
 				get => _userPassword;
-				set {
-						if(value == null)
+				set
+				{
+						if (value == null)
 								throw new InvalidOperationException("The user password cannot be null.");
-						if(value.Length > 31)
+						if (value.Length > 31)
 								throw new InvalidOperationException("The user password cannot have more than 31 characters.");
 						_userPassword = value;
 				}
@@ -52,7 +57,8 @@ public sealed class FbUserData {
 		public string GroupName { get; set; }
 		public string RoleName { get; set; }
 
-		public FbUserData() {
+		public FbUserData()
+		{
 				UserName = string.Empty;
 				UserPassword = string.Empty;
 				FirstName = string.Empty;

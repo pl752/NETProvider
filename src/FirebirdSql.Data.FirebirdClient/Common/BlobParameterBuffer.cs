@@ -19,6 +19,7 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class BlobParameterBuffer(Encoding encoding) : ParameterBuffer {
+internal sealed class BlobParameterBuffer(Encoding encoding) : ParameterBuffer
+{
 		public Encoding Encoding { get; } = encoding;
 }

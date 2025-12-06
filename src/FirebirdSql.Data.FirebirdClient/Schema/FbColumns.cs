@@ -25,10 +25,12 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbColumns : FbSchema {
+internal class FbColumns : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -70,25 +72,31 @@ internal class FbColumns : FbSchema {
 				    LEFT JOIN rdb$collations coll ON (coll.rdb$collation_id = fld.rdb$collation_id AND coll.rdb$character_set_id = fld.rdb$character_set_id)",
 					MajorVersionNumber >= 3 ? "rfr.rdb$identity_type" : "null");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* TABLE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* TABLE_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("rfr.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* COLUMN_NAME */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								if(where.Length > 0) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
+								if (where.Length > 0)
+								{
 										_ = where.Append(" AND ");
 								}
 
@@ -96,7 +104,8 @@ internal class FbColumns : FbSchema {
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -105,57 +114,68 @@ internal class FbColumns : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 				_ = schema.Columns.Add("IS_NULLABLE", typeof(bool));
 				_ = schema.Columns.Add("IS_ARRAY", typeof(bool));
 				_ = schema.Columns.Add("IS_IDENTITY", typeof(bool));
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						int blrType = Convert.ToInt32(row["FIELD_TYPE"], CultureInfo.InvariantCulture);
 
 						int subType = 0;
-						if(row["COLUMN_SUB_TYPE"] != DBNull.Value) {
+						if (row["COLUMN_SUB_TYPE"] != DBNull.Value)
+						{
 								subType = Convert.ToInt32(row["COLUMN_SUB_TYPE"], CultureInfo.InvariantCulture);
 						}
 
 						int scale = 0;
-						if(row["NUMERIC_SCALE"] != DBNull.Value) {
+						if (row["NUMERIC_SCALE"] != DBNull.Value)
+						{
 								scale = Convert.ToInt32(row["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
 						}
 
 						row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
 						row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
 
-						var dbType = (FbDbType)TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
-						row["COLUMN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType)dbType).ToLowerInvariant();
+						var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
+						row["COLUMN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
 
-						if(dbType is FbDbType.Binary or FbDbType.Text) {
+						if (dbType is FbDbType.Binary or FbDbType.Text)
+						{
 								row["COLUMN_SIZE"] = Int32.MaxValue;
 						}
 
-						if(dbType is FbDbType.Char or FbDbType.VarChar) {
-								if(!row.IsNull("CHARACTER_MAX_LENGTH")) {
+						if (dbType is FbDbType.Char or FbDbType.VarChar)
+						{
+								if (!row.IsNull("CHARACTER_MAX_LENGTH"))
+								{
 										row["COLUMN_SIZE"] = row["CHARACTER_MAX_LENGTH"];
 								}
 						}
-						else {
+						else
+						{
 								row["CHARACTER_OCTET_LENGTH"] = 0;
 						}
 
-						if(row["NUMERIC_PRECISION"] == DBNull.Value) {
+						if (row["NUMERIC_PRECISION"] == DBNull.Value)
+						{
 								row["NUMERIC_PRECISION"] = 0;
 						}
 
-						if((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
-							(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0)) {
+						if ((dbType == FbDbType.Decimal || dbType == FbDbType.Numeric) &&
+							(row["NUMERIC_PRECISION"] == DBNull.Value || Convert.ToInt32(row["NUMERIC_PRECISION"]) == 0))
+						{
 								row["NUMERIC_PRECISION"] = row["COLUMN_SIZE"];
 						}
 
 						row["NUMERIC_SCALE"] = (-1) * scale;
 
 						string domainName = row["DOMAIN_NAME"].ToString();
-						if(domainName != null && domainName.StartsWith("RDB$")) {
+						if (domainName != null && domainName.StartsWith("RDB$"))
+						{
 								row["DOMAIN_NAME"] = null;
 						}
 

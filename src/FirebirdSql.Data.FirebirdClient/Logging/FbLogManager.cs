@@ -19,14 +19,18 @@ using System;
 
 namespace FirebirdSql.Data.Logging;
 
-public static class FbLogManager {
-		public static IFbLoggingProvider Provider {
-				get {
+public static class FbLogManager
+{
+		public static IFbLoggingProvider Provider
+		{
+				get
+				{
 						_providerRetrieved = true;
 						return _provider;
 				}
-				set {
-						if(_providerRetrieved)
+				set
+				{
+						if (_providerRetrieved)
 								throw new InvalidOperationException("The logging provider must be set before any action is taken");
 
 						_provider = value ?? throw new ArgumentNullException(nameof(value));
@@ -38,7 +42,8 @@ public static class FbLogManager {
 		static IFbLoggingProvider _provider;
 		static bool _providerRetrieved;
 
-		static FbLogManager() {
+		static FbLogManager()
+		{
 				_provider = new NullLoggingProvider();
 		}
 

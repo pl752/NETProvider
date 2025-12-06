@@ -22,7 +22,8 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class DbField {
+internal sealed class DbField
+{
 		#region Fields
 
 		private short _dataType;
@@ -47,17 +48,24 @@ internal sealed class DbField {
 
 		public int SqlType => _dataType & ~1;
 
-		public short DataType { get => _dataType; set => _dataType = value;
+		public short DataType
+		{
+				get => _dataType; set => _dataType = value;
 		}
 
-		public short NumericScale { get => _numericScale; set => _numericScale = value;
+		public short NumericScale
+		{
+				get => _numericScale; set => _numericScale = value;
 		}
 
-		public short SubType {
+		public short SubType
+		{
 				get => _subType;
-				set {
+				set
+				{
 						_subType = value;
-						if(IsCharacter()) {
+						if (IsCharacter())
+						{
 								// Bits 0-7 of sqlsubtype is charset_id (127 is a special value -
 								// current attachment charset).
 								// Bits 8-17 hold collation_id for this value.
@@ -69,42 +77,58 @@ internal sealed class DbField {
 				}
 		}
 
-		public short Length {
+		public short Length
+		{
 				get => _length;
-				set {
+				set
+				{
 						_length = value;
-						if(IsCharacter()) {
+						if (IsCharacter())
+						{
 								_charCount = _length / _charset.BytesPerCharacter;
 						}
 				}
 		}
 
-		public short NullFlag { get => _nullFlag; set => _nullFlag = value;
+		public short NullFlag
+		{
+				get => _nullFlag; set => _nullFlag = value;
 		}
 
-		public string Name { get => _name; set => _name = value.Trim();
+		public string Name
+		{
+				get => _name; set => _name = value.Trim();
 		}
 
-		public string Relation { get => _relation; set => _relation = value.Trim();
+		public string Relation
+		{
+				get => _relation; set => _relation = value.Trim();
 		}
 
-		public string Owner { get => _owner; set => _owner = value.Trim();
+		public string Owner
+		{
+				get => _owner; set => _owner = value.Trim();
 		}
 
-		public string Alias { get => _alias; set => _alias = value.Trim();
+		public string Alias
+		{
+				get => _alias; set => _alias = value.Trim();
 		}
 
 		public Charset Charset => _charset;
 
 		public int CharCount => _charCount;
 
-		public ArrayBase ArrayHandle {
-				get {
+		public ArrayBase ArrayHandle
+		{
+				get
+				{
 						EnsureArray();
 						return _arrayHandle;
 				}
 
-				set {
+				set
+				{
 						EnsureArray();
 						_arrayHandle = value;
 				}
@@ -116,7 +140,8 @@ internal sealed class DbField {
 
 		#region Constructors
 
-		public DbField() {
+		public DbField()
+		{
 				_charCount = -1;
 				_name = string.Empty;
 				_relation = string.Empty;
@@ -131,35 +156,40 @@ internal sealed class DbField {
 
 		public bool IsNumeric() => _dataType == 0
 						? false
-						: DbDataType switch {
+						: DbDataType switch
+						{
 								DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
 								_ => false,
 						};
 
 		public bool IsDecimal() => _dataType == 0
 						? false
-						: DbDataType switch {
+						: DbDataType switch
+						{
 								DbDataType.Numeric or DbDataType.Decimal => true,
 								_ => false,
 						};
 
 		public bool IsLong() => _dataType == 0
 						? false
-						: DbDataType switch {
+						: DbDataType switch
+						{
 								DbDataType.Binary or DbDataType.Text => true,
 								_ => false,
 						};
 
 		public bool IsCharacter() => _dataType == 0
 						? false
-						: DbDataType switch {
+						: DbDataType switch
+						{
 								DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
 								_ => false,
 						};
 
 		public bool IsArray() => _dataType == 0
 						? false
-						: DbDataType switch {
+						: DbDataType switch
+						{
 								DbDataType.Array => true,
 								_ => false,
 						};
@@ -170,27 +200,36 @@ internal sealed class DbField {
 
 		public bool AllowDBNull() => (DataType & 1) == 1;
 
-		public void SetValue(byte[] buffer) {
-				if(buffer == null || NullFlag == -1) {
+		public void SetValue(byte[] buffer)
+		{
+				if (buffer == null || NullFlag == -1)
+				{
 						_dbValue.SetValue(DBNull.Value);
 				}
-				else {
-						switch(SqlType) {
+				else
+				{
+						switch (SqlType)
+						{
 								case IscCodes.SQL_TEXT:
 								case IscCodes.SQL_VARYING:
-										if(DbDataType == DbDataType.Guid) {
+										if (DbDataType == DbDataType.Guid)
+										{
 												_dbValue.SetValue(TypeDecoder.DecodeGuid(buffer));
 										}
-										else {
-												if(Charset.IsOctetsCharset) {
+										else
+										{
+												if (Charset.IsOctetsCharset)
+												{
 														_dbValue.SetValue(buffer);
 												}
-												else {
+												else
+												{
 														string s = Charset.GetString(buffer, 0, buffer.Length);
 
 														var runes = s.EnumerateRunes().ToArray();
-														if((Length % Charset.BytesPerCharacter) == 0 &&
-													runes.Length > CharCount) {
+														if ((Length % Charset.BytesPerCharacter) == 0 &&
+													runes.Length > CharCount)
+														{
 																s = new string([.. runes.Take(CharCount).RunesToChars()]);
 														}
 
@@ -200,19 +239,23 @@ internal sealed class DbField {
 										break;
 
 								case IscCodes.SQL_SHORT:
-										if(_numericScale < 0) {
+										if (_numericScale < 0)
+										{
 												_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt16(buffer, 0), _numericScale, _dataType));
 										}
-										else {
+										else
+										{
 												_dbValue.SetValue(BitConverter.ToInt16(buffer, 0));
 										}
 										break;
 
 								case IscCodes.SQL_LONG:
-										if(_numericScale < 0) {
+										if (_numericScale < 0)
+										{
 												_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt32(buffer, 0), _numericScale, _dataType));
 										}
-										else {
+										else
+										{
 												_dbValue.SetValue(BitConverter.ToInt32(buffer, 0));
 										}
 										break;
@@ -230,15 +273,18 @@ internal sealed class DbField {
 								case IscCodes.SQL_INT64:
 								case IscCodes.SQL_BLOB:
 								case IscCodes.SQL_ARRAY:
-										if(_numericScale < 0) {
+										if (_numericScale < 0)
+										{
 												_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt64(buffer, 0), _numericScale, _dataType));
 										}
-										else {
+										else
+										{
 												_dbValue.SetValue(BitConverter.ToInt64(buffer, 0));
 										}
 										break;
 
-								case IscCodes.SQL_TIMESTAMP: {
+								case IscCodes.SQL_TIMESTAMP:
+										{
 												var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
 												_dbValue.SetValue(date.Add(time));
@@ -257,7 +303,8 @@ internal sealed class DbField {
 										_dbValue.SetValue(TypeDecoder.DecodeBoolean(buffer));
 										break;
 
-								case IscCodes.SQL_TIMESTAMP_TZ: {
+								case IscCodes.SQL_TIMESTAMP_TZ:
+										{
 												var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
 												ushort tzId = BitConverter.ToUInt16(buffer, 8);
@@ -266,7 +313,8 @@ internal sealed class DbField {
 												break;
 										}
 
-								case IscCodes.SQL_TIMESTAMP_TZ_EX: {
+								case IscCodes.SQL_TIMESTAMP_TZ_EX:
+										{
 												var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
 												ushort tzId = BitConverter.ToUInt16(buffer, 8);
@@ -276,14 +324,16 @@ internal sealed class DbField {
 												break;
 										}
 
-								case IscCodes.SQL_TIME_TZ: {
+								case IscCodes.SQL_TIME_TZ:
+										{
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
 												ushort tzId = BitConverter.ToUInt16(buffer, 4);
 												_dbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, null));
 												break;
 										}
 
-								case IscCodes.SQL_TIME_TZ_EX: {
+								case IscCodes.SQL_TIME_TZ_EX:
+										{
 												var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
 												ushort tzId = BitConverter.ToUInt16(buffer, 4);
 												short offset = BitConverter.ToInt16(buffer, 6);
@@ -300,10 +350,12 @@ internal sealed class DbField {
 										break;
 
 								case IscCodes.SQL_INT128:
-										if(_numericScale < 0) {
+										if (_numericScale < 0)
+										{
 												_dbValue.SetValue(TypeDecoder.DecodeDecimal(Int128Helper.GetInt128(buffer), _numericScale, _dataType));
 										}
-										else {
+										else
+										{
 												_dbValue.SetValue(Int128Helper.GetInt128(buffer));
 										}
 										break;
@@ -314,9 +366,12 @@ internal sealed class DbField {
 				}
 		}
 
-		public void FixNull() {
-				if(NullFlag == -1 && _dbValue.IsDBNull()) {
-						switch(DbDataType) {
+		public void FixNull()
+		{
+				if (NullFlag == -1 && _dbValue.IsDBNull())
+				{
+						switch (DbDataType)
+						{
 								case DbDataType.Char:
 								case DbDataType.VarChar:
 										_dbValue.SetValue(string.Empty);
@@ -327,31 +382,31 @@ internal sealed class DbField {
 										break;
 
 								case DbDataType.SmallInt:
-										_dbValue.SetValue((short)0);
+										_dbValue.SetValue((short) 0);
 										break;
 
 								case DbDataType.Integer:
-										_dbValue.SetValue((int)0);
+										_dbValue.SetValue((int) 0);
 										break;
 
 								case DbDataType.BigInt:
 								case DbDataType.Binary:
 								case DbDataType.Array:
 								case DbDataType.Text:
-										_dbValue.SetValue((long)0);
+										_dbValue.SetValue((long) 0);
 										break;
 
 								case DbDataType.Numeric:
 								case DbDataType.Decimal:
-										_dbValue.SetValue((decimal)0);
+										_dbValue.SetValue((decimal) 0);
 										break;
 
 								case DbDataType.Float:
-										_dbValue.SetValue((float)0);
+										_dbValue.SetValue((float) 0);
 										break;
 
 								case DbDataType.Double:
-										_dbValue.SetValue((double)0);
+										_dbValue.SetValue((double) 0);
 										break;
 
 								case DbDataType.Date:
@@ -383,7 +438,7 @@ internal sealed class DbField {
 										break;
 
 								case DbDataType.Int128:
-										_dbValue.SetValue((BigInteger)0);
+										_dbValue.SetValue((BigInteger) 0);
 										break;
 
 								default:
@@ -400,8 +455,9 @@ internal sealed class DbField {
 
 		#region Private Methods
 
-		private void EnsureArray() {
-				if(!IsArray())
+		private void EnsureArray()
+		{
+				if (!IsArray())
 						throw IscException.ForStrParam("Field is not an array type.");
 		}
 

@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Common;
 
-public enum DecimalType {
+public enum DecimalType
+{
 		Finite,
 		Infinity,
 		NaN,

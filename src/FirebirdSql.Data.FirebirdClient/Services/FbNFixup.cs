@@ -23,12 +23,16 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNFixup(string connectionString = null) : FbService(connectionString) {
-		public void Execute() {
+public sealed class FbNFixup(string connectionString = null) : FbService(connectionString)
+{
+		public void Execute()
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								Open();
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_nfix);
@@ -36,19 +40,24 @@ public sealed class FbNFixup(string connectionString = null) : FbService(connect
 								StartTask(startSpb);
 								ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 						}
-						finally {
+						finally
+						{
 								Close();
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_nfix);
@@ -56,11 +65,13 @@ public sealed class FbNFixup(string connectionString = null) : FbService(connect
 								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 								await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 						}
-						finally {
+						finally
+						{
 								await CloseAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}

@@ -25,7 +25,8 @@ using FirebirdSql.Data.Logging;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbTransaction : DbTransaction {
+public sealed class FbTransaction : DbTransaction
+{
 		static readonly IFbLogger Log = FbLogManager.CreateLogger(nameof(FbTransaction));
 
 		internal const IsolationLevel DefaultIsolationLevel = IsolationLevel.ReadCommitted;
@@ -62,7 +63,8 @@ public sealed class FbTransaction : DbTransaction {
 		internal FbTransaction(FbConnection connection)
 			: this(connection, IsolationLevel.ReadCommitted) { }
 
-		internal FbTransaction(FbConnection connection, IsolationLevel il) {
+		internal FbTransaction(FbConnection connection, IsolationLevel il)
+		{
 				_connection = connection;
 				IsolationLevel = il;
 		}
@@ -71,15 +73,21 @@ public sealed class FbTransaction : DbTransaction {
 
 		#region IDisposable, IAsyncDisposable methods
 
-		protected override void Dispose(bool disposing) {
-				if(!_disposed) {
+		protected override void Dispose(bool disposing)
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
-						if(_transaction != null) {
-								if(!_isCompleted) {
-										try {
+						if (_transaction != null)
+						{
+								if (!_isCompleted)
+								{
+										try
+										{
 												_transaction.Dispose2();
 										}
-										catch(IscException ex) {
+										catch (IscException ex)
+										{
 												throw FbException.Create(ex);
 										}
 								}
@@ -91,15 +99,21 @@ public sealed class FbTransaction : DbTransaction {
 				base.Dispose(disposing);
 		}
 #if !(NET48 || NETSTANDARD2_0)
-		public override async ValueTask DisposeAsync() {
-				if(!_disposed) {
+		public override async ValueTask DisposeAsync()
+		{
+				if (!_disposed)
+				{
 						_disposed = true;
-						if(_transaction != null) {
-								if(!_isCompleted) {
-										try {
+						if (_transaction != null)
+						{
+								if (!_isCompleted)
+								{
+										try
+										{
 												await _transaction.Dispose2Async(CancellationToken.None).ConfigureAwait(false);
 										}
-										catch(IscException ex) {
+										catch (IscException ex)
+										{
 												throw FbException.Create(ex);
 										}
 								}
@@ -116,15 +130,18 @@ public sealed class FbTransaction : DbTransaction {
 
 		#region Methods
 
-		public override void Commit() {
+		public override void Commit()
+		{
 				LogMessages.TransactionCommitting(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						_transaction.Commit();
 						CompleteTransaction();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -139,26 +156,31 @@ public sealed class FbTransaction : DbTransaction {
 				LogMessages.TransactionCommitting(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 						await CompleteTransactionAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
 				LogMessages.TransactionCommitted(Log, this);
 		}
 
-		public override void Rollback() {
+		public override void Rollback()
+		{
 				LogMessages.TransactionRollingBack(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						_transaction.Rollback();
 						CompleteTransaction();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -173,11 +195,13 @@ public sealed class FbTransaction : DbTransaction {
 				LogMessages.TransactionRollingBack(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 						await CompleteTransactionAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -194,18 +218,20 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						using(command)
+						using (command)
 #endif
 						{
 								command.ExecuteNonQuery();
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -221,18 +247,20 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						await using(command.ConfigureAwait(false))
+						await using (command.ConfigureAwait(false))
 #endif
 						{
 								await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -249,18 +277,20 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"RELEASE SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						using(command)
+						using (command)
 #endif
 						{
 								command.ExecuteNonQuery();
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -276,18 +306,20 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"RELEASE SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						await using(command.ConfigureAwait(false))
+						await using (command.ConfigureAwait(false))
 #endif
 						{
 								await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -304,18 +336,20 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"ROLLBACK WORK TO SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						using(command)
+						using (command)
 #endif
 						{
 								command.ExecuteNonQuery();
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -331,72 +365,86 @@ public sealed class FbTransaction : DbTransaction {
 
 				EnsureSavePointName(savePointName);
 				EnsureCompleted();
-				try {
+				try
+				{
 						var command = new FbCommand($"ROLLBACK WORK TO SAVEPOINT {savePointName}", _connection, this);
 #if NET48 || NETSTANDARD2_0
 			using (command)
 #else
-						await using(command.ConfigureAwait(false))
+						await using (command.ConfigureAwait(false))
 #endif
 						{
 								await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
 				LogMessages.TransactionRolledBackSavepoint(Log, this);
 		}
 
-		public void CommitRetaining() {
+		public void CommitRetaining()
+		{
 				LogMessages.TransactionCommittingRetaining(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						_transaction.CommitRetaining();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
 				LogMessages.TransactionCommittedRetaining(Log, this);
 		}
-		public async Task CommitRetainingAsync(CancellationToken cancellationToken = default) {
+		public async Task CommitRetainingAsync(CancellationToken cancellationToken = default)
+		{
 				LogMessages.TransactionCommittingRetaining(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						await _transaction.CommitRetainingAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
 				LogMessages.TransactionCommittedRetaining(Log, this);
 		}
 
-		public void RollbackRetaining() {
+		public void RollbackRetaining()
+		{
 				LogMessages.TransactionRollingBackRetaining(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						_transaction.RollbackRetaining();
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
 				LogMessages.TransactionRolledBackRetaining(Log, this);
 		}
-		public async Task RollbackRetainingAsync(CancellationToken cancellationToken = default) {
+		public async Task RollbackRetainingAsync(CancellationToken cancellationToken = default)
+		{
 				LogMessages.TransactionRollingBackRetaining(Log, this);
 
 				EnsureCompleted();
-				try {
+				try
+				{
 						await _transaction.RollbackRetainingAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 
@@ -407,14 +455,16 @@ public sealed class FbTransaction : DbTransaction {
 
 		#region Internal Methods
 
-		internal void BeginTransaction() {
+		internal void BeginTransaction()
+		{
 				LogMessages.TransactionBeginning(Log, this);
 
 				_transaction = _connection.InnerConnection.Database.BeginTransaction(BuildTpb());
 
 				LogMessages.TransactionBegan(Log, this);
 		}
-		internal async Task BeginTransactionAsync(CancellationToken cancellationToken = default) {
+		internal async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+		{
 				LogMessages.TransactionBeginning(Log, this);
 
 				_transaction = await _connection.InnerConnection.Database.BeginTransactionAsync(BuildTpb(), cancellationToken).ConfigureAwait(false);
@@ -422,14 +472,16 @@ public sealed class FbTransaction : DbTransaction {
 				LogMessages.TransactionBegan(Log, this);
 		}
 
-		internal void BeginTransaction(FbTransactionOptions options) {
+		internal void BeginTransaction(FbTransactionOptions options)
+		{
 				LogMessages.TransactionBeginning(Log, this);
 
 				_transaction = _connection.InnerConnection.Database.BeginTransaction(BuildTpb(options));
 
 				LogMessages.TransactionBegan(Log, this);
 		}
-		internal async Task BeginTransactionAsync(FbTransactionOptions options, CancellationToken cancellationToken = default) {
+		internal async Task BeginTransactionAsync(FbTransactionOptions options, CancellationToken cancellationToken = default)
+		{
 				LogMessages.TransactionBeginning(Log, this);
 
 				_transaction = await _connection.InnerConnection.Database.BeginTransactionAsync(BuildTpb(options), cancellationToken).ConfigureAwait(false);
@@ -437,8 +489,9 @@ public sealed class FbTransaction : DbTransaction {
 				LogMessages.TransactionBegan(Log, this);
 		}
 
-		internal static void EnsureActive(FbTransaction transaction) {
-				if(transaction == null || transaction.IsCompleted)
+		internal static void EnsureActive(FbTransaction transaction)
+		{
+				if (transaction == null || transaction.IsCompleted)
 						throw new InvalidOperationException("Transaction must be valid and active.");
 		}
 
@@ -446,7 +499,8 @@ public sealed class FbTransaction : DbTransaction {
 
 		#region Private Methods
 
-		private void CompleteTransaction() {
+		private void CompleteTransaction()
+		{
 				var innerConnection = _connection?.InnerConnection;
 				innerConnection?.TransactionCompleted();
 				_connection = null;
@@ -454,9 +508,11 @@ public sealed class FbTransaction : DbTransaction {
 				_transaction = null;
 				_isCompleted = true;
 		}
-		private async Task CompleteTransactionAsync(CancellationToken cancellationToken = default) {
+		private async Task CompleteTransactionAsync(CancellationToken cancellationToken = default)
+		{
 				var innerConnection = _connection?.InnerConnection;
-				if(innerConnection != null) {
+				if (innerConnection != null)
+				{
 						await innerConnection.TransactionCompletedAsync(cancellationToken).ConfigureAwait(false);
 				}
 				_connection = null;
@@ -465,15 +521,18 @@ public sealed class FbTransaction : DbTransaction {
 				_isCompleted = true;
 		}
 
-		private TransactionParameterBuffer BuildTpb() {
-				var options = new FbTransactionOptions {
+		private TransactionParameterBuffer BuildTpb()
+		{
+				var options = new FbTransactionOptions
+				{
 						WaitTimeout = null,
 						TransactionBehavior = FbTransactionBehavior.Write
 				};
 
 				options.TransactionBehavior |= FbTransactionBehavior.NoWait;
 
-				switch(IsolationLevel) {
+				switch (IsolationLevel)
+				{
 						case IsolationLevel.Serializable:
 								options.TransactionBehavior |= FbTransactionBehavior.Consistency;
 								break;
@@ -494,44 +553,57 @@ public sealed class FbTransaction : DbTransaction {
 				return BuildTpb(options);
 		}
 
-		private void EnsureCompleted() {
-				if(_isCompleted) {
+		private void EnsureCompleted()
+		{
+				if (_isCompleted)
+				{
 						throw new InvalidOperationException("This transaction has completed and it is no longer usable.");
 				}
 		}
 
-		private TransactionParameterBuffer BuildTpb(FbTransactionOptions options) {
+		private TransactionParameterBuffer BuildTpb(FbTransactionOptions options)
+		{
 				var tpb = Connection.InnerConnection.Database.CreateTransactionParameterBuffer();
 
 				tpb.Append(IscCodes.isc_tpb_version3);
 
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Consistency)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Consistency))
+				{
 						tpb.Append(IscCodes.isc_tpb_consistency);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Concurrency)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Concurrency))
+				{
 						tpb.Append(IscCodes.isc_tpb_concurrency);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Wait)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Wait))
+				{
 						tpb.Append(IscCodes.isc_tpb_wait);
-						if(options.WaitTimeoutTPBValue != null) {
-								tpb.Append(IscCodes.isc_tpb_lock_timeout, (short)options.WaitTimeoutTPBValue);
+						if (options.WaitTimeoutTPBValue != null)
+						{
+								tpb.Append(IscCodes.isc_tpb_lock_timeout, (short) options.WaitTimeoutTPBValue);
 						}
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoWait)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoWait))
+				{
 						tpb.Append(IscCodes.isc_tpb_nowait);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Read)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Read))
+				{
 						tpb.Append(IscCodes.isc_tpb_read);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Write)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Write))
+				{
 						tpb.Append(IscCodes.isc_tpb_write);
 				}
-				foreach(var table in options.LockTables) {
+				foreach (var table in options.LockTables)
+				{
 						int lockType;
-						if(table.Value.HasFlag(FbTransactionBehavior.LockRead)) {
+						if (table.Value.HasFlag(FbTransactionBehavior.LockRead))
+						{
 								lockType = IscCodes.isc_tpb_lock_read;
 						}
-						else {
+						else
+						{
 								lockType = table.Value.HasFlag(FbTransactionBehavior.LockWrite)
 										? IscCodes.isc_tpb_lock_write
 										: throw new ArgumentException("Must specify either LockRead or LockWrite.");
@@ -539,50 +611,64 @@ public sealed class FbTransaction : DbTransaction {
 						tpb.Append(lockType, table.Key);
 
 						int? lockBehavior = null;
-						if(table.Value.HasFlag(FbTransactionBehavior.Exclusive)) {
+						if (table.Value.HasFlag(FbTransactionBehavior.Exclusive))
+						{
 								lockBehavior = IscCodes.isc_tpb_exclusive;
 						}
-						else if(table.Value.HasFlag(FbTransactionBehavior.Protected)) {
+						else if (table.Value.HasFlag(FbTransactionBehavior.Protected))
+						{
 								lockBehavior = IscCodes.isc_tpb_protected;
 						}
-						else if(table.Value.HasFlag(FbTransactionBehavior.Shared)) {
+						else if (table.Value.HasFlag(FbTransactionBehavior.Shared))
+						{
 								lockBehavior = IscCodes.isc_tpb_shared;
 						}
-						if(lockBehavior != null) {
-								tpb.Append((int)lockBehavior);
+						if (lockBehavior != null)
+						{
+								tpb.Append((int) lockBehavior);
 						}
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.ReadCommitted)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.ReadCommitted))
+				{
 						tpb.Append(IscCodes.isc_tpb_read_committed);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.Autocommit)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.Autocommit))
+				{
 						tpb.Append(IscCodes.isc_tpb_autocommit);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.RecVersion)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.RecVersion))
+				{
 						tpb.Append(IscCodes.isc_tpb_rec_version);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoRecVersion)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoRecVersion))
+				{
 						tpb.Append(IscCodes.isc_tpb_no_rec_version);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.RestartRequests)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.RestartRequests))
+				{
 						tpb.Append(IscCodes.isc_tpb_restart_requests);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoAutoUndo)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoAutoUndo))
+				{
 						tpb.Append(IscCodes.isc_tpb_no_auto_undo);
 				}
-				if(options.TransactionBehavior.HasFlag(FbTransactionBehavior.ReadConsistency)) {
+				if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.ReadConsistency))
+				{
 						tpb.Append(IscCodes.isc_tpb_read_consistency);
 				}
 
-				if(options.SnapshotAtNumber != null) {
-						tpb.Append(IscCodes.isc_tpb_at_snapshot_number, (long)options.SnapshotAtNumber);
+				if (options.SnapshotAtNumber != null)
+				{
+						tpb.Append(IscCodes.isc_tpb_at_snapshot_number, (long) options.SnapshotAtNumber);
 				}
 
 				return tpb;
 		}
 
-		private static void EnsureSavePointName(string savePointName) {
-				if(string.IsNullOrWhiteSpace(savePointName)) {
+		private static void EnsureSavePointName(string savePointName)
+		{
+				if (string.IsNullOrWhiteSpace(savePointName))
+				{
 						throw new ArgumentException("No transaction name was specified.");
 				}
 		}

@@ -22,14 +22,17 @@ using FirebirdSql.Data.Types;
 namespace FirebirdSql.Data.Common;
 
 // based on Jaybird's implementation
-class DecimalCodec(int formatBitLength, int coefficientDigits) {
-		class DecimalFormat {
+class DecimalCodec(int formatBitLength, int coefficientDigits)
+{
+		class DecimalFormat
+		{
 				const int SignBits = 1;
 				const int CombinationBits = 5;
 				const int BitsPerGroup = DenselyPackedDecimalCodec.BitsPerGroup;
 				const int DigitsPerGroup = DenselyPackedDecimalCodec.DigitsPerGroup;
 
-				public DecimalFormat(int formatBitLength, int coefficientDigits) {
+				public DecimalFormat(int formatBitLength, int coefficientDigits)
+				{
 						FormatBitLength = formatBitLength;
 						CoefficientDigits = coefficientDigits;
 						FormatByteLength = FormatBitLength / 8;
@@ -49,8 +52,10 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 				public int EMin { get; }
 				public int ExponentBias { get; }
 
-				public void ValidateByteLength(byte[] decBytes) {
-						if(decBytes.Length != FormatByteLength) {
+				public void ValidateByteLength(byte[] decBytes)
+				{
+						if (decBytes.Length != FormatByteLength)
+						{
 								throw new ArgumentException(nameof(decBytes), $"{nameof(decBytes)} argument must be {FormatByteLength} bytes.");
 						}
 				}
@@ -78,9 +83,11 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 		public static DecimalCodec DecFloat34 { get; } = new DecimalCodec(128, 34);
 
 		// Parse an IEEE-754 decimal format to a FbDecFloat.
-		public FbDecFloat ParseBytes(byte[] decBytes) {
+		public FbDecFloat ParseBytes(byte[] decBytes)
+		{
 				// this (and related) code works with BE
-				if(BitConverter.IsLittleEndian) {
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(decBytes);
 				}
 
@@ -89,22 +96,26 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 				int firstByte = decBytes[0] & 0xff;
 				int signum = -1 * (firstByte >>> 7) | 1;
 				var decimalType = DecimalTypeFromFirstByte(firstByte);
-				switch(decimalType) {
+				switch (decimalType)
+				{
 						case DecimalType.Infinity:
 								return signum == NegativeSignum ? FbDecFloat.NegativeInfinity : FbDecFloat.PositiveInfinity;
 						case DecimalType.NaN:
 								return signum == NegativeSignum ? FbDecFloat.NegativeNaN : FbDecFloat.PositiveNaN;
 						case DecimalType.SignalingNaN:
 								return signum == NegativeSignum ? FbDecFloat.NegativeSignalingNaN : FbDecFloat.PositiveSignalingNaN;
-						case DecimalType.Finite: {
+						case DecimalType.Finite:
+								{
 										// NOTE: get exponent MSB from combination field and first 2 bits of exponent continuation in one go
 										int exponentMSB;
 										int firstDigit;
-										if((firstByte & Combination2) != Combination2) {
+										if ((firstByte & Combination2) != Combination2)
+										{
 												exponentMSB = (firstByte >>> 3) & 0b01100 | (firstByte & 0b011);
 												firstDigit = (firstByte >>> 2) & 0b0111;
 										}
-										else {
+										else
+										{
 												exponentMSB = (firstByte >>> 1) & 0b01100 | (firstByte & 0b011);
 												firstDigit = 0b01000 | ((firstByte >>> 2) & 0b01);
 										}
@@ -120,40 +131,48 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 		}
 
 		// Encodes a FbDecFloat to its IEEE-754 format.
-		public byte[] EncodeDecimal(FbDecFloat @decimal) {
+		public byte[] EncodeDecimal(FbDecFloat @decimal)
+		{
 				byte[] decBytes = new byte[_decimalFormat.FormatByteLength];
 
-				if(@decimal.Negative) {
+				if (@decimal.Negative)
+				{
 						decBytes[0] = NegativeBit;
 				}
 
-				if(@decimal.Type == DecimalType.Finite) {
+				if (@decimal.Type == DecimalType.Finite)
+				{
 						EncodeFinite(@decimal, decBytes);
 				}
-				else {
+				else
+				{
 						decBytes[0] |= GetSpecialBits(@decimal.Type);
 				}
 
 				// this (and related) code works with BE
-				if(BitConverter.IsLittleEndian) {
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(decBytes);
 				}
 				return decBytes;
 		}
 
-		void EncodeFinite(FbDecFloat @decimal, byte[] decBytes) {
+		void EncodeFinite(FbDecFloat @decimal, byte[] decBytes)
+		{
 				int biasedExponent = _decimalFormat.BiasedExponent(@decimal.Exponent);
 				var coefficient = @decimal.Coefficient;
 				int mostSignificantDigit = _coefficientCoder.EncodeValue(coefficient, decBytes);
 				int expMSB = biasedExponent >>> _decimalFormat.ExponentContinuationBits;
 				int expTwoBitCont = (biasedExponent >>> _decimalFormat.ExponentContinuationBits - 2) & 0b011;
-				if(mostSignificantDigit <= 7) {
-						decBytes[0] |= (byte)((expMSB << 5)
+				if (mostSignificantDigit <= 7)
+				{
+						decBytes[0] |= (byte) ((expMSB << 5)
 								| (mostSignificantDigit << 2)
 								| expTwoBitCont);
 				}
-				else {
-						decBytes[0] |= (byte)(Combination2
+				else
+				{
+						decBytes[0] |= (byte) (Combination2
 								| (expMSB << 3)
 								| ((mostSignificantDigit & 0b01) << 2)
 								| expTwoBitCont);
@@ -161,33 +180,40 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 				EncodeExponentContinuation(decBytes, biasedExponent, _decimalFormat.ExponentContinuationBits - 2);
 		}
 
-		static void EncodeExponentContinuation(byte[] decBytes, int expAndBias, int expBitsRemaining) {
+		static void EncodeExponentContinuation(byte[] decBytes, int expAndBias, int expBitsRemaining)
+		{
 				int expByteIndex = 1;
-				while(expBitsRemaining > 8) {
-						decBytes[expByteIndex++] = (byte)(expAndBias >>> expBitsRemaining - 8);
+				while (expBitsRemaining > 8)
+				{
+						decBytes[expByteIndex++] = (byte) (expAndBias >>> expBitsRemaining - 8);
 						expBitsRemaining -= 8;
 				}
-				if(expBitsRemaining > 0) {
-						decBytes[expByteIndex] |= (byte)(expAndBias << 8 - expBitsRemaining);
+				if (expBitsRemaining > 0)
+				{
+						decBytes[expByteIndex] |= (byte) (expAndBias << 8 - expBitsRemaining);
 				}
 		}
 
-		static int DecodeExponent(byte[] decBytes, int exponentMSB, int exponentBitsRemaining) {
+		static int DecodeExponent(byte[] decBytes, int exponentMSB, int exponentBitsRemaining)
+		{
 				int exponent = exponentMSB;
 				int byteIndex = 1;
-				while(exponentBitsRemaining > 8) {
+				while (exponentBitsRemaining > 8)
+				{
 						exponent = (exponent << 8) | (decBytes[byteIndex] & 0xFF);
 						exponentBitsRemaining -= 8;
 						byteIndex += 1;
 				}
-				if(exponentBitsRemaining > 0) {
+				if (exponentBitsRemaining > 0)
+				{
 						exponent = (exponent << exponentBitsRemaining)
 							| ((decBytes[byteIndex] & 0xFF) >>> (8 - exponentBitsRemaining));
 				}
 				return exponent;
 		}
 
-		static DecimalType DecimalTypeFromFirstByte(int firstByte) => (firstByte & TypeMask) switch {
+		static DecimalType DecimalTypeFromFirstByte(int firstByte) => (firstByte & TypeMask) switch
+		{
 				Infinity0 => DecimalType.Infinity,
 				Infinity2 => DecimalType.Infinity,
 				NaNQuiet => DecimalType.NaN,
@@ -195,7 +221,8 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 				_ => DecimalType.Finite,
 		};
 
-		static byte GetSpecialBits(DecimalType decimalType) => decimalType switch {
+		static byte GetSpecialBits(DecimalType decimalType) => decimalType switch
+		{
 				DecimalType.Finite => throw new InvalidOperationException($"{nameof(DecimalType)} {nameof(DecimalType.Finite)} has no special bits."),
 				DecimalType.Infinity => Infinity0,
 				DecimalType.NaN => NaNQuiet,

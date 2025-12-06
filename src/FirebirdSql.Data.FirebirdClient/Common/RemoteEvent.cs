@@ -24,7 +24,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal class RemoteEvent(DatabaseBase database) {
+internal class RemoteEvent(DatabaseBase database)
+{
 		const int MaxEventNameLength = 255;
 		const int MaxEpbLength = 65535;
 
@@ -43,27 +44,31 @@ internal class RemoteEvent(DatabaseBase database) {
 
 		public DatabaseBase Database => _database;
 
-		public void QueueEvents(ICollection<string> events) {
+		public void QueueEvents(ICollection<string> events)
+		{
 				EnsureNotRunning();
 				EnsureEventsCollection(events);
 				_events.AddRange(events);
 				_database.QueueEvents(this);
 		}
-		public ValueTask QueueEventsAsync(ICollection<string> events, CancellationToken cancellationToken = default) {
+		public ValueTask QueueEventsAsync(ICollection<string> events, CancellationToken cancellationToken = default)
+		{
 				EnsureNotRunning();
 				EnsureEventsCollection(events);
 				_events.AddRange(events);
 				return _database.QueueEventsAsync(this, cancellationToken);
 		}
 
-		public void CancelEvents() {
+		public void CancelEvents()
+		{
 				_database.CancelEvents(this);
 				_currentCounts = null;
 				_previousCounts = null;
 				_events.Clear();
 				Volatile.Write(ref _running, 0);
 		}
-		public async ValueTask CancelEventsAsync(CancellationToken cancellationToken = default) {
+		public async ValueTask CancelEventsAsync(CancellationToken cancellationToken = default)
+		{
 				await _database.CancelEventsAsync(this, cancellationToken).ConfigureAwait(false);
 				_currentCounts = null;
 				_previousCounts = null;
@@ -71,15 +76,17 @@ internal class RemoteEvent(DatabaseBase database) {
 				Volatile.Write(ref _running, 0);
 		}
 
-		internal void EventCounts(byte[] buffer) {
-				if(Volatile.Read(ref _running) == 0)
+		internal void EventCounts(byte[] buffer)
+		{
+				if (Volatile.Read(ref _running) == 0)
 						return;
 
 				_previousCounts = _currentCounts;
 				_currentCounts = new int[_events.Count];
 
 				int pos = 1;
-				while(pos < buffer.Length) {
+				while (pos < buffer.Length)
+				{
 						byte length = buffer[pos++];
 						string eventName = _database.Charset.GetString(buffer, pos, length);
 
@@ -92,9 +99,10 @@ internal class RemoteEvent(DatabaseBase database) {
 						pos += 4;
 				}
 
-				for(int i = 0; i < _events.Count; i++) {
+				for (int i = 0; i < _events.Count; i++)
+				{
 						int count = _currentCounts[i] - _previousCounts[i];
-						if(count == 0)
+						if (count == 0)
 								continue;
 						EventCountsCallback(_events[i], count);
 				}
@@ -102,32 +110,37 @@ internal class RemoteEvent(DatabaseBase database) {
 
 		internal void EventError(Exception error) => EventErrorCallback(error);
 
-		internal EventParameterBuffer BuildEpb() {
+		internal EventParameterBuffer BuildEpb()
+		{
 				_currentCounts ??= new int[_events.Count];
 				return BuildEpb(_events, i => _currentCounts[i] + 1);
 		}
 
-		void EnsureNotRunning() {
-				if(Interlocked.Exchange(ref _running, 1) == 1)
+		void EnsureNotRunning()
+		{
+				if (Interlocked.Exchange(ref _running, 1) == 1)
 						throw new InvalidOperationException("Events are already running.");
 		}
 
-		EventParameterBuffer BuildEpb(IList<string> events, Func<int, int> countFactory) {
+		EventParameterBuffer BuildEpb(IList<string> events, Func<int, int> countFactory)
+		{
 				var epb = Database.CreateEventParameterBuffer();
 				epb.Append(IscCodes.EPB_version1);
-				for(int i = 0; i < events.Count; i++) {
+				for (int i = 0; i < events.Count; i++)
+				{
 						epb.Append(events[i], countFactory(i));
 				}
 				return epb;
 		}
 
-		void EnsureEventsCollection(ICollection<string> events) {
+		void EnsureEventsCollection(ICollection<string> events)
+		{
 				ArgumentNullException.ThrowIfNull(events);
-				if(events.Count == 0)
+				if (events.Count == 0)
 						throw new ArgumentOutOfRangeException(nameof(events), "Need to provide at least one event.");
-				if(events.Any(x => x.Length > MaxEventNameLength))
+				if (events.Any(x => x.Length > MaxEventNameLength))
 						throw new ArgumentOutOfRangeException(nameof(events), $"Some events are longer than {MaxEventNameLength}.");
-				if(BuildEpb([.. events], _ => default).ToArray().Length > MaxEpbLength)
+				if (BuildEpb([.. events], _ => default).ToArray().Length > MaxEpbLength)
 						throw new ArgumentOutOfRangeException(nameof(events), $"Whole events buffer is bigger than {MaxEpbLength}.");
 		}
 }

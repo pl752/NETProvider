@@ -22,7 +22,8 @@ using FirebirdSql.Data.Common;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbBackupFlags {
+public enum FbBackupFlags
+{
 		IgnoreChecksums = IscCodes.isc_spb_bkp_ignore_checksums,
 		IgnoreLimbo = IscCodes.isc_spb_bkp_ignore_limbo,
 		MetaDataOnly = IscCodes.isc_spb_bkp_metadata_only,

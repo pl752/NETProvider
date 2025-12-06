@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Common;
 
-internal enum DbStatementType : int {
+internal enum DbStatementType : int
+{
 		None = 0,
 		Select = IscCodes.isc_info_sql_stmt_select,
 		Insert = IscCodes.isc_info_sql_stmt_insert,

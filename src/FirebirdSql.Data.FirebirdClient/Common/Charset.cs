@@ -22,14 +22,16 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class Charset {
+internal sealed class Charset
+{
 		internal const string Octets = "OCTETS";
 		internal const string None = "NONE";
 
 		private readonly static Dictionary<int, Charset> charsetsById;
 		private readonly static Dictionary<string, Charset> charsetsByName;
 
-		static Charset() {
+		static Charset()
+		{
 				var charsets = GetSupportedCharsets();
 				charsetsById = charsets.ToDictionary(x => x.Identifier);
 				charsetsByName = charsets.ToDictionary(x => x.Name, StringComparer.CurrentCultureIgnoreCase);
@@ -41,7 +43,8 @@ internal sealed class Charset {
 
 		public static bool TryGetByName(string name, out Charset charset) => charsetsByName.TryGetValue(name, out charset);
 
-		private static List<Charset> GetSupportedCharsets() {
+		private static List<Charset> GetSupportedCharsets()
+		{
 				var charsets = new List<Charset> {
 						new Charset(0, None, 1, None),
 						new Charset(1, Octets, 1, Octets),
@@ -81,8 +84,10 @@ internal sealed class Charset {
 				return charsets;
 		}
 
-		private static void TryAddCharset(List<Charset> charsets, Func<Charset> charsetCreator) {
-				try {
+		private static void TryAddCharset(List<Charset> charsets, Func<Charset> charsetCreator)
+		{
+				try
+				{
 						charsets.Add(charsetCreator());
 				}
 				catch { }
@@ -96,14 +101,16 @@ internal sealed class Charset {
 		public bool IsOctetsCharset { get; }
 		public bool IsNoneCharset { get; }
 
-		public Charset(int id, string name, int bytesPerCharacter, string systemName) {
+		public Charset(int id, string name, int bytesPerCharacter, string systemName)
+		{
 				Identifier = id;
 				Name = name;
 				BytesPerCharacter = bytesPerCharacter;
 				SystemName = systemName;
 				IsNoneCharset = false;
 				IsOctetsCharset = false;
-				switch(SystemName) {
+				switch (SystemName)
+				{
 						case None:
 								Encoding = Encoding2.Default;
 								IsNoneCharset = true;

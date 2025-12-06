@@ -20,16 +20,22 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using FirebirdSql.Data.Common;
 
-namespace FirebirdSql.Data.Client.Native {
-		static class StatusVectorHelper {
-				public static void ProcessStatusVector(IntPtr[] statusVector, Charset charset, Action<IscException> warningMessage) {
+namespace FirebirdSql.Data.Client.Native
+{
+		static class StatusVectorHelper
+		{
+				public static void ProcessStatusVector(IntPtr[] statusVector, Charset charset, Action<IscException> warningMessage)
+				{
 						var ex = ParseStatusVector(statusVector, charset);
 
-						if(ex != null) {
-								if(ex.IsWarning) {
+						if (ex != null)
+						{
+								if (ex.IsWarning)
+								{
 										warningMessage?.Invoke(ex);
 								}
-								else {
+								else
+								{
 										throw ex;
 								}
 						}
@@ -37,18 +43,22 @@ namespace FirebirdSql.Data.Client.Native {
 
 				public static void ClearStatusVector(IntPtr[] statusVector) => Array.Clear(statusVector, 0, statusVector.Length);
 
-				public static IscException ParseStatusVector(IntPtr[] statusVector, Charset charset) {
+				public static IscException ParseStatusVector(IntPtr[] statusVector, Charset charset)
+				{
 						IscException exception = null;
 						bool eof = false;
 
-						for(int i = 0; i < statusVector.Length;) {
+						for (int i = 0; i < statusVector.Length;)
+						{
 								nint arg = statusVector[i++];
 
-								switch(arg.AsInt()) {
+								switch (arg.AsInt())
+								{
 										case IscCodes.isc_arg_gds:
 										default:
 												nint er = statusVector[i++];
-												if(er != IntPtr.Zero) {
+												if (er != IntPtr.Zero)
+												{
 														exception ??= IscException.ForBuilding();
 														exception.Errors.Add(new IscError(arg.AsInt(), er.AsInt()));
 												}
@@ -60,7 +70,8 @@ namespace FirebirdSql.Data.Client.Native {
 												break;
 
 										case IscCodes.isc_arg_interpreted:
-										case IscCodes.isc_arg_string: {
+										case IscCodes.isc_arg_string:
+												{
 														nint ptr = statusVector[i++];
 														byte[] buffer = ReadStringData(ptr);
 														string value = charset.GetString(buffer);
@@ -68,7 +79,8 @@ namespace FirebirdSql.Data.Client.Native {
 												}
 												break;
 
-										case IscCodes.isc_arg_cstring: {
+										case IscCodes.isc_arg_cstring:
+												{
 														i++;
 
 														nint ptr = statusVector[i++];
@@ -82,7 +94,8 @@ namespace FirebirdSql.Data.Client.Native {
 										case IscCodes.isc_arg_number:
 												exception.Errors.Add(new IscError(arg.AsInt(), statusVector[i++].AsInt()));
 												break;
-										case IscCodes.isc_arg_sql_state: {
+										case IscCodes.isc_arg_sql_state:
+												{
 														nint ptr = statusVector[i++];
 														byte[] buffer = ReadStringData(ptr);
 														string value = charset.GetString(buffer);
@@ -91,7 +104,8 @@ namespace FirebirdSql.Data.Client.Native {
 												break;
 								}
 
-								if(eof) {
+								if (eof)
+								{
 										break;
 								}
 						}
@@ -99,12 +113,14 @@ namespace FirebirdSql.Data.Client.Native {
 						return exception;
 				}
 
-				private static byte[] ReadStringData(IntPtr ptr) {
+				private static byte[] ReadStringData(IntPtr ptr)
+				{
 						var buffer = new List<byte>();
 						int offset = 0;
-						while(true) {
+						while (true)
+						{
 								byte b = Marshal.ReadByte(ptr, offset);
-								if(b == 0)
+								if (b == 0)
 										break;
 								buffer.Add(b);
 								offset++;

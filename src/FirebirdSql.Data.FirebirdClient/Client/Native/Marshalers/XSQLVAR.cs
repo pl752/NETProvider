@@ -21,7 +21,8 @@ using System.Runtime.InteropServices;
 namespace FirebirdSql.Data.Client.Native.Marshalers;
 
 [StructLayout(LayoutKind.Sequential)]
-internal class XSQLVAR {
+internal class XSQLVAR
+{
 		public short sqltype;
 		public short sqlscale;
 		public short sqlsubtype;

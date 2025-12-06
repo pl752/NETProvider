@@ -21,7 +21,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-interface IDataProvider {
+interface IDataProvider
+{
 		int Read(byte[] buffer, int offset, int count);
 		int Read(Span<byte> buffer, int offset, int count);
 		ValueTask<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);

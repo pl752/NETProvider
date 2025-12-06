@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Services;
 
-public enum FbShutdownMode {
+public enum FbShutdownMode
+{
 		Forced,
 		DenyTransaction,
 		DenyConnection

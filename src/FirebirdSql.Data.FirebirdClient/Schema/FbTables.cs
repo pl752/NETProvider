@@ -22,10 +22,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbTables : FbSchema {
+internal class FbTables : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -41,29 +43,36 @@ internal class FbTables : FbSchema {
 					rdb$view_source AS VIEW_SOURCE
 				FROM rdb$relations");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* TABLE_CATALOG */
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* TABLE_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat("rdb$relation_name = @p{0}", index++);
 						}
 
 						/* TABLE_TYPE */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
-								if(where.Length > 0) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
+								if (where.Length > 0)
+								{
 										_ = where.Append(" AND ");
 								}
 
-								switch(restrictions[3].ToString()) {
+								switch (restrictions[3].ToString())
+								{
 										case "VIEW":
 												_ = where.Append("rdb$view_source IS NOT NULL");
 												break;
@@ -80,7 +89,8 @@ internal class FbTables : FbSchema {
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
@@ -89,21 +99,26 @@ internal class FbTables : FbSchema {
 				return sql;
 		}
 
-		protected override void ProcessResult(DataTable schema) {
+		protected override void ProcessResult(DataTable schema)
+		{
 				schema.BeginLoadData();
 
-				foreach(DataRow row in schema.Rows) {
+				foreach (DataRow row in schema.Rows)
+				{
 						row["TABLE_TYPE"] = "TABLE";
-						if(row["IS_SYSTEM_TABLE"] == DBNull.Value ||
-							Convert.ToInt32(row["IS_SYSTEM_TABLE"], CultureInfo.InvariantCulture) == 0) {
+						if (row["IS_SYSTEM_TABLE"] == DBNull.Value ||
+							Convert.ToInt32(row["IS_SYSTEM_TABLE"], CultureInfo.InvariantCulture) == 0)
+						{
 								row["IS_SYSTEM_TABLE"] = false;
 						}
-						else {
+						else
+						{
 								row["IS_SYSTEM_TABLE"] = true;
 								row["TABLE_TYPE"] = "SYSTEM_TABLE";
 						}
-						if(row["VIEW_SOURCE"] != null &&
-							row["VIEW_SOURCE"].ToString().Length > 0) {
+						if (row["VIEW_SOURCE"] != null &&
+							row["VIEW_SOURCE"].ToString().Length > 0)
+						{
 								row["TABLE_TYPE"] = "VIEW";
 						}
 				}

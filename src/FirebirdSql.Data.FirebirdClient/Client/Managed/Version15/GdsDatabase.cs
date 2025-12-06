@@ -21,9 +21,12 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version15;
 
-internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(connection) {
-		protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey) {
-				while(response is CryptKeyCallbackResponse cryptKeyCallbackResponse) {
+internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(connection)
+{
+		protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
+		{
+				while (response is CryptKeyCallbackResponse cryptKeyCallbackResponse)
+				{
 						Xdr.Write(IscCodes.op_crypt_key_callback);
 						Xdr.WriteBuffer(cryptKey);
 						Xdr.Write(cryptKeyCallbackResponse.Size);
@@ -32,8 +35,10 @@ internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(con
 				}
 				return response;
 		}
-		protected internal override async ValueTask<IResponse> ProcessCryptCallbackResponseIfNeededAsync(IResponse response, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				while(response is CryptKeyCallbackResponse cryptKeyCallbackResponse) {
+		protected internal override async ValueTask<IResponse> ProcessCryptCallbackResponseIfNeededAsync(IResponse response, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
+				while (response is CryptKeyCallbackResponse cryptKeyCallbackResponse)
+				{
 						await Xdr.WriteAsync(IscCodes.op_crypt_key_callback, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteBufferAsync(cryptKey, cancellationToken).ConfigureAwait(false);
 						await Xdr.WriteAsync(cryptKeyCallbackResponse.Size).ConfigureAwait(false);
@@ -45,5 +50,5 @@ internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(con
 
 		public override StatementBase CreateStatement() => new GdsStatement(this);
 
-		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
+		public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
 }

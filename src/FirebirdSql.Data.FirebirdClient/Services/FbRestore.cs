@@ -23,12 +23,15 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbRestore(string connectionString = null) : FbService(connectionString) {
+public sealed class FbRestore(string connectionString = null) : FbService(connectionString)
+{
 		private int? _pageSize;
-		public int? PageSize {
+		public int? PageSize
+		{
 				get => _pageSize;
-				set {
-						if(value is int v && !SizeHelper.IsValidPageSize(v))
+				set
+				{
+						if (value is int v && !SizeHelper.IsValidPageSize(v))
 								throw SizeHelper.InvalidSizeException("page size");
 
 						_pageSize = value;
@@ -44,85 +47,99 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 		public FbRestoreFlags Options { get; set; }
 		public FbBackupRestoreStatistics? Statistics { get; set; }
 
-		public void Execute() {
+		public void Execute()
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								Open();
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_restore);
-								foreach(var bkpFile in BackupFiles) {
+								foreach (var bkpFile in BackupFiles)
+								{
 										startSpb.Append2(IscCodes.isc_spb_bkp_file, bkpFile.BackupFile);
 								}
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								if(Verbose)
+								if (Verbose)
 										startSpb.Append(IscCodes.isc_spb_verbose);
-								if(VerboseInterval.HasValue)
-										startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
-								if(PageBuffers.HasValue)
-										startSpb.Append(IscCodes.isc_spb_res_buffers, (int)PageBuffers);
-								if(_pageSize.HasValue)
-										startSpb.Append(IscCodes.isc_spb_res_page_size, (int)_pageSize);
-								startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte)(ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
-								if(!string.IsNullOrEmpty(SkipData))
+								if (VerboseInterval.HasValue)
+										startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+								if (PageBuffers.HasValue)
+										startSpb.Append(IscCodes.isc_spb_res_buffers, (int) PageBuffers);
+								if (_pageSize.HasValue)
+										startSpb.Append(IscCodes.isc_spb_res_page_size, (int) _pageSize);
+								startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte) (ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
+								if (!string.IsNullOrEmpty(SkipData))
 										startSpb.Append2(IscCodes.isc_spb_res_skip_data, SkipData);
-								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-								if(Statistics.HasValue)
+								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+								if (Statistics.HasValue)
 										startSpb.Append2(IscCodes.isc_spb_res_stat, Statistics.Value.BuildConfiguration());
-								if(ConnectionStringOptions.ParallelWorkers > 0)
+								if (ConnectionStringOptions.ParallelWorkers > 0)
 										startSpb.Append(IscCodes.isc_spb_res_parallel_workers, ConnectionStringOptions.ParallelWorkers);
 								StartTask(startSpb);
-								if(Verbose || VerboseInterval.HasValue) {
+								if (Verbose || VerboseInterval.HasValue)
+								{
 										ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 								}
 						}
-						finally {
+						finally
+						{
 								Close();
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task ExecuteAsync(CancellationToken cancellationToken = default) {
+		public async Task ExecuteAsync(CancellationToken cancellationToken = default)
+		{
 				EnsureDatabase();
 
-				try {
-						try {
+				try
+				{
+						try
+						{
 								await OpenAsync(cancellationToken).ConfigureAwait(false);
 								var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 								startSpb.Append(IscCodes.isc_action_svc_restore);
-								foreach(var bkpFile in BackupFiles) {
+								foreach (var bkpFile in BackupFiles)
+								{
 										startSpb.Append2(IscCodes.isc_spb_bkp_file, bkpFile.BackupFile);
 								}
 								startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-								if(Verbose)
+								if (Verbose)
 										startSpb.Append(IscCodes.isc_spb_verbose);
-								if(VerboseInterval.HasValue)
-										startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
-								if(PageBuffers.HasValue)
-										startSpb.Append(IscCodes.isc_spb_res_buffers, (int)PageBuffers);
-								if(_pageSize.HasValue)
-										startSpb.Append(IscCodes.isc_spb_res_page_size, (int)_pageSize);
-								startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte)(ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
-								if(!string.IsNullOrEmpty(SkipData))
+								if (VerboseInterval.HasValue)
+										startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+								if (PageBuffers.HasValue)
+										startSpb.Append(IscCodes.isc_spb_res_buffers, (int) PageBuffers);
+								if (_pageSize.HasValue)
+										startSpb.Append(IscCodes.isc_spb_res_page_size, (int) _pageSize);
+								startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte) (ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
+								if (!string.IsNullOrEmpty(SkipData))
 										startSpb.Append2(IscCodes.isc_spb_res_skip_data, SkipData);
-								startSpb.Append(IscCodes.isc_spb_options, (int)Options);
-								if(Statistics.HasValue)
+								startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+								if (Statistics.HasValue)
 										startSpb.Append2(IscCodes.isc_spb_res_stat, Statistics.Value.BuildConfiguration());
-								if(ConnectionStringOptions.ParallelWorkers > 0)
+								if (ConnectionStringOptions.ParallelWorkers > 0)
 										startSpb.Append(IscCodes.isc_spb_res_parallel_workers, ConnectionStringOptions.ParallelWorkers);
 								await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-								if(Verbose || VerboseInterval.HasValue) {
+								if (Verbose || VerboseInterval.HasValue)
+								{
 										await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 								}
 						}
-						finally {
+						finally
+						{
 								await CloseAsync(cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(Exception ex) {
+				catch (Exception ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}

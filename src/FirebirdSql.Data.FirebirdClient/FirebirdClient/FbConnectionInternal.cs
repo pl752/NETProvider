@@ -30,7 +30,8 @@ using FirebirdSql.Data.Schema;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal class FbConnectionInternal(ConnectionString options) {
+internal class FbConnectionInternal(ConnectionString options)
+{
 		#region Fields
 
 		private DatabaseBase _db;
@@ -65,110 +66,138 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Create and Drop database methods
 
-		public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite) {
+		public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite)
+		{
 				var db = ClientFactory.CreateDatabase(_connectionStringOptions);
 
 				var dpb = db.CreateDatabaseParameterBuffer();
 
-				if(db.UseUtf8ParameterBuffer) {
+				if (db.UseUtf8ParameterBuffer)
+				{
 						dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 				}
 				dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
-				if(!string.IsNullOrEmpty(_connectionStringOptions.UserID)) {
+				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) _connectionStringOptions.Dialect, 0, 0, 0]);
+				if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
+				{
 						dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
 				}
-				if(_connectionStringOptions.Charset.Length > 0) {
-						if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+				if (_connectionStringOptions.Charset.Length > 0)
+				{
+						if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 								throw new ArgumentException("Invalid character set specified.");
 						dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 				}
-				dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
+				dpb.Append(IscCodes.isc_dpb_force_write, (short) (forcedWrites ? 1 : 0));
 				dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
-				if(pageSize > 0) {
-						if(!SizeHelper.IsValidPageSize(pageSize))
+				if (pageSize > 0)
+				{
+						if (!SizeHelper.IsValidPageSize(pageSize))
 								throw SizeHelper.InvalidSizeException("page size");
 						dpb.Append(IscCodes.isc_dpb_page_size, pageSize);
 				}
 
-				try {
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+				try
+				{
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								db.CreateDatabaseWithTrustedAuth(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
-						else {
+						else
+						{
 								db.CreateDatabase(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
 				}
-				finally {
+				finally
+				{
 						db.Detach();
 				}
 		}
-		public async Task CreateDatabaseAsync(int pageSize, bool forcedWrites, bool overwrite, CancellationToken cancellationToken = default) {
+		public async Task CreateDatabaseAsync(int pageSize, bool forcedWrites, bool overwrite, CancellationToken cancellationToken = default)
+		{
 				var db = await ClientFactory.CreateDatabaseAsync(_connectionStringOptions, cancellationToken).ConfigureAwait(false);
 
 				var dpb = db.CreateDatabaseParameterBuffer();
 
-				if(db.UseUtf8ParameterBuffer) {
+				if (db.UseUtf8ParameterBuffer)
+				{
 						dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 				}
 				dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
-				if(!string.IsNullOrEmpty(_connectionStringOptions.UserID)) {
+				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) _connectionStringOptions.Dialect, 0, 0, 0]);
+				if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
+				{
 						dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
 				}
-				if(_connectionStringOptions.Charset.Length > 0) {
-						if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+				if (_connectionStringOptions.Charset.Length > 0)
+				{
+						if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 								throw new ArgumentException("Invalid character set specified.");
 						dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 				}
-				dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
+				dpb.Append(IscCodes.isc_dpb_force_write, (short) (forcedWrites ? 1 : 0));
 				dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
-				if(pageSize > 0) {
-						if(!SizeHelper.IsValidPageSize(pageSize))
+				if (pageSize > 0)
+				{
+						if (!SizeHelper.IsValidPageSize(pageSize))
 								throw SizeHelper.InvalidSizeException("page size");
 						dpb.Append(IscCodes.isc_dpb_page_size, pageSize);
 				}
 
-				try {
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+				try
+				{
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								await db.CreateDatabaseWithTrustedAuthAsync(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
-						else {
+						else
+						{
 								await db.CreateDatabaseAsync(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
 				}
-				finally {
+				finally
+				{
 						await db.DetachAsync(cancellationToken).ConfigureAwait(false);
 				}
 		}
 
-		public void DropDatabase() {
+		public void DropDatabase()
+		{
 				var db = ClientFactory.CreateDatabase(_connectionStringOptions);
-				try {
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+				try
+				{
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								db.AttachWithTrustedAuth(BuildDpb(db, _connectionStringOptions), _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
-						else {
+						else
+						{
 								db.Attach(BuildDpb(db, _connectionStringOptions), _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
 						db.DropDatabase();
 				}
-				finally {
+				finally
+				{
 						db.Detach();
 				}
 		}
-		public async Task DropDatabaseAsync(CancellationToken cancellationToken = default) {
+		public async Task DropDatabaseAsync(CancellationToken cancellationToken = default)
+		{
 				var db = await ClientFactory.CreateDatabaseAsync(_connectionStringOptions, cancellationToken).ConfigureAwait(false);
-				try {
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+				try
+				{
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								await db.AttachWithTrustedAuthAsync(BuildDpb(db, _connectionStringOptions), _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
-						else {
+						else
+						{
 								await db.AttachAsync(BuildDpb(db, _connectionStringOptions), _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
 						await db.DropDatabaseAsync(cancellationToken).ConfigureAwait(false);
 				}
-				finally {
+				finally
+				{
 						await db.DetachAsync(cancellationToken).ConfigureAwait(false);
 				}
 		}
@@ -177,63 +206,81 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Connect and Disconnect methods
 
-		public void Connect() {
-				if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+		public void Connect()
+		{
+				if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 						throw new ArgumentException("Invalid character set specified.");
 
-				try {
+				try
+				{
 						_db = ClientFactory.CreateDatabase(_connectionStringOptions);
 						var dpb = BuildDpb(_db, _connectionStringOptions);
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								_db.AttachWithTrustedAuth(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
-						else {
+						else
+						{
 								_db.Attach(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
-		public async Task ConnectAsync(CancellationToken cancellationToken = default) {
-				if(!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
+		public async Task ConnectAsync(CancellationToken cancellationToken = default)
+		{
+				if (!Charset.TryGetByName(_connectionStringOptions.Charset, out var charset))
 						throw new ArgumentException("Invalid character set specified.");
 
-				try {
+				try
+				{
 						_db = await ClientFactory.CreateDatabaseAsync(_connectionStringOptions, cancellationToken).ConfigureAwait(false);
 						var dpb = BuildDpb(_db, _connectionStringOptions);
-						if(string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password)) {
+						if (string.IsNullOrEmpty(_connectionStringOptions.UserID) && string.IsNullOrEmpty(_connectionStringOptions.Password))
+						{
 								await _db.AttachWithTrustedAuthAsync(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
-						else {
+						else
+						{
 								await _db.AttachAsync(dpb, _connectionStringOptions.Database, _connectionStringOptions.CryptKey, cancellationToken).ConfigureAwait(false);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						throw FbException.Create(ex);
 				}
 		}
 
-		public void Disconnect() {
-				if(_db != null) {
-						try {
+		public void Disconnect()
+		{
+				if (_db != null)
+				{
+						try
+						{
 								_db.Detach();
 						}
 						catch { }
-						finally {
+						finally
+						{
 								_db = null;
 								_owningConnection = null;
 								_connectionStringOptions = null;
 						}
 				}
 		}
-		public async Task DisconnectAsync(CancellationToken cancellationToken = default) {
-				if(_db != null) {
-						try {
+		public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+		{
+				if (_db != null)
+				{
+						try
+						{
 								await _db.DetachAsync(cancellationToken).ConfigureAwait(false);
 						}
 						catch { }
-						finally {
+						finally
+						{
 								_db = null;
 								_owningConnection = null;
 								_connectionStringOptions = null;
@@ -245,36 +292,44 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Transaction Handling Methods
 
-		public FbTransaction BeginTransaction(IsolationLevel level, string transactionName) {
+		public FbTransaction BeginTransaction(IsolationLevel level, string transactionName)
+		{
 				EnsureNoActiveTransaction();
 
-				try {
+				try
+				{
 						_activeTransaction = new FbTransaction(_owningConnection, level);
 						_activeTransaction.BeginTransaction();
 
-						if(transactionName != null) {
+						if (transactionName != null)
+						{
 								_activeTransaction.Save(transactionName);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						DisposeTransaction();
 						throw FbException.Create(ex);
 				}
 
 				return _activeTransaction;
 		}
-		public async Task<FbTransaction> BeginTransactionAsync(IsolationLevel level, string transactionName, CancellationToken cancellationToken = default) {
+		public async Task<FbTransaction> BeginTransactionAsync(IsolationLevel level, string transactionName, CancellationToken cancellationToken = default)
+		{
 				EnsureNoActiveTransaction();
 
-				try {
+				try
+				{
 						_activeTransaction = new FbTransaction(_owningConnection, level);
 						await _activeTransaction.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-						if(transactionName != null) {
+						if (transactionName != null)
+						{
 								_activeTransaction.Save(transactionName);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						await DisposeTransactionAsync(cancellationToken).ConfigureAwait(false);
 						throw FbException.Create(ex);
 				}
@@ -282,36 +337,44 @@ internal class FbConnectionInternal(ConnectionString options) {
 				return _activeTransaction;
 		}
 
-		public FbTransaction BeginTransaction(FbTransactionOptions options, string transactionName) {
+		public FbTransaction BeginTransaction(FbTransactionOptions options, string transactionName)
+		{
 				EnsureNoActiveTransaction();
 
-				try {
+				try
+				{
 						_activeTransaction = new FbTransaction(_owningConnection, IsolationLevel.Unspecified);
 						_activeTransaction.BeginTransaction(options);
 
-						if(transactionName != null) {
+						if (transactionName != null)
+						{
 								_activeTransaction.Save(transactionName);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						DisposeTransaction();
 						throw FbException.Create(ex);
 				}
 
 				return _activeTransaction;
 		}
-		public async Task<FbTransaction> BeginTransactionAsync(FbTransactionOptions options, string transactionName, CancellationToken cancellationToken = default) {
+		public async Task<FbTransaction> BeginTransactionAsync(FbTransactionOptions options, string transactionName, CancellationToken cancellationToken = default)
+		{
 				EnsureNoActiveTransaction();
 
-				try {
+				try
+				{
 						_activeTransaction = new FbTransaction(_owningConnection, IsolationLevel.Unspecified);
 						await _activeTransaction.BeginTransactionAsync(options, cancellationToken).ConfigureAwait(false);
 
-						if(transactionName != null) {
+						if (transactionName != null)
+						{
 								_activeTransaction.Save(transactionName);
 						}
 				}
-				catch(IscException ex) {
+				catch (IscException ex)
+				{
 						await DisposeTransactionAsync(cancellationToken).ConfigureAwait(false);
 						throw FbException.Create(ex);
 				}
@@ -319,14 +382,18 @@ internal class FbConnectionInternal(ConnectionString options) {
 				return _activeTransaction;
 		}
 
-		public void DisposeTransaction() {
-				if(_activeTransaction != null && !IsEnlisted) {
+		public void DisposeTransaction()
+		{
+				if (_activeTransaction != null && !IsEnlisted)
+				{
 						_activeTransaction.Dispose();
 						_activeTransaction = null;
 				}
 		}
-		public async Task DisposeTransactionAsync(CancellationToken cancellationToken = default) {
-				if(_activeTransaction != null && !IsEnlisted) {
+		public async Task DisposeTransactionAsync(CancellationToken cancellationToken = default)
+		{
+				if (_activeTransaction != null && !IsEnlisted)
+				{
 #if NET48 || NETSTANDARD2_0
 			_activeTransaction.Dispose();
 			await Task.CompletedTask.ConfigureAwait(false);
@@ -337,13 +404,17 @@ internal class FbConnectionInternal(ConnectionString options) {
 				}
 		}
 
-		public void TransactionCompleted() {
-				foreach(var command in _preparedCommands) {
+		public void TransactionCompleted()
+		{
+				foreach (var command in _preparedCommands)
+				{
 						command.TransactionCompleted();
 				}
 		}
-		public async Task TransactionCompletedAsync(CancellationToken cancellationToken = default) {
-				foreach(var command in _preparedCommands) {
+		public async Task TransactionCompletedAsync(CancellationToken cancellationToken = default)
+		{
+				foreach (var command in _preparedCommands)
+				{
 						await command.TransactionCompletedAsync(cancellationToken).ConfigureAwait(false);
 				}
 		}
@@ -352,15 +423,19 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Transaction Enlistment
 
-		public void EnlistTransaction(System.Transactions.Transaction transaction) {
-				if(_owningConnection != null) {
-						if(_enlistmentNotification != null && _enlistmentNotification.SystemTransaction == transaction)
+		public void EnlistTransaction(System.Transactions.Transaction transaction)
+		{
+				if (_owningConnection != null)
+				{
+						if (_enlistmentNotification != null && _enlistmentNotification.SystemTransaction == transaction)
 								return;
 
-						if(HasActiveTransaction) {
+						if (HasActiveTransaction)
+						{
 								throw new ArgumentException("Unable to enlist in transaction, a local transaction already exists");
 						}
-						if(_enlistmentNotification != null) {
+						if (_enlistmentNotification != null)
+						{
 								throw new ArgumentException("Already enlisted in a transaction");
 						}
 
@@ -371,8 +446,10 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		private void EnlistmentCompleted(object sender, EventArgs e) => _enlistmentNotification = null;
 
-		public FbTransaction BeginTransaction(System.Transactions.IsolationLevel isolationLevel) {
-				var il = isolationLevel switch {
+		public FbTransaction BeginTransaction(System.Transactions.IsolationLevel isolationLevel)
+		{
+				var il = isolationLevel switch
+				{
 						System.Transactions.IsolationLevel.Chaos => IsolationLevel.Chaos,
 						System.Transactions.IsolationLevel.ReadUncommitted => IsolationLevel.ReadUncommitted,
 						System.Transactions.IsolationLevel.RepeatableRead => IsolationLevel.RepeatableRead,
@@ -383,8 +460,10 @@ internal class FbConnectionInternal(ConnectionString options) {
 				};
 				return BeginTransaction(il, null);
 		}
-		public Task<FbTransaction> BeginTransactionAsync(System.Transactions.IsolationLevel isolationLevel, CancellationToken cancellationToken = default) {
-				var il = isolationLevel switch {
+		public Task<FbTransaction> BeginTransactionAsync(System.Transactions.IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+		{
+				var il = isolationLevel switch
+				{
 						System.Transactions.IsolationLevel.Chaos => IsolationLevel.Chaos,
 						System.Transactions.IsolationLevel.ReadUncommitted => IsolationLevel.ReadUncommitted,
 						System.Transactions.IsolationLevel.RepeatableRead => IsolationLevel.RepeatableRead,
@@ -407,46 +486,57 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Prepared Commands Methods
 
-		public void AddPreparedCommand(IFbPreparedCommand command) {
-				if(_preparedCommands.Contains(command))
+		public void AddPreparedCommand(IFbPreparedCommand command)
+		{
+				if (_preparedCommands.Contains(command))
 						return;
 				_ = _preparedCommands.Add(command);
 		}
 
 		public void RemovePreparedCommand(IFbPreparedCommand command) => _preparedCommands.Remove(command);
 
-		public void ReleasePreparedCommands() {
+		public void ReleasePreparedCommands()
+		{
 				// copy the data because the collection will be modified via RemovePreparedCommand from Release
 				var data = _preparedCommands.ToList();
-				foreach(var item in data) {
-						try {
+				foreach (var item in data)
+				{
+						try
+						{
 								item.Release();
 						}
-						catch(IOException) {
+						catch (IOException)
+						{
 								// If an IO error occurs when trying to release the command
 								// avoid it. (It maybe the connection to the server was down
 								// for unknown reasons.)
 						}
-						catch(IscException ex) when(ex.ErrorCode is IscCodes.isc_network_error
+						catch (IscException ex) when (ex.ErrorCode is IscCodes.isc_network_error
 							or IscCodes.isc_net_read_err
-							or IscCodes.isc_net_write_err) { }
+							or IscCodes.isc_net_write_err)
+						{ }
 				}
 		}
-		public async Task ReleasePreparedCommandsAsync(CancellationToken cancellationToken = default) {
+		public async Task ReleasePreparedCommandsAsync(CancellationToken cancellationToken = default)
+		{
 				// copy the data because the collection will be modified via RemovePreparedCommand from Release
 				var data = _preparedCommands.ToList();
-				foreach(var item in data) {
-						try {
+				foreach (var item in data)
+				{
+						try
+						{
 								await item.ReleaseAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch(IOException) {
+						catch (IOException)
+						{
 								// If an IO error occurs when trying to release the command
 								// avoid it. (It maybe the connection to the server was down
 								// for unknown reasons.)
 						}
-						catch(IscException ex) when(ex.ErrorCode is IscCodes.isc_network_error
+						catch (IscException ex) when (ex.ErrorCode is IscCodes.isc_network_error
 							or IscCodes.isc_net_read_err
-							or IscCodes.isc_net_write_err) { }
+							or IscCodes.isc_net_write_err)
+						{ }
 				}
 		}
 
@@ -454,8 +544,10 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Firebird Events Methods
 
-		public void CloseEventManager() {
-				if(_db != null && _db.HasRemoteEventSupport) {
+		public void CloseEventManager()
+		{
+				if (_db != null && _db.HasRemoteEventSupport)
+				{
 						_db.CloseEventManager();
 				}
 		}
@@ -465,40 +557,49 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 		#region Private Methods
 
-		private void EnsureNoActiveTransaction() {
-				if(HasActiveTransaction)
+		private void EnsureNoActiveTransaction()
+		{
+				if (HasActiveTransaction)
 						throw new InvalidOperationException("A transaction is currently active. Parallel transactions are not supported.");
 		}
 
-		private static DatabaseParameterBufferBase BuildDpb(DatabaseBase db, ConnectionString options) {
+		private static DatabaseParameterBufferBase BuildDpb(DatabaseBase db, ConnectionString options)
+		{
 				var dpb = db.CreateDatabaseParameterBuffer();
 
-				if(db.UseUtf8ParameterBuffer) {
+				if (db.UseUtf8ParameterBuffer)
+				{
 						dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 				}
 				dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)options.Dialect, 0, 0, 0]);
+				dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) options.Dialect, 0, 0, 0]);
 				dpb.Append(IscCodes.isc_dpb_lc_ctype, options.Charset);
-				if(options.DbCachePages > 0) {
+				if (options.DbCachePages > 0)
+				{
 						dpb.Append(IscCodes.isc_dpb_num_buffers, options.DbCachePages);
 				}
-				if(!string.IsNullOrEmpty(options.UserID)) {
+				if (!string.IsNullOrEmpty(options.UserID))
+				{
 						dpb.Append(IscCodes.isc_dpb_user_name, options.UserID);
 				}
-				if(!string.IsNullOrEmpty(options.Role)) {
+				if (!string.IsNullOrEmpty(options.Role))
+				{
 						dpb.Append(IscCodes.isc_dpb_sql_role_name, options.Role);
 				}
 				dpb.Append(IscCodes.isc_dpb_connect_timeout, options.ConnectionTimeout);
 				dpb.Append(IscCodes.isc_dpb_process_id, GetProcessId());
 				dpb.Append(IscCodes.isc_dpb_process_name, GetProcessName(options));
 				dpb.Append(IscCodes.isc_dpb_client_version, GetClientVersion());
-				if(options.NoDatabaseTriggers) {
+				if (options.NoDatabaseTriggers)
+				{
 						dpb.Append(IscCodes.isc_dpb_no_db_triggers, 1);
 				}
-				if(options.NoGarbageCollect) {
-						dpb.Append(IscCodes.isc_dpb_no_garbage_collect, (byte)0);
+				if (options.NoGarbageCollect)
+				{
+						dpb.Append(IscCodes.isc_dpb_no_garbage_collect, (byte) 0);
 				}
-				if(options.ParallelWorkers > 0) {
+				if (options.ParallelWorkers > 0)
+				{
 						dpb.Append(IscCodes.isc_dpb_parallel_workers, options.ParallelWorkers);
 				}
 
@@ -510,7 +611,8 @@ internal class FbConnectionInternal(ConnectionString options) {
 						: GetSystemWebHostingPath() ?? GetRealProcessName() ?? string.Empty;
 
 
-		private static string GetSystemWebHostingPath() {
+		private static string GetSystemWebHostingPath()
+		{
 #if NET48
 		var assembly = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.Equals("System.Web", StringComparison.Ordinal)).FirstOrDefault();
 		if (assembly == null)
@@ -523,23 +625,30 @@ internal class FbConnectionInternal(ConnectionString options) {
 #endif
 		}
 
-		private static string GetRealProcessName() {
-				static string FromProcess() {
-						try {
+		private static string GetRealProcessName()
+		{
+				static string FromProcess()
+				{
+						try
+						{
 								return Process.GetCurrentProcess().MainModule.FileName;
 						}
-						catch(InvalidOperationException) {
+						catch (InvalidOperationException)
+						{
 								return null;
 						}
 				}
 				return Assembly.GetEntryAssembly()?.Location ?? FromProcess();
 		}
 
-		private static int GetProcessId() {
-				try {
+		private static int GetProcessId()
+		{
+				try
+				{
 						return Process.GetCurrentProcess().Id;
 				}
-				catch(InvalidOperationException) {
+				catch (InvalidOperationException)
+				{
 						return -1;
 				}
 		}
@@ -548,20 +657,24 @@ internal class FbConnectionInternal(ConnectionString options) {
 		#endregion
 
 		#region Cancelation
-		public void EnableCancel() {
+		public void EnableCancel()
+		{
 				_db.CancelOperation(IscCodes.fb_cancel_enable);
 				CancelDisabled = false;
 		}
-		public async Task EnableCancelAsync(CancellationToken cancellationToken = default) {
+		public async Task EnableCancelAsync(CancellationToken cancellationToken = default)
+		{
 				await _db.CancelOperationAsync(IscCodes.fb_cancel_enable, cancellationToken).ConfigureAwait(false);
 				CancelDisabled = false;
 		}
 
-		public void DisableCancel() {
+		public void DisableCancel()
+		{
 				_db.CancelOperation(IscCodes.fb_cancel_disable);
 				CancelDisabled = true;
 		}
-		public async Task DisableCancelAsync(CancellationToken cancellationToken = default) {
+		public async Task DisableCancelAsync(CancellationToken cancellationToken = default)
+		{
 				await _db.CancelOperationAsync(IscCodes.fb_cancel_disable, cancellationToken).ConfigureAwait(false);
 				CancelDisabled = true;
 		}
@@ -571,7 +684,8 @@ internal class FbConnectionInternal(ConnectionString options) {
 		#endregion
 
 		#region Infrastructure
-		public FbConnectionInternal SetOwningConnection(FbConnection owningConnection) {
+		public FbConnectionInternal SetOwningConnection(FbConnection owningConnection)
+		{
 				_owningConnection = owningConnection;
 				return this;
 		}

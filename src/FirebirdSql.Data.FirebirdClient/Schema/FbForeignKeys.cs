@@ -19,10 +19,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbForeignKeys : FbSchema {
+internal class FbForeignKeys : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -50,29 +52,35 @@ internal class FbForeignKeys : FbSchema {
 
 				_ = where.Append("co.rdb$constraint_type = 'FOREIGN KEY'");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
 						/* CONSTRAINT_CATALOG	*/
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 						}
 
 						/* CONSTRAINT_SCHEMA */
-						if(restrictions.Length >= 2 && restrictions[1] != null) {
+						if (restrictions.Length >= 2 && restrictions[1] != null)
+						{
 						}
 
 						/* TABLE_NAME */
-						if(restrictions.Length >= 3 && restrictions[2] != null) {
+						if (restrictions.Length >= 3 && restrictions[2] != null)
+						{
 								_ = where.AppendFormat(" AND co.rdb$relation_name = @p{0}", index++);
 						}
 
 						/* CONSTRAINT_NAME */
-						if(restrictions.Length >= 4 && restrictions[3] != null) {
+						if (restrictions.Length >= 4 && restrictions[3] != null)
+						{
 								_ = where.AppendFormat(" AND rel.rdb$constraint_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 

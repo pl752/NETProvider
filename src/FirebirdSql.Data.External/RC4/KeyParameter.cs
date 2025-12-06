@@ -1,32 +1,36 @@
 using System;
 
-namespace Org.BouncyCastle.Crypto.Parameters {
+namespace Org.BouncyCastle.Crypto.Parameters
+{
 		internal class KeyParameter
-		: ICipherParameters {
+		: ICipherParameters
+		{
 				private readonly byte[] key;
 
 				public KeyParameter(
-					byte[] key) {
+					byte[] key)
+				{
 						ArgumentNullException.ThrowIfNull(key);
 
-						this.key = (byte[])key.Clone();
+						this.key = (byte[]) key.Clone();
 				}
 
 				public KeyParameter(
 								byte[] key,
 								int keyOff,
-								int keyLen) {
+								int keyLen)
+				{
 						ArgumentNullException.ThrowIfNull(key);
-						if(keyOff < 0 || keyOff > key.Length)
+						if (keyOff < 0 || keyOff > key.Length)
 								throw new ArgumentOutOfRangeException("keyOff");
-						if(keyLen < 0 || keyLen > (key.Length - keyOff))
+						if (keyLen < 0 || keyLen > (key.Length - keyOff))
 								throw new ArgumentOutOfRangeException("keyLen");
 
 						this.key = new byte[keyLen];
 						Array.Copy(key, keyOff, this.key, 0, keyLen);
 				}
 
-				public byte[] GetKey() => (byte[])key.Clone();
+				public byte[] GetKey() => (byte[]) key.Clone();
 		}
 
 }

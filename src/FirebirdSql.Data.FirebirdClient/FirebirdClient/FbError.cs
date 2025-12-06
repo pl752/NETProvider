@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.FirebirdClient;
 
 [Serializable]
-public sealed class FbError {
+public sealed class FbError
+{
 		#region Fields
 
 		private readonly byte _classError;
@@ -45,14 +46,17 @@ public sealed class FbError {
 		#region Constructors
 
 		internal FbError(string message, int number)
-			: this(0, 0, message, number) {
+			: this(0, 0, message, number)
+		{
 		}
 
 		internal FbError(byte classError, string message, int number)
-			: this(classError, 0, message, number) {
+			: this(classError, 0, message, number)
+		{
 		}
 
-		internal FbError(byte classError, int line, string message, int number) {
+		internal FbError(byte classError, int line, string message, int number)
+		{
 				_classError = classError;
 				_lineNumber = line;
 				_number = number;

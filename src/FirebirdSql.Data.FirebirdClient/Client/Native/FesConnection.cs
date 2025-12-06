@@ -21,10 +21,12 @@ using System.Text.RegularExpressions;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesConnection {
+internal sealed class FesConnection
+{
 		private FesConnection() { }
 
-		public static Version GetClientVersion(IFbClient fbClient) {
+		public static Version GetClientVersion(IFbClient fbClient)
+		{
 				var sb = new StringBuilder(64);
 				fbClient.isc_get_client_version(sb);
 				string version = sb.ToString();

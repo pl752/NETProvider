@@ -28,7 +28,8 @@ namespace FirebirdSql.Data.Client.Managed.Srp;
 /// <remarks>
 /// http://srp.stanford.edu/design.html
 /// </remarks>
-abstract class SrpClientBase {
+abstract class SrpClientBase
+{
 		public abstract string Name { get; }
 
 		public string SessionKeyName { get; } = "Symmetric";
@@ -46,12 +47,14 @@ abstract class SrpClientBase {
 		public byte[] Proof { get; private set; } // M
 		public byte[] SessionKey { get; private set; } // K
 
-		public SrpClientBase() {
+		public SrpClientBase()
+		{
 				PrivateKey = GetSecret();
 				PublicKey = BigInteger.ModPow(g, PrivateKey, N);
 		}
 
-		public byte[] ClientProof(string user, string password, byte[] salt, BigInteger serverPublicKey) {
+		public byte[] ClientProof(string user, string password, byte[] salt, BigInteger serverPublicKey)
+		{
 				byte[] K = GetClientSessionKey(user, password, salt, serverPublicKey);
 
 				var n1 = BigIntegerFromByteArray(ComputeSHA1Hash(BigIntegerToByteArray(N)));
@@ -67,7 +70,8 @@ abstract class SrpClientBase {
 				return Proof;
 		}
 
-		public byte[] ClientProof(string user, string password, byte[] authData) {
+		public byte[] ClientProof(string user, string password, byte[] authData)
+		{
 				int saltLength = authData[0] + authData[1] * 256;
 				byte[] salt = new byte[saltLength];
 				Array.Copy(authData, 2, salt, 0, saltLength);
@@ -81,7 +85,8 @@ abstract class SrpClientBase {
 				return ClientProof(user, password, salt, serverPublicKey);
 		}
 
-		public (BigInteger, BigInteger) ServerSeed(string user, string password, byte[] salt) {
+		public (BigInteger, BigInteger) ServerSeed(string user, string password, byte[] salt)
+		{
 				var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
 				var b = GetSecret();
 				var gb = BigInteger.ModPow(g, b, N);
@@ -90,7 +95,8 @@ abstract class SrpClientBase {
 				return (B, b);
 		}
 
-		public static byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b) {
+		public static byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b)
+		{
 				var u = GetScramble(A, B);
 				var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
 				var vu = BigInteger.ModPow(v, u, N);
@@ -103,13 +109,15 @@ abstract class SrpClientBase {
 
 		private static BigInteger GetSecret() => new BigInteger(GetRandomBytes(SRP_KEY_SIZE / 8).Concat(new byte[] { 0 }).ToArray());
 
-		private byte[] GetClientSessionKey(string user, string password, byte[] salt, BigInteger serverPublicKey) {
+		private byte[] GetClientSessionKey(string user, string password, byte[] salt, BigInteger serverPublicKey)
+		{
 				var u = GetScramble(PublicKey, serverPublicKey);
 				var x = GetUserHash(user, password, salt);
 				var gx = BigInteger.ModPow(g, x, N);
 				_ = BigInteger.DivRem(k * gx, N, out var kgx);
 				var Bkgx = serverPublicKey - kgx;
-				if(Bkgx < 0) {
+				if (Bkgx < 0)
+				{
 						Bkgx = Bkgx + N;
 				}
 				_ = BigInteger.DivRem(Bkgx, N, out var diff);
@@ -121,7 +129,8 @@ abstract class SrpClientBase {
 
 		protected abstract byte[] ComputeHash(params byte[][] ba);
 
-		private static BigInteger GetUserHash(string user, string password, byte[] salt) {
+		private static BigInteger GetUserHash(string user, string password, byte[] salt)
+		{
 				byte[] userBytes = Encoding.UTF8.GetBytes(user);
 				byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
 				byte[] hash1 = ComputeSHA1Hash(userBytes, SEPARATOR_BYTES, passwordBytes);
@@ -129,13 +138,15 @@ abstract class SrpClientBase {
 				return BigIntegerFromByteArray(hash2);
 		}
 
-		private static BigInteger BigIntegerFromByteArray(byte[] b) {
+		private static BigInteger BigIntegerFromByteArray(byte[] b)
+		{
 				Span<byte> bytes = [0, .. b];
 				bytes.Reverse();
 				return new BigInteger(bytes);
 		}
 
-		private static byte[] BigIntegerToByteArray(BigInteger n) {
+		private static byte[] BigIntegerToByteArray(BigInteger n)
+		{
 				Span<byte> bytes = stackalloc byte[n.GetByteCount()];
 				_ = n.TryWriteBytes(bytes, out _);
 				bytes.Reverse();
@@ -144,16 +155,19 @@ abstract class SrpClientBase {
 
 		private static byte[] ComputeSHA1Hash(params byte[][] ba) => SHA1.HashData([.. ba.SelectMany(x => x)]);
 
-		private static byte[] Pad(BigInteger n) {
+		private static byte[] Pad(BigInteger n)
+		{
 				byte[] bn = BigIntegerToByteArray(n);
 				return [.. bn.SkipWhile((_, i) => i < bn.Length - SRP_KEY_SIZE)];
 		}
 
 		private static BigInteger GetScramble(BigInteger x, BigInteger y) => BigIntegerFromByteArray(ComputeSHA1Hash(Pad(x), Pad(y)));
 
-		private static byte[] GetRandomBytes(int count) {
+		private static byte[] GetRandomBytes(int count)
+		{
 				byte[] result = new byte[count];
-				using(var random = RandomNumberGenerator.Create()) {
+				using (var random = RandomNumberGenerator.Create())
+				{
 						random.GetBytes(result);
 				}
 				return result;

@@ -22,28 +22,33 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.Common;
 
-internal static class TypeDecoder {
-		public static decimal DecodeDecimal(object value, int scale, int type) {
+internal static class TypeDecoder
+{
+		public static decimal DecodeDecimal(object value, int scale, int type)
+		{
 				int shift = scale < 0 ? -scale : scale;
 
-				return (type & ~1) switch {
-						IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift),
-						IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal)(double)value,
-						IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift),
+				return (type & ~1) switch
+				{
+						IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal) (short) value, shift),
+						IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal) (int) value, shift),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (long) value, shift),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal) (double) value,
+						IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal) (BigInteger) value, shift),
 						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
 				};
 		}
 
 		public static TimeSpan DecodeTime(int sqlTime) => TimeSpan.FromTicks(sqlTime * 1000L);
 
-		public static DateTime DecodeDate(int sqlDate) {
+		public static DateTime DecodeDate(int sqlDate)
+		{
 				var (year, month, day) = DecodeDateImpl(sqlDate);
 				var date = new DateTime(year, month, day);
 				return date.Date;
 		}
-		static (int year, int month, int day) DecodeDateImpl(int sqlDate) {
+		static (int year, int month, int day) DecodeDateImpl(int sqlDate)
+		{
 				sqlDate -= 1721119 - 2400001;
 				int century = (4 * sqlDate - 1) / 146097;
 				sqlDate = 4 * sqlDate - 1 - 146097 * century;
@@ -59,10 +64,12 @@ internal static class TypeDecoder {
 
 				int year = 100 * century + sqlDate;
 
-				if(month < 10) {
+				if (month < 10)
+				{
 						month += 3;
 				}
-				else {
+				else
+				{
 						month -= 9;
 						year += 1;
 				}
@@ -74,7 +81,8 @@ internal static class TypeDecoder {
 
 		public static bool DecodeBoolean(ReadOnlySpan<byte> value) => value[0] != 0;
 
-		public static Guid DecodeGuid(byte[] value) {
+		public static Guid DecodeGuid(byte[] value)
+		{
 				int a = IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
 				short b = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 4));
 				short c = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(value, 6));
@@ -85,22 +93,28 @@ internal static class TypeDecoder {
 
 		public static long DecodeInt64(byte[] value) => IPAddress.HostToNetworkOrder(BitConverter.ToInt64(value, 0));
 
-		public static FbDecFloat DecodeDec16(byte[] value) {
-				if(BitConverter.IsLittleEndian) {
+		public static FbDecFloat DecodeDec16(byte[] value)
+		{
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(value);
 				}
 				return DecimalCodec.DecFloat16.ParseBytes(value);
 		}
 
-		public static FbDecFloat DecodeDec34(byte[] value) {
-				if(BitConverter.IsLittleEndian) {
+		public static FbDecFloat DecodeDec34(byte[] value)
+		{
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(value);
 				}
 				return DecimalCodec.DecFloat34.ParseBytes(value);
 		}
 
-		public static BigInteger DecodeInt128(byte[] value) {
-				if(BitConverter.IsLittleEndian) {
+		public static BigInteger DecodeInt128(byte[] value)
+		{
+				if (BitConverter.IsLittleEndian)
+				{
 						Array.Reverse(value);
 				}
 				return Int128Helper.GetInt128(value);

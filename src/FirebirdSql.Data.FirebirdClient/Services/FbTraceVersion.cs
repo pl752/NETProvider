@@ -17,7 +17,8 @@
 
 namespace FirebirdSql.Data.Services;
 
-public enum FbTraceVersion {
+public enum FbTraceVersion
+{
 		Detect,
 		Version1,
 		Version2,

@@ -24,7 +24,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Native;
 
-internal sealed class FesDatabase : DatabaseBase {
+internal sealed class FesDatabase : DatabaseBase
+{
 		#region Fields
 
 		private static readonly Version Version25 = new Version(2, 5);
@@ -51,7 +52,8 @@ internal sealed class FesDatabase : DatabaseBase {
 		#region Constructors
 
 		public FesDatabase(string dllName, Charset charset, int packetSize, short dialect)
-			: base(charset, packetSize, dialect) {
+			: base(charset, packetSize, dialect)
+		{
 				_fbClient = FbClientFactory.Create(dllName);
 				_fbClientVersion = FesConnection.GetClientVersion(_fbClient);
 				_handle = new DatabaseHandle();
@@ -62,7 +64,8 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Database Methods
 
-		public override void CreateDatabase(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
+		public override void CreateDatabase(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+		{
 				CheckCryptKeyForSupport(cryptKey);
 
 				byte[] databaseBuffer = dpb.Encoding.GetBytes(database);
@@ -71,7 +74,7 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				_ = _fbClient.isc_create_database(
 					_statusVector,
-					(short)databaseBuffer.Length,
+					(short) databaseBuffer.Length,
 					databaseBuffer,
 					ref _handle,
 					dpb.Length,
@@ -80,7 +83,8 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				ProcessStatusVector(Charset.DefaultCharset);
 		}
-		public override ValueTask CreateDatabaseAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
+		public override ValueTask CreateDatabaseAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
 				CheckCryptKeyForSupport(cryptKey);
 
 				byte[] databaseBuffer = dpb.Encoding.GetBytes(database);
@@ -89,7 +93,7 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				_ = _fbClient.isc_create_database(
 					_statusVector,
-					(short)databaseBuffer.Length,
+					(short) databaseBuffer.Length,
 					databaseBuffer,
 					ref _handle,
 					dpb.Length,
@@ -104,7 +108,8 @@ internal sealed class FesDatabase : DatabaseBase {
 		public override void CreateDatabaseWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => throw new NotSupportedException("Trusted Auth isn't supported on Firebird Embedded.");
 		public override ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => throw new NotSupportedException("Trusted Auth isn't supported on Firebird Embedded.");
 
-		public override void DropDatabase() {
+		public override void DropDatabase()
+		{
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
 				_ = _fbClient.isc_drop_database(_statusVector, ref _handle);
@@ -113,7 +118,8 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				_handle.Dispose();
 		}
-		public override ValueTask DropDatabaseAsync(CancellationToken cancellationToken = default) {
+		public override ValueTask DropDatabaseAsync(CancellationToken cancellationToken = default)
+		{
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
 				_ = _fbClient.isc_drop_database(_statusVector, ref _handle);
@@ -142,7 +148,8 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Methods
 
-		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) {
+		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+		{
 				CheckCryptKeyForSupport(cryptKey);
 
 				byte[] databaseBuffer = dpb.Encoding.GetBytes(database);
@@ -151,7 +158,7 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				_ = _fbClient.isc_attach_database(
 					_statusVector,
-					(short)databaseBuffer.Length,
+					(short) databaseBuffer.Length,
 					databaseBuffer,
 					ref _handle,
 					dpb.Length,
@@ -161,7 +168,8 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				ServerVersion = GetServerVersion();
 		}
-		public override async ValueTask AttachAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) {
+		public override async ValueTask AttachAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
 				CheckCryptKeyForSupport(cryptKey);
 
 				byte[] databaseBuffer = dpb.Encoding.GetBytes(database);
@@ -170,7 +178,7 @@ internal sealed class FesDatabase : DatabaseBase {
 
 				_ = _fbClient.isc_attach_database(
 					_statusVector,
-					(short)databaseBuffer.Length,
+					(short) databaseBuffer.Length,
 					databaseBuffer,
 					ref _handle,
 					dpb.Length,
@@ -184,12 +192,15 @@ internal sealed class FesDatabase : DatabaseBase {
 		public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey) => throw new NotSupportedException("Trusted Auth isn't supported on Firebird Embedded.");
 		public override ValueTask AttachWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default) => throw new NotSupportedException("Trusted Auth isn't supported on Firebird Embedded.");
 
-		public override void Detach() {
-				if(TransactionCount > 0) {
+		public override void Detach()
+		{
+				if (TransactionCount > 0)
+				{
 						throw IscException.ForErrorCodeIntParam(IscCodes.isc_open_trans, TransactionCount);
 				}
 
-				if(!_handle.IsInvalid) {
+				if (!_handle.IsInvalid)
+				{
 						StatusVectorHelper.ClearStatusVector(_statusVector);
 
 						_ = _fbClient.isc_detach_database(_statusVector, ref _handle);
@@ -204,12 +215,15 @@ internal sealed class FesDatabase : DatabaseBase {
 				_statusVector = null;
 				TransactionCount = 0;
 		}
-		public override ValueTask DetachAsync(CancellationToken cancellationToken = default) {
-				if(TransactionCount > 0) {
+		public override ValueTask DetachAsync(CancellationToken cancellationToken = default)
+		{
+				if (TransactionCount > 0)
+				{
 						throw IscException.ForErrorCodeIntParam(IscCodes.isc_open_trans, TransactionCount);
 				}
 
-				if(!_handle.IsInvalid) {
+				if (!_handle.IsInvalid)
+				{
 						StatusVectorHelper.ClearStatusVector(_statusVector);
 
 						_ = _fbClient.isc_detach_database(_statusVector, ref _handle);
@@ -231,12 +245,14 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Transaction Methods
 
-		public override TransactionBase BeginTransaction(TransactionParameterBuffer tpb) {
+		public override TransactionBase BeginTransaction(TransactionParameterBuffer tpb)
+		{
 				var transaction = new FesTransaction(this);
 				transaction.BeginTransaction(tpb);
 				return transaction;
 		}
-		public override async ValueTask<TransactionBase> BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default) {
+		public override async ValueTask<TransactionBase> BeginTransactionAsync(TransactionParameterBuffer tpb, CancellationToken cancellationToken = default)
+		{
 				var transaction = new FesTransaction(this);
 				await transaction.BeginTransactionAsync(tpb, cancellationToken).ConfigureAwait(false);
 				return transaction;
@@ -246,25 +262,29 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Cancel Methods
 
-		public override void CancelOperation(short kind) {
+		public override void CancelOperation(short kind)
+		{
 				nint[] localStatusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 
-				_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort)kind);
+				_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort) kind);
 
-				try {
+				try
+				{
 						ProcessStatusVector(localStatusVector);
 				}
-				catch(IscException ex) when(ex.ErrorCode == IscCodes.isc_nothing_to_cancel) { }
+				catch (IscException ex) when (ex.ErrorCode == IscCodes.isc_nothing_to_cancel) { }
 		}
-		public override ValueTask CancelOperationAsync(short kind, CancellationToken cancellationToken = default) {
+		public override ValueTask CancelOperationAsync(short kind, CancellationToken cancellationToken = default)
+		{
 				nint[] localStatusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 
-				_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort)kind);
+				_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort) kind);
 
-				try {
+				try
+				{
 						ProcessStatusVector(localStatusVector);
 				}
-				catch(IscException ex) when(ex.ErrorCode == IscCodes.isc_nothing_to_cancel) { }
+				catch (IscException ex) when (ex.ErrorCode == IscCodes.isc_nothing_to_cancel) { }
 
 				return ValueTask2.CompletedTask;
 		}
@@ -294,14 +314,16 @@ internal sealed class FesDatabase : DatabaseBase {
 		public override List<object> GetDatabaseInfo(byte[] items) => GetDatabaseInfo(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE);
 		public override ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, CancellationToken cancellationToken = default) => GetDatabaseInfoAsync(items, IscCodes.DEFAULT_MAX_BUFFER_SIZE, cancellationToken);
 
-		public override List<object> GetDatabaseInfo(byte[] items, int bufferLength) {
+		public override List<object> GetDatabaseInfo(byte[] items, int bufferLength)
+		{
 				byte[] buffer = new byte[bufferLength];
 
 				DatabaseInfo(items, buffer, buffer.Length);
 
 				return IscHelper.ParseDatabaseInfo(buffer, Charset);
 		}
-		public override ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default) {
+		public override ValueTask<List<object>> GetDatabaseInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
+		{
 				byte[] buffer = new byte[bufferLength];
 
 				DatabaseInfo(items, buffer, buffer.Length);
@@ -319,15 +341,16 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Private Methods
 
-		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength) {
+		private void DatabaseInfo(byte[] items, byte[] buffer, int bufferLength)
+		{
 				StatusVectorHelper.ClearStatusVector(_statusVector);
 
 				_ = _fbClient.isc_database_info(
 					_statusVector,
 					ref _handle,
-					(short)items.Length,
+					(short) items.Length,
 					items,
-					(short)bufferLength,
+					(short) bufferLength,
 					buffer);
 
 				ProcessStatusVector();
@@ -341,9 +364,10 @@ internal sealed class FesDatabase : DatabaseBase {
 
 		#region Internal Static Methods
 
-		internal static void CheckCryptKeyForSupport(byte[] cryptKey) {
+		internal static void CheckCryptKeyForSupport(byte[] cryptKey)
+		{
 				// ICryptKeyCallbackImpl would have to be passed from C# for 'cryptKey' passing
-				if(cryptKey?.Length > 0)
+				if (cryptKey?.Length > 0)
 						throw new NotSupportedException("Passing Encryption Key isn't, yet, supported on Firebird Embedded.");
 		}
 

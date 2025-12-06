@@ -20,12 +20,14 @@ using System;
 namespace FirebirdSql.Data.Isql;
 
 [Serializable]
-public class FbStatement {
+public class FbStatement
+{
 		public string Text { get; private set; }
 		internal string CleanText { get; private set; }
 		public SqlStatementType StatementType { get; private set; }
 
-		internal FbStatement(string text, string cleanText) {
+		internal FbStatement(string text, string cleanText)
+		{
 				Text = text;
 				CleanText = cleanText;
 		}

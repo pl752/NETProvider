@@ -19,10 +19,12 @@ using System.Globalization;
 
 namespace FirebirdSql.Data.Services;
 
-public abstract class FbTraceConfiguration {
+public abstract class FbTraceConfiguration
+{
 		protected static string WriteBoolValue(bool b) => b ? "true" : "false";
 
-		protected static string WriteString(string s) {
+		protected static string WriteString(string s)
+		{
 				s = s
 					.Replace("{", "{{")
 					.Replace("}", "}}")

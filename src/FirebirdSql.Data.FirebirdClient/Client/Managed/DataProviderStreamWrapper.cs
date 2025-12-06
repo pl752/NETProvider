@@ -23,7 +23,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider {
+sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider
+{
 		readonly Stream _stream = stream;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

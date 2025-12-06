@@ -23,7 +23,8 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version10;
 
-internal class GdsServiceManager : ServiceManagerBase {
+internal class GdsServiceManager : ServiceManagerBase
+{
 		private static readonly byte[] zeroIntBuf = TypeEncoder.EncodeInt32(0);
 		private static readonly byte[] bufOpServiceStart = TypeEncoder.EncodeInt32(IscCodes.op_service_start);
 
@@ -47,7 +48,8 @@ internal class GdsServiceManager : ServiceManagerBase {
 		#region Constructors
 
 		public GdsServiceManager(GdsConnection connection)
-			: base(connection.Charset) {
+			: base(connection.Charset)
+		{
 				_connection = connection;
 				_database = CreateDatabase(_connection);
 				RewireWarningMessage();
@@ -57,36 +59,44 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 		#region Methods
 
-		public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey) {
-				try {
+		public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
+		{
+				try
+				{
 						SendAttachToBuffer(spb, service);
 						_database.Xdr.Flush();
-						ProcessAttachResponse((GenericResponse)_database.ReadResponse());
+						ProcessAttachResponse((GenericResponse) _database.ReadResponse());
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						_database.Detach();
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask AttachAsync(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await SendAttachToBufferAsync(spb, service, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-						await ProcessAttachResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+						await ProcessAttachResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						await _database.DetachAsync(cancellationToken).ConfigureAwait(false);
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		protected virtual void SendAttachToBuffer(ServiceParameterBufferBase spb, string service) {
+		protected virtual void SendAttachToBuffer(ServiceParameterBufferBase spb, string service)
+		{
 				_database.Xdr.Write(IscCodes.op_service_attach);
 				_database.Xdr.Write(GdsDatabase.DatabaseObjectId);
 				_database.Xdr.Write(service);
 				_database.Xdr.WriteBuffer(spb.ToArray());
 		}
-		protected virtual async ValueTask SendAttachToBufferAsync(ServiceParameterBufferBase spb, string service, CancellationToken cancellationToken = default) {
+		protected virtual async ValueTask SendAttachToBufferAsync(ServiceParameterBufferBase spb, string service, CancellationToken cancellationToken = default)
+		{
 				await _database.Xdr.WriteAsync(IscCodes.op_service_attach, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.WriteAsync(GdsDatabase.DatabaseObjectId, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.WriteAsync(service, cancellationToken).ConfigureAwait(false);
@@ -94,13 +104,16 @@ internal class GdsServiceManager : ServiceManagerBase {
 		}
 
 		protected virtual void ProcessAttachResponse(GenericResponse response) => Handle = response.ObjectHandle;
-		protected virtual ValueTask ProcessAttachResponseAsync(GenericResponse response, CancellationToken cancellationToken = default) {
+		protected virtual ValueTask ProcessAttachResponseAsync(GenericResponse response, CancellationToken cancellationToken = default)
+		{
 				Handle = response.ObjectHandle;
 				return ValueTask2.CompletedTask;
 		}
 
-		public override void Detach() {
-				try {
+		public override void Detach()
+		{
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_service_detach);
 						_database.Xdr.Write(Handle);
 						_database.Xdr.Write(IscCodes.op_disconnect);
@@ -108,24 +121,31 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						Handle = 0;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
-				finally {
-						try {
+				finally
+				{
+						try
+						{
 								_connection.Disconnect();
 						}
-						catch(IOException ex) {
+						catch (IOException ex)
+						{
 								throw IscException.ForIOException(ex);
 						}
-						finally {
+						finally
+						{
 								_database = null;
 								_connection = null;
 						}
 				}
 		}
-		public override async ValueTask DetachAsync(CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask DetachAsync(CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_service_detach, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(Handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(IscCodes.op_disconnect, cancellationToken).ConfigureAwait(false);
@@ -133,64 +153,81 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						Handle = 0;
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
-				finally {
-						try {
+				finally
+				{
+						try
+						{
 								await _connection.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch(IOException ex) {
+						catch (IOException ex)
+						{
 								throw IscException.ForIOException(ex);
 						}
-						finally {
+						finally
+						{
 								_database = null;
 								_connection = null;
 						}
 				}
 		}
 
-		public override void Start(ServiceParameterBufferBase spb) {
-				try {
+		public override void Start(ServiceParameterBufferBase spb)
+		{
+				try
+				{
 						_database.Xdr.WriteBytes(bufOpServiceStart);
 						_database.Xdr.Write(Handle);
 						_database.Xdr.WriteBytes(zeroIntBuf);
 						_database.Xdr.WriteBuffer(spb.ToArray(), spb.Length);
 						_database.Xdr.Flush();
 
-						try {
+						try
+						{
 								_ = _database.ReadResponse();
 						}
-						catch(IscException) {
+						catch (IscException)
+						{
 								throw;
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask StartAsync(ServiceParameterBufferBase spb, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteBytesAsync(bufOpServiceStart, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(Handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteBufferAsync(spb.ToArray(), spb.Length, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						try {
+						try
+						{
 								_ = await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 						}
-						catch(IscException) {
+						catch (IscException)
+						{
 								throw;
 						}
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
 
-		public override void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer) {
-				try {
+		public override void Query(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer)
+		{
+				try
+				{
 						_database.Xdr.Write(IscCodes.op_service_info);
 						_database.Xdr.Write(Handle);
 						_database.Xdr.Write(GdsDatabase.Incarnation);
@@ -200,22 +237,26 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						_database.Xdr.Flush();
 
-						var response = (GenericResponse)_database.ReadResponse();
+						var response = (GenericResponse) _database.ReadResponse();
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}
-		public override async ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default) {
-				try {
+		public override async ValueTask QueryAsync(ServiceParameterBufferBase spb, int requestLength, byte[] requestBuffer, int bufferLength, byte[] buffer, CancellationToken cancellationToken = default)
+		{
+				try
+				{
 						await _database.Xdr.WriteAsync(IscCodes.op_service_info, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(Handle, cancellationToken).ConfigureAwait(false);
 						await _database.Xdr.WriteAsync(GdsDatabase.Incarnation, cancellationToken).ConfigureAwait(false);
@@ -225,17 +266,19 @@ internal class GdsServiceManager : ServiceManagerBase {
 
 						await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-						var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+						var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 						int responseLength = bufferLength;
 
-						if(response.Data.Length < bufferLength) {
+						if (response.Data.Length < bufferLength)
+						{
 								responseLength = response.Data.Length;
 						}
 
 						response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 				}
-				catch(IOException ex) {
+				catch (IOException ex)
+				{
 						throw IscException.ForIOException(ex);
 				}
 		}

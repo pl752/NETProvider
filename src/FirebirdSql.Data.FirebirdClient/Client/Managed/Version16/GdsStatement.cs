@@ -21,19 +21,22 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version16;
 
-internal class GdsStatement : Version15.GdsStatement {
+internal class GdsStatement : Version15.GdsStatement
+{
 		public GdsStatement(GdsDatabase database)
 			: base(database) { }
 
 		public GdsStatement(GdsDatabase database, Version10.GdsTransaction transaction)
 			: base(database, transaction) { }
 
-		protected override void SendExecuteToBuffer(int timeout, IDescriptorFiller descriptorFiller) {
+		protected override void SendExecuteToBuffer(int timeout, IDescriptorFiller descriptorFiller)
+		{
 				base.SendExecuteToBuffer(timeout, descriptorFiller);
 				_database.Xdr.Write(timeout);
 		}
 
-		protected override async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default) {
+		protected override async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
+		{
 				await base.SendExecuteToBufferAsync(timeout, descriptorFiller, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.WriteAsync(timeout, cancellationToken).ConfigureAwait(false);
 		}

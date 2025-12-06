@@ -20,12 +20,14 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class BatchBase {
+internal abstract class BatchBase
+{
 		public abstract StatementBase Statement { get; }
 		public bool MultiError { get; set; }
 		public int BatchBufferSize { get; set; }
 
-		public class ExecuteResultItem {
+		public class ExecuteResultItem
+		{
 				public int RecordsAffected { get; set; }
 				public bool IsError { get; set; }
 				public IscException Exception { get; set; }

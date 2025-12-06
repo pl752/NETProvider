@@ -20,7 +20,8 @@ using System;
 namespace FirebirdSql.Data.Services;
 
 [Flags]
-public enum FbDatabaseTraceEvents {
+public enum FbDatabaseTraceEvents
+{
 		Connections = 0x00_00_01,
 		Transactions = 0x00_00_02,
 		StatementPrepare = 0x00_00_04,

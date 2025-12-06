@@ -22,7 +22,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class TransactionBase {
+internal abstract class TransactionBase
+{
 		public abstract int Handle { get; }
 
 		public TransactionState State { get; protected set; }
@@ -58,8 +59,9 @@ internal abstract class TransactionBase {
 		public virtual void Dispose2() { }
 		public virtual ValueTask Dispose2Async(CancellationToken cancellationToken = default) => ValueTask2.CompletedTask;
 
-		protected void EnsureActiveTransactionState() {
-				if(State != TransactionState.Active)
+		protected void EnsureActiveTransactionState()
+		{
+				if (State != TransactionState.Active)
 						throw IscException.ForTypeErrorCodeIntParamStrParam(IscCodes.isc_arg_gds, IscCodes.isc_tra_state, Handle, "no valid");
 		}
 

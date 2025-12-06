@@ -90,7 +90,8 @@
 
 using Interop = System.Runtime.InteropServices;
 
-namespace Ionic.Zlib {
+namespace Ionic.Zlib
+{
 
 		/// <summary>
 		/// Describes how to flush the current deflate operation.
@@ -98,7 +99,8 @@ namespace Ionic.Zlib {
 		/// <remarks>
 		/// The different FlushType values are useful when using a Deflate in a streaming application.
 		/// </remarks>
-		internal enum FlushType {
+		internal enum FlushType
+		{
 				/// <summary>No flush at all.</summary>
 				None = 0,
 
@@ -137,7 +139,8 @@ namespace Ionic.Zlib {
 		/// <summary>
 		/// The compression level to be used when using a DeflateStream or ZlibStream with CompressionMode.Compress.
 		/// </summary>
-		internal enum CompressionLevel {
+		internal enum CompressionLevel
+		{
 				/// <summary>
 				/// None means that the data will be simply stored, with no change at all.
 				/// If you are producing ZIPs for use on Mac OSX, be aware that archives produced with CompressionLevel.None
@@ -215,7 +218,8 @@ namespace Ionic.Zlib {
 		/// work better on different sorts of data.  The strategy parameter can affect the compression
 		/// ratio and the speed of compression but not the correctness of the compresssion.
 		/// </summary>
-		internal enum CompressionStrategy {
+		internal enum CompressionStrategy
+		{
 				/// <summary>
 				/// The default strategy is probably the best for normal data.
 				/// </summary>
@@ -241,7 +245,8 @@ namespace Ionic.Zlib {
 		/// <summary>
 		/// An enum to specify the direction of transcoding - whether to compress or decompress.
 		/// </summary>
-		internal enum CompressionMode {
+		internal enum CompressionMode
+		{
 				/// <summary>
 				/// Used to specify that the stream should compress the data.
 				/// </summary>
@@ -257,13 +262,15 @@ namespace Ionic.Zlib {
 		/// A general purpose exception class for exceptions in the Zlib library.
 		/// </summary>
 		[Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000E")]
-		internal class ZlibException : System.Exception {
+		internal class ZlibException : System.Exception
+		{
 				/// <summary>
 				/// The ZlibException class captures exception information generated
 				/// by the Zlib library.
 				/// </summary>
 				public ZlibException()
-						: base() {
+						: base()
+				{
 				}
 
 				/// <summary>
@@ -271,19 +278,21 @@ namespace Ionic.Zlib {
 				/// </summary>
 				/// <param name="s">the message for the exception.</param>
 				public ZlibException(System.String s)
-						: base(s) {
+						: base(s)
+				{
 				}
 		}
 
 
-		internal class SharedUtils {
+		internal class SharedUtils
+		{
 				/// <summary>
 				/// Performs an unsigned bitwise right shift with the specified number
 				/// </summary>
 				/// <param name="number">Number to operate on</param>
 				/// <param name="bits">Ammount of bits to shift</param>
 				/// <returns>The resulting number from the shift operation</returns>
-				public static int URShift(int number, int bits) => (int)((uint)number >> bits);
+				public static int URShift(int number, int bits) => (int) ((uint) number >> bits);
 
 #if NOT
         /// <summary>
@@ -313,20 +322,21 @@ namespace Ionic.Zlib {
 				///   count depending on the data available in the source TextReader. Returns -1
 				///   if the end of the stream is reached.
 				/// </returns>
-				public static System.Int32 ReadInput(System.IO.TextReader sourceTextReader, byte[] target, int start, int count) {
+				public static System.Int32 ReadInput(System.IO.TextReader sourceTextReader, byte[] target, int start, int count)
+				{
 						// Returns 0 bytes if not enough space in target
-						if(target.Length == 0)
+						if (target.Length == 0)
 								return 0;
 
 						char[] charArray = new char[target.Length];
 						int bytesRead = sourceTextReader.Read(charArray, start, count);
 
 						// Returns -1 if EOF
-						if(bytesRead == 0)
+						if (bytesRead == 0)
 								return -1;
 
-						for(int index = start; index < start + bytesRead; index++)
-								target[index] = (byte)charArray[index];
+						for (int index = start; index < start + bytesRead; index++)
+								target[index] = (byte) charArray[index];
 
 						return bytesRead;
 				}
@@ -338,7 +348,8 @@ namespace Ionic.Zlib {
 				internal static char[] ToCharArray(byte[] byteArray) => System.Text.UTF8Encoding.UTF8.GetChars(byteArray);
 		}
 
-		internal static class InternalConstants {
+		internal static class InternalConstants
+		{
 				internal static readonly int MAX_BITS = 15;
 				internal static readonly int BL_CODES = 19;
 				internal static readonly int D_CODES = 30;
@@ -360,7 +371,8 @@ namespace Ionic.Zlib {
 
 		}
 
-		internal sealed class StaticTree {
+		internal sealed class StaticTree
+		{
 				internal static readonly short[] lengthAndLiteralsTreeCodes = [
 						12, 8, 140, 8, 76, 8, 204, 8, 44, 8, 172, 8, 108, 8, 236, 8,
 						28, 8, 156, 8, 92, 8, 220, 8, 60, 8, 188, 8, 124, 8, 252, 8,
@@ -416,14 +428,16 @@ namespace Ionic.Zlib {
 				internal int elems;         // max number of elements in the tree
 				internal int maxLength;     // max bit length for the codes
 
-				private StaticTree(short[] treeCodes, int[] extraBits, int extraBase, int elems, int maxLength) {
+				private StaticTree(short[] treeCodes, int[] extraBits, int extraBase, int elems, int maxLength)
+				{
 						this.treeCodes = treeCodes;
 						this.extraBits = extraBits;
 						this.extraBase = extraBase;
 						this.elems = elems;
 						this.maxLength = maxLength;
 				}
-				static StaticTree() {
+				static StaticTree()
+				{
 						Literals = new StaticTree(lengthAndLiteralsTreeCodes, Tree.ExtraLengthBits, InternalConstants.LITERALS + 1, InternalConstants.L_CODES, InternalConstants.MAX_BITS);
 						Distances = new StaticTree(distTreeCodes, Tree.ExtraDistanceBits, 0, InternalConstants.D_CODES, InternalConstants.MAX_BITS);
 						BitLengths = new StaticTree(null, Tree.extra_blbits, 0, InternalConstants.BL_CODES, InternalConstants.MAX_BL_BITS);
@@ -443,7 +457,8 @@ namespace Ionic.Zlib {
 		/// </remarks>
 		///
 		/// <exclude/>
-		internal sealed class Adler {
+		internal sealed class Adler
+		{
 				// largest prime smaller than 65536
 				private static readonly uint BASE = 65521;
 				// NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
@@ -468,17 +483,20 @@ namespace Ionic.Zlib {
 				///    adler = Adler.Adler32(adler, buffer, index, length);
 				///  </code>
 				/// </example>
-				public static uint Adler32(uint adler, byte[] buf, int index, int len) {
-						if(buf == null)
+				public static uint Adler32(uint adler, byte[] buf, int index, int len)
+				{
+						if (buf == null)
 								return 1;
 
-						uint s1 = (uint)(adler & 0xffff);
-						uint s2 = (uint)((adler >> 16) & 0xffff);
+						uint s1 = (uint) (adler & 0xffff);
+						uint s2 = (uint) ((adler >> 16) & 0xffff);
 
-						while(len > 0) {
+						while (len > 0)
+						{
 								int k = len < NMAX ? len : NMAX;
 								len -= k;
-								while(k >= 16) {
+								while (k >= 16)
+								{
 										//s1 += (buf[index++] & 0xff); s2 += s1;
 										s1 += buf[index++];
 										s2 += s1;
@@ -514,17 +532,19 @@ namespace Ionic.Zlib {
 										s2 += s1;
 										k -= 16;
 								}
-								if(k != 0) {
-										do {
+								if (k != 0)
+								{
+										do
+										{
 												s1 += buf[index++];
 												s2 += s1;
 										}
-										while(--k != 0);
+										while (--k != 0);
 								}
 								s1 %= BASE;
 								s2 %= BASE;
 						}
-						return (uint)((s2 << 16) | s1);
+						return (uint) ((s2 << 16) | s1);
 				}
 #pragma warning restore 3001
 #pragma warning restore 3002

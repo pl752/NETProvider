@@ -19,10 +19,12 @@ using System.Text;
 
 namespace FirebirdSql.Data.Schema;
 
-internal class FbRoles : FbSchema {
+internal class FbRoles : FbSchema
+{
 		#region Protected Methods
 
-		protected override StringBuilder GetCommandText(string[] restrictions) {
+		protected override StringBuilder GetCommandText(string[] restrictions)
+		{
 				var sql = new StringBuilder();
 				var where = new StringBuilder();
 
@@ -32,15 +34,18 @@ internal class FbRoles : FbSchema {
 					rdb$owner_name AS OWNER_NAME
 				FROM rdb$roles");
 
-				if(restrictions != null) {
+				if (restrictions != null)
+				{
 						int index = 0;
 
-						if(restrictions.Length >= 1 && restrictions[0] != null) {
+						if (restrictions.Length >= 1 && restrictions[0] != null)
+						{
 								_ = where.AppendFormat("rdb$role_name = @p{0}", index++);
 						}
 				}
 
-				if(where.Length > 0) {
+				if (where.Length > 0)
+				{
 						_ = sql.AppendFormat(" WHERE {0} ", where.ToString());
 				}
 
