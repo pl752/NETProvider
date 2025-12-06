@@ -245,7 +245,7 @@ internal static class FbClientFactory
 		}
 		else
 		{
-			il.Emit(OpCodes.Ldarg_S, (short) i);
+			il.Emit(OpCodes.Ldarg_S, (short)i);
 		}
 	}
 
@@ -265,7 +265,7 @@ internal static class FbClientFactory
 #endif
 #endif
 
-		return (IFbClient) Activator.CreateInstance(t);
+		return (IFbClient)Activator.CreateInstance(t);
 	}
 
 	/// <summary>

@@ -359,7 +359,7 @@ public class FbConnectionStringBuilder : DbConnectionStringBuilder
 	private void SetValue<T>(string keyword, T value)
 	{
 		string key = GetKey(keyword);
-		this[key] = value is byte[] bytes ? Convert.ToBase64String(bytes) : (object) value;
+		this[key] = value is byte[] bytes ? Convert.ToBase64String(bytes) : (object)value;
 	}
 
 	private string GetKey(string keyword)

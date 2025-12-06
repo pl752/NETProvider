@@ -31,7 +31,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 	public override StatementBase CreateStatement() => new GdsStatement(this);
 
-	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
+	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 
 	public override void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
 	{
@@ -46,7 +46,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 				var response = ReadResponse();
 				response = ProcessTrustedAuthResponse(sspiHelper, response);
-				ProcessAttachResponse((GenericResponse) response);
+				ProcessAttachResponse((GenericResponse)response);
 			}
 		}
 		catch (IscException)
@@ -75,7 +75,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 				var response = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				response = await ProcessTrustedAuthResponseAsync(sspiHelper, response, cancellationToken).ConfigureAwait(false);
-				await ProcessAttachResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+				await ProcessAttachResponseAsync((GenericResponse)response, cancellationToken).ConfigureAwait(false);
 			}
 		}
 		catch (IscException)
@@ -135,7 +135,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 			var response = ReadResponse();
 			response = ProcessTrustedAuthResponse(sspiHelper, response);
-			ProcessCreateResponse((GenericResponse) response);
+			ProcessCreateResponse((GenericResponse)response);
 		}
 	}
 	public override async ValueTask CreateDatabaseWithTrustedAuthAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default)
@@ -149,7 +149,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 
 			var response = await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 			response = await ProcessTrustedAuthResponseAsync(sspiHelper, response, cancellationToken).ConfigureAwait(false);
-			await ProcessCreateResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+			await ProcessCreateResponseAsync((GenericResponse)response, cancellationToken).ConfigureAwait(false);
 		}
 	}
 

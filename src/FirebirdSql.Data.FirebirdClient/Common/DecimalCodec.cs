@@ -166,13 +166,13 @@ class DecimalCodec(int formatBitLength, int coefficientDigits)
 		int expTwoBitCont = (biasedExponent >>> _decimalFormat.ExponentContinuationBits - 2) & 0b011;
 		if (mostSignificantDigit <= 7)
 		{
-			decBytes[0] |= (byte) ((expMSB << 5)
+			decBytes[0] |= (byte)((expMSB << 5)
 					| (mostSignificantDigit << 2)
 					| expTwoBitCont);
 		}
 		else
 		{
-			decBytes[0] |= (byte) (Combination2
+			decBytes[0] |= (byte)(Combination2
 					| (expMSB << 3)
 					| ((mostSignificantDigit & 0b01) << 2)
 					| expTwoBitCont);
@@ -185,12 +185,12 @@ class DecimalCodec(int formatBitLength, int coefficientDigits)
 		int expByteIndex = 1;
 		while (expBitsRemaining > 8)
 		{
-			decBytes[expByteIndex++] = (byte) (expAndBias >>> expBitsRemaining - 8);
+			decBytes[expByteIndex++] = (byte)(expAndBias >>> expBitsRemaining - 8);
 			expBitsRemaining -= 8;
 		}
 		if (expBitsRemaining > 0)
 		{
-			decBytes[expByteIndex] |= (byte) (expAndBias << 8 - expBitsRemaining);
+			decBytes[expByteIndex] |= (byte)(expAndBias << 8 - expBitsRemaining);
 		}
 	}
 

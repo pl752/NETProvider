@@ -28,7 +28,7 @@ public sealed class FbRowUpdatedEventArgs(
 {
 	#region Properties
 
-	public new FbCommand Command => (FbCommand) base.Command;
+	public new FbCommand Command => (FbCommand)base.Command;
 
 	#endregion
 	#region Constructors

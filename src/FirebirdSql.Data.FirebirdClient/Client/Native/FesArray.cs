@@ -46,12 +46,12 @@ internal sealed class FesArray : ArrayBase
 
 	public override DatabaseBase Database
 	{
-		get => _database; set => _database = (FesDatabase) value;
+		get => _database; set => _database = (FesDatabase)value;
 	}
 
 	public override TransactionBase Transaction
 	{
-		get => _transaction; set => _transaction = (FesTransaction) value;
+		get => _transaction; set => _transaction = (FesTransaction)value;
 	}
 
 	#endregion
@@ -539,7 +539,7 @@ internal sealed class FesArray : ArrayBase
 					{
 						case DbDataType.Char:
 							{
-								string value = source != null ? (string) source : string.Empty;
+								string value = source != null ? (string)source : string.Empty;
 								byte[] buffer = charset.GetBytes(value);
 
 								writer.Write(buffer);
@@ -548,7 +548,7 @@ internal sealed class FesArray : ArrayBase
 								{
 									for (int j = buffer.Length; j < desc.Length; j++)
 									{
-										writer.Write((byte) 32);
+										writer.Write((byte)32);
 									}
 								}
 							}
@@ -556,7 +556,7 @@ internal sealed class FesArray : ArrayBase
 
 						case DbDataType.VarChar:
 							{
-								string value = source != null ? (string) source : string.Empty;
+								string value = source != null ? (string)source : string.Empty;
 
 								byte[] buffer = charset.GetBytes(value);
 								writer.Write(buffer);
@@ -565,51 +565,51 @@ internal sealed class FesArray : ArrayBase
 								{
 									for (int j = buffer.Length; j < desc.Length; j++)
 									{
-										writer.Write((byte) 0);
+										writer.Write((byte)0);
 									}
 								}
-								writer.Write((short) 0);
+								writer.Write((short)0);
 							}
 							break;
 
 						case DbDataType.SmallInt:
-							writer.Write((short) source);
+							writer.Write((short)source);
 							break;
 
 						case DbDataType.Integer:
-							writer.Write((int) source);
+							writer.Write((int)source);
 							break;
 
 						case DbDataType.BigInt:
-							writer.Write((long) source);
+							writer.Write((long)source);
 							break;
 
 						case DbDataType.Float:
-							writer.Write((float) source);
+							writer.Write((float)source);
 							break;
 
 						case DbDataType.Double:
-							writer.Write((double) source);
+							writer.Write((double)source);
 							break;
 
 						case DbDataType.Numeric:
 						case DbDataType.Decimal:
 							{
-								object numeric = TypeEncoder.EncodeDecimal((decimal) source, desc.Scale, type);
+								object numeric = TypeEncoder.EncodeDecimal((decimal)source, desc.Scale, type);
 
 								switch (type)
 								{
 									case IscCodes.SQL_SHORT:
-										writer.Write((short) numeric);
+										writer.Write((short)numeric);
 										break;
 
 									case IscCodes.SQL_LONG:
-										writer.Write((int) numeric);
+										writer.Write((int)numeric);
 										break;
 
 									case IscCodes.SQL_QUAD:
 									case IscCodes.SQL_INT64:
-										writer.Write((long) numeric);
+										writer.Write((long)numeric);
 										break;
 								}
 							}
@@ -620,7 +620,7 @@ internal sealed class FesArray : ArrayBase
 							break;
 
 						case DbDataType.Time:
-							writer.Write(TypeEncoder.EncodeTime((TimeSpan) source));
+							writer.Write(TypeEncoder.EncodeTime((TimeSpan)source));
 							break;
 
 						case DbDataType.TimeStamp:
@@ -630,7 +630,7 @@ internal sealed class FesArray : ArrayBase
 							break;
 
 						default:
-							throw TypeHelper.InvalidDataType((int) dbType);
+							throw TypeHelper.InvalidDataType((int)dbType);
 					}
 				}
 

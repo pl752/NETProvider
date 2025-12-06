@@ -382,31 +382,31 @@ internal sealed class DbField
 					break;
 
 				case DbDataType.SmallInt:
-					_dbValue.SetValue((short) 0);
+					_dbValue.SetValue((short)0);
 					break;
 
 				case DbDataType.Integer:
-					_dbValue.SetValue((int) 0);
+					_dbValue.SetValue((int)0);
 					break;
 
 				case DbDataType.BigInt:
 				case DbDataType.Binary:
 				case DbDataType.Array:
 				case DbDataType.Text:
-					_dbValue.SetValue((long) 0);
+					_dbValue.SetValue((long)0);
 					break;
 
 				case DbDataType.Numeric:
 				case DbDataType.Decimal:
-					_dbValue.SetValue((decimal) 0);
+					_dbValue.SetValue((decimal)0);
 					break;
 
 				case DbDataType.Float:
-					_dbValue.SetValue((float) 0);
+					_dbValue.SetValue((float)0);
 					break;
 
 				case DbDataType.Double:
-					_dbValue.SetValue((double) 0);
+					_dbValue.SetValue((double)0);
 					break;
 
 				case DbDataType.Date:
@@ -438,7 +438,7 @@ internal sealed class DbField
 					break;
 
 				case DbDataType.Int128:
-					_dbValue.SetValue((BigInteger) 0);
+					_dbValue.SetValue((BigInteger)0);
 					break;
 
 				default:

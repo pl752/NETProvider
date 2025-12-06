@@ -49,7 +49,7 @@ public readonly struct FbZonedTime : IEquatable<FbZonedTime>, IConvertible
 	{
 		unchecked
 		{
-			int hash = (int) 2166136261;
+			int hash = (int)2166136261;
 			hash = (hash * 16777619) ^ Time.GetHashCode();
 			hash = (hash * 16777619) ^ TimeZone.GetHashCode();
 			if (Offset != null)

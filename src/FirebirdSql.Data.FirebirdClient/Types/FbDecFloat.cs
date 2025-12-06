@@ -105,7 +105,7 @@ public readonly struct FbDecFloat : IEquatable<FbDecFloat>
 	{
 		unchecked
 		{
-			int hash = (int) 2166136261;
+			int hash = (int)2166136261;
 			hash = (hash * 16777619) ^ Type.GetHashCode();
 			hash = (hash * 16777619) ^ Negative.GetHashCode();
 			hash = (hash * 16777619) ^ Coefficient.GetHashCode();

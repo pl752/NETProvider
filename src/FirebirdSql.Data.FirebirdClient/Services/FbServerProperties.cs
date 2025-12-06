@@ -46,20 +46,20 @@ public sealed class FbServerProperties(string connectionString = null) : FbServi
 	public string GetMessageFile() => GetString(IscCodes.isc_info_svc_get_env_msg);
 	public Task<string> GetMessageFileAsync(CancellationToken cancellationToken = default) => GetStringAsync(IscCodes.isc_info_svc_get_env_msg, cancellationToken);
 
-	public FbDatabasesInfo GetDatabasesInfo() => (FbDatabasesInfo) GetInfo(IscCodes.isc_info_svc_svr_db_info).FirstOrDefault() ?? new FbDatabasesInfo();
-	public async Task<FbDatabasesInfo> GetDatabasesInfoAsync(CancellationToken cancellationToken = default) => (FbDatabasesInfo) (await GetInfoAsync(IscCodes.isc_info_svc_svr_db_info, cancellationToken).ConfigureAwait(false)).FirstOrDefault() ?? new FbDatabasesInfo();
+	public FbDatabasesInfo GetDatabasesInfo() => (FbDatabasesInfo)GetInfo(IscCodes.isc_info_svc_svr_db_info).FirstOrDefault() ?? new FbDatabasesInfo();
+	public async Task<FbDatabasesInfo> GetDatabasesInfoAsync(CancellationToken cancellationToken = default) => (FbDatabasesInfo)(await GetInfoAsync(IscCodes.isc_info_svc_svr_db_info, cancellationToken).ConfigureAwait(false)).FirstOrDefault() ?? new FbDatabasesInfo();
 
-	public FbServerConfig GetServerConfig() => (FbServerConfig) GetInfo(IscCodes.isc_info_svc_get_config).FirstOrDefault() ?? new FbServerConfig();
-	public async Task<FbServerConfig> GetServerConfigAsync(CancellationToken cancellationToken = default) => (FbServerConfig) (await GetInfoAsync(IscCodes.isc_info_svc_get_config, cancellationToken).ConfigureAwait(false)).FirstOrDefault() ?? new FbServerConfig();
+	public FbServerConfig GetServerConfig() => (FbServerConfig)GetInfo(IscCodes.isc_info_svc_get_config).FirstOrDefault() ?? new FbServerConfig();
+	public async Task<FbServerConfig> GetServerConfigAsync(CancellationToken cancellationToken = default) => (FbServerConfig)(await GetInfoAsync(IscCodes.isc_info_svc_get_config, cancellationToken).ConfigureAwait(false)).FirstOrDefault() ?? new FbServerConfig();
 
-	private string GetString(int item) => (string) GetInfo(item).FirstOrDefault();
-	private async Task<string> GetStringAsync(int item, CancellationToken cancellationToken = default) => (string) (await GetInfoAsync(item, cancellationToken).ConfigureAwait(false)).FirstOrDefault();
+	private string GetString(int item) => (string)GetInfo(item).FirstOrDefault();
+	private async Task<string> GetStringAsync(int item, CancellationToken cancellationToken = default) => (string)(await GetInfoAsync(item, cancellationToken).ConfigureAwait(false)).FirstOrDefault();
 
-	private int GetInt32(int item) => (int) GetInfo(item).FirstOrDefault();
-	private async Task<int> GetInt32Async(int item, CancellationToken cancellationToken = default) => (int) (await GetInfoAsync(item, cancellationToken).ConfigureAwait(false)).FirstOrDefault();
+	private int GetInt32(int item) => (int)GetInfo(item).FirstOrDefault();
+	private async Task<int> GetInt32Async(int item, CancellationToken cancellationToken = default) => (int)(await GetInfoAsync(item, cancellationToken).ConfigureAwait(false)).FirstOrDefault();
 
-	private List<object> GetInfo(int item) => GetInfo([(byte) item]);
-	private Task<List<object>> GetInfoAsync(int item, CancellationToken cancellationToken = default) => GetInfoAsync([(byte) item], cancellationToken);
+	private List<object> GetInfo(int item) => GetInfo([(byte)item]);
+	private Task<List<object>> GetInfoAsync(int item, CancellationToken cancellationToken = default) => GetInfoAsync([(byte)item], cancellationToken);
 
 	private List<object> GetInfo(byte[] items)
 	{

@@ -174,5 +174,5 @@ class SqlStringParser(string targetString)
 
 	char? GetNextChar(int index) => index + 1 < _sourceLength
 				? _source[index + 1]
-				: (char?) null;
+				: (char?)null;
 }

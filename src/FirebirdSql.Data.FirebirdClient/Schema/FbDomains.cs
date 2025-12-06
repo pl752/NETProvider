@@ -118,8 +118,8 @@ internal class FbDomains : FbSchema
 			row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
 			row["IS_ARRAY"] = row["COLUMN_ARRAY"] != DBNull.Value;
 
-			var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
-			row["DOMAIN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
+			var dbType = (FbDbType)TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
+			row["DOMAIN_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType)dbType).ToLowerInvariant();
 
 			if (dbType is FbDbType.Char or FbDbType.VarChar)
 			{

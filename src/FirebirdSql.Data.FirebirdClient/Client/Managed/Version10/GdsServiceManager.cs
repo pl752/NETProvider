@@ -65,7 +65,7 @@ internal class GdsServiceManager : ServiceManagerBase
 		{
 			SendAttachToBuffer(spb, service);
 			_database.Xdr.Flush();
-			ProcessAttachResponse((GenericResponse) _database.ReadResponse());
+			ProcessAttachResponse((GenericResponse)_database.ReadResponse());
 		}
 		catch (IOException ex)
 		{
@@ -79,7 +79,7 @@ internal class GdsServiceManager : ServiceManagerBase
 		{
 			await SendAttachToBufferAsync(spb, service, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			await ProcessAttachResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+			await ProcessAttachResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 		}
 		catch (IOException ex)
 		{
@@ -237,7 +237,7 @@ internal class GdsServiceManager : ServiceManagerBase
 
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			int responseLength = bufferLength;
 
@@ -266,7 +266,7 @@ internal class GdsServiceManager : ServiceManagerBase
 
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			int responseLength = bufferLength;
 

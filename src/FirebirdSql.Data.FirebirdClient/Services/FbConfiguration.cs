@@ -493,11 +493,11 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
 				if (forcedWrites)
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte) IscCodes.isc_spb_prp_wm_sync);
+					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte)IscCodes.isc_spb_prp_wm_sync);
 				}
 				else
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte) IscCodes.isc_spb_prp_wm_async);
+					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte)IscCodes.isc_spb_prp_wm_async);
 				}
 				StartTask(startSpb);
 			}
@@ -525,11 +525,11 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
 				if (forcedWrites)
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte) IscCodes.isc_spb_prp_wm_sync);
+					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte)IscCodes.isc_spb_prp_wm_sync);
 				}
 				else
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte) IscCodes.isc_spb_prp_wm_async);
+					startSpb.Append(IscCodes.isc_spb_prp_write_mode, (byte)IscCodes.isc_spb_prp_wm_async);
 				}
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 			}
@@ -558,11 +558,11 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
 				if (reserveSpace)
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte) IscCodes.isc_spb_prp_res);
+					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte)IscCodes.isc_spb_prp_res);
 				}
 				else
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte) IscCodes.isc_spb_prp_res_use_full);
+					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte)IscCodes.isc_spb_prp_res_use_full);
 				}
 				StartTask(startSpb);
 			}
@@ -590,11 +590,11 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
 				if (reserveSpace)
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte) IscCodes.isc_spb_prp_res);
+					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte)IscCodes.isc_spb_prp_res);
 				}
 				else
 				{
-					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte) IscCodes.isc_spb_prp_res_use_full);
+					startSpb.Append(IscCodes.isc_spb_prp_reserve_space, (byte)IscCodes.isc_spb_prp_res_use_full);
 				}
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 			}
@@ -621,7 +621,7 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(IscCodes.isc_action_svc_properties);
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_prp_access_mode, (byte) (readOnly ? IscCodes.isc_spb_prp_am_readonly : IscCodes.isc_spb_prp_am_readwrite));
+				startSpb.Append(IscCodes.isc_spb_prp_access_mode, (byte)(readOnly ? IscCodes.isc_spb_prp_am_readonly : IscCodes.isc_spb_prp_am_readwrite));
 				StartTask(startSpb);
 			}
 			finally
@@ -646,7 +646,7 @@ public sealed class FbConfiguration(string connectionString = null) : FbService(
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(IscCodes.isc_action_svc_properties);
 				startSpb.Append2(IscCodes.isc_spb_dbname, ConnectionStringOptions.Database);
-				startSpb.Append(IscCodes.isc_spb_prp_access_mode, (byte) (readOnly ? IscCodes.isc_spb_prp_am_readonly : IscCodes.isc_spb_prp_am_readwrite));
+				startSpb.Append(IscCodes.isc_spb_prp_access_mode, (byte)(readOnly ? IscCodes.isc_spb_prp_am_readonly : IscCodes.isc_spb_prp_am_readwrite));
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 			}
 			finally

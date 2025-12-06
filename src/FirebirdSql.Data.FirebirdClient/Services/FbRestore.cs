@@ -66,15 +66,15 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 				if (Verbose)
 					startSpb.Append(IscCodes.isc_spb_verbose);
 				if (VerboseInterval.HasValue)
-					startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+					startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
 				if (PageBuffers.HasValue)
-					startSpb.Append(IscCodes.isc_spb_res_buffers, (int) PageBuffers);
+					startSpb.Append(IscCodes.isc_spb_res_buffers, (int)PageBuffers);
 				if (_pageSize.HasValue)
-					startSpb.Append(IscCodes.isc_spb_res_page_size, (int) _pageSize);
-				startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte) (ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
+					startSpb.Append(IscCodes.isc_spb_res_page_size, (int)_pageSize);
+				startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte)(ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
 				if (!string.IsNullOrEmpty(SkipData))
 					startSpb.Append2(IscCodes.isc_spb_res_skip_data, SkipData);
-				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
 				if (Statistics.HasValue)
 					startSpb.Append2(IscCodes.isc_spb_res_stat, Statistics.Value.BuildConfiguration());
 				if (ConnectionStringOptions.ParallelWorkers > 0)
@@ -114,15 +114,15 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 				if (Verbose)
 					startSpb.Append(IscCodes.isc_spb_verbose);
 				if (VerboseInterval.HasValue)
-					startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+					startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
 				if (PageBuffers.HasValue)
-					startSpb.Append(IscCodes.isc_spb_res_buffers, (int) PageBuffers);
+					startSpb.Append(IscCodes.isc_spb_res_buffers, (int)PageBuffers);
 				if (_pageSize.HasValue)
-					startSpb.Append(IscCodes.isc_spb_res_page_size, (int) _pageSize);
-				startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte) (ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
+					startSpb.Append(IscCodes.isc_spb_res_page_size, (int)_pageSize);
+				startSpb.Append(IscCodes.isc_spb_res_access_mode, (byte)(ReadOnly ? IscCodes.isc_spb_res_am_readonly : IscCodes.isc_spb_res_am_readwrite));
 				if (!string.IsNullOrEmpty(SkipData))
 					startSpb.Append2(IscCodes.isc_spb_res_skip_data, SkipData);
-				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
 				if (Statistics.HasValue)
 					startSpb.Append2(IscCodes.isc_spb_res_stat, Statistics.Value.BuildConfiguration());
 				if (ConnectionStringOptions.ParallelWorkers > 0)

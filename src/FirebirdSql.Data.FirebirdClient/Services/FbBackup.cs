@@ -49,17 +49,17 @@ public sealed class FbBackup(string connectionString = null) : FbService(connect
 				{
 					startSpb.Append2(IscCodes.isc_spb_bkp_file, file.BackupFile);
 					if (file.BackupLength.HasValue)
-						startSpb.Append(IscCodes.isc_spb_bkp_length, (int) file.BackupLength);
+						startSpb.Append(IscCodes.isc_spb_bkp_length, (int)file.BackupLength);
 				}
 				if (Verbose)
 					startSpb.Append(IscCodes.isc_spb_verbose);
 				if (VerboseInterval.HasValue)
-					startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+					startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
 				if (Factor > 0)
 					startSpb.Append(IscCodes.isc_spb_bkp_factor, Factor);
 				if (!string.IsNullOrEmpty(SkipData))
 					startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
-				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
 				if (Statistics.HasValue)
 					startSpb.Append2(IscCodes.isc_spb_bkp_stat, Statistics.Value.BuildConfiguration());
 				if (ConnectionStringOptions.ParallelWorkers > 0)
@@ -96,17 +96,17 @@ public sealed class FbBackup(string connectionString = null) : FbService(connect
 				{
 					startSpb.Append2(IscCodes.isc_spb_bkp_file, file.BackupFile);
 					if (file.BackupLength.HasValue)
-						startSpb.Append(IscCodes.isc_spb_bkp_length, (int) file.BackupLength);
+						startSpb.Append(IscCodes.isc_spb_bkp_length, (int)file.BackupLength);
 				}
 				if (Verbose)
 					startSpb.Append(IscCodes.isc_spb_verbose);
 				if (VerboseInterval.HasValue)
-					startSpb.Append(IscCodes.isc_spb_verbint, (int) VerboseInterval);
+					startSpb.Append(IscCodes.isc_spb_verbint, (int)VerboseInterval);
 				if (Factor > 0)
 					startSpb.Append(IscCodes.isc_spb_bkp_factor, Factor);
 				if (!string.IsNullOrEmpty(SkipData))
 					startSpb.Append2(IscCodes.isc_spb_bkp_skip_data, SkipData);
-				startSpb.Append(IscCodes.isc_spb_options, (int) Options);
+				startSpb.Append(IscCodes.isc_spb_options, (int)Options);
 				if (Statistics.HasValue)
 					startSpb.Append2(IscCodes.isc_spb_bkp_stat, Statistics.Value.BuildConfiguration());
 				if (ConnectionStringOptions.ParallelWorkers > 0)

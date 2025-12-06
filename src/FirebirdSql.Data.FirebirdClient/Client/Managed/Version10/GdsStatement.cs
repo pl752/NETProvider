@@ -65,7 +65,7 @@ internal class GdsStatement : StatementBase
 				}
 				else
 				{
-					_transaction = (GdsTransaction) value;
+					_transaction = (GdsTransaction)value;
 					TransactionUpdate = new EventHandler(TransactionUpdated);
 					_transaction.Update += TransactionUpdate;
 				}
@@ -225,16 +225,16 @@ internal class GdsStatement : StatementBase
 			{
 				SendAllocateToBuffer();
 				_database.Xdr.Flush();
-				ProcessAllocateResponse((GenericResponse) _database.ReadResponse());
+				ProcessAllocateResponse((GenericResponse)_database.ReadResponse());
 			}
 
 			SendPrepareToBuffer(commandText);
 			_database.Xdr.Flush();
-			ProcessPrepareResponse((GenericResponse) _database.ReadResponse());
+			ProcessPrepareResponse((GenericResponse)_database.ReadResponse());
 
 			SendInfoSqlToBuffer(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE);
 			_database.Xdr.Flush();
-			StatementType = ProcessStatementTypeInfoBuffer(ProcessInfoSqlResponse((GenericResponse) _database.ReadResponse()));
+			StatementType = ProcessStatementTypeInfoBuffer(ProcessInfoSqlResponse((GenericResponse)_database.ReadResponse()));
 
 			State = StatementState.Prepared;
 		}
@@ -254,16 +254,16 @@ internal class GdsStatement : StatementBase
 			{
 				await SendAllocateToBufferAsync(cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-				await ProcessAllocateResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+				await ProcessAllocateResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 			}
 
 			await SendPrepareToBufferAsync(commandText, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			await ProcessPrepareResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+			await ProcessPrepareResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 
 			await SendInfoSqlToBufferAsync(StatementTypeInfoItems, IscCodes.STATEMENT_TYPE_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			StatementType = ProcessStatementTypeInfoBuffer(await ProcessInfoSqlResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
+			StatementType = ProcessStatementTypeInfoBuffer(await ProcessInfoSqlResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
 
 			State = StatementState.Prepared;
 		}
@@ -288,17 +288,17 @@ internal class GdsStatement : StatementBase
 
 			if (StatementType == DbStatementType.StoredProcedure)
 			{
-				ProcessStoredProcedureExecuteResponse((SqlResponse) _database.ReadResponse());
+				ProcessStoredProcedureExecuteResponse((SqlResponse)_database.ReadResponse());
 			}
 
-			var executeResponse = (GenericResponse) _database.ReadResponse();
+			var executeResponse = (GenericResponse)_database.ReadResponse();
 			ProcessExecuteResponse(executeResponse);
 
 			if (DoRecordsAffected)
 			{
 				SendInfoSqlToBuffer(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE);
 				_database.Xdr.Flush();
-				RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse((GenericResponse) _database.ReadResponse()));
+				RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse((GenericResponse)_database.ReadResponse()));
 			}
 			else
 			{
@@ -327,17 +327,17 @@ internal class GdsStatement : StatementBase
 
 			if (StatementType == DbStatementType.StoredProcedure)
 			{
-				await ProcessStoredProcedureExecuteResponseAsync((SqlResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+				await ProcessStoredProcedureExecuteResponseAsync((SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 			}
 
-			var executeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 			await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);
 
 			if (DoRecordsAffected)
 			{
 				await SendInfoSqlToBufferAsync(RowsAffectedInfoItems, IscCodes.ROWS_AFFECTED_BUFFER_SIZE, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-				RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
+				RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false));
 			}
 			else
 			{
@@ -526,7 +526,7 @@ internal class GdsStatement : StatementBase
 		_database.Xdr.WriteBytes(bufOpPrepare);
 		_database.Xdr.Write(_transaction.Handle);
 		_database.Xdr.Write(_handle);
-		_database.Xdr.Write((int) _database.Dialect);
+		_database.Xdr.Write((int)_database.Dialect);
 		_database.Xdr.Write(commandText);
 		_database.Xdr.WriteBuffer(DescribeInfoAndBindInfoItems, DescribeInfoAndBindInfoItems.Length);
 		_database.Xdr.WriteBytes(bufPrepareInfoSize);
@@ -536,7 +536,7 @@ internal class GdsStatement : StatementBase
 		await _database.Xdr.WriteBytesAsync(bufOpPrepare, 4, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.WriteAsync(_transaction.Handle, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
-		await _database.Xdr.WriteAsync((int) _database.Dialect, cancellationToken).ConfigureAwait(false);
+		await _database.Xdr.WriteAsync((int)_database.Dialect, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.WriteAsync(commandText, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.WriteBufferAsync(DescribeInfoAndBindInfoItems, DescribeInfoAndBindInfoItems.Length, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.WriteBytesAsync(bufPrepareInfoSize, 4, cancellationToken).ConfigureAwait(false);
@@ -567,13 +567,13 @@ internal class GdsStatement : StatementBase
 	{
 		DoInfoSqlPacket(items, bufferLength);
 		_database.Xdr.Flush();
-		return ProcessInfoSqlResponse((GenericResponse) _database.ReadResponse());
+		return ProcessInfoSqlResponse((GenericResponse)_database.ReadResponse());
 	}
 	protected override async ValueTask<byte[]> GetSqlInfoAsync(byte[] items, int bufferLength, CancellationToken cancellationToken = default)
 	{
 		await DoInfoSqlPacketAsync(items, bufferLength, cancellationToken).ConfigureAwait(false);
 		await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-		return await ProcessInfoSqlResponseAsync((GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+		return await ProcessInfoSqlResponseAsync((GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 	}
 
 	protected void DoInfoSqlPacket(byte[] items, int bufferLength)
@@ -897,9 +897,9 @@ internal class GdsStatement : StatementBase
 								newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 								newItems.Insert(chock + 1, 2);
 
-								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short) 0;
-								newItems.Insert(chock + 2, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
-								newItems.Insert(chock + 3, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
+								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
+								newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
+								newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
 								part++;
 								chock = i + 4 + 1;
@@ -921,12 +921,12 @@ internal class GdsStatement : StatementBase
 							break;
 
 						currentPosition++;
-						int len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						int len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						if (rowDescs[currentDescriptorIndex] == null)
 						{
 							long n = IscHelper.VaxInteger(info, currentPosition, len);
-							rowDescs[currentDescriptorIndex] = new Descriptor((short) n);
+							rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 							if (n == 0)
 							{
 								currentPosition += len;
@@ -937,63 +937,63 @@ internal class GdsStatement : StatementBase
 						break;
 
 					case IscCodes.isc_info_sql_sqlda_seq:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						currentItemIndex = (int) IscHelper.VaxInteger(info, currentPosition, len);
+						currentItemIndex = (int)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_type:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_sub_type:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_scale:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_length:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_field:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Name = _database.Charset.GetString(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_relation:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Relation = _database.Charset.GetString(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_owner:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Owner = _database.Charset.GetString(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_alias:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Alias = _database.Charset.GetString(info, currentPosition, len);
 						currentPosition += len;
@@ -1034,9 +1034,9 @@ internal class GdsStatement : StatementBase
 								newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 								newItems.Insert(chock + 1, 2);
 
-								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short) 0;
-								newItems.Insert(chock + 2, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
-								newItems.Insert(chock + 3, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
+								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
+								newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
+								newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
 								part++;
 								chock = i + 4 + 1;
@@ -1059,12 +1059,12 @@ internal class GdsStatement : StatementBase
 							break;
 
 						currentPosition++;
-						int len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						int len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						if (rowDescs[currentDescriptorIndex] == null)
 						{
 							long n = IscHelper.VaxInteger(info, currentPosition, len);
-							rowDescs[currentDescriptorIndex] = new Descriptor((short) n);
+							rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 							if (n == 0)
 							{
 								currentPosition += len;
@@ -1075,63 +1075,63 @@ internal class GdsStatement : StatementBase
 						break;
 
 					case IscCodes.isc_info_sql_sqlda_seq:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						currentItemIndex = (int) IscHelper.VaxInteger(info, currentPosition, len);
+						currentItemIndex = (int)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_type:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_sub_type:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_scale:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_length:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short) IscHelper.VaxInteger(info, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short)IscHelper.VaxInteger(info, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_field:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Name = _database.Charset.GetString(info.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_relation:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Relation = _database.Charset.GetString(info.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_owner:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Owner = _database.Charset.GetString(info.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_alias:
-						len = (int) IscHelper.VaxInteger(info, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Alias = _database.Charset.GetString(info.Slice(currentPosition, len));
 						currentPosition += len;
@@ -1173,9 +1173,9 @@ internal class GdsStatement : StatementBase
 								newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
 								newItems.Insert(chock + 1, 2);
 
-								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short) 0;
-								newItems.Insert(chock + 2, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
-								newItems.Insert(chock + 3, (byte) ((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
+								short processedItems = rowDescs[part] != null ? rowDescs[part].Count : (short)0;
+								newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
+								newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
 								part++;
 								chock = i + 4 + 1;
@@ -1198,12 +1198,12 @@ internal class GdsStatement : StatementBase
 							break;
 
 						currentPosition++;
-						int len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						int len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
 						if (rowDescs[currentDescriptorIndex] == null)
 						{
 							long n = IscHelper.VaxInteger(info.Span, currentPosition, len);
-							rowDescs[currentDescriptorIndex] = new Descriptor((short) n);
+							rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
 							if (n == 0)
 							{
 								currentPosition += len;
@@ -1214,63 +1214,63 @@ internal class GdsStatement : StatementBase
 						break;
 
 					case IscCodes.isc_info_sql_sqlda_seq:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
-						currentItemIndex = (int) IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentItemIndex = (int)IscHelper.VaxInteger(info.Span, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_type:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short) IscHelper.VaxInteger(info.Span, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_sub_type:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short) IscHelper.VaxInteger(info.Span, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_scale:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short) IscHelper.VaxInteger(info.Span, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_length:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
-						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short) IscHelper.VaxInteger(info.Span, currentPosition, len);
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_field:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Name = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_relation:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Relation = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_owner:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Owner = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
 					case IscCodes.isc_info_sql_alias:
-						len = (int) IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
 						currentPosition += 2;
 						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Alias = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
 						currentPosition += len;
@@ -1481,7 +1481,7 @@ internal class GdsStatement : StatementBase
 					xdr.Write(field.DbValue.GetDate());
 					xdr.Write(field.DbValue.GetTime());
 					xdr.Write(field.DbValue.GetTimeZoneId());
-					xdr.Write((short) 0);
+					xdr.Write((short)0);
 					break;
 
 				case DbDataType.TimeTZ:
@@ -1492,7 +1492,7 @@ internal class GdsStatement : StatementBase
 				case DbDataType.TimeTZEx:
 					xdr.Write(field.DbValue.GetTime());
 					xdr.Write(field.DbValue.GetTimeZoneId());
-					xdr.Write((short) 0);
+					xdr.Write((short)0);
 					break;
 
 				case DbDataType.Dec16:
@@ -1641,7 +1641,7 @@ internal class GdsStatement : StatementBase
 					await xdr.WriteAsync(field.DbValue.GetDate(), cancellationToken).ConfigureAwait(false);
 					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
 					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync((short) 0, cancellationToken).ConfigureAwait(false);
+					await xdr.WriteAsync((short)0, cancellationToken).ConfigureAwait(false);
 					break;
 
 				case DbDataType.TimeTZ:
@@ -1652,7 +1652,7 @@ internal class GdsStatement : StatementBase
 				case DbDataType.TimeTZEx:
 					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
 					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync((short) 0, cancellationToken).ConfigureAwait(false);
+					await xdr.WriteAsync((short)0, cancellationToken).ConfigureAwait(false);
 					break;
 
 				case DbDataType.Dec16:
@@ -1752,7 +1752,7 @@ internal class GdsStatement : StatementBase
 				return xdr.ReadInt128();
 
 			default:
-				throw TypeHelper.InvalidDataType((int) field.DbDataType);
+				throw TypeHelper.InvalidDataType((int)field.DbDataType);
 		}
 	}
 	protected async ValueTask<object> ReadRawValueAsync(IXdrReader xdr, DbField field, CancellationToken cancellationToken = default)
@@ -1836,7 +1836,7 @@ internal class GdsStatement : StatementBase
 				return await xdr.ReadInt128Async(cancellationToken).ConfigureAwait(false);
 
 			default:
-				throw TypeHelper.InvalidDataType((int) field.DbDataType);
+				throw TypeHelper.InvalidDataType((int)field.DbDataType);
 		}
 	}
 

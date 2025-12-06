@@ -65,9 +65,9 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 				"@" + row["PARAMETER_NAME"].ToString().Trim(),
 				FbDbType.VarChar);
 
-			parameter.FbDbType = (FbDbType) dataTypes[0]["ProviderDbType"];
+			parameter.FbDbType = (FbDbType)dataTypes[0]["ProviderDbType"];
 
-			parameter.Direction = (ParameterDirection) row["PARAMETER_DIRECTION"];
+			parameter.Direction = (ParameterDirection)row["PARAMETER_DIRECTION"];
 
 			parameter.Size = Convert.ToInt32(row["PARAMETER_SIZE"], CultureInfo.InvariantCulture);
 
@@ -115,7 +115,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 	[DefaultValue(null)]
 	public new FbDataAdapter DataAdapter
 	{
-		get => (FbDataAdapter) base.DataAdapter; set => base.DataAdapter = value;
+		get => (FbDataAdapter)base.DataAdapter; set => base.DataAdapter = value;
 	}
 
 	#endregion
@@ -183,7 +183,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 
 	protected override void ApplyParameterInfo(DbParameter p, DataRow row, StatementType statementType, bool whereClause)
 	{
-		var parameter = (FbParameter) p;
+		var parameter = (FbParameter)p;
 
 		parameter.Size = int.Parse(row["ColumnSize"].ToString());
 		if (row["NumericPrecision"] != DBNull.Value)
@@ -194,7 +194,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 		{
 			parameter.Scale = byte.Parse(row["NumericScale"].ToString());
 		}
-		parameter.FbDbType = (FbDbType) row["ProviderType"];
+		parameter.FbDbType = (FbDbType)row["ProviderType"];
 	}
 
 	protected override string GetParameterName(int parameterOrdinal) => string.Format("@p{0}", parameterOrdinal);
@@ -211,7 +211,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 		}
 
 		_rowUpdatingHandler = new EventHandler<FbRowUpdatingEventArgs>(RowUpdatingHandler);
-		((FbDataAdapter) adapter).RowUpdating += _rowUpdatingHandler;
+		((FbDataAdapter)adapter).RowUpdating += _rowUpdatingHandler;
 	}
 
 	#endregion

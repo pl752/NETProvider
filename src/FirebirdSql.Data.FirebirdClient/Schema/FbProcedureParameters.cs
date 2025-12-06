@@ -132,8 +132,8 @@ internal class FbProcedureParameters : FbSchema
 
 			row["IS_NULLABLE"] = row["COLUMN_NULLABLE"] == DBNull.Value;
 
-			var dbType = (FbDbType) TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
-			row["PARAMETER_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType) dbType).ToLowerInvariant();
+			var dbType = (FbDbType)TypeHelper.GetDbDataTypeFromBlrType(blrType, subType, scale);
+			row["PARAMETER_DATA_TYPE"] = TypeHelper.GetDataTypeName((DbDataType)dbType).ToLowerInvariant();
 
 			if (dbType is FbDbType.Char or FbDbType.VarChar)
 			{

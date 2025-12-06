@@ -120,25 +120,25 @@ internal struct DbValue
 
 	public readonly byte GetByte() => _value switch
 	{
-		BigInteger bi => (byte) bi,
+		BigInteger bi => (byte)bi,
 		_ => Convert.ToByte(_value, CultureInfo.InvariantCulture),
 	};
 
 	public readonly short GetInt16() => _value switch
 	{
-		BigInteger bi => (short) bi,
+		BigInteger bi => (short)bi,
 		_ => Convert.ToInt16(_value, CultureInfo.InvariantCulture),
 	};
 
 	public readonly int GetInt32() => _value switch
 	{
-		BigInteger bi => (int) bi,
+		BigInteger bi => (int)bi,
 		_ => Convert.ToInt32(_value, CultureInfo.InvariantCulture),
 	};
 
 	public readonly long GetInt64() => _value switch
 	{
-		BigInteger bi => (long) bi,
+		BigInteger bi => (long)bi,
 		_ => Convert.ToInt64(_value, CultureInfo.InvariantCulture),
 	};
 
@@ -162,9 +162,9 @@ internal struct DbValue
 		_ => Convert.ToDateTime(_value, CultureInfo.CurrentCulture.DateTimeFormat),
 	};
 
-	public readonly TimeSpan GetTimeSpan() => (TimeSpan) _value;
+	public readonly TimeSpan GetTimeSpan() => (TimeSpan)_value;
 
-	public readonly FbDecFloat GetDecFloat() => (FbDecFloat) _value;
+	public readonly FbDecFloat GetDecFloat() => (FbDecFloat)_value;
 
 	public readonly BigInteger GetInt128() => _value switch
 	{
@@ -172,12 +172,12 @@ internal struct DbValue
 		short s => s,
 		int i => i,
 		long l => l,
-		_ => (BigInteger) _value,
+		_ => (BigInteger)_value,
 	};
 
-	public readonly FbZonedDateTime GetZonedDateTime() => (FbZonedDateTime) _value;
+	public readonly FbZonedDateTime GetZonedDateTime() => (FbZonedDateTime)_value;
 
-	public readonly FbZonedTime GetZonedTime() => (FbZonedTime) _value;
+	public readonly FbZonedTime GetZonedTime() => (FbZonedTime)_value;
 
 	public Array GetArray()
 	{
@@ -186,7 +186,7 @@ internal struct DbValue
 			_value = GetArrayData(l);
 		}
 
-		return (Array) _value;
+		return (Array)_value;
 	}
 	public async ValueTask<Array> GetArrayAsync(CancellationToken cancellationToken = default)
 	{
@@ -195,7 +195,7 @@ internal struct DbValue
 			_value = await GetArrayDataAsync(l, cancellationToken).ConfigureAwait(false);
 		}
 
-		return (Array) _value;
+		return (Array)_value;
 	}
 
 	public byte[] GetBinary()
@@ -204,7 +204,7 @@ internal struct DbValue
 		{
 			_value = GetBlobData(l);
 		}
-		return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[]) _value;
+		return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[])_value;
 	}
 	public async ValueTask<byte[]> GetBinaryAsync(CancellationToken cancellationToken = default)
 	{
@@ -212,7 +212,7 @@ internal struct DbValue
 		{
 			_value = await GetBlobDataAsync(l, cancellationToken).ConfigureAwait(false);
 		}
-		return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[]) _value;
+		return _value is Guid guid ? TypeEncoder.EncodeGuid(guid) : (byte[])_value;
 	}
 
 	public readonly BlobStream GetBinaryStream() => _value is not long l ? throw new NotSupportedException() : GetBlobStream(l);
@@ -301,7 +301,7 @@ internal struct DbValue
 
 					for (int i = 0; i < buffer.Length; i++)
 					{
-						buffer[i] = (byte) ' ';
+						buffer[i] = (byte)' ';
 					}
 					Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
 					return buffer;
@@ -335,7 +335,7 @@ internal struct DbValue
 						bytes = Field.Charset.GetBytes(svalue);
 					}
 
-					Buffer.BlockCopy(BitConverter.GetBytes((short) bytes.Length), 0, buffer, 0, 2);
+					Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 					Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					return buffer;
 				}
@@ -387,7 +387,7 @@ internal struct DbValue
 					if (Field.SqlType == IscCodes.SQL_VARYING)
 					{
 						buffer = new byte[bytes.Length + 2];
-						Buffer.BlockCopy(BitConverter.GetBytes((short) bytes.Length), 0, buffer, 0, 2);
+						Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 						Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					}
 					else
@@ -465,7 +465,7 @@ internal struct DbValue
 				return Int128Helper.GetBytes(GetInt128());
 
 			default:
-				throw TypeHelper.InvalidDataType((int) Field.DbDataType);
+				throw TypeHelper.InvalidDataType((int)Field.DbDataType);
 		}
 	}
 	public async ValueTask<byte[]> GetBytesAsync(CancellationToken cancellationToken = default)
@@ -516,7 +516,7 @@ internal struct DbValue
 
 					for (int i = 0; i < buffer.Length; i++)
 					{
-						buffer[i] = (byte) ' ';
+						buffer[i] = (byte)' ';
 					}
 					Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
 					return buffer;
@@ -550,7 +550,7 @@ internal struct DbValue
 						bytes = Field.Charset.GetBytes(svalue);
 					}
 
-					Buffer.BlockCopy(BitConverter.GetBytes((short) bytes.Length), 0, buffer, 0, 2);
+					Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 					Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					return buffer;
 				}
@@ -602,7 +602,7 @@ internal struct DbValue
 					if (Field.SqlType == IscCodes.SQL_VARYING)
 					{
 						buffer = new byte[bytes.Length + 2];
-						Buffer.BlockCopy(BitConverter.GetBytes((short) bytes.Length), 0, buffer, 0, 2);
+						Buffer.BlockCopy(BitConverter.GetBytes((short)bytes.Length), 0, buffer, 0, 2);
 						Buffer.BlockCopy(bytes, 0, buffer, 2, bytes.Length);
 					}
 					else
@@ -680,7 +680,7 @@ internal struct DbValue
 				return Int128Helper.GetBytes(GetInt128());
 
 			default:
-				throw TypeHelper.InvalidDataType((int) Field.DbDataType);
+				throw TypeHelper.InvalidDataType((int)Field.DbDataType);
 		}
 	}
 
@@ -691,11 +691,11 @@ internal struct DbValue
 
 		return _field.SqlType switch
 		{
-			IscCodes.SQL_SHORT => BitConverter.GetBytes((short) numeric),
-			IscCodes.SQL_LONG => BitConverter.GetBytes((int) numeric),
-			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => BitConverter.GetBytes((long) numeric),
-			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => BitConverter.GetBytes((double) numeric),
-			IscCodes.SQL_INT128 => Int128Helper.GetBytes((BigInteger) numeric),
+			IscCodes.SQL_SHORT => BitConverter.GetBytes((short)numeric),
+			IscCodes.SQL_LONG => BitConverter.GetBytes((int)numeric),
+			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => BitConverter.GetBytes((long)numeric),
+			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => BitConverter.GetBytes((double)numeric),
+			IscCodes.SQL_INT128 => Int128Helper.GetBytes((BigInteger)numeric),
 			_ => null,
 		};
 	}

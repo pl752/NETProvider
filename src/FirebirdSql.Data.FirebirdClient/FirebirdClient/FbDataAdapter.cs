@@ -64,28 +64,28 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 	[DefaultValue(null)]
 	public new FbCommand SelectCommand
 	{
-		get => (FbCommand) base.SelectCommand; set => base.SelectCommand = value;
+		get => (FbCommand)base.SelectCommand; set => base.SelectCommand = value;
 	}
 
 	[Category("Update")]
 	[DefaultValue(null)]
 	public new FbCommand InsertCommand
 	{
-		get => (FbCommand) base.InsertCommand; set => base.InsertCommand = value;
+		get => (FbCommand)base.InsertCommand; set => base.InsertCommand = value;
 	}
 
 	[Category("Update")]
 	[DefaultValue(null)]
 	public new FbCommand UpdateCommand
 	{
-		get => (FbCommand) base.UpdateCommand; set => base.UpdateCommand = value;
+		get => (FbCommand)base.UpdateCommand; set => base.UpdateCommand = value;
 	}
 
 	[Category("Update")]
 	[DefaultValue(null)]
 	public new FbCommand DeleteCommand
 	{
-		get => (FbCommand) base.DeleteCommand; set => base.DeleteCommand = value;
+		get => (FbCommand)base.DeleteCommand; set => base.DeleteCommand = value;
 	}
 
 	#endregion
@@ -154,25 +154,25 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	protected override void OnRowUpdating(RowUpdatingEventArgs value)
 	{
-		EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>) Events[EventRowUpdating];
+		EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>)Events[EventRowUpdating];
 
 		if ((null != handler) &&
 	(value is FbRowUpdatingEventArgs) &&
 	(value != null))
 		{
-			handler(this, (FbRowUpdatingEventArgs) value);
+			handler(this, (FbRowUpdatingEventArgs)value);
 		}
 	}
 
 	protected override void OnRowUpdated(RowUpdatedEventArgs value)
 	{
-		EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>) Events[EventRowUpdated];
+		EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>)Events[EventRowUpdated];
 
 		if ((handler != null) &&
 	(value is FbRowUpdatedEventArgs) &&
 	(value != null))
 		{
-			handler(this, (FbRowUpdatedEventArgs) value);
+			handler(this, (FbRowUpdatedEventArgs)value);
 		}
 	}
 

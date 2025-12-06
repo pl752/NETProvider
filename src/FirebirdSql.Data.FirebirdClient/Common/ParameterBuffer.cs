@@ -25,7 +25,7 @@ internal abstract class ParameterBuffer
 {
 	private readonly List<byte> _data;
 
-	public short Length => (short) _data.Count;
+	public short Length => (short)_data.Count;
 
 	protected ParameterBuffer()
 	{
@@ -36,7 +36,7 @@ internal abstract class ParameterBuffer
 
 	public void Append(int type) => WriteByte(type);
 
-	protected void WriteByte(int value) => WriteByte((byte) value);
+	protected void WriteByte(int value) => WriteByte((byte)value);
 
 	protected void WriteByte(byte value) => _data.Add(value);
 

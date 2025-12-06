@@ -68,7 +68,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		{
 			SendAttachToBuffer(dpb, database);
 			Xdr.Flush();
-			ProcessAttachResponse((GenericResponse) ReadResponse());
+			ProcessAttachResponse((GenericResponse)ReadResponse());
 		}
 		catch (IscException)
 		{
@@ -89,7 +89,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		{
 			await SendAttachToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			await ProcessAttachResponseAsync((GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+			await ProcessAttachResponseAsync((GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 		}
 		catch (IscException)
 		{
@@ -259,7 +259,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		{
 			SendCreateToBuffer(dpb, database);
 			Xdr.Flush();
-			ProcessCreateResponse((GenericResponse) ReadResponse());
+			ProcessCreateResponse((GenericResponse)ReadResponse());
 		}
 		catch (IOException ex)
 		{
@@ -272,7 +272,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		{
 			await SendCreateToBufferAsync(dpb, database, cancellationToken).ConfigureAwait(false);
 			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			await ProcessCreateResponseAsync((GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+			await ProcessCreateResponseAsync((GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 		}
 		catch (IOException ex)
 		{
@@ -379,7 +379,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			Span<byte> sin_port = stackalloc byte[2];
 			Xdr.ReadBytes(sin_port, 2);
-			ushort portNumber = (ushort) IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port));
+			ushort portNumber = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port));
 			respLen -= 2;
 
 			// * The address returned by the server may be incorrect if it is behind a NAT box
@@ -429,7 +429,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			byte[] sin_port = new byte[2];
 			_ = await Xdr.ReadBytesAsync(sin_port, 2, cancellationToken).ConfigureAwait(false);
-			ushort portNumber = (ushort) IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port, 0));
+			ushort portNumber = (ushort)IPAddress.NetworkToHostOrder(BitConverter.ToInt16(sin_port, 0));
 			respLen -= 2;
 
 			// * The address returned by the server may be incorrect if it is behind a NAT box
@@ -504,7 +504,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			Xdr.Flush();
 
-			var response = (GenericResponse) ReadResponse();
+			var response = (GenericResponse)ReadResponse();
 
 			remoteEvent.RemoteId = response.ObjectHandle;
 		}
@@ -539,7 +539,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			remoteEvent.RemoteId = response.ObjectHandle;
 		}
@@ -618,7 +618,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 	public override StatementBase CreateStatement() => new GdsStatement(this);
 
-	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (GdsTransaction) transaction);
+	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (GdsTransaction)transaction);
 
 	#endregion
 
@@ -789,7 +789,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			Xdr.Flush();
 
-			var response = (GenericResponse) ReadResponse();
+			var response = (GenericResponse)ReadResponse();
 
 			int responseLength = bufferLength;
 
@@ -817,7 +817,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 
 			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			int responseLength = bufferLength;
 

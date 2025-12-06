@@ -61,7 +61,7 @@ internal class BinaryEncoding : Encoding
 		int charEnd = charIndex + charCount;
 		while (charIndex < charEnd)
 		{
-			bytes[index++] = (byte) chars[charIndex++];
+			bytes[index++] = (byte)chars[charIndex++];
 		}
 
 		return charCount;
@@ -83,7 +83,7 @@ internal class BinaryEncoding : Encoding
 		int charEnd = charIndex + charCount;
 		while (charIndex < charEnd)
 		{
-			bytes[index++] = (byte) chars[charIndex++];
+			bytes[index++] = (byte)chars[charIndex++];
 		}
 
 		return charCount;
@@ -112,7 +112,7 @@ internal class BinaryEncoding : Encoding
 		int byteEnd = index + count;
 		while (index < byteEnd)
 		{
-			chars[charIndex++] = (char) bytes[index++];
+			chars[charIndex++] = (char)bytes[index++];
 		}
 
 		return count;

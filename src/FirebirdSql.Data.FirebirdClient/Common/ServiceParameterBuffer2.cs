@@ -30,14 +30,14 @@ internal sealed class ServiceParameterBuffer2(Encoding encoding) : ServiceParame
 	public override void Append1(int type, byte[] value)
 	{
 		WriteByte(type);
-		WriteByte((byte) value.Length);
+		WriteByte((byte)value.Length);
 		Write(value);
 	}
 
 	public override void Append2(int type, byte[] value)
 	{
 		WriteByte(type);
-		Write((short) value.Length);
+		Write((short)value.Length);
 		Write(value);
 	}
 

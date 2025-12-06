@@ -166,7 +166,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 				if (ProtocolVersion < 0)
 				{
-					ProtocolVersion = (ushort) (ProtocolVersion & IscCodes.FB_PROTOCOL_MASK) | IscCodes.FB_PROTOCOL_FLAG;
+					ProtocolVersion = (ushort)(ProtocolVersion & IscCodes.FB_PROTOCOL_MASK) | IscCodes.FB_PROTOCOL_FLAG;
 				}
 
 				if (Compression && !((ProtocolMinimunType & IscCodes.pflag_compress) != 0))
@@ -216,7 +216,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 			}
 			else if (operation == IscCodes.op_response)
 			{
-				var response = (GenericResponse) ProcessOperation(operation);
+				var response = (GenericResponse)ProcessOperation(operation);
 				response.HandleResponseException();
 			}
 			else
@@ -280,7 +280,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 
 				if (ProtocolVersion < 0)
 				{
-					ProtocolVersion = (ushort) (ProtocolVersion & IscCodes.FB_PROTOCOL_MASK) | IscCodes.FB_PROTOCOL_FLAG;
+					ProtocolVersion = (ushort)(ProtocolVersion & IscCodes.FB_PROTOCOL_MASK) | IscCodes.FB_PROTOCOL_FLAG;
 				}
 
 				if (Compression && !((ProtocolMinimunType & IscCodes.pflag_compress) != 0))
@@ -330,7 +330,7 @@ internal sealed class GdsConnection(string user, string password, string dataSou
 			}
 			else if (operation == IscCodes.op_response)
 			{
-				var response = (GenericResponse) await ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
+				var response = (GenericResponse)await ProcessOperationAsync(operation, cancellationToken).ConfigureAwait(false);
 				response.HandleResponseException();
 			}
 			else

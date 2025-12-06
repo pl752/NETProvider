@@ -31,18 +31,18 @@ internal static class TypeEncoder
 
 		return (type & ~1) switch
 		{
-			IscCodes.SQL_SHORT => (short) DecimalShiftHelper.ShiftDecimalRight(d, shift),
-			IscCodes.SQL_LONG => (int) DecimalShiftHelper.ShiftDecimalRight(d, shift),
-			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long) DecimalShiftHelper.ShiftDecimalRight(d, shift),
-			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double) d,
-			IscCodes.SQL_INT128 => (BigInteger) DecimalShiftHelper.ShiftDecimalRight(d, shift),
+			IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+			IscCodes.SQL_LONG => (int)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double)d,
+			IscCodes.SQL_INT128 => (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift),
 			_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
 		};
 	}
 
-	public static int EncodeTime(TimeSpan t) => (int) (t.Ticks / 1000L);
+	public static int EncodeTime(TimeSpan t) => (int)(t.Ticks / 1000L);
 #if NET6_0_OR_GREATER
-	public static int EncodeTime(TimeOnly t) => (int) (t.Ticks / 1000L);
+	public static int EncodeTime(TimeOnly t) => (int)(t.Ticks / 1000L);
 #endif
 
 	public static int EncodeDate(DateTime d)
@@ -74,9 +74,9 @@ internal static class TypeEncoder
 		return 146097 * c / 4 + 1461 * ya / 4 + (153 * month + 2) / 5 + day + 1721119 - 2400001;
 	}
 
-	public static byte[] EncodeBoolean(bool value) => [(byte) (value ? 1 : 0)];
+	public static byte[] EncodeBoolean(bool value) => [(byte)(value ? 1 : 0)];
 
-	public static void EncodeBoolean(bool value, Span<byte> destination) => destination[0] = (byte) (value ? 1 : 0);
+	public static void EncodeBoolean(bool value, Span<byte> destination) => destination[0] = (byte)(value ? 1 : 0);
 
 	public static byte[] EncodeGuid(Guid value)
 	{

@@ -64,7 +64,7 @@ internal sealed class FesServiceManager : ServiceManagerBase
 
 		_ = _fbClient.isc_service_attach(
 			_statusVector,
-			(short) service.Length,
+			(short)service.Length,
 			service,
 			ref svcHandle,
 			spb.Length,
@@ -84,7 +84,7 @@ internal sealed class FesServiceManager : ServiceManagerBase
 
 		_ = _fbClient.isc_service_attach(
 			_statusVector,
-			(short) service.Length,
+			(short)service.Length,
 			service,
 			ref svcHandle,
 			spb.Length,
@@ -172,9 +172,9 @@ internal sealed class FesServiceManager : ServiceManagerBase
 			ref reserved,
 			spb.Length,
 			spb.ToArray(),
-			(short) requestLength,
+			(short)requestLength,
 			requestBuffer,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		ProcessStatusVector();
@@ -192,9 +192,9 @@ internal sealed class FesServiceManager : ServiceManagerBase
 			ref reserved,
 			spb.Length,
 			spb.ToArray(),
-			(short) requestLength,
+			(short)requestLength,
 			requestBuffer,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		ProcessStatusVector();

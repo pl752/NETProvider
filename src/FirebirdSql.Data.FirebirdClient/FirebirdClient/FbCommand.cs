@@ -84,8 +84,8 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	public override int CommandTimeout
 	{
 		get => _commandTimeout != null
-						? (int) _commandTimeout
-						: _connection?.CommandTimeout >= 0 ? (int) _connection?.CommandTimeout : ConnectionString.DefaultValueCommandTimeout;
+						? (int)_commandTimeout
+						: _connection?.CommandTimeout >= 0 ? (int)_connection?.CommandTimeout : ConnectionString.DefaultValueCommandTimeout;
 		set
 		{
 			if (value < 0)
@@ -191,12 +191,12 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 
 	protected override DbConnection DbConnection
 	{
-		get => Connection; set => Connection = (FbConnection) value;
+		get => Connection; set => Connection = (FbConnection)value;
 	}
 
 	protected override DbTransaction DbTransaction
 	{
-		get => Transaction; set => Transaction = (FbTransaction) value;
+		get => Transaction; set => Transaction = (FbTransaction)value;
 	}
 
 	protected override DbParameterCollection DbParameterCollection => Parameters;
@@ -371,12 +371,12 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 
 		if (_expectedColumnTypes != null)
 		{
-			command._expectedColumnTypes = (Type[]) _expectedColumnTypes.Clone();
+			command._expectedColumnTypes = (Type[])_expectedColumnTypes.Clone();
 		}
 
 		for (int i = 0; i < Parameters.Count; i++)
 		{
-			_ = command.Parameters.Add(((ICloneable) Parameters[i]).Clone());
+			_ = command.Parameters.Add(((ICloneable)Parameters[i]).Clone());
 		}
 
 		return command;
@@ -1035,7 +1035,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 						case DbDataType.Binary:
 							{
 								var blob = _statement.CreateBlob();
-								blob.Write((byte[]) commandParameter.InternalValue);
+								blob.Write((byte[])commandParameter.InternalValue);
 								parameter.DbValue.SetValue(blob.Id);
 							}
 							break;
@@ -1049,7 +1049,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 								}
 								else
 								{
-									blob.Write((string) commandParameter.InternalValue);
+									blob.Write((string)commandParameter.InternalValue);
 								}
 								parameter.DbValue.SetValue(blob.Id);
 							}
@@ -1068,7 +1068,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 								}
 
 								parameter.ArrayHandle.Handle = 0;
-								parameter.ArrayHandle.Write((Array) commandParameter.InternalValue);
+								parameter.ArrayHandle.Write((Array)commandParameter.InternalValue);
 								parameter.DbValue.SetValue(parameter.ArrayHandle.Handle);
 							}
 							break;
@@ -1131,7 +1131,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 						case DbDataType.Binary:
 							{
 								var blob = _statement.CreateBlob();
-								await blob.WriteAsync((byte[]) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+								await blob.WriteAsync((byte[])commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								statementParameter.DbValue.SetValue(blob.Id);
 							}
 							break;
@@ -1145,7 +1145,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 								}
 								else
 								{
-									await blob.WriteAsync((string) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+									await blob.WriteAsync((string)commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								}
 								statementParameter.DbValue.SetValue(blob.Id);
 							}
@@ -1164,7 +1164,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 								}
 
 								statementParameter.ArrayHandle.Handle = 0;
-								await statementParameter.ArrayHandle.WriteAsync((Array) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+								await statementParameter.ArrayHandle.WriteAsync((Array)commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								statementParameter.DbValue.SetValue(statementParameter.ArrayHandle.Handle);
 							}
 							break;

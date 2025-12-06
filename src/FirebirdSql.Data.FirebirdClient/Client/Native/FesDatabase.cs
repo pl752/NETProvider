@@ -74,7 +74,7 @@ internal sealed class FesDatabase : DatabaseBase
 
 		_ = _fbClient.isc_create_database(
 			_statusVector,
-			(short) databaseBuffer.Length,
+			(short)databaseBuffer.Length,
 			databaseBuffer,
 			ref _handle,
 			dpb.Length,
@@ -93,7 +93,7 @@ internal sealed class FesDatabase : DatabaseBase
 
 		_ = _fbClient.isc_create_database(
 			_statusVector,
-			(short) databaseBuffer.Length,
+			(short)databaseBuffer.Length,
 			databaseBuffer,
 			ref _handle,
 			dpb.Length,
@@ -158,7 +158,7 @@ internal sealed class FesDatabase : DatabaseBase
 
 		_ = _fbClient.isc_attach_database(
 			_statusVector,
-			(short) databaseBuffer.Length,
+			(short)databaseBuffer.Length,
 			databaseBuffer,
 			ref _handle,
 			dpb.Length,
@@ -178,7 +178,7 @@ internal sealed class FesDatabase : DatabaseBase
 
 		_ = _fbClient.isc_attach_database(
 			_statusVector,
-			(short) databaseBuffer.Length,
+			(short)databaseBuffer.Length,
 			databaseBuffer,
 			ref _handle,
 			dpb.Length,
@@ -266,7 +266,7 @@ internal sealed class FesDatabase : DatabaseBase
 	{
 		nint[] localStatusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 
-		_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort) kind);
+		_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort)kind);
 
 		try
 		{
@@ -278,7 +278,7 @@ internal sealed class FesDatabase : DatabaseBase
 	{
 		nint[] localStatusVector = new IntPtr[IscCodes.ISC_STATUS_LENGTH];
 
-		_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort) kind);
+		_ = _fbClient.fb_cancel_operation(localStatusVector, ref _handle, (ushort)kind);
 
 		try
 		{
@@ -348,9 +348,9 @@ internal sealed class FesDatabase : DatabaseBase
 		_ = _fbClient.isc_database_info(
 			_statusVector,
 			ref _handle,
-			(short) items.Length,
+			(short)items.Length,
 			items,
-			(short) bufferLength,
+			(short)bufferLength,
 			buffer);
 
 		ProcessStatusVector();

@@ -129,7 +129,7 @@ public sealed class BlobStream : Stream
 			_ => throw new ArgumentOutOfRangeException(nameof(origin))
 		};
 
-		_blobHandle.Seek((int) offset, seekMode);
+		_blobHandle.Seek((int)offset, seekMode);
 		return _position = _blobHandle.Position;
 	}
 

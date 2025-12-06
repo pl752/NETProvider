@@ -52,7 +52,7 @@ public sealed class FbValidation2(string connectionString = null) : FbService(co
 				if (!string.IsNullOrEmpty(IndicesExclude))
 					startSpb.Append2(IscCodes.isc_spb_val_idx_excl, IndicesExclude);
 				if (LockTimeout.HasValue)
-					startSpb.Append(IscCodes.isc_spb_val_lock_timeout, (int) LockTimeout);
+					startSpb.Append(IscCodes.isc_spb_val_lock_timeout, (int)LockTimeout);
 				StartTask(startSpb);
 				ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 			}
@@ -87,7 +87,7 @@ public sealed class FbValidation2(string connectionString = null) : FbService(co
 				if (!string.IsNullOrEmpty(IndicesExclude))
 					startSpb.Append2(IscCodes.isc_spb_val_idx_excl, IndicesExclude);
 				if (LockTimeout.HasValue)
-					startSpb.Append(IscCodes.isc_spb_val_lock_timeout, (int) LockTimeout);
+					startSpb.Append(IscCodes.isc_spb_val_lock_timeout, (int)LockTimeout);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 				await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 			}

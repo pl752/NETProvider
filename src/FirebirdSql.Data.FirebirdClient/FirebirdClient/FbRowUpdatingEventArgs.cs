@@ -30,7 +30,7 @@ public sealed class FbRowUpdatingEventArgs(
 
 	public new FbCommand Command
 	{
-		get => (FbCommand) base.Command; set => base.Command = value;
+		get => (FbCommand)base.Command; set => base.Command = value;
 	}
 
 	#endregion

@@ -117,7 +117,7 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(action);
 				if (sessionID.HasValue)
-					startSpb.Append(IscCodes.isc_spb_trc_id, (int) sessionID);
+					startSpb.Append(IscCodes.isc_spb_trc_id, (int)sessionID);
 				StartTask(startSpb);
 				ProcessServiceOutput(new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 			}
@@ -141,7 +141,7 @@ public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, stri
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(action);
 				if (sessionID.HasValue)
-					startSpb.Append(IscCodes.isc_spb_trc_id, (int) sessionID);
+					startSpb.Append(IscCodes.isc_spb_trc_id, (int)sessionID);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 				await ProcessServiceOutputAsync(new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 			}

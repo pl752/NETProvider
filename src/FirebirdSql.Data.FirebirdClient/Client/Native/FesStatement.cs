@@ -64,7 +64,7 @@ internal sealed class FesStatement : StatementBase
 				}
 				else
 				{
-					_transaction = (FesTransaction) value;
+					_transaction = (FesTransaction)value;
 					TransactionUpdate = new EventHandler(TransactionUpdated);
 					_transaction.Update += TransactionUpdate;
 				}
@@ -256,7 +256,7 @@ internal sealed class FesStatement : StatementBase
 			_statusVector,
 			ref trHandle,
 			ref _handle,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer,
 			_database.Dialect,
 			sqlda);
@@ -311,7 +311,7 @@ internal sealed class FesStatement : StatementBase
 			_statusVector,
 			ref trHandle,
 			ref _handle,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer,
 			_database.Dialect,
 			sqlda);
@@ -356,7 +356,7 @@ internal sealed class FesStatement : StatementBase
 			nameof(IFbClient.fb_dsql_set_timeout),
 			() =>
 			{
-				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
+				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
 				_database.ProcessStatusVector(_statusVector);
 			});
 
@@ -421,7 +421,7 @@ internal sealed class FesStatement : StatementBase
 			nameof(IFbClient.fb_dsql_set_timeout),
 			() =>
 			{
-				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint) timeout);
+				_ = _database.FbClient.fb_dsql_set_timeout(_statusVector, ref _handle, (uint)timeout);
 				_database.ProcessStatusVector(_statusVector);
 			});
 
@@ -635,7 +635,7 @@ internal sealed class FesStatement : StatementBase
 		_ = _database.FbClient.isc_dsql_free_statement(
 			_statusVector,
 			ref _handle,
-			(short) option);
+			(short)option);
 
 		if (option == IscCodes.DSQL_drop)
 		{
@@ -662,7 +662,7 @@ internal sealed class FesStatement : StatementBase
 		_ = _database.FbClient.isc_dsql_free_statement(
 			_statusVector,
 			ref _handle,
-			(short) option);
+			(short)option);
 
 		if (option == IscCodes.DSQL_drop)
 		{
@@ -699,9 +699,9 @@ internal sealed class FesStatement : StatementBase
 		_ = _database.FbClient.isc_dsql_sql_info(
 			_statusVector,
 			ref _handle,
-			(short) items.Length,
+			(short)items.Length,
 			items,
-			(short) bufferLength,
+			(short)bufferLength,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);
@@ -717,9 +717,9 @@ internal sealed class FesStatement : StatementBase
 		_ = _database.FbClient.isc_dsql_sql_info(
 			_statusVector,
 			ref _handle,
-			(short) items.Length,
+			(short)items.Length,
 			items,
-			(short) bufferLength,
+			(short)bufferLength,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);

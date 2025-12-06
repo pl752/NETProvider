@@ -60,14 +60,14 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 			Span<byte> user = stackalloc byte[Encoding.UTF8.GetByteCount(userString)];
 			_ = Encoding.UTF8.TryGetBytes(userString, user, out int userLen);
 			result.WriteByte(IscCodes.CNCT_user);
-			result.WriteByte((byte) userLen);
+			result.WriteByte((byte)userLen);
 			result.Write(user);
 
 			string hostName = Dns.GetHostName();
 			Span<byte> host = stackalloc byte[Encoding.UTF8.GetByteCount(hostName)];
 			_ = Encoding.UTF8.TryGetBytes(hostName, host, out int hostLen);
 			result.WriteByte(IscCodes.CNCT_host);
-			result.WriteByte((byte) hostLen);
+			result.WriteByte((byte)hostLen);
 			result.Write(host);
 
 			result.WriteByte(IscCodes.CNCT_user_verification);
@@ -79,14 +79,14 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 					Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(User)];
 					_ = Encoding.UTF8.TryGetBytes(User, bytes, out int len);
 					result.WriteByte(IscCodes.CNCT_login);
-					result.WriteByte((byte) len);
+					result.WriteByte((byte)len);
 					result.Write(bytes);
 				}
 				{
 					Span<byte> bytes = stackalloc byte[Encoding.UTF8.GetByteCount(_srp256.Name)];
 					_ = Encoding.UTF8.TryGetBytes(_srp256.Name, bytes, out int len);
 					result.WriteByte(IscCodes.CNCT_plugin_name);
-					result.WriteByte((byte) len);
+					result.WriteByte((byte)len);
 					result.Write(bytes[..len]);
 				}
 				{
@@ -102,7 +102,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 					_ = Encoding.UTF8.TryGetBytes(",", bytes2, out int l2);
 					_ = Encoding.UTF8.TryGetBytes(_srp.Name, bytes3, out int l3);
 					result.WriteByte(IscCodes.CNCT_plugin_list);
-					result.WriteByte((byte) (l1 + l2 + l3));
+					result.WriteByte((byte)(l1 + l2 + l3));
 					result.Write(bytes1);
 					result.Write(bytes2);
 					result.Write(bytes3);
@@ -121,14 +121,14 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 				Span<byte> pluginNameBytes = stackalloc byte[Encoding.UTF8.GetByteCount(_sspi.Name)];
 				_ = Encoding.UTF8.TryGetBytes(_sspi.Name, pluginNameBytes, out int pluginNameLen);
 				result.WriteByte(IscCodes.CNCT_plugin_name);
-				result.WriteByte((byte) pluginNameLen);
+				result.WriteByte((byte)pluginNameLen);
 				result.Write(pluginNameBytes);
 
 				byte[] specificData = _sspi.InitializeClientSecurity();
 				WriteMultiPartHelper(result, IscCodes.CNCT_specific_data, specificData);
 
 				result.WriteByte(IscCodes.CNCT_plugin_list);
-				result.WriteByte((byte) pluginNameLen);
+				result.WriteByte((byte)pluginNameLen);
 				result.Write(pluginNameBytes);
 
 				result.WriteByte(IscCodes.CNCT_client_crypt);
@@ -331,8 +331,8 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		{
 			stream.WriteByte(code);
 			int length = Math.Min(data.Length - i, MaxLength);
-			stream.WriteByte((byte) (length + 1));
-			stream.WriteByte((byte) part);
+			stream.WriteByte((byte)(length + 1));
+			stream.WriteByte((byte)part);
 			stream.Write(data, i, length);
 			part++;
 		}
@@ -346,8 +346,8 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		{
 			stream.WriteByte(code);
 			int length = Math.Min(data.Length - i, MaxLength);
-			stream.WriteByte((byte) (length + 1));
-			stream.WriteByte((byte) part);
+			stream.WriteByte((byte)(length + 1));
+			stream.WriteByte((byte)part);
 			stream.Write(data[i..(i + length)]);
 			part++;
 		}

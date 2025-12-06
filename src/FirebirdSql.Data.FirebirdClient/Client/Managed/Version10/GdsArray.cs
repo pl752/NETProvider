@@ -50,12 +50,12 @@ internal sealed class GdsArray : ArrayBase
 
 	public override DatabaseBase Database
 	{
-		get => _database; set => _database = (GdsDatabase) value;
+		get => _database; set => _database = (GdsDatabase)value;
 	}
 
 	public override TransactionBase Transaction
 	{
-		get => _transaction; set => _transaction = (GdsTransaction) value;
+		get => _transaction; set => _transaction = (GdsTransaction)value;
 	}
 
 	#endregion
@@ -142,7 +142,7 @@ internal sealed class GdsArray : ArrayBase
 			_database.Xdr.WriteBytes(slice, slice.Length);
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			_handle = response.BlobId;
 		}
@@ -168,7 +168,7 @@ internal sealed class GdsArray : ArrayBase
 			await _database.Xdr.WriteBytesAsync(slice, slice.Length, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			_handle = response.BlobId;
 		}
@@ -540,32 +540,32 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					case DbDataType.VarChar:
-						xdr.Write((string) source);
+						xdr.Write((string)source);
 						break;
 
 					case DbDataType.SmallInt:
-						xdr.Write((short) source);
+						xdr.Write((short)source);
 						break;
 
 					case DbDataType.Integer:
-						xdr.Write((int) source);
+						xdr.Write((int)source);
 						break;
 
 					case DbDataType.BigInt:
-						xdr.Write((long) source);
+						xdr.Write((long)source);
 						break;
 
 					case DbDataType.Decimal:
 					case DbDataType.Numeric:
-						xdr.Write((decimal) source, type, Descriptor.Scale);
+						xdr.Write((decimal)source, type, Descriptor.Scale);
 						break;
 
 					case DbDataType.Float:
-						xdr.Write((float) source);
+						xdr.Write((float)source);
 						break;
 
 					case DbDataType.Double:
-						xdr.Write((double) source);
+						xdr.Write((double)source);
 						break;
 
 					case DbDataType.Date:
@@ -573,7 +573,7 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					case DbDataType.Time:
-						xdr.WriteTime((TimeSpan) source);
+						xdr.WriteTime((TimeSpan)source);
 						break;
 
 					case DbDataType.TimeStamp:
@@ -581,7 +581,7 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					default:
-						throw TypeHelper.InvalidDataType((int) dbType);
+						throw TypeHelper.InvalidDataType((int)dbType);
 				}
 			}
 
@@ -610,32 +610,32 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					case DbDataType.VarChar:
-						await xdr.WriteAsync((string) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((string)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.SmallInt:
-						await xdr.WriteAsync((short) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((short)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.Integer:
-						await xdr.WriteAsync((int) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((int)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.BigInt:
-						await xdr.WriteAsync((long) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((long)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.Decimal:
 					case DbDataType.Numeric:
-						await xdr.WriteAsync((decimal) source, type, Descriptor.Scale, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((decimal)source, type, Descriptor.Scale, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.Float:
-						await xdr.WriteAsync((float) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((float)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.Double:
-						await xdr.WriteAsync((double) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteAsync((double)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.Date:
@@ -643,7 +643,7 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					case DbDataType.Time:
-						await xdr.WriteTimeAsync((TimeSpan) source, cancellationToken).ConfigureAwait(false);
+						await xdr.WriteTimeAsync((TimeSpan)source, cancellationToken).ConfigureAwait(false);
 						break;
 
 					case DbDataType.TimeStamp:
@@ -651,7 +651,7 @@ internal sealed class GdsArray : ArrayBase
 						break;
 
 					default:
-						throw TypeHelper.InvalidDataType((int) dbType);
+						throw TypeHelper.InvalidDataType((int)dbType);
 				}
 			}
 
@@ -688,7 +688,7 @@ internal sealed class GdsArray : ArrayBase
 			case IscCodes.blr_long:
 			case IscCodes.blr_int64:
 			case IscCodes.blr_quad:
-				StuffSdl(sdl, (byte) desc.Scale);
+				StuffSdl(sdl, (byte)desc.Scale);
 				break;
 
 			case IscCodes.blr_text:
@@ -743,7 +743,7 @@ internal sealed class GdsArray : ArrayBase
 
 		StuffSdl(sdl, IscCodes.isc_sdl_eoc);
 
-		return ((MemoryStream) sdl.BaseStream).ToArray();
+		return ((MemoryStream)sdl.BaseStream).ToArray();
 	}
 
 	private static void Stuff(BinaryWriter sdl, short count, params object[] args)
@@ -774,7 +774,7 @@ internal sealed class GdsArray : ArrayBase
 		if (literal is >= (-32768) and <= 32767)
 		{
 			StuffSdl(sdl, IscCodes.isc_sdl_short_integer);
-			StuffWord(sdl, (short) literal);
+			StuffWord(sdl, (short)literal);
 
 			return;
 		}
@@ -785,12 +785,12 @@ internal sealed class GdsArray : ArrayBase
 
 	private static void StuffString(BinaryWriter sdl, int constant, string value)
 	{
-		StuffSdl(sdl, (byte) constant);
-		StuffSdl(sdl, (byte) value.Length);
+		StuffSdl(sdl, (byte)constant);
+		StuffSdl(sdl, (byte)value.Length);
 
 		for (int i = 0; i < value.Length; i++)
 		{
-			StuffSdl(sdl, (byte) value[i]);
+			StuffSdl(sdl, (byte)value[i]);
 		}
 	}
 

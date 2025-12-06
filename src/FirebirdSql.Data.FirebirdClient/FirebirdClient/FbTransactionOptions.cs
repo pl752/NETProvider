@@ -30,7 +30,7 @@ public class FbTransactionOptions
 		{
 			if (value.HasValue)
 			{
-				double secs = ((TimeSpan) value).TotalSeconds;
+				double secs = ((TimeSpan)value).TotalSeconds;
 				if (secs is < 1 or > short.MaxValue)
 					throw new ArgumentException($"The value must be between 1 and {short.MaxValue}.");
 			}
@@ -38,7 +38,7 @@ public class FbTransactionOptions
 			_waitTimeout = value;
 		}
 	}
-	internal short? WaitTimeoutTPBValue => (short?) _waitTimeout?.TotalSeconds;
+	internal short? WaitTimeoutTPBValue => (short?)_waitTimeout?.TotalSeconds;
 
 	public FbTransactionBehavior TransactionBehavior { get; set; }
 

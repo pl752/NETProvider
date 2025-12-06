@@ -77,7 +77,7 @@ internal class FbConnectionInternal(ConnectionString options)
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
 		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) _connectionStringOptions.Dialect, 0, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
 		if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
 		{
 			dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
@@ -88,7 +88,7 @@ internal class FbConnectionInternal(ConnectionString options)
 				throw new ArgumentException("Invalid character set specified.");
 			dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 		}
-		dpb.Append(IscCodes.isc_dpb_force_write, (short) (forcedWrites ? 1 : 0));
+		dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
 		dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
 		if (pageSize > 0)
 		{
@@ -124,7 +124,7 @@ internal class FbConnectionInternal(ConnectionString options)
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
 		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) _connectionStringOptions.Dialect, 0, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
 		if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
 		{
 			dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
@@ -135,7 +135,7 @@ internal class FbConnectionInternal(ConnectionString options)
 				throw new ArgumentException("Invalid character set specified.");
 			dpb.Append(IscCodes.isc_dpb_set_db_charset, charset.Name);
 		}
-		dpb.Append(IscCodes.isc_dpb_force_write, (short) (forcedWrites ? 1 : 0));
+		dpb.Append(IscCodes.isc_dpb_force_write, (short)(forcedWrites ? 1 : 0));
 		dpb.Append(IscCodes.isc_dpb_overwrite, overwrite ? 1 : 0);
 		if (pageSize > 0)
 		{
@@ -572,7 +572,7 @@ internal class FbConnectionInternal(ConnectionString options)
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
 		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte) options.Dialect, 0, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)options.Dialect, 0, 0, 0]);
 		dpb.Append(IscCodes.isc_dpb_lc_ctype, options.Charset);
 		if (options.DbCachePages > 0)
 		{
@@ -596,7 +596,7 @@ internal class FbConnectionInternal(ConnectionString options)
 		}
 		if (options.NoGarbageCollect)
 		{
-			dpb.Append(IscCodes.isc_dpb_no_garbage_collect, (byte) 0);
+			dpb.Append(IscCodes.isc_dpb_no_garbage_collect, (byte)0);
 		}
 		if (options.ParallelWorkers > 0)
 		{

@@ -94,7 +94,7 @@ internal abstract class ArrayBase
 
 	public void SetDesc(Array sourceArray)
 	{
-		_descriptor.Dimensions = (short) sourceArray.Rank;
+		_descriptor.Dimensions = (short)sourceArray.Rank;
 
 		for (int i = 0; i < sourceArray.Rank; i++)
 		{

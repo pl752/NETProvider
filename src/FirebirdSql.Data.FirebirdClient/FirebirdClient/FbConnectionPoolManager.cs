@@ -145,7 +145,7 @@ sealed class FbConnectionPoolManager : IDisposable
 		static long GetTicks()
 		{
 			int ticks = Environment.TickCount;
-			return ticks + -(long) int.MinValue;
+			return ticks + -(long)int.MinValue;
 		}
 	}
 

@@ -101,7 +101,7 @@ internal class GdsTransaction : TransactionBase
 			_database.Xdr.WriteBuffer(tpb.ToArray());
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			_database.TransactionCount++;
 
@@ -127,7 +127,7 @@ internal class GdsTransaction : TransactionBase
 			await _database.Xdr.WriteBufferAsync(tpb.ToArray(), cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			_database.TransactionCount++;
 
@@ -432,7 +432,7 @@ internal class GdsTransaction : TransactionBase
 
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			int responseLength = bufferLength;
 
@@ -460,7 +460,7 @@ internal class GdsTransaction : TransactionBase
 
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			int responseLength = bufferLength;
 

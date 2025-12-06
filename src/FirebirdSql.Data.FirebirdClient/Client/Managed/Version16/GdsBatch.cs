@@ -28,7 +28,7 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 
 	public override StatementBase Statement => _statement;
 
-	public GdsDatabase Database => (GdsDatabase) _statement.Database;
+	public GdsDatabase Database => (GdsDatabase)_statement.Database;
 
 	public override ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller)
 	{
@@ -74,7 +74,7 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 			numberOfResponses--;
 			var batchMsgResponse = Database.ReadResponse();
 			numberOfResponses--;
-			var batchExecResponse = (BatchCompletionStateResponse) Database.ReadResponse();
+			var batchExecResponse = (BatchCompletionStateResponse)Database.ReadResponse();
 
 			return BuildResult(batchExecResponse);
 		}
@@ -127,7 +127,7 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 			numberOfResponses--;
 			var batchMsgResponse = await Database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 			numberOfResponses--;
-			var batchExecResponse = (BatchCompletionStateResponse) await Database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var batchExecResponse = (BatchCompletionStateResponse)await Database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			return BuildResult(batchExecResponse);
 		}

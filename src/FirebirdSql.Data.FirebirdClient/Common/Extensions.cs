@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Common;
 
 internal static class Extensions
 {
-	public static int AsInt(this IntPtr ptr) => (int) ptr.ToInt64();
+	public static int AsInt(this IntPtr ptr) => (int)ptr.ToInt64();
 
 	public static IntPtr ReadIntPtr(this BinaryReader self) => IntPtr.Size == sizeof(int)
 					? new IntPtr(self.ReadInt32())
@@ -41,7 +41,7 @@ internal static class Extensions
 
 	public static IEnumerable<IEnumerable<T>> Split<T>(this T[] array, int size)
 	{
-		for (int i = 0; i < (float) array.Length / size; i++)
+		for (int i = 0; i < (float)array.Length / size; i++)
 		{
 			yield return array.Skip(i * size).Take(size);
 		}

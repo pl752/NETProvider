@@ -254,7 +254,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 				startSpb.Append2(IscCodes.isc_spb_sec_username, userName);
 				StartTask(startSpb);
 				var info = Query([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-				return ((FbUserData[]) info.FirstOrDefault())?.FirstOrDefault();
+				return ((FbUserData[])info.FirstOrDefault())?.FirstOrDefault();
 			}
 			finally
 			{
@@ -278,7 +278,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 				startSpb.Append2(IscCodes.isc_spb_sec_username, userName);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 				var info = await QueryAsync([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-				return ((FbUserData[]) info.FirstOrDefault())?.FirstOrDefault();
+				return ((FbUserData[])info.FirstOrDefault())?.FirstOrDefault();
 			}
 			finally
 			{
@@ -302,7 +302,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				StartTask(startSpb);
 				var info = Query([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-				return (FbUserData[]) info.FirstOrDefault();
+				return (FbUserData[])info.FirstOrDefault();
 			}
 			finally
 			{
@@ -325,7 +325,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
 				var info = await QueryAsync([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-				return (FbUserData[]) info.FirstOrDefault();
+				return (FbUserData[])info.FirstOrDefault();
 			}
 			finally
 			{
@@ -346,7 +346,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 			{
 				Open();
 				var info = Query([IscCodes.isc_info_svc_user_dbpath], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
-				return (string) info.FirstOrDefault();
+				return (string)info.FirstOrDefault();
 			}
 			finally
 			{
@@ -366,7 +366,7 @@ public sealed class FbSecurity(string connectionString = null) : FbService(conne
 			{
 				await OpenAsync(cancellationToken).ConfigureAwait(false);
 				var info = await QueryAsync([IscCodes.isc_info_svc_user_dbpath], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
-				return (string) info.FirstOrDefault();
+				return (string)info.FirstOrDefault();
 			}
 			finally
 			{

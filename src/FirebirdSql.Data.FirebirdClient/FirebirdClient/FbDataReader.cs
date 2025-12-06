@@ -604,91 +604,91 @@ public sealed class FbDataReader : DbDataReader
 		{
 			if (type == typeof(bool))
 			{
-				return (T) (object) _row[i].GetBoolean();
+				return (T)(object)_row[i].GetBoolean();
 			}
 			else if (type == typeof(byte))
 			{
-				return (T) (object) _row[i].GetByte();
+				return (T)(object)_row[i].GetByte();
 			}
 			else if (type == typeof(char))
 			{
-				return (T) (object) _row[i].GetChar();
+				return (T)(object)_row[i].GetChar();
 			}
 			else if (type == typeof(Guid))
 			{
-				return (T) (object) _row[i].GetGuid();
+				return (T)(object)_row[i].GetGuid();
 			}
 			else if (type == typeof(short))
 			{
-				return (T) (object) _row[i].GetInt16();
+				return (T)(object)_row[i].GetInt16();
 			}
 			else if (type == typeof(int))
 			{
-				return (T) (object) _row[i].GetInt32();
+				return (T)(object)_row[i].GetInt32();
 			}
 			else if (type == typeof(long))
 			{
-				return (T) (object) _row[i].GetInt64();
+				return (T)(object)_row[i].GetInt64();
 			}
 			else if (type == typeof(float))
 			{
-				return (T) (object) _row[i].GetFloat();
+				return (T)(object)_row[i].GetFloat();
 			}
 			else if (type == typeof(double))
 			{
-				return (T) (object) _row[i].GetDouble();
+				return (T)(object)_row[i].GetDouble();
 			}
 			else if (type == typeof(string))
 			{
-				return (T) (object) _row[i].GetString();
+				return (T)(object)_row[i].GetString();
 			}
 			else if (type == typeof(decimal))
 			{
-				return (T) (object) _row[i].GetDecimal();
+				return (T)(object)_row[i].GetDecimal();
 			}
 			else if (type == typeof(DateTime))
 			{
-				return (T) (object) _row[i].GetDateTime();
+				return (T)(object)_row[i].GetDateTime();
 			}
 			else if (type == typeof(TimeSpan))
 			{
-				return (T) (object) _row[i].GetTimeSpan();
+				return (T)(object)_row[i].GetTimeSpan();
 			}
 			else if (type == typeof(byte[]))
 			{
-				return (T) (object) _row[i].GetBinary();
+				return (T)(object)_row[i].GetBinary();
 			}
 			else if (type == typeof(FbDecFloat))
 			{
-				return (T) (object) _row[i].GetDecFloat();
+				return (T)(object)_row[i].GetDecFloat();
 			}
 			else if (type == typeof(BigInteger))
 			{
-				return (T) (object) _row[i].GetInt128();
+				return (T)(object)_row[i].GetInt128();
 			}
 			else if (type == typeof(FbZonedDateTime))
 			{
-				return (T) (object) _row[i].GetZonedDateTime();
+				return (T)(object)_row[i].GetZonedDateTime();
 			}
 			else if (type == typeof(FbZonedTime))
 			{
-				return (T) (object) _row[i].GetZonedTime();
+				return (T)(object)_row[i].GetZonedTime();
 			}
 #if NET6_0_OR_GREATER
 			else if (type == typeof(DateOnly))
 			{
-				return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
+				return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
 			}
 #endif
 #if NET6_0_OR_GREATER
 			else if (type == typeof(TimeOnly))
 			{
-				return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
 			}
 #endif
 			else
 			{
-				return (T) _row[i].GetValue();
+				return (T)_row[i].GetValue();
 			}
 		}
 		catch (IscException ex)
@@ -709,91 +709,91 @@ public sealed class FbDataReader : DbDataReader
 		{
 			if (type == typeof(bool))
 			{
-				return (T) (object) _row[i].GetBoolean();
+				return (T)(object)_row[i].GetBoolean();
 			}
 			else if (type == typeof(byte))
 			{
-				return (T) (object) _row[i].GetByte();
+				return (T)(object)_row[i].GetByte();
 			}
 			else if (type == typeof(char))
 			{
-				return (T) (object) _row[i].GetChar();
+				return (T)(object)_row[i].GetChar();
 			}
 			else if (type == typeof(Guid))
 			{
-				return (T) (object) _row[i].GetGuid();
+				return (T)(object)_row[i].GetGuid();
 			}
 			else if (type == typeof(short))
 			{
-				return (T) (object) _row[i].GetInt16();
+				return (T)(object)_row[i].GetInt16();
 			}
 			else if (type == typeof(int))
 			{
-				return (T) (object) _row[i].GetInt32();
+				return (T)(object)_row[i].GetInt32();
 			}
 			else if (type == typeof(long))
 			{
-				return (T) (object) _row[i].GetInt64();
+				return (T)(object)_row[i].GetInt64();
 			}
 			else if (type == typeof(float))
 			{
-				return (T) (object) _row[i].GetFloat();
+				return (T)(object)_row[i].GetFloat();
 			}
 			else if (type == typeof(double))
 			{
-				return (T) (object) _row[i].GetDouble();
+				return (T)(object)_row[i].GetDouble();
 			}
 			else if (type == typeof(string))
 			{
-				return (T) (object) await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
+				return (T)(object)await _row[i].GetStringAsync(cancellationToken).ConfigureAwait(false);
 			}
 			else if (type == typeof(decimal))
 			{
-				return (T) (object) _row[i].GetDecimal();
+				return (T)(object)_row[i].GetDecimal();
 			}
 			else if (type == typeof(DateTime))
 			{
-				return (T) (object) _row[i].GetDateTime();
+				return (T)(object)_row[i].GetDateTime();
 			}
 			else if (type == typeof(TimeSpan))
 			{
-				return (T) (object) _row[i].GetTimeSpan();
+				return (T)(object)_row[i].GetTimeSpan();
 			}
 			else if (type == typeof(byte[]))
 			{
-				return (T) (object) await _row[i].GetBinaryAsync().ConfigureAwait(false);
+				return (T)(object)await _row[i].GetBinaryAsync().ConfigureAwait(false);
 			}
 			else if (type == typeof(FbDecFloat))
 			{
-				return (T) (object) _row[i].GetDecFloat();
+				return (T)(object)_row[i].GetDecFloat();
 			}
 			else if (type == typeof(BigInteger))
 			{
-				return (T) (object) _row[i].GetInt128();
+				return (T)(object)_row[i].GetInt128();
 			}
 			else if (type == typeof(FbZonedDateTime))
 			{
-				return (T) (object) _row[i].GetZonedDateTime();
+				return (T)(object)_row[i].GetZonedDateTime();
 			}
 			else if (type == typeof(FbZonedTime))
 			{
-				return (T) (object) _row[i].GetZonedTime();
+				return (T)(object)_row[i].GetZonedTime();
 			}
 #if NET6_0_OR_GREATER
 			else if (type == typeof(DateOnly))
 			{
-				return (T) (object) DateOnly.FromDateTime(_row[i].GetDateTime());
+				return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
 			}
 #endif
 #if NET6_0_OR_GREATER
 			else if (type == typeof(TimeOnly))
 			{
-				return (T) (object) TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
 			}
 #endif
 			else
 			{
-				return (T) await _row[i].GetValueAsync().ConfigureAwait(false);
+				return (T)await _row[i].GetValueAsync().ConfigureAwait(false);
 			}
 		}
 		catch (IscException ex)
@@ -823,13 +823,13 @@ public sealed class FbDataReader : DbDataReader
 
 			if (length > (byteArray.Length - dataIndex))
 			{
-				realLength = byteArray.Length - (int) dataIndex;
+				realLength = byteArray.Length - (int)dataIndex;
 			}
 
-			Array.Copy(byteArray, (int) dataIndex, buffer, bufferIndex, realLength);
+			Array.Copy(byteArray, (int)dataIndex, buffer, bufferIndex, realLength);
 
 
-			int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int) dataIndex : length;
+			int bytesRead = (byteArray.Length - dataIndex) < length ? byteArray.Length - (int)dataIndex : length;
 
 			return bytesRead;
 		}
@@ -855,14 +855,14 @@ public sealed class FbDataReader : DbDataReader
 
 			if (length > (charArray.Length - dataIndex))
 			{
-				realLength = charArray.Length - (int) dataIndex;
+				realLength = charArray.Length - (int)dataIndex;
 			}
 
-			Array.Copy(charArray, (int) dataIndex, buffer,
+			Array.Copy(charArray, (int)dataIndex, buffer,
 				bufferIndex, realLength);
 
 
-			int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int) dataIndex : length;
+			int charsRead = (charArray.Length - dataIndex) < length ? charArray.Length - (int)dataIndex : length;
 
 			return charsRead;
 		}
@@ -939,7 +939,7 @@ public sealed class FbDataReader : DbDataReader
 			throw new IndexOutOfRangeException("Could not find specified column in results.");
 	}
 
-	private FbDbType GetProviderType(int i) => (FbDbType) _fields[i].DbDataType;
+	private FbDbType GetProviderType(int i) => (FbDbType)_fields[i].DbDataType;
 
 	private void UpdateRecordsAffected()
 	{

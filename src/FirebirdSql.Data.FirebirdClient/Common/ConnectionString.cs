@@ -517,19 +517,19 @@ internal sealed class ConnectionString
 				: defaultValue;
 
 	internal static byte[] GetBytes(string key, TryGetValueDelegate tryGetValue, byte[] defaultValue = default) => tryGetValue(key, out object value)
-				? (byte[]) value
+				? (byte[])value
 				: defaultValue;
 
 	internal static FbServerType GetServerType(string key, TryGetValueDelegate tryGetValue, FbServerType defaultValue = default) => tryGetValue(key, out object value)
-				? (FbServerType) value
+				? (FbServerType)value
 				: defaultValue;
 
 	internal static IsolationLevel GetIsolationLevel(string key, TryGetValueDelegate tryGetValue, IsolationLevel defaultValue = default) => tryGetValue(key, out object value)
-				? (IsolationLevel) value
+				? (IsolationLevel)value
 				: defaultValue;
 
 	internal static FbWireCrypt GetWireCrypt(string key, TryGetValueDelegate tryGetValue, FbWireCrypt defaultValue = default) => tryGetValue(key, out object value)
-				? (FbWireCrypt) value
+				? (FbWireCrypt)value
 				: defaultValue;
 
 	#endregion
@@ -542,7 +542,7 @@ internal sealed class ConnectionString
 		if (s == null)
 			return s;
 
-		string dataDirectoryLocation = (string) AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
+		string dataDirectoryLocation = (string)AppDomain.CurrentDomain.GetData("DataDirectory") ?? string.Empty;
 		string pattern = string.Format("{0}{1}?", Regex.Escape(DataDirectoryKeyword), Regex.Escape(Path.DirectorySeparatorChar.ToString()));
 		return Regex.Replace(s, pattern, dataDirectoryLocation + Path.DirectorySeparatorChar, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 	}

@@ -44,7 +44,7 @@ internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServic
 					response = Connection.AuthBlock.ProcessContAuthResponse();
 					response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				base.ProcessAttachResponse(genericResponse);
 
 				if (genericResponse.Data.Length != 0)
@@ -57,7 +57,7 @@ internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServic
 			else
 			{
 				response = (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
-				ProcessAttachResponse((GenericResponse) response);
+				ProcessAttachResponse((GenericResponse)response);
 				Database.AuthBlock.Complete();
 			}
 		}
@@ -90,7 +90,7 @@ internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServic
 					response = await Connection.AuthBlock.ProcessContAuthResponseAsync(cancellationToken).ConfigureAwait(false);
 					response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				await base.ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
 				if (genericResponse.Data.Length != 0)
@@ -103,7 +103,7 @@ internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServic
 			else
 			{
 				response = await (Database as GdsDatabase).ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
-				await ProcessAttachResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+				await ProcessAttachResponseAsync((GenericResponse)response, cancellationToken).ConfigureAwait(false);
 				Database.AuthBlock.Complete();
 			}
 		}

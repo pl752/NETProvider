@@ -391,7 +391,7 @@ public sealed class FbConnection : DbConnection, ICloneable
 
 	#region Methods
 
-	public new FbCommand CreateCommand() => (FbCommand) CreateDbCommand();
+	public new FbCommand CreateCommand() => (FbCommand)CreateDbCommand();
 
 	protected override DbCommand CreateDbCommand() => new FbCommand(null, this);
 

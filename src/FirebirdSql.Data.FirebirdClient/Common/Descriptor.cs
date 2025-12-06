@@ -105,8 +105,8 @@ internal sealed class Descriptor
 			blr.WriteByte(IscCodes.blr_message);
 			blr.WriteByte(0);
 			int par_count = Count * 2;
-			blr.WriteByte((byte) (par_count & 255));
-			blr.WriteByte((byte) (par_count >> 8));
+			blr.WriteByte((byte)(par_count & 255));
+			blr.WriteByte((byte)(par_count >> 8));
 
 			for (int i = 0; i < _fields.Length; i++)
 			{
@@ -117,16 +117,16 @@ internal sealed class Descriptor
 				{
 					case IscCodes.SQL_VARYING:
 						blr.WriteByte(IscCodes.blr_varying);
-						blr.WriteByte((byte) (len & 255));
-						blr.WriteByte((byte) (len >> 8));
+						blr.WriteByte((byte)(len & 255));
+						blr.WriteByte((byte)(len >> 8));
 						length = TypeHelper.BlrAlign(length, 2);
 						length += len + 2;
 						break;
 
 					case IscCodes.SQL_TEXT:
 						blr.WriteByte(IscCodes.blr_text);
-						blr.WriteByte((byte) (len & 255));
-						blr.WriteByte((byte) (len >> 8));
+						blr.WriteByte((byte)(len & 255));
+						blr.WriteByte((byte)(len >> 8));
 						// no align
 						length += len;
 						break;
@@ -183,28 +183,28 @@ internal sealed class Descriptor
 
 					case IscCodes.SQL_LONG:
 						blr.WriteByte(IscCodes.blr_long);
-						blr.WriteByte((byte) _fields[i].NumericScale);
+						blr.WriteByte((byte)_fields[i].NumericScale);
 						length = TypeHelper.BlrAlign(length, 4);
 						length += 4;
 						break;
 
 					case IscCodes.SQL_SHORT:
 						blr.WriteByte(IscCodes.blr_short);
-						blr.WriteByte((byte) _fields[i].NumericScale);
+						blr.WriteByte((byte)_fields[i].NumericScale);
 						length = TypeHelper.BlrAlign(length, 2);
 						length += 2;
 						break;
 
 					case IscCodes.SQL_INT64:
 						blr.WriteByte(IscCodes.blr_int64);
-						blr.WriteByte((byte) _fields[i].NumericScale);
+						blr.WriteByte((byte)_fields[i].NumericScale);
 						length = TypeHelper.BlrAlign(length, 8);
 						length += 8;
 						break;
 
 					case IscCodes.SQL_QUAD:
 						blr.WriteByte(IscCodes.blr_quad);
-						blr.WriteByte((byte) _fields[i].NumericScale);
+						blr.WriteByte((byte)_fields[i].NumericScale);
 						length = TypeHelper.BlrAlign(length, 4);
 						length += 8;
 						break;
@@ -253,15 +253,15 @@ internal sealed class Descriptor
 
 					case IscCodes.SQL_INT128:
 						blr.WriteByte(IscCodes.blr_int128);
-						blr.WriteByte((byte) _fields[i].NumericScale);
+						blr.WriteByte((byte)_fields[i].NumericScale);
 						length = TypeHelper.BlrAlign(length, 8);
 						length += 16;
 						break;
 
 					case IscCodes.SQL_NULL:
 						blr.WriteByte(IscCodes.blr_text);
-						blr.WriteByte((byte) (len & 255));
-						blr.WriteByte((byte) (len >> 8));
+						blr.WriteByte((byte)(len & 255));
+						blr.WriteByte((byte)(len >> 8));
 						// no align
 						length += len;
 						break;

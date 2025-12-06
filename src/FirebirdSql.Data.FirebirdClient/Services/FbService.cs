@@ -277,7 +277,7 @@ public abstract class FbService
 						int length = GetLength(buffer, 2, ref pos);
 						if (length == 0)
 							continue;
-						queryResponseAction(truncated, (int) IscHelper.VaxInteger(buffer, pos, 4));
+						queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4));
 						pos += length;
 						truncated = false;
 						break;
@@ -386,7 +386,7 @@ public abstract class FbService
 						int length = GetLength(buffer, 2, ref pos);
 						if (length == 0)
 							continue;
-						await queryResponseAction(truncated, (int) IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
+						await queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
 						pos += length;
 						truncated = false;
 						break;
@@ -531,7 +531,7 @@ public abstract class FbService
 			pos++;
 
 			int key = buffer[pos - 1];
-			int keyValue = (int) IscHelper.VaxInteger(buffer, pos, 4);
+			int keyValue = (int)IscHelper.VaxInteger(buffer, pos, 4);
 
 			pos += 4;
 
@@ -631,7 +631,7 @@ public abstract class FbService
 			switch (type)
 			{
 				case IscCodes.isc_spb_num_att:
-					dbInfo.ConnectionCount = (int) IscHelper.VaxInteger(buffer, pos, 4);
+					dbInfo.ConnectionCount = (int)IscHelper.VaxInteger(buffer, pos, 4);
 					pos += 4;
 					break;
 
@@ -640,7 +640,7 @@ public abstract class FbService
 					break;
 
 				case IscCodes.isc_spb_dbname:
-					int length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+					int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 					pos += 2;
 					dbInfo.AddDatabase(charset.GetString(buffer, pos, length));
 					pos += length;
@@ -665,7 +665,7 @@ public abstract class FbService
 			{
 				case IscCodes.isc_spb_sec_username:
 					{
-						length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+						length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 						pos += 2;
 						currentUser = new FbUserData
 						{
@@ -678,33 +678,33 @@ public abstract class FbService
 					break;
 
 				case IscCodes.isc_spb_sec_firstname:
-					length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 					pos += 2;
 					currentUser.FirstName = charset.GetString(buffer, pos, length);
 					pos += length;
 					break;
 
 				case IscCodes.isc_spb_sec_middlename:
-					length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 					pos += 2;
 					currentUser.MiddleName = charset.GetString(buffer, pos, length);
 					pos += length;
 					break;
 
 				case IscCodes.isc_spb_sec_lastname:
-					length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 					pos += 2;
 					currentUser.LastName = charset.GetString(buffer, pos, length);
 					pos += length;
 					break;
 
 				case IscCodes.isc_spb_sec_userid:
-					currentUser.UserID = (int) IscHelper.VaxInteger(buffer, pos, 4);
+					currentUser.UserID = (int)IscHelper.VaxInteger(buffer, pos, 4);
 					pos += 4;
 					break;
 
 				case IscCodes.isc_spb_sec_groupid:
-					currentUser.GroupID = (int) IscHelper.VaxInteger(buffer, pos, 4);
+					currentUser.GroupID = (int)IscHelper.VaxInteger(buffer, pos, 4);
 					pos += 4;
 					break;
 			}
@@ -717,7 +717,7 @@ public abstract class FbService
 
 	private static int GetLength(byte[] buffer, int size, ref int pos)
 	{
-		int result = (int) IscHelper.VaxInteger(buffer, pos, size);
+		int result = (int)IscHelper.VaxInteger(buffer, pos, size);
 		pos += size;
 		return result;
 	}

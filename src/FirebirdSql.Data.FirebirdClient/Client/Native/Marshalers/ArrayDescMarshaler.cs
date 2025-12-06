@@ -46,7 +46,7 @@ internal static class ArrayDescMarshaler
 		var arrayDesc = new ArrayDescMarshal
 		{
 			DataType = descriptor.DataType,
-			Scale = (byte) descriptor.Scale,
+			Scale = (byte)descriptor.Scale,
 			Length = descriptor.Length,
 			FieldName = descriptor.FieldName,
 			RelationName = descriptor.RelationName,
@@ -58,8 +58,8 @@ internal static class ArrayDescMarshaler
 
 		for (int i = 0; i < descriptor.Dimensions; i++)
 		{
-			arrayBounds[i].LowerBound = (short) descriptor.Bounds[i].LowerBound;
-			arrayBounds[i].UpperBound = (short) descriptor.Bounds[i].UpperBound;
+			arrayBounds[i].LowerBound = (short)descriptor.Bounds[i].LowerBound;
+			arrayBounds[i].UpperBound = (short)descriptor.Bounds[i].UpperBound;
 		}
 
 		return MarshalManagedToNative(arrayDesc, arrayBounds);

@@ -123,7 +123,7 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration
 		_ = sb.AppendLine();
 		_ = sb.AppendFormat("print_dyn {0}", WriteBoolValue(Events.HasFlag(FbDatabaseTraceEvents.PrintDYN)));
 		_ = sb.AppendLine();
-		_ = sb.AppendFormat("time_threshold {0}", WriteNumber((int) TimeThreshold.TotalMilliseconds));
+		_ = sb.AppendFormat("time_threshold {0}", WriteNumber((int)TimeThreshold.TotalMilliseconds));
 		_ = sb.AppendLine();
 		_ = sb.AppendFormat("max_sql_length {0}", WriteNumber(MaxSQLLength));
 		_ = sb.AppendLine();
@@ -216,7 +216,7 @@ public class FbDatabaseTraceConfiguration : FbTraceConfiguration
 		_ = sb.AppendLine();
 		_ = sb.AppendFormat("print_dyn = {0}", WriteBoolValue(Events.HasFlag(FbDatabaseTraceEvents.PrintDYN)));
 		_ = sb.AppendLine();
-		_ = sb.AppendFormat("time_threshold = {0}", WriteNumber((int) TimeThreshold.TotalMilliseconds));
+		_ = sb.AppendFormat("time_threshold = {0}", WriteNumber((int)TimeThreshold.TotalMilliseconds));
 		_ = sb.AppendLine();
 		_ = sb.AppendFormat("max_sql_length = {0}", WriteNumber(MaxSQLLength));
 		_ = sb.AppendLine();

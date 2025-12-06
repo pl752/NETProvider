@@ -69,7 +69,7 @@ internal sealed class FesBlob : BlobBase
 		ClearStatusVector();
 
 		var dbHandle = _database.HandlePtr;
-		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+		var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
 		_ = _database.FbClient.isc_create_blob2(
 			_statusVector,
@@ -91,7 +91,7 @@ internal sealed class FesBlob : BlobBase
 		ClearStatusVector();
 
 		var dbHandle = _database.HandlePtr;
-		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+		var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
 		_ = _database.FbClient.isc_create_blob2(
 			_statusVector,
@@ -116,7 +116,7 @@ internal sealed class FesBlob : BlobBase
 		ClearStatusVector();
 
 		var dbHandle = _database.HandlePtr;
-		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+		var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
 		_ = _database.FbClient.isc_open_blob2(
 			_statusVector,
@@ -136,7 +136,7 @@ internal sealed class FesBlob : BlobBase
 		ClearStatusVector();
 
 		var dbHandle = _database.HandlePtr;
-		var trHandle = ((FesTransaction) _transaction).HandlePtr;
+		var trHandle = ((FesTransaction)_transaction).HandlePtr;
 
 		_ = _database.FbClient.isc_open_blob2(
 			_statusVector,
@@ -165,15 +165,15 @@ internal sealed class FesBlob : BlobBase
 			ref _blobHandle,
 			1,
 			[IscCodes.isc_info_blob_total_length],
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);
 
 		long length = IscHelper.VaxInteger(buffer, 1, 2);
-		long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+		long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
-		return (int) size;
+		return (int)size;
 	}
 
 	public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
@@ -187,20 +187,20 @@ internal sealed class FesBlob : BlobBase
 			ref _blobHandle,
 			1,
 			[IscCodes.isc_info_blob_total_length],
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);
 
 		long length = IscHelper.VaxInteger(buffer, 1, 2);
-		long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+		long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
-		return ValueTask2.FromResult((int) size);
+		return ValueTask2.FromResult((int)size);
 	}
 
 	public override void GetSegment(Stream stream)
 	{
-		short requested = (short) SegmentSize;
+		short requested = (short)SegmentSize;
 		short segmentLength = 0;
 
 		ClearStatusVector();
@@ -237,7 +237,7 @@ internal sealed class FesBlob : BlobBase
 	}
 	public override ValueTask GetSegmentAsync(Stream stream, CancellationToken cancellationToken = default)
 	{
-		short requested = (short) SegmentSize;
+		short requested = (short)SegmentSize;
 		short segmentLength = 0;
 
 		ClearStatusVector();
@@ -278,7 +278,7 @@ internal sealed class FesBlob : BlobBase
 
 	public override byte[] GetSegment()
 	{
-		short requested = (short) (SegmentSize - 2);
+		short requested = (short)(SegmentSize - 2);
 		short segmentLength = 0;
 
 		ClearStatusVector();
@@ -322,7 +322,7 @@ internal sealed class FesBlob : BlobBase
 	}
 	public override ValueTask<byte[]> GetSegmentAsync(CancellationToken cancellationToken = default)
 	{
-		short requested = (short) SegmentSize;
+		short requested = (short)SegmentSize;
 		short segmentLength = 0;
 
 		ClearStatusVector();
@@ -374,7 +374,7 @@ internal sealed class FesBlob : BlobBase
 		_ = _database.FbClient.isc_put_segment(
 			_statusVector,
 			ref _blobHandle,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);
@@ -386,7 +386,7 @@ internal sealed class FesBlob : BlobBase
 		_ = _database.FbClient.isc_put_segment(
 			_statusVector,
 			ref _blobHandle,
-			(short) buffer.Length,
+			(short)buffer.Length,
 			buffer);
 
 		_database.ProcessStatusVector(_statusVector);
@@ -402,7 +402,7 @@ internal sealed class FesBlob : BlobBase
 		_ = _database.FbClient.isc_seek_blob(
 			_statusVector,
 			ref _blobHandle,
-			(short) seekOperation,
+			(short)seekOperation,
 			position,
 			ref resultingPosition);
 
@@ -416,7 +416,7 @@ internal sealed class FesBlob : BlobBase
 		_ = _database.FbClient.isc_seek_blob(
 			_statusVector,
 			ref _blobHandle,
-			(short) seekOperation,
+			(short)seekOperation,
 			position,
 			ref resultingPosition);
 

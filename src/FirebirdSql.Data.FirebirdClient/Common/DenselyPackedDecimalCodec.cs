@@ -331,14 +331,14 @@ class DenselyPackedDecimalCodec
 			int firstByteIndex = lsbIndex - digitBitsFromEnd / BitPerByte;
 
 			remainingValue = BigInteger.DivRem(remainingValue, OneThousand, out var remainder);
-			int currentGroup = Bin2DPD[(int) remainder];
+			int currentGroup = Bin2DPD[(int)remainder];
 
 			decBytes[firstByteIndex] =
-					(byte) (decBytes[firstByteIndex] | (currentGroup << firstByteBitOffset));
+					(byte)(decBytes[firstByteIndex] | (currentGroup << firstByteBitOffset));
 			decBytes[firstByteIndex - 1] =
-					(byte) (decBytes[firstByteIndex - 1] | (currentGroup >>> BitPerByte - firstByteBitOffset));
+					(byte)(decBytes[firstByteIndex - 1] | (currentGroup >>> BitPerByte - firstByteBitOffset));
 		}
-		int mostSignificantDigit = (int) remainingValue;
+		int mostSignificantDigit = (int)remainingValue;
 		Debug.Assert(mostSignificantDigit is >= 0 and <= 9, $"{nameof(mostSignificantDigit)} out of range, was {mostSignificantDigit}.");
 		return mostSignificantDigit;
 	}

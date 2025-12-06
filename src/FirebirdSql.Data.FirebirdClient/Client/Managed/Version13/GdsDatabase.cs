@@ -42,7 +42,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 					response = AuthBlock.ProcessContAuthResponse();
 					response = ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				ProcessAttachResponse(genericResponse);
 
 				if (genericResponse.Data.Length != 0)
@@ -55,7 +55,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 			else
 			{
 				response = ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
-				ProcessAttachResponse((GenericResponse) response);
+				ProcessAttachResponse((GenericResponse)response);
 				AuthBlock.Complete();
 			}
 			AuthBlock.WireCryptValidate(IscCodes.PROTOCOL_VERSION13);
@@ -91,7 +91,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 					response = await AuthBlock.ProcessContAuthResponseAsync(cancellationToken).ConfigureAwait(false);
 					response = await ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				await ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
 				if (genericResponse.Data.Length != 0)
@@ -104,7 +104,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 			else
 			{
 				response = await ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
-				await ProcessAttachResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+				await ProcessAttachResponseAsync((GenericResponse)response, cancellationToken).ConfigureAwait(false);
 				AuthBlock.Complete();
 			}
 			AuthBlock.WireCryptValidate(IscCodes.PROTOCOL_VERSION13);
@@ -174,7 +174,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 					response = AuthBlock.ProcessContAuthResponse();
 					response = ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				ProcessCreateResponse(genericResponse);
 
 				if (genericResponse.Data.Length != 0)
@@ -187,7 +187,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 			else
 			{
 				response = ProcessCryptCallbackResponseIfNeeded(response, cryptKey);
-				ProcessCreateResponse((GenericResponse) response);
+				ProcessCreateResponse((GenericResponse)response);
 				AuthBlock.Complete();
 			}
 		}
@@ -214,7 +214,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 					response = await AuthBlock.ProcessContAuthResponseAsync(cancellationToken).ConfigureAwait(false);
 					response = await ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
 				}
-				var genericResponse = (GenericResponse) response;
+				var genericResponse = (GenericResponse)response;
 				await ProcessCreateResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
 				if (genericResponse.Data.Length != 0)
@@ -227,7 +227,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 			else
 			{
 				response = await ProcessCryptCallbackResponseIfNeededAsync(response, cryptKey, cancellationToken).ConfigureAwait(false);
-				await ProcessCreateResponseAsync((GenericResponse) response, cancellationToken).ConfigureAwait(false);
+				await ProcessCreateResponseAsync((GenericResponse)response, cancellationToken).ConfigureAwait(false);
 				AuthBlock.Complete();
 			}
 		}
@@ -301,7 +301,7 @@ internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(con
 
 	public override StatementBase CreateStatement() => new GdsStatement(this);
 
-	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction) transaction);
+	public override StatementBase CreateStatement(TransactionBase transaction) => new GdsStatement(this, (Version10.GdsTransaction)transaction);
 
 	public override DatabaseParameterBufferBase CreateDatabaseParameterBuffer() => new DatabaseParameterBuffer2(ParameterBufferEncoding);
 }

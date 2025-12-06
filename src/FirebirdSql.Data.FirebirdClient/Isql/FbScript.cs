@@ -76,7 +76,7 @@ public class FbScript
 				var type = GetStatementType(statement.CleanText);
 				if (type != null)
 				{
-					statement.SetStatementType((SqlStatementType) type);
+					statement.SetStatementType((SqlStatementType)type);
 					_results.Add(statement);
 					continue;
 				}

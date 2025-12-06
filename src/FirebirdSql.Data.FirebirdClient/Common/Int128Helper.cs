@@ -42,7 +42,7 @@ internal static class Int128Helper
 		}
 		if (result.Length < 16)
 		{
-			byte padding = value.Sign == -1 ? (byte) 255 : (byte) 0;
+			byte padding = value.Sign == -1 ? (byte)255 : (byte)0;
 			byte[] tmp = [padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding, padding];
 			Buffer.BlockCopy(result, 0, tmp, 0, result.Length);
 			result = tmp;

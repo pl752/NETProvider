@@ -100,16 +100,16 @@ internal static class XsqldaMarshaler
 			Marshal.WriteInt16(xsqlvar[i].sqlind, descriptor[i].NullFlag);
 
 			xsqlvar[i].sqlname = GetStringBuffer(charset, descriptor[i].Name);
-			xsqlvar[i].sqlname_length = (short) descriptor[i].Name.Length;
+			xsqlvar[i].sqlname_length = (short)descriptor[i].Name.Length;
 
 			xsqlvar[i].relname = GetStringBuffer(charset, descriptor[i].Relation);
-			xsqlvar[i].relname_length = (short) descriptor[i].Relation.Length;
+			xsqlvar[i].relname_length = (short)descriptor[i].Relation.Length;
 
 			xsqlvar[i].ownername = GetStringBuffer(charset, descriptor[i].Owner);
-			xsqlvar[i].ownername_length = (short) descriptor[i].Owner.Length;
+			xsqlvar[i].ownername_length = (short)descriptor[i].Owner.Length;
 
 			xsqlvar[i].aliasname = GetStringBuffer(charset, descriptor[i].Alias);
-			xsqlvar[i].aliasname_length = (short) descriptor[i].Alias.Length;
+			xsqlvar[i].aliasname_length = (short)descriptor[i].Alias.Length;
 		}
 
 		return MarshalManagedToNative(xsqlda, xsqlvar);
@@ -151,7 +151,7 @@ internal static class XsqldaMarshaler
 			descriptor[i].Length = xsqlvar.sqllen;
 
 			descriptor[i].NullFlag = xsqlvar.sqlind == IntPtr.Zero
-				? (short) 0
+				? (short)0
 				: Marshal.ReadInt16(xsqlvar.sqlind);
 
 			if (fetching)
@@ -175,7 +175,7 @@ internal static class XsqldaMarshaler
 	{
 		unsafe
 		{
-			using (var reader = new BinaryReader(new UnmanagedMemoryStream((byte*) ptr.ToPointer(), SizeOfXSQLVAR)))
+			using (var reader = new BinaryReader(new UnmanagedMemoryStream((byte*)ptr.ToPointer(), SizeOfXSQLVAR)))
 			{
 				if (!onlyPointers)
 					xsqlvar.sqltype = reader.ReadInt16();

@@ -66,7 +66,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	private struct SecBuffer(int bufferSize) : IDisposable
 	{
 		private readonly int cbBuffer = bufferSize;
-		private readonly int bufferType = (int) SecBufferType.SECBUFFER_TOKEN;
+		private readonly int bufferType = (int)SecBufferType.SECBUFFER_TOKEN;
 		private IntPtr pvBuffer = Marshal.AllocHGlobal(bufferSize);
 
 		public SecBuffer(byte[] secBufferBytes)
@@ -78,7 +78,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		public SecBuffer(byte[] secBufferBytes, SecBufferType bufferType)
 			: this(secBufferBytes)
 		{
-			this.bufferType = (int) bufferType;
+			this.bufferType = (int)bufferType;
 		}
 
 		public void Dispose()

@@ -60,19 +60,19 @@ public sealed class FbParameterCollection : DbParameterCollection
 	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public override int Count => _parameters.Count;
 
-	public override bool IsFixedSize => ((IList) _parameters).IsFixedSize;
+	public override bool IsFixedSize => ((IList)_parameters).IsFixedSize;
 
-	public override bool IsReadOnly => ((IList) _parameters).IsReadOnly;
+	public override bool IsReadOnly => ((IList)_parameters).IsReadOnly;
 
-	public override bool IsSynchronized => ((ICollection) _parameters).IsSynchronized;
+	public override bool IsSynchronized => ((ICollection)_parameters).IsSynchronized;
 
-	public override object SyncRoot => ((ICollection) _parameters).SyncRoot;
+	public override object SyncRoot => ((ICollection)_parameters).SyncRoot;
 
 	#endregion
 
 	#region Internal properties
 
-	internal bool HasParameterWithNonAsciiName => _hasParameterWithNonAsciiName ?? (bool) (_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
+	internal bool HasParameterWithNonAsciiName => _hasParameterWithNonAsciiName ?? (bool)(_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
 
 	#endregion
 
@@ -96,7 +96,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 		}
 	}
 
-	public override void AddRange(Array values) => AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter) x; }));
+	public override void AddRange(Array values) => AddRange(values.Cast<object>().Select(x => { EnsureFbParameterType(x); return (FbParameter)x; }));
 
 	public FbParameter AddWithValue(string parameterName, object value) => Add(new FbParameter(parameterName, value));
 
@@ -121,7 +121,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 	{
 		EnsureFbParameterType(value);
 
-		return IndexOf(Add((FbParameter) value));
+		return IndexOf(Add((FbParameter)value));
 	}
 
 	public bool Contains(FbParameter value) => _parameters.Contains(value);
@@ -130,7 +130,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 	{
 		EnsureFbParameterType(value);
 
-		return Contains((FbParameter) value);
+		return Contains((FbParameter)value);
 	}
 
 	public override bool Contains(string parameterName) => IndexOf(parameterName) != -1;
@@ -141,7 +141,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 	{
 		EnsureFbParameterType(value);
 
-		return IndexOf((FbParameter) value);
+		return IndexOf((FbParameter)value);
 	}
 
 	public override int IndexOf(string parameterName) => IndexOf(parameterName, -1);
@@ -176,7 +176,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 	{
 		EnsureFbParameterType(value);
 
-		Insert(index, (FbParameter) value);
+		Insert(index, (FbParameter)value);
 	}
 
 	public void Remove(FbParameter value)
@@ -193,7 +193,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 	{
 		EnsureFbParameterType(value);
 
-		Remove((FbParameter) value);
+		Remove((FbParameter)value);
 	}
 
 	public override void RemoveAt(int index)
@@ -212,7 +212,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 	public void CopyTo(FbParameter[] array, int index) => _parameters.CopyTo(array, index);
 
-	public override void CopyTo(Array array, int index) => ((IList) _parameters).CopyTo(array, index);
+	public override void CopyTo(Array array, int index) => ((IList)_parameters).CopyTo(array, index);
 
 	public override void Clear()
 	{
@@ -234,9 +234,9 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 	protected override DbParameter GetParameter(int index) => this[index];
 
-	protected override void SetParameter(int index, DbParameter value) => this[index] = (FbParameter) value;
+	protected override void SetParameter(int index, DbParameter value) => this[index] = (FbParameter)value;
 
-	protected override void SetParameter(string parameterName, DbParameter value) => this[parameterName] = (FbParameter) value;
+	protected override void SetParameter(string parameterName, DbParameter value) => this[parameterName] = (FbParameter)value;
 
 	#endregion
 

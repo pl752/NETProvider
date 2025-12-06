@@ -50,14 +50,14 @@ internal class GdsStatement : Version12.GdsStatement
 				var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 				short count = _parameters.Count;
-				int bytesLen = (int) Math.Ceiling(count / 8d);
+				int bytesLen = (int)Math.Ceiling(count / 8d);
 				Span<byte> buffer = stackalloc byte[bytesLen];
 				buffer.Clear();
 				for (int i = 0; i < count; i++)
 				{
 					if (_parameters[i].DbValue.IsDBNull())
 					{
-						buffer[i / 8] |= (byte) (1 << (i % 8));
+						buffer[i / 8] |= (byte)(1 << (i % 8));
 					}
 				}
 				xdr.WriteOpaque(buffer);
@@ -93,14 +93,14 @@ internal class GdsStatement : Version12.GdsStatement
 				var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
 				short count = _parameters.Count;
-				int len = (int) Math.Ceiling(count / 8d);
+				int len = (int)Math.Ceiling(count / 8d);
 				byte[] buffer = ArrayPool<byte>.Shared.Rent(len);
 				Array.Clear(buffer, 0, len);
 				for (int i = 0; i < count; i++)
 				{
 					if (_parameters[i].DbValue.IsDBNull())
 					{
-						buffer[i / 8] |= (byte) (1 << (i % 8));
+						buffer[i / 8] |= (byte)(1 << (i % 8));
 					}
 				}
 				try
@@ -139,7 +139,7 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				int len = (int) Math.Ceiling(_fields.Count / 8d);
+				int len = (int)Math.Ceiling(_fields.Count / 8d);
 				byte[] rented = ArrayPool<byte>.Shared.Rent(len);
 				try
 				{
@@ -177,7 +177,7 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				int len = (int) Math.Ceiling(_fields.Count / 8d);
+				int len = (int)Math.Ceiling(_fields.Count / 8d);
 				byte[] rented = ArrayPool<byte>.Shared.Rent(len);
 				try
 				{

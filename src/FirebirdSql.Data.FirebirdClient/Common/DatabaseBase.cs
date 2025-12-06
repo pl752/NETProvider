@@ -93,7 +93,7 @@ internal abstract class DatabaseBase(Charset charset, int packetSize, short dial
 				IscCodes.isc_info_end
 		];
 		var info = GetDatabaseInfo(items, IscCodes.BUFFER_SIZE_256);
-		return (string) info[info.Count - 1];
+		return (string)info[info.Count - 1];
 	}
 	public async ValueTask<string> GetServerVersionAsync(CancellationToken cancellationToken = default)
 	{
@@ -103,6 +103,6 @@ internal abstract class DatabaseBase(Charset charset, int packetSize, short dial
 				IscCodes.isc_info_end
 		];
 		var info = await GetDatabaseInfoAsync(items, IscCodes.BUFFER_SIZE_256, cancellationToken).ConfigureAwait(false);
-		return (string) info[info.Count - 1];
+		return (string)info[info.Count - 1];
 	}
 }

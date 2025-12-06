@@ -133,7 +133,7 @@ internal sealed class GdsBlob : BlobBase
 
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			int responseLength = bufferLength;
 
@@ -145,9 +145,9 @@ internal sealed class GdsBlob : BlobBase
 			var buffer = response.Data.Span[..responseLength];
 
 			long length = IscHelper.VaxInteger(buffer, 1, 2);
-			long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+			long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
-			return (int) size;
+			return (int)size;
 		}
 		catch (IOException ex)
 		{
@@ -172,7 +172,7 @@ internal sealed class GdsBlob : BlobBase
 
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			int responseLength = bufferLength;
 
@@ -184,9 +184,9 @@ internal sealed class GdsBlob : BlobBase
 			var buffer = response.Data.Span[..responseLength];
 
 			long length = IscHelper.VaxInteger(buffer, 1, 2);
-			long size = IscHelper.VaxInteger(buffer, 3, (int) length);
+			long size = IscHelper.VaxInteger(buffer, 3, (int)length);
 
-			return (int) size;
+			return (int)size;
 		}
 		catch (IOException ex)
 		{
@@ -206,7 +206,7 @@ internal sealed class GdsBlob : BlobBase
 			_database.Xdr.WriteBytes(zeroIntBuf);
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			RblRemoveValue(IscCodes.RBL_segment);
 			if (response.ObjectHandle == 1)
@@ -231,7 +231,7 @@ internal sealed class GdsBlob : BlobBase
 
 			while (srcpos < buffer.Length)
 			{
-				len = (int) IscHelper.VaxInteger(buffer.Span, srcpos, 2);
+				len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 				srcpos += 2;
 
 				stream.Write(buffer.Span.Slice(srcpos, len));
@@ -255,7 +255,7 @@ internal sealed class GdsBlob : BlobBase
 			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			RblRemoveValue(IscCodes.RBL_segment);
 			if (response.ObjectHandle == 1)
@@ -280,7 +280,7 @@ internal sealed class GdsBlob : BlobBase
 
 			while (srcpos < buffer.Length)
 			{
-				len = (int) IscHelper.VaxInteger(buffer.Span, srcpos, 2);
+				len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 				srcpos += 2;
 
 				stream.Write(buffer.Span.Slice(srcpos, len));
@@ -305,7 +305,7 @@ internal sealed class GdsBlob : BlobBase
 			_database.Xdr.Write(DataSegment);
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			RblRemoveValue(IscCodes.RBL_segment);
 			if (response.ObjectHandle == 1)
@@ -331,7 +331,7 @@ internal sealed class GdsBlob : BlobBase
 			byte[] tmp = new byte[requested * 2];
 			while (posInInput < buffer.Length)
 			{
-				int len = (int) IscHelper.VaxInteger(buffer.Span, posInInput, 2);
+				int len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 				posInInput += 2;
 
 				buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
@@ -361,7 +361,7 @@ internal sealed class GdsBlob : BlobBase
 			await _database.Xdr.WriteAsync(DataSegment, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			RblRemoveValue(IscCodes.RBL_segment);
 			if (response.ObjectHandle == 1)
@@ -387,7 +387,7 @@ internal sealed class GdsBlob : BlobBase
 			byte[] tmp = new byte[requested * 2];
 			while (posInInput < buffer.Length)
 			{
-				int len = (int) IscHelper.VaxInteger(buffer.Span, posInInput, 2);
+				int len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 				posInInput += 2;
 
 				buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
@@ -449,7 +449,7 @@ internal sealed class GdsBlob : BlobBase
 			_database.Xdr.Write(offset);
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			_position = response.ObjectHandle;
 		}
@@ -468,7 +468,7 @@ internal sealed class GdsBlob : BlobBase
 			await _database.Xdr.WriteAsync(offset, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			_position = response.ObjectHandle;
 		}
@@ -501,7 +501,7 @@ internal sealed class GdsBlob : BlobBase
 			_database.Xdr.Write(_blobId);
 			_database.Xdr.Flush();
 
-			var response = (GenericResponse) _database.ReadResponse();
+			var response = (GenericResponse)_database.ReadResponse();
 
 			_blobId = response.BlobId;
 			_blobHandle = response.ObjectHandle;
@@ -525,7 +525,7 @@ internal sealed class GdsBlob : BlobBase
 			await _database.Xdr.WriteAsync(_blobId, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			var response = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			_blobId = response.BlobId;
 			_blobHandle = response.ObjectHandle;

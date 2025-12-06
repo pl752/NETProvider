@@ -57,12 +57,12 @@ internal class GdsStatement : Version11.GdsStatement
 				if (StatementType == DbStatementType.StoredProcedure)
 				{
 					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse) _database.ReadResponse();
+					sqlStoredProcedureResponse = (SqlResponse)_database.ReadResponse();
 					ProcessStoredProcedureExecuteResponse(sqlStoredProcedureResponse);
 				}
 
 				numberOfResponses--;
-				var executeResponse = (GenericResponse) _database.ReadResponse();
+				var executeResponse = (GenericResponse)_database.ReadResponse();
 				ProcessExecuteResponse(executeResponse);
 			}
 			finally
@@ -82,7 +82,7 @@ internal class GdsStatement : Version11.GdsStatement
 				try
 				{
 					numberOfResponses--;
-					var rowsAffectedResponse = (GenericResponse) _database.ReadResponse();
+					var rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
 					RecordsAffected = ProcessRecordsAffectedBuffer(ProcessInfoSqlResponse(rowsAffectedResponse));
 				}
 				finally
@@ -120,12 +120,12 @@ internal class GdsStatement : Version11.GdsStatement
 				if (StatementType == DbStatementType.StoredProcedure)
 				{
 					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+					sqlStoredProcedureResponse = (SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 					await ProcessStoredProcedureExecuteResponseAsync(sqlStoredProcedureResponse, cancellationToken).ConfigureAwait(false);
 				}
 
 				numberOfResponses--;
-				var executeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+				var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);
 			}
 			finally
@@ -145,7 +145,7 @@ internal class GdsStatement : Version11.GdsStatement
 				try
 				{
 					numberOfResponses--;
-					var rowsAffectedResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+					var rowsAffectedResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 					RecordsAffected = ProcessRecordsAffectedBuffer(await ProcessInfoSqlResponseAsync(rowsAffectedResponse, cancellationToken).ConfigureAwait(false));
 				}
 				finally

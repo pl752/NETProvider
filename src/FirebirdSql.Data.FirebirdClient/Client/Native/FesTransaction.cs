@@ -383,9 +383,9 @@ internal sealed class FesTransaction : TransactionBase
 		_ = _database.FbClient.isc_transaction_info(
 			_statusVector,
 			ref _handle,
-			(short) items.Length,
+			(short)items.Length,
 			items,
-			(short) bufferLength,
+			(short)bufferLength,
 			buffer);
 
 		ProcessStatusVector();

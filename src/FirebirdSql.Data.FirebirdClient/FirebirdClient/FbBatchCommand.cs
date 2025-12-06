@@ -874,7 +874,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 						case DbDataType.Binary:
 							{
 								var blob = _statement.CreateBlob();
-								blob.Write((byte[]) commandParameter.InternalValue);
+								blob.Write((byte[])commandParameter.InternalValue);
 								parameter.DbValue.SetValue(blob.Id);
 							}
 							break;
@@ -884,11 +884,11 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								var blob = _statement.CreateBlob();
 								if (commandParameter.InternalValue is byte[])
 								{
-									blob.Write((byte[]) commandParameter.InternalValue);
+									blob.Write((byte[])commandParameter.InternalValue);
 								}
 								else
 								{
-									blob.Write((string) commandParameter.InternalValue);
+									blob.Write((string)commandParameter.InternalValue);
 								}
 								parameter.DbValue.SetValue(blob.Id);
 							}
@@ -907,7 +907,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								}
 
 								parameter.ArrayHandle.Handle = 0;
-								parameter.ArrayHandle.Write((Array) commandParameter.InternalValue);
+								parameter.ArrayHandle.Write((Array)commandParameter.InternalValue);
 								parameter.DbValue.SetValue(parameter.ArrayHandle.Handle);
 							}
 							break;
@@ -970,7 +970,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 						case DbDataType.Binary:
 							{
 								var blob = _statement.CreateBlob();
-								await blob.WriteAsync((byte[]) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+								await blob.WriteAsync((byte[])commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								batchParameter.DbValue.SetValue(blob.Id);
 							}
 							break;
@@ -980,11 +980,11 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								var blob = _statement.CreateBlob();
 								if (commandParameter.InternalValue is byte[])
 								{
-									await blob.WriteAsync((byte[]) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+									await blob.WriteAsync((byte[])commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								}
 								else
 								{
-									await blob.WriteAsync((string) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+									await blob.WriteAsync((string)commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								}
 								batchParameter.DbValue.SetValue(blob.Id);
 							}
@@ -1004,7 +1004,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 								}
 
 								batchParameter.ArrayHandle.Handle = 0;
-								await batchParameter.ArrayHandle.WriteAsync((Array) commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
+								await batchParameter.ArrayHandle.WriteAsync((Array)commandParameter.InternalValue, cancellationToken).ConfigureAwait(false);
 								batchParameter.DbValue.SetValue(batchParameter.ArrayHandle.Handle);
 							}
 							break;

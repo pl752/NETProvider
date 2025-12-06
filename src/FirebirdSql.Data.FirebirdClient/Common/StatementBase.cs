@@ -272,7 +272,7 @@ internal abstract class StatementBase
 		int type;
 		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-			int length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+			int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 			pos += 2;
 			switch (type)
 			{
@@ -280,21 +280,21 @@ internal abstract class StatementBase
 					int t;
 					while ((t = buffer[pos++]) != IscCodes.isc_info_end)
 					{
-						int l = (int) IscHelper.VaxInteger(buffer, pos, 2);
+						int l = (int)IscHelper.VaxInteger(buffer, pos, 2);
 						pos += 2;
 						switch (t)
 						{
 							case IscCodes.isc_info_req_insert_count:
-								insertCount = (int) IscHelper.VaxInteger(buffer, pos, l);
+								insertCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_update_count:
-								updateCount = (int) IscHelper.VaxInteger(buffer, pos, l);
+								updateCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_delete_count:
-								deleteCount = (int) IscHelper.VaxInteger(buffer, pos, l);
+								deleteCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_select_count:
-								int selectCount = (int) IscHelper.VaxInteger(buffer, pos, l);
+								int selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 						}
 						pos += l;
@@ -327,12 +327,12 @@ internal abstract class StatementBase
 		int type;
 		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-			int length = (int) IscHelper.VaxInteger(buffer, pos, 2);
+			int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 			pos += 2;
 			switch (type)
 			{
 				case IscCodes.isc_info_sql_stmt_type:
-					stmtType = (DbStatementType) IscHelper.VaxInteger(buffer, pos, length);
+					stmtType = (DbStatementType)IscHelper.VaxInteger(buffer, pos, length);
 					pos += length;
 					break;
 

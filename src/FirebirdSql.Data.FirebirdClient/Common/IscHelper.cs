@@ -32,7 +32,7 @@ internal static class IscHelper
 		int type;
 		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-			int length = (int) VaxInteger(buffer, pos, 2);
+			int length = (int)VaxInteger(buffer, pos, 2);
 			pos += 2;
 
 			switch (type)
@@ -146,8 +146,8 @@ internal static class IscHelper
 
 				case IscCodes.isc_info_creation_date:
 					{
-						var date = TypeDecoder.DecodeDate((int) VaxInteger(buffer, pos, 4));
-						var time = TypeDecoder.DecodeTime((int) VaxInteger(buffer, pos + 4, 4));
+						var date = TypeDecoder.DecodeDate((int)VaxInteger(buffer, pos, 4));
+						var time = TypeDecoder.DecodeTime((int)VaxInteger(buffer, pos + 4, 4));
 						info.Add(date.Add(time));
 					}
 					break;
@@ -167,9 +167,9 @@ internal static class IscHelper
 
 				case IscCodes.fb_info_creation_timestamp_tz:
 					{
-						var date = TypeDecoder.DecodeDate((int) VaxInteger(buffer, pos, 4));
-						var time = TypeDecoder.DecodeTime((int) VaxInteger(buffer, pos + 4, 4));
-						ushort tzId = (ushort) VaxInteger(buffer, pos + 4 + 4, 4);
+						var date = TypeDecoder.DecodeDate((int)VaxInteger(buffer, pos, 4));
+						var time = TypeDecoder.DecodeTime((int)VaxInteger(buffer, pos + 4, 4));
+						ushort tzId = (ushort)VaxInteger(buffer, pos + 4 + 4, 4);
 						var dt = date.Add(time);
 						dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 						info.Add(TypeHelper.CreateZonedDateTime(dt, tzId, null));
@@ -194,7 +194,7 @@ internal static class IscHelper
 		int type;
 		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-			int length = (int) VaxInteger(buffer, pos, 2);
+			int length = (int)VaxInteger(buffer, pos, 2);
 			pos += 2;
 
 			switch (type)

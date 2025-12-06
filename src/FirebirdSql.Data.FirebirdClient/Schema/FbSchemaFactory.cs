@@ -69,9 +69,9 @@ internal sealed class FbSchemaFactory
 			throw new NotSupportedException("Unsupported collection name.");
 		}
 
-		return restrictions != null && restrictions.Length > (int) collection[0]["NumberOfRestrictions"]
+		return restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]
 				? throw new InvalidOperationException("The number of specified restrictions is not valid.")
-				: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int) collection[0]["NumberOfRestrictions"]
+				: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]
 				? throw new InvalidOperationException("Incorrect restriction definition.")
 				: collection[0]["PopulationMechanism"].ToString() switch
 				{
@@ -108,9 +108,9 @@ internal sealed class FbSchemaFactory
 			throw new NotSupportedException("Unsupported collection name.");
 		}
 
-		return restrictions != null && restrictions.Length > (int) collection[0]["NumberOfRestrictions"]
+		return restrictions != null && restrictions.Length > (int)collection[0]["NumberOfRestrictions"]
 				? throw new InvalidOperationException("The number of specified restrictions is not valid.")
-				: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int) collection[0]["NumberOfRestrictions"]
+				: ds.Tables[DbMetaDataCollectionNames.Restrictions].Select(filter).Length != (int)collection[0]["NumberOfRestrictions"]
 				? throw new InvalidOperationException("Incorrect restriction definition.")
 				: collection[0]["PopulationMechanism"].ToString() switch
 				{

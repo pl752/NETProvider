@@ -63,15 +63,15 @@ internal class GdsStatement : Version10.GdsStatement
 				if (State == StatementState.Deallocated)
 				{
 					numberOfResponses--;
-					allocateResponse = (GenericResponse) _database.ReadResponse();
+					allocateResponse = (GenericResponse)_database.ReadResponse();
 				}
 
 				numberOfResponses--;
-				var prepareResponse = (GenericResponse) _database.ReadResponse();
+				var prepareResponse = (GenericResponse)_database.ReadResponse();
 				bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 				numberOfResponses--;
-				var statementTypeResponse = (GenericResponse) _database.ReadResponse();
+				var statementTypeResponse = (GenericResponse)_database.ReadResponse();
 
 				if (allocateResponse != null)
 				{
@@ -120,15 +120,15 @@ internal class GdsStatement : Version10.GdsStatement
 				if (State == StatementState.Deallocated)
 				{
 					numberOfResponses--;
-					allocateResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+					allocateResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				}
 
 				numberOfResponses--;
-				var prepareResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+				var prepareResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				bool deferredExecute = (prepareResponse.ObjectHandle & IscCodes.STMT_DEFER_EXECUTE) == IscCodes.STMT_DEFER_EXECUTE;
 
 				numberOfResponses--;
-				var statementTypeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+				var statementTypeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 				if (allocateResponse != null)
 				{
@@ -180,18 +180,18 @@ internal class GdsStatement : Version10.GdsStatement
 				if (StatementType == DbStatementType.StoredProcedure)
 				{
 					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse) _database.ReadResponse();
+					sqlStoredProcedureResponse = (SqlResponse)_database.ReadResponse();
 					ProcessStoredProcedureExecuteResponse(sqlStoredProcedureResponse);
 				}
 
 				numberOfResponses--;
-				var executeResponse = (GenericResponse) _database.ReadResponse();
+				var executeResponse = (GenericResponse)_database.ReadResponse();
 
 				GenericResponse rowsAffectedResponse = null;
 				if (readRowsAffectedResponse)
 				{
 					numberOfResponses--;
-					rowsAffectedResponse = (GenericResponse) _database.ReadResponse();
+					rowsAffectedResponse = (GenericResponse)_database.ReadResponse();
 				}
 
 				ProcessExecuteResponse(executeResponse);
@@ -242,18 +242,18 @@ internal class GdsStatement : Version10.GdsStatement
 				if (StatementType == DbStatementType.StoredProcedure)
 				{
 					numberOfResponses--;
-					sqlStoredProcedureResponse = (SqlResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+					sqlStoredProcedureResponse = (SqlResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 					await ProcessStoredProcedureExecuteResponseAsync(sqlStoredProcedureResponse, cancellationToken).ConfigureAwait(false);
 				}
 
 				numberOfResponses--;
-				var executeResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+				var executeResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 				GenericResponse rowsAffectedResponse = null;
 				if (readRowsAffectedResponse)
 				{
 					numberOfResponses--;
-					rowsAffectedResponse = (GenericResponse) await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
+					rowsAffectedResponse = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 				}
 
 				await ProcessExecuteResponseAsync(executeResponse, cancellationToken).ConfigureAwait(false);

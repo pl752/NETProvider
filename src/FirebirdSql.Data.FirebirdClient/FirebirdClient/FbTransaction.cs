@@ -580,7 +580,7 @@ public sealed class FbTransaction : DbTransaction
 			tpb.Append(IscCodes.isc_tpb_wait);
 			if (options.WaitTimeoutTPBValue != null)
 			{
-				tpb.Append(IscCodes.isc_tpb_lock_timeout, (short) options.WaitTimeoutTPBValue);
+				tpb.Append(IscCodes.isc_tpb_lock_timeout, (short)options.WaitTimeoutTPBValue);
 			}
 		}
 		if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.NoWait))
@@ -625,7 +625,7 @@ public sealed class FbTransaction : DbTransaction
 			}
 			if (lockBehavior != null)
 			{
-				tpb.Append((int) lockBehavior);
+				tpb.Append((int)lockBehavior);
 			}
 		}
 		if (options.TransactionBehavior.HasFlag(FbTransactionBehavior.ReadCommitted))
@@ -659,7 +659,7 @@ public sealed class FbTransaction : DbTransaction
 
 		if (options.SnapshotAtNumber != null)
 		{
-			tpb.Append(IscCodes.isc_tpb_at_snapshot_number, (long) options.SnapshotAtNumber);
+			tpb.Append(IscCodes.isc_tpb_at_snapshot_number, (long)options.SnapshotAtNumber);
 		}
 
 		return tpb;

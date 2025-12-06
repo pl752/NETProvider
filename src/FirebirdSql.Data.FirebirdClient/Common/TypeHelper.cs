@@ -28,13 +28,13 @@ internal static class TypeHelper
 
 	public static short? GetSize(DbDataType type) => type switch
 	{
-		DbDataType.Array or DbDataType.Binary or DbDataType.Text => (short?) 8,
-		DbDataType.SmallInt => (short?) 2,
-		DbDataType.Integer or DbDataType.Float or DbDataType.Date or DbDataType.Time => (short?) 4,
-		DbDataType.BigInt or DbDataType.Double or DbDataType.TimeStamp or DbDataType.Dec16 or DbDataType.TimeTZ => (short?) 8,
-		DbDataType.Guid or DbDataType.TimeStampTZEx or DbDataType.Dec34 or DbDataType.Int128 => (short?) 16,
-		DbDataType.Boolean => (short?) 1,
-		DbDataType.TimeStampTZ or DbDataType.TimeTZEx => (short?) 12,
+		DbDataType.Array or DbDataType.Binary or DbDataType.Text => (short?)8,
+		DbDataType.SmallInt => (short?)2,
+		DbDataType.Integer or DbDataType.Float or DbDataType.Date or DbDataType.Time => (short?)4,
+		DbDataType.BigInt or DbDataType.Double or DbDataType.TimeStamp or DbDataType.Dec16 or DbDataType.TimeTZ => (short?)8,
+		DbDataType.Guid or DbDataType.TimeStampTZEx or DbDataType.Dec34 or DbDataType.Int128 => (short?)16,
+		DbDataType.Boolean => (short?)1,
+		DbDataType.TimeStampTZ or DbDataType.TimeTZEx => (short?)12,
 		_ => null,
 	};
 
@@ -63,7 +63,7 @@ internal static class TypeHelper
 			DbDataType.Dec16 => IscCodes.SQL_DEC16,
 			DbDataType.Dec34 => IscCodes.SQL_DEC34,
 			DbDataType.Int128 => IscCodes.SQL_INT128,
-			_ => throw InvalidDataType((int) type),
+			_ => throw InvalidDataType((int)type),
 		};
 		if (isNullable)
 		{
@@ -121,7 +121,7 @@ internal static class TypeHelper
 		DbDataType.TimeTZ or DbDataType.TimeTZEx => "TIME WITH TIME ZONE",
 		DbDataType.Dec16 or DbDataType.Dec34 => "DECFLOAT",
 		DbDataType.Int128 => "INT128",
-		_ => throw InvalidDataType((int) type),
+		_ => throw InvalidDataType((int)type),
 	};
 
 	public static Type GetTypeFromDbDataType(DbDataType type) => type switch
@@ -143,7 +143,7 @@ internal static class TypeHelper
 		DbDataType.TimeTZ or DbDataType.TimeTZEx => typeof(FbZonedTime),
 		DbDataType.Dec16 or DbDataType.Dec34 => typeof(FbDecFloat),
 		DbDataType.Int128 => typeof(System.Numerics.BigInteger),
-		_ => throw InvalidDataType((int) type),
+		_ => throw InvalidDataType((int)type),
 	};
 
 	public static FbDbType GetFbDataTypeFromType(Type type)
@@ -262,7 +262,7 @@ internal static class TypeHelper
 		DbDataType.Guid => DbType.Guid,
 		DbDataType.Boolean => DbType.Boolean,
 		DbDataType.TimeStampTZ or DbDataType.TimeStampTZEx or DbDataType.TimeTZ or DbDataType.TimeTZEx or DbDataType.Dec16 or DbDataType.Dec34 or DbDataType.Int128 => DbType.Object,// nothing better at the moment
-		_ => throw InvalidDataType((int) type),
+		_ => throw InvalidDataType((int)type),
 	};
 
 	public static DbDataType GetDbDataTypeFromDbType(DbType type) => type switch
@@ -281,7 +281,7 @@ internal static class TypeHelper
 		DbType.Single => DbDataType.Float,
 		DbType.Guid => DbDataType.Guid,
 		DbType.Boolean => DbDataType.Boolean,
-		_ => throw InvalidDataType((int) type),
+		_ => throw InvalidDataType((int)type),
 	};
 
 	public static DbDataType GetDbDataTypeFromBlrType(int type, int subType, int scale) => GetDbDataTypeFromSqlType(GetSqlTypeFromBlrType(type), subType, scale);
@@ -403,17 +403,17 @@ internal static class TypeHelper
 
 	public static DbDataType GetDbDataTypeFromFbDbType(FbDbType type) =>
 			// these are aligned for this conversion
-			(DbDataType) type;
+			(DbDataType)type;
 
 	public static TimeSpan DateTimeTimeToTimeSpan(DateTime d) => TimeSpan.FromTicks(d.Subtract(d.Date).Ticks);
 
 	public static FbZonedDateTime CreateZonedDateTime(DateTime dateTime, ushort tzId, short? offset) => !TimeZoneMapping.TryGetById(tzId, out string tz)
 					? throw new ArgumentException("Unknown time zone ID.")
-					: new FbZonedDateTime(dateTime, tz, offset != null ? TimeSpan.FromMinutes((short) offset) : (TimeSpan?) null);
+					: new FbZonedDateTime(dateTime, tz, offset != null ? TimeSpan.FromMinutes((short)offset) : (TimeSpan?)null);
 
 	public static FbZonedTime CreateZonedTime(TimeSpan time, ushort tzId, short? offset) => !TimeZoneMapping.TryGetById(tzId, out string tz)
 					? throw new ArgumentException("Unknown time zone ID.")
-					: new FbZonedTime(time, tz, offset != null ? TimeSpan.FromMinutes((short) offset) : (TimeSpan?) null);
+					: new FbZonedTime(time, tz, offset != null ? TimeSpan.FromMinutes((short)offset) : (TimeSpan?)null);
 
 	public static Exception InvalidDataType(int type) => new ArgumentException($"Invalid data type: {type}.");
 

@@ -118,7 +118,7 @@ public sealed class FbParameter : DbParameter, ICloneable
 	[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 	public override DbType DbType
 	{
-		get => TypeHelper.GetDbTypeFromDbDataType((DbDataType) _fbDbType); set => FbDbType = (FbDbType) TypeHelper.GetDbDataTypeFromDbType(value);
+		get => TypeHelper.GetDbTypeFromDbDataType((DbDataType)_fbDbType); set => FbDbType = (FbDbType)TypeHelper.GetDbDataTypeFromDbType(value);
 	}
 
 	[RefreshProperties(RefreshProperties.All)]
@@ -175,14 +175,14 @@ public sealed class FbParameter : DbParameter, ICloneable
 	#region Properties
 
 	[Category("Data")]
-	[DefaultValue((byte) 0)]
+	[DefaultValue((byte)0)]
 	public override byte Precision
 	{
 		get => _precision; set => _precision = value;
 	}
 
 	[Category("Data")]
-	[DefaultValue((byte) 0)]
+	[DefaultValue((byte)0)]
 	public override byte Scale
 	{
 		get => _scale; set => _scale = value;
