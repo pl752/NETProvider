@@ -153,9 +153,9 @@ internal sealed class DbField
 		}
 	}
 
-	public DbValue DbValue
+	public ref DbValue DbValue
 	{
-		get { return _dbValue; }
+		get { return ref _dbValue; }
 	}
 
 	#endregion
@@ -274,7 +274,7 @@ internal sealed class DbField
 	{
 		if (buffer == null || NullFlag == -1)
 		{
-			DbValue.SetValue(DBNull.Value);
+			_dbValue.SetValue(DBNull.Value);
 		}
 		else
 		{
@@ -284,26 +284,25 @@ internal sealed class DbField
 				case IscCodes.SQL_VARYING:
 					if (DbDataType == DbDataType.Guid)
 					{
-						DbValue.SetValue(TypeDecoder.DecodeGuid(buffer));
+						_dbValue.SetValue(TypeDecoder.DecodeGuid(buffer));
 					}
 					else
 					{
 						if (Charset.IsOctetsCharset)
 						{
-							DbValue.SetValue(buffer);
+							_dbValue.SetValue(buffer);
 						}
 						else
 						{
 							var s = Charset.GetString(buffer, 0, buffer.Length);
 
-							var runes = s.EnumerateRunesEx().ToList();
+							var runes = s.EnumerateRunes().ToArray();
 							if ((Length % Charset.BytesPerCharacter) == 0 &&
-								runes.Count > CharCount)
-							{
-								s = new string([.. runes.Take(CharCount).SelectMany(x => x)]);
+						runes.Length > CharCount) {
+								s = new string([.. runes.Take(CharCount).RunesToChars()]);
 							}
 
-							DbValue.SetValue(s);
+							_dbValue.SetValue(s);
 						}
 					}
 					break;
@@ -311,32 +310,32 @@ internal sealed class DbField
 				case IscCodes.SQL_SHORT:
 					if (_numericScale < 0)
 					{
-						DbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt16(buffer, 0), _numericScale, _dataType));
+						_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt16(buffer, 0), _numericScale, _dataType));
 					}
 					else
 					{
-						DbValue.SetValue(BitConverter.ToInt16(buffer, 0));
+						_dbValue.SetValue(BitConverter.ToInt16(buffer, 0));
 					}
 					break;
 
 				case IscCodes.SQL_LONG:
 					if (_numericScale < 0)
 					{
-						DbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt32(buffer, 0), _numericScale, _dataType));
+						_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt32(buffer, 0), _numericScale, _dataType));
 					}
 					else
 					{
-						DbValue.SetValue(BitConverter.ToInt32(buffer, 0));
+						_dbValue.SetValue(BitConverter.ToInt32(buffer, 0));
 					}
 					break;
 
 				case IscCodes.SQL_FLOAT:
-					DbValue.SetValue(BitConverter.ToSingle(buffer, 0));
+					_dbValue.SetValue(BitConverter.ToSingle(buffer, 0));
 					break;
 
 				case IscCodes.SQL_DOUBLE:
 				case IscCodes.SQL_D_FLOAT:
-					DbValue.SetValue(BitConverter.ToDouble(buffer, 0));
+					_dbValue.SetValue(BitConverter.ToDouble(buffer, 0));
 					break;
 
 				case IscCodes.SQL_QUAD:
@@ -345,11 +344,11 @@ internal sealed class DbField
 				case IscCodes.SQL_ARRAY:
 					if (_numericScale < 0)
 					{
-						DbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt64(buffer, 0), _numericScale, _dataType));
+						_dbValue.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt64(buffer, 0), _numericScale, _dataType));
 					}
 					else
 					{
-						DbValue.SetValue(BitConverter.ToInt64(buffer, 0));
+						_dbValue.SetValue(BitConverter.ToInt64(buffer, 0));
 					}
 					break;
 
@@ -357,20 +356,20 @@ internal sealed class DbField
 					{
 						var date = TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0));
 						var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
-						DbValue.SetValue(date.Add(time));
+						_dbValue.SetValue(date.Add(time));
 						break;
 					}
 
 				case IscCodes.SQL_TYPE_TIME:
-					DbValue.SetValue(TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0)));
+					_dbValue.SetValue(TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0)));
 					break;
 
 				case IscCodes.SQL_TYPE_DATE:
-					DbValue.SetValue(TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0)));
+					_dbValue.SetValue(TypeDecoder.DecodeDate(BitConverter.ToInt32(buffer, 0)));
 					break;
 
 				case IscCodes.SQL_BOOLEAN:
-					DbValue.SetValue(TypeDecoder.DecodeBoolean(buffer));
+					_dbValue.SetValue(TypeDecoder.DecodeBoolean(buffer));
 					break;
 
 				case IscCodes.SQL_TIMESTAMP_TZ:
@@ -379,7 +378,7 @@ internal sealed class DbField
 						var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 4));
 						var tzId = BitConverter.ToUInt16(buffer, 8);
 						var dt = DateTime.SpecifyKind(date.Add(time), DateTimeKind.Utc);
-						DbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, null));
+						_dbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, null));
 						break;
 					}
 
@@ -390,7 +389,7 @@ internal sealed class DbField
 						var tzId = BitConverter.ToUInt16(buffer, 8);
 						var offset = BitConverter.ToInt16(buffer, 10);
 						var dt = DateTime.SpecifyKind(date.Add(time), DateTimeKind.Utc);
-						DbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, offset));
+						_dbValue.SetValue(TypeHelper.CreateZonedDateTime(dt, tzId, offset));
 						break;
 					}
 
@@ -398,7 +397,7 @@ internal sealed class DbField
 					{
 						var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
 						var tzId = BitConverter.ToUInt16(buffer, 4);
-						DbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, null));
+						_dbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, null));
 						break;
 					}
 
@@ -407,26 +406,26 @@ internal sealed class DbField
 						var time = TypeDecoder.DecodeTime(BitConverter.ToInt32(buffer, 0));
 						var tzId = BitConverter.ToUInt16(buffer, 4);
 						var offset = BitConverter.ToInt16(buffer, 6);
-						DbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, offset));
+						_dbValue.SetValue(TypeHelper.CreateZonedTime(time, tzId, offset));
 						break;
 					}
 
 				case IscCodes.SQL_DEC16:
-					DbValue.SetValue(DecimalCodec.DecFloat16.ParseBytes(buffer));
+					_dbValue.SetValue(DecimalCodec.DecFloat16.ParseBytes(buffer));
 					break;
 
 				case IscCodes.SQL_DEC34:
-					DbValue.SetValue(DecimalCodec.DecFloat34.ParseBytes(buffer));
+					_dbValue.SetValue(DecimalCodec.DecFloat34.ParseBytes(buffer));
 					break;
 
 				case IscCodes.SQL_INT128:
 					if (_numericScale < 0)
 					{
-						DbValue.SetValue(TypeDecoder.DecodeDecimal(Int128Helper.GetInt128(buffer), _numericScale, _dataType));
+						_dbValue.SetValue(TypeDecoder.DecodeDecimal(Int128Helper.GetInt128(buffer), _numericScale, _dataType));
 					}
 					else
 					{
-						DbValue.SetValue(Int128Helper.GetInt128(buffer));
+						_dbValue.SetValue(Int128Helper.GetInt128(buffer));
 					}
 					break;
 
@@ -444,71 +443,71 @@ internal sealed class DbField
 			{
 				case DbDataType.Char:
 				case DbDataType.VarChar:
-					DbValue.SetValue(string.Empty);
+					_dbValue.SetValue(string.Empty);
 					break;
 
 				case DbDataType.Guid:
-					DbValue.SetValue(Guid.Empty);
+					_dbValue.SetValue(Guid.Empty);
 					break;
 
 				case DbDataType.SmallInt:
-					DbValue.SetValue((short)0);
+					_dbValue.SetValue((short)0);
 					break;
 
 				case DbDataType.Integer:
-					DbValue.SetValue((int)0);
+					_dbValue.SetValue((int)0);
 					break;
 
 				case DbDataType.BigInt:
 				case DbDataType.Binary:
 				case DbDataType.Array:
 				case DbDataType.Text:
-					DbValue.SetValue((long)0);
+					_dbValue.SetValue((long)0);
 					break;
 
 				case DbDataType.Numeric:
 				case DbDataType.Decimal:
-					DbValue.SetValue((decimal)0);
+					_dbValue.SetValue((decimal)0);
 					break;
 
 				case DbDataType.Float:
-					DbValue.SetValue((float)0);
+					_dbValue.SetValue((float)0);
 					break;
 
 				case DbDataType.Double:
-					DbValue.SetValue((double)0);
+					_dbValue.SetValue((double)0);
 					break;
 
 				case DbDataType.Date:
 				case DbDataType.TimeStamp:
-					DbValue.SetValue(DateTime2.UnixEpoch);
+					_dbValue.SetValue(DateTime2.UnixEpoch);
 					break;
 
 				case DbDataType.Time:
-					DbValue.SetValue(TimeSpan.Zero);
+					_dbValue.SetValue(TimeSpan.Zero);
 					break;
 
 				case DbDataType.Boolean:
-					DbValue.SetValue(false);
+					_dbValue.SetValue(false);
 					break;
 
 				case DbDataType.TimeStampTZ:
 				case DbDataType.TimeStampTZEx:
-					DbValue.SetValue(new FbZonedDateTime(DateTime2.UnixEpoch, TimeZoneMapping.DefaultTimeZoneName));
+					_dbValue.SetValue(new FbZonedDateTime(DateTime2.UnixEpoch, TimeZoneMapping.DefaultTimeZoneName));
 					break;
 
 				case DbDataType.TimeTZ:
 				case DbDataType.TimeTZEx:
-					DbValue.SetValue(new FbZonedTime(TimeSpan.Zero, TimeZoneMapping.DefaultTimeZoneName));
+					_dbValue.SetValue(new FbZonedTime(TimeSpan.Zero, TimeZoneMapping.DefaultTimeZoneName));
 					break;
 
 				case DbDataType.Dec16:
 				case DbDataType.Dec34:
-					DbValue.SetValue(new FbDecFloat(0, 0));
+					_dbValue.SetValue(new FbDecFloat(0, 0));
 					break;
 
 				case DbDataType.Int128:
-					DbValue.SetValue((BigInteger)0);
+					_dbValue.SetValue((BigInteger)0);
 					break;
 
 				default:
