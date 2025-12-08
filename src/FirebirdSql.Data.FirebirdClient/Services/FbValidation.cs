@@ -23,15 +23,11 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbValidation : FbService
+public sealed class FbValidation(string connectionString = null) : FbService(connectionString)
 {
 	public FbValidationFlags Options { get; set; }
 
-	public FbValidation(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

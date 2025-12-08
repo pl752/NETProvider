@@ -26,17 +26,13 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbStreamingBackup : FbService
+public sealed class FbStreamingBackup(string connectionString = null) : FbService(connectionString)
 {
 	public string SkipData { get; set; }
 	public FbBackupFlags Options { get; set; }
 	public Stream OutputStream { get; set; }
 
-	public FbStreamingBackup(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 
@@ -101,7 +97,7 @@ public sealed class FbStreamingBackup : FbService
 
 	void ReadOutput()
 	{
-		Query(new byte[] { IscCodes.isc_info_svc_to_eof }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) =>
+		Query([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), (_, x) =>
 		{
 			var buffer = x as byte[];
 			OutputStream.Write(buffer, 0, buffer.Length);
@@ -109,7 +105,7 @@ public sealed class FbStreamingBackup : FbService
 	}
 	Task ReadOutputAsync(CancellationToken cancellationToken = default)
 	{
-		return QueryAsync(new byte[] { IscCodes.isc_info_svc_to_eof }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) =>
+		return QueryAsync([IscCodes.isc_info_svc_to_eof], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), async (_, x) =>
 		{
 			var buffer = x as byte[];
 			await OutputStream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);

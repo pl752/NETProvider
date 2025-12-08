@@ -160,8 +160,8 @@ internal static class FbClientFactory
 		var diaType = typeof(DllImportAttribute);
 
 		// Create a CustomAttributeBuilder for the DLLImportAttribute, specifying the constructor that takes a string argument.
-		var ctor = diaType.GetConstructor(new Type[] { typeof(string) });
-		var cab = new CustomAttributeBuilder(ctor, new object[] { dllName });
+		var ctor = diaType.GetConstructor([typeof(string)]);
+		var cab = new CustomAttributeBuilder(ctor, [dllName]);
 
 		// Assign the DllImport attribute to the smb
 		smb.SetCustomAttribute(cab);

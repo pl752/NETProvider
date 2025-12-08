@@ -183,21 +183,11 @@ internal sealed class DbField
 			return false;
 		}
 
-		switch (DbDataType)
-		{
-			case DbDataType.SmallInt:
-			case DbDataType.Integer:
-			case DbDataType.BigInt:
-			case DbDataType.Numeric:
-			case DbDataType.Decimal:
-			case DbDataType.Float:
-			case DbDataType.Double:
-				return true;
-
-			default:
-				return false;
+				return DbDataType switch {
+						DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
+						_ => false,
+				};
 		}
-	}
 
 	public bool IsDecimal()
 	{
@@ -206,16 +196,11 @@ internal sealed class DbField
 			return false;
 		}
 
-		switch (DbDataType)
-		{
-			case DbDataType.Numeric:
-			case DbDataType.Decimal:
-				return true;
-
-			default:
-				return false;
+				return DbDataType switch {
+						DbDataType.Numeric or DbDataType.Decimal => true,
+						_ => false,
+				};
 		}
-	}
 
 	public bool IsLong()
 	{
@@ -224,16 +209,11 @@ internal sealed class DbField
 			return false;
 		}
 
-		switch (DbDataType)
-		{
-			case DbDataType.Binary:
-			case DbDataType.Text:
-				return true;
-
-			default:
-				return false;
+				return DbDataType switch {
+						DbDataType.Binary or DbDataType.Text => true,
+						_ => false,
+				};
 		}
-	}
 
 	public bool IsCharacter()
 	{
@@ -242,17 +222,11 @@ internal sealed class DbField
 			return false;
 		}
 
-		switch (DbDataType)
-		{
-			case DbDataType.Char:
-			case DbDataType.VarChar:
-			case DbDataType.Text:
-				return true;
-
-			default:
-				return false;
+				return DbDataType switch {
+						DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
+						_ => false,
+				};
 		}
-	}
 
 	public bool IsArray()
 	{
@@ -261,19 +235,15 @@ internal sealed class DbField
 			return false;
 		}
 
-		switch (DbDataType)
-		{
-			case DbDataType.Array:
-				return true;
-
-			default:
-				return false;
+				return DbDataType switch {
+						DbDataType.Array => true,
+						_ => false,
+				};
 		}
-	}
 
 	public bool IsAliased()
 	{
-		return (Name != Alias) ? true : false;
+		return Name != Alias;
 	}
 
 	public int GetSize()

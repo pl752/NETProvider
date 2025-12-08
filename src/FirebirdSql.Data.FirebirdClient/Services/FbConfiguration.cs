@@ -23,13 +23,9 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbConfiguration : FbService
+public sealed class FbConfiguration(string connectionString = null) : FbService(connectionString)
 {
-	public FbConfiguration(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void SetSqlDialect(int sqlDialect)
+		public void SetSqlDialect(int sqlDialect)
 	{
 		EnsureDatabase();
 

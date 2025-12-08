@@ -26,17 +26,16 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbDatabaseInfo
-{
-	#region Properties
+public sealed class FbDatabaseInfo(FbConnection connection = null) {
+		#region Properties
 
-	public FbConnection Connection { get; set; }
+		public FbConnection Connection { get; set; } = connection;
 
-	#endregion
+		#endregion
 
-	#region Methods
+		#region Methods
 
-	public string GetIscVersion()
+		public string GetIscVersion()
 	{
 		return GetValue<string>(IscCodes.isc_info_isc_version);
 	}
@@ -477,20 +476,14 @@ public sealed class FbDatabaseInfo
 		return GetValueAsync<int>(IscCodes.fb_info_statement_timeout_att, cancellationToken);
 	}
 
-	#endregion
+		#endregion
+		#region Constructors
 
-	#region Constructors
+		#endregion
 
-	public FbDatabaseInfo(FbConnection connection = null)
-	{
-		Connection = connection;
-	}
+		#region Private Methods
 
-	#endregion
-
-	#region Private Methods
-
-	private T GetValue<T>(byte item)
+		private T GetValue<T>(byte item)
 	{
 		FbConnection.EnsureOpen(Connection);
 
@@ -525,7 +518,7 @@ public sealed class FbDatabaseInfo
 			IscCodes.isc_info_end
 		};
 
-		return (Connection.InnerConnection.Database.GetDatabaseInfo(items)).Select(InfoValuesHelper.ConvertValue<T>).ToList();
+		return [.. (Connection.InnerConnection.Database.GetDatabaseInfo(items)).Select(InfoValuesHelper.ConvertValue<T>)];
 	}
 	private async Task<List<T>> GetListAsync<T>(byte item, CancellationToken cancellationToken = default)
 	{
@@ -537,7 +530,7 @@ public sealed class FbDatabaseInfo
 			IscCodes.isc_info_end
 		};
 
-		return (await Connection.InnerConnection.Database.GetDatabaseInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>).ToList();
+		return [.. (await Connection.InnerConnection.Database.GetDatabaseInfoAsync(items, cancellationToken).ConfigureAwait(false)).Select(InfoValuesHelper.ConvertValue<T>)];
 	}
 
 	#endregion

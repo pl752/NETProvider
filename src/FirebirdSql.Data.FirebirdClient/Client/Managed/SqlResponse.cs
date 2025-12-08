@@ -20,12 +20,7 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed;
 
-internal class SqlResponse : IResponse
+internal class SqlResponse(int count) : IResponse
 {
-	public int Count { get; }
-
-	public SqlResponse(int count)
-	{
-		Count = count;
-	}
+		public int Count { get; } = count;
 }

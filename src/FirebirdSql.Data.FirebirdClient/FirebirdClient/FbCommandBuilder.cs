@@ -43,27 +43,25 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 
 		if (spName.StartsWith(quotePrefix) && spName.EndsWith(quoteSuffix))
 		{
-			spName = spName.Substring(1, spName.Length - 2);
+			spName = spName[1..^1];
 		}
 		else
 		{
 			spName = spName.ToUpperInvariant();
 		}
 
-		var paramsText = string.Empty;
-
-		command.Parameters.Clear();
+				command.Parameters.Clear();
 
 		var dataTypes = command.Connection.GetSchema("DataTypes").DefaultView;
 
 		var spSchema = command.Connection.GetSchema(
-			"ProcedureParameters", new string[] { null, null, spName });
+			"ProcedureParameters", [null, null, spName]);
 
 		// SP has zero params. or not exist
 		// so check whether exists, else thow exception
 		if (spSchema.Rows.Count == 0)
 		{
-			if (command.Connection.GetSchema("Procedures", new string[] { null, null, spName }).Rows.Count == 0)
+			if (command.Connection.GetSchema("Procedures", [null, null, spName]).Rows.Count == 0)
 				throw new InvalidOperationException("Stored procedure doesn't exist.");
 		}
 
@@ -207,30 +205,24 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 
 	public override string QuoteIdentifier(string unquotedIdentifier)
 	{
-		if (unquotedIdentifier == null)
-		{
-			throw new ArgumentNullException("Unquoted identifier parameter cannot be null");
-		}
+				ArgumentNullException.ThrowIfNull(unquotedIdentifier);
 
-		return string.Format("{0}{1}{2}", QuotePrefix, unquotedIdentifier, QuoteSuffix);
+				return string.Format("{0}{1}{2}", QuotePrefix, unquotedIdentifier, QuoteSuffix);
 	}
 
 	public override string UnquoteIdentifier(string quotedIdentifier)
 	{
-		if (quotedIdentifier == null)
-		{
-			throw new ArgumentNullException("Quoted identifier parameter cannot be null");
-		}
+				ArgumentNullException.ThrowIfNull(quotedIdentifier);
 
-		var unquotedIdentifier = quotedIdentifier.Trim();
+				var unquotedIdentifier = quotedIdentifier.Trim();
 
 		if (unquotedIdentifier.StartsWith(QuotePrefix))
 		{
-			unquotedIdentifier = unquotedIdentifier.Remove(0, 1);
+			unquotedIdentifier = unquotedIdentifier[1..];
 		}
 		if (unquotedIdentifier.EndsWith(QuoteSuffix))
 		{
-			unquotedIdentifier = unquotedIdentifier.Remove(unquotedIdentifier.Length - 1, 1);
+			unquotedIdentifier = unquotedIdentifier[..^1];
 		}
 
 		return unquotedIdentifier;
@@ -273,7 +265,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 
 	protected override void SetRowUpdatingHandler(DbDataAdapter adapter)
 	{
-		if (!(adapter is FbDataAdapter))
+		if (adapter is not FbDataAdapter)
 		{
 			throw new ArgumentException($"Argument needs to be a {nameof(FbDataAdapter)}.", nameof(adapter));
 		}

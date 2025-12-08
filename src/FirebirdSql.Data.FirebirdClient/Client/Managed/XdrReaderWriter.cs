@@ -258,43 +258,25 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	public decimal ReadDecimal(int type, int scale)
 	{
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return TypeDecoder.DecodeDecimal(ReadInt16(), scale, type);
-			case IscCodes.SQL_LONG:
-				return TypeDecoder.DecodeDecimal(ReadInt32(), scale, type);
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return TypeDecoder.DecodeDecimal(ReadInt64(), scale, type);
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return TypeDecoder.DecodeDecimal(ReadDouble(), scale, type);
-			case IscCodes.SQL_INT128:
-				return TypeDecoder.DecodeDecimal(ReadInt128(), scale, type);
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
-		}
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(ReadInt16(), scale, type),
+						IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(ReadInt32(), scale, type),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(ReadInt64(), scale, type),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(ReadDouble(), scale, type),
+						IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(ReadInt128(), scale, type),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 	}
 	public async ValueTask<decimal> ReadDecimalAsync(int type, int scale, CancellationToken cancellationToken = default)
 	{
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return TypeDecoder.DecodeDecimal(await ReadInt16Async(cancellationToken).ConfigureAwait(false), scale, type);
-			case IscCodes.SQL_LONG:
-				return TypeDecoder.DecodeDecimal(await ReadInt32Async(cancellationToken).ConfigureAwait(false), scale, type);
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return TypeDecoder.DecodeDecimal(await ReadInt64Async(cancellationToken).ConfigureAwait(false), scale, type);
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return TypeDecoder.DecodeDecimal(await ReadDoubleAsync(cancellationToken).ConfigureAwait(false), scale, type);
-			case IscCodes.SQL_INT128:
-				return TypeDecoder.DecodeDecimal(await ReadInt128Async(cancellationToken).ConfigureAwait(false), scale, type);
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
-		}
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => TypeDecoder.DecodeDecimal(await ReadInt16Async(cancellationToken).ConfigureAwait(false), scale, type),
+						IscCodes.SQL_LONG => TypeDecoder.DecodeDecimal(await ReadInt32Async(cancellationToken).ConfigureAwait(false), scale, type),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => TypeDecoder.DecodeDecimal(await ReadInt64Async(cancellationToken).ConfigureAwait(false), scale, type),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => TypeDecoder.DecodeDecimal(await ReadDoubleAsync(cancellationToken).ConfigureAwait(false), scale, type),
+						IscCodes.SQL_INT128 => TypeDecoder.DecodeDecimal(await ReadInt128Async(cancellationToken).ConfigureAwait(false), scale, type),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 	}
 
 	public bool ReadBoolean()
@@ -371,10 +353,7 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 					var er = ReadInt32();
 					if (er != 0)
 					{
-						if (exception == null)
-						{
-							exception = IscException.ForBuilding();
-						}
+						exception ??= IscException.ForBuilding();
 						exception.Errors.Add(new IscError(arg, er));
 					}
 					break;
@@ -414,10 +393,7 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 					var er = await ReadInt32Async(cancellationToken).ConfigureAwait(false);
 					if (er != 0)
 					{
-						if (exception == null)
-						{
-							exception = IscException.ForBuilding();
-						}
+						exception ??= IscException.ForBuilding();
 						exception.Errors.Add(new IscError(arg, er));
 					}
 					break;
@@ -694,23 +670,14 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	public ValueTask WriteAsync(decimal value, int type, int scale, CancellationToken cancellationToken = default)
 	{
 		var numeric = TypeEncoder.EncodeDecimal(value, scale, type);
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return WriteAsync((short)numeric, cancellationToken);
-			case IscCodes.SQL_LONG:
-				return WriteAsync((int)numeric, cancellationToken);
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return WriteAsync((long)numeric, cancellationToken);
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return WriteAsync((double)numeric, cancellationToken);
-			case IscCodes.SQL_INT128:
-				return WriteAsync((BigInteger)numeric, cancellationToken);
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
-		}
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => WriteAsync((short)numeric, cancellationToken),
+						IscCodes.SQL_LONG => WriteAsync((int)numeric, cancellationToken),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => WriteAsync((long)numeric, cancellationToken),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => WriteAsync((double)numeric, cancellationToken),
+						IscCodes.SQL_INT128 => WriteAsync((BigInteger)numeric, cancellationToken),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 	}
 
 	public void Write(bool value)
@@ -808,7 +775,7 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	#region Pad + Fill
 
-	static readonly byte[] PadArray = new byte[] { 0, 0, 0, 0 };
+	static readonly byte[] PadArray = [0, 0, 0, 0];
 	void WritePad(int length)
 	{
 		_dataProvider.Write(PadArray, 0, length);

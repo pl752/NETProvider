@@ -28,12 +28,9 @@ internal class BinaryEncoding : Encoding
 
 	static void Validate(object data, int dataLength, int index, int count)
 	{
-		if (data == null)
-		{
-			throw new ArgumentNullException();
-		}
+				ArgumentNullException.ThrowIfNull(data);
 
-		if (index < 0 || count < 0 || dataLength - index < count)
+				if (index < 0 || count < 0 || dataLength - index < count)
 		{
 			throw new ArgumentOutOfRangeException();
 		}

@@ -22,11 +22,10 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class BlobBase
-{
+internal abstract class BlobBase(DatabaseBase db) {
 	private int _rblFlags;
-	private Charset _charset;
-	private int _segmentSize;
+	private readonly Charset _charset = db.Charset;
+	private readonly int _segmentSize = db.PacketSize;
 
 	protected long _blobId;
 	protected bool _isOpen;
@@ -43,13 +42,7 @@ internal abstract class BlobBase
 
 	public abstract DatabaseBase Database { get; }
 
-	protected BlobBase(DatabaseBase db)
-	{
-		_segmentSize = db.PacketSize;
-		_charset = db.Charset;
-	}
-
-	public string ReadString()
+		public string ReadString()
 	{
 		var buffer = Read();
 		return _charset.GetString(buffer, 0, buffer.Length);

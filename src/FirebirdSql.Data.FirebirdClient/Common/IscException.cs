@@ -113,7 +113,7 @@ internal sealed class IscException : Exception
 
 	public static IscException ForIOException(IOException exception)
 	{
-		return ForErrorCodes(new[] { IscCodes.isc_net_write_err, IscCodes.isc_net_read_err }, exception);
+		return ForErrorCodes([IscCodes.isc_net_write_err, IscCodes.isc_net_read_err], exception);
 	}
 
 	public void BuildExceptionData()
@@ -206,7 +206,7 @@ internal sealed class IscException : Exception
 		_message = builder.ToString();
 	}
 
-	private string BuildDefaultErrorMessage(int code)
+	private static string BuildDefaultErrorMessage(int code)
 	{
 		return string.Format(CultureInfo.CurrentCulture, "No message for error code {0} found.", code);
 	}

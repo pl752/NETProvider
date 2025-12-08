@@ -23,7 +23,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbValidation2 : FbService
+public sealed class FbValidation2(string connectionString = null) : FbService(connectionString)
 {
 	public string TablesInclude { get; set; }
 	public string TablesExclude { get; set; }
@@ -31,11 +31,7 @@ public sealed class FbValidation2 : FbService
 	public string IndicesExclude { get; set; }
 	public int? LockTimeout { get; set; }
 
-	public FbValidation2(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

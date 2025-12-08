@@ -21,7 +21,11 @@ using System.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbRowUpdatedEventArgs : RowUpdatedEventArgs
+public sealed class FbRowUpdatedEventArgs(
+	DataRow row,
+	IDbCommand command,
+	StatementType statementType,
+	DataTableMapping tableMapping) : RowUpdatedEventArgs(row, command, statementType, tableMapping)
 {
 	#region Properties
 
@@ -30,18 +34,8 @@ public sealed class FbRowUpdatedEventArgs : RowUpdatedEventArgs
 		get { return (FbCommand)base.Command; }
 	}
 
-	#endregion
+		#endregion
+		#region Constructors
 
-	#region Constructors
-
-	public FbRowUpdatedEventArgs(
-		DataRow row,
-		IDbCommand command,
-		StatementType statementType,
-		DataTableMapping tableMapping)
-		: base(row, command, statementType, tableMapping)
-	{
-	}
-
-	#endregion
+		#endregion
 }

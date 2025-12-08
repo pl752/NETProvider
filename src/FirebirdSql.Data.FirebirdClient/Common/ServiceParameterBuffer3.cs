@@ -19,13 +19,9 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class ServiceParameterBuffer3 : ServiceParameterBufferBase
+internal sealed class ServiceParameterBuffer3(Encoding encoding) : ServiceParameterBufferBase(encoding)
 {
-	public ServiceParameterBuffer3(Encoding encoding)
-		: base(encoding)
-	{ }
-
-	public override void AppendPreamble()
+		public override void AppendPreamble()
 	{
 		Append(IscCodes.isc_spb_version3);
 	}

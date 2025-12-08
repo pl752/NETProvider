@@ -21,7 +21,7 @@ namespace FirebirdSql.Data.Common;
 
 internal static class SqlStateMapping
 {
-	static Dictionary<int, string> _mapping = new Dictionary<int, string>()
+	static readonly Dictionary<int, string> _mapping = new Dictionary<int, string>()
 		{
 	{335544321, "22000"}, //   1 arith_except
 	{335544322, "HY000"}, //   2 bad_dbkey

@@ -29,29 +29,15 @@ internal static class TypeEncoder
 	{
 		var shift = scale < 0 ? -scale : scale;
 
-		switch (type & ~1)
-		{
-			case IscCodes.SQL_SHORT:
-				return (short)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_LONG:
-				return (int)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_QUAD:
-			case IscCodes.SQL_INT64:
-				return (long)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			case IscCodes.SQL_DOUBLE:
-			case IscCodes.SQL_D_FLOAT:
-				return (double)d;
-
-			case IscCodes.SQL_INT128:
-				return (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift);
-
-			default:
-				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
+				return (type & ~1) switch {
+						IscCodes.SQL_SHORT => (short)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_LONG => (int)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => (long)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (double)d,
+						IscCodes.SQL_INT128 => (BigInteger)DecimalShiftHelper.ShiftDecimalRight(d, shift),
+						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+				};
 		}
-	}
 
 	public static int EncodeTime(TimeSpan t)
 	{
@@ -98,7 +84,7 @@ internal static class TypeEncoder
 
 	public static byte[] EncodeBoolean(bool value)
 	{
-		return new[] { (byte)(value ? 1 : 0) };
+		return [(byte)(value ? 1 : 0)];
 	}
 
 	public static byte[] EncodeGuid(Guid value)
@@ -107,13 +93,14 @@ internal static class TypeEncoder
 		var a = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0)));
 		var b = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 4)));
 		var c = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(BitConverter.ToInt16(data, 6)));
-		return new[]
-		{
+		return
+		[
 			a[0], a[1], a[2], a[3],
 			b[0], b[1],
 			c[0], c[1],
 			data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]
-		};
+		];
+	}
 	}
 
 	public static byte[] EncodeInt32(int value)

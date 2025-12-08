@@ -22,8 +22,8 @@ namespace FirebirdSql.Data.Common;
 
 internal static class ShutdownHelper
 {
-	static ConcurrentBag<Action> _pools;
-	static ConcurrentBag<Action> _fbClients;
+	static readonly ConcurrentBag<Action> _pools;
+	static readonly ConcurrentBag<Action> _fbClients;
 
 	static ShutdownHelper()
 	{

@@ -73,10 +73,9 @@ public sealed class FbParameter : DbParameter, ICloneable
 		}
 		set
 		{
-			if (value < 0)
-				throw new ArgumentOutOfRangeException();
+						ArgumentOutOfRangeException.ThrowIfNegative(value);
 
-			_size = value;
+						_size = value;
 
 			// Hack for Clob parameters
 			if (value == 2147483647 &&
@@ -151,10 +150,7 @@ public sealed class FbParameter : DbParameter, ICloneable
 		get { return _value; }
 		set
 		{
-			if (value == null)
-			{
-				value = DBNull.Value;
-			}
+			value ??= DBNull.Value;
 
 			if (FbDbType == FbDbType.Guid && value != null &&
 				value != DBNull.Value && !(value is Guid) && !(value is byte[]))
@@ -237,7 +233,7 @@ public sealed class FbParameter : DbParameter, ICloneable
 			switch (_value)
 			{
 				case string svalue:
-					return svalue.Substring(0, Math.Min(Size, svalue.Length));
+					return svalue[..Math.Min(Size, svalue.Length)];
 				case byte[] bvalue:
 					var result = new byte[Math.Min(Size, bvalue.Length)];
 					Array.Copy(bvalue, result, result.Length);
@@ -366,10 +362,7 @@ public sealed class FbParameter : DbParameter, ICloneable
 
 	private void SetFbDbType(object value)
 	{
-		if (value == null)
-		{
-			value = DBNull.Value;
-		}
+		value ??= DBNull.Value;
 		_fbDbType = TypeHelper.GetFbDataTypeFromType(value.GetType());
 	}
 

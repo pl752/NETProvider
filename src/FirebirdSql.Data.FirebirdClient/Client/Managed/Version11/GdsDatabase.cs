@@ -25,17 +25,11 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version11;
 
-internal class GdsDatabase : Version10.GdsDatabase
+internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(connection)
 {
-	private readonly Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)> _deferredPackets;
+	private readonly Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)> _deferredPackets = new Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)>();
 
-	public GdsDatabase(GdsConnection connection)
-		: base(connection)
-	{
-		_deferredPackets = new Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)>();
-	}
-
-	public override StatementBase CreateStatement()
+		public override StatementBase CreateStatement()
 	{
 		return new GdsStatement(this);
 	}

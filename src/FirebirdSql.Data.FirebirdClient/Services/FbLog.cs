@@ -23,13 +23,9 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbLog : FbService
+public sealed class FbLog(string connectionString = null) : FbService(connectionString)
 {
-	public FbLog(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		try
 		{

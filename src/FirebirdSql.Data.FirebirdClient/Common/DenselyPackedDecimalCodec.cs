@@ -164,7 +164,7 @@ class DenselyPackedDecimalCodec
 	).ToCharArray();
 
 	// from ICU decNumber decDPD.h
-	static readonly int[] Bin2DPD = {
+	static readonly int[] Bin2DPD = [
 			0,      1,    2,    3,    4,    5,    6,    7,
 			8,      9,   16,   17,   18,   19,   20,   21,   22,   23,   24,   25,   32,
 			33,    34,   35,   36,   37,   38,   39,   40,   41,   48,   49,   50,   51,
@@ -243,7 +243,7 @@ class DenselyPackedDecimalCodec
 			252,  253,  508,  509,  764,  765, 1020, 1021,  958,  959,  142,  143,  398,
 			399,  654,  655,  910,  911,  238,  239,  158,  159,  414,  415,  670,  671,
 			926,  927,  254,  255
-		};
+		];
 	//@formatter:on
 
 	readonly int _numberOfDigits;

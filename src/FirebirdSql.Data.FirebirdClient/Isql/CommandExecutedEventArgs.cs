@@ -20,18 +20,10 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Isql;
 
-public class CommandExecutedEventArgs : EventArgs
+public class CommandExecutedEventArgs(FbDataReader dataReader, string commandText, SqlStatementType statementType, int rowsAffected) : EventArgs
 {
-	public FbDataReader DataReader { get; private set; }
-	public string CommandText { get; private set; }
-	public SqlStatementType StatementType { get; private set; }
-	public int RowsAffected { get; private set; }
-
-	public CommandExecutedEventArgs(FbDataReader dataReader, string commandText, SqlStatementType statementType, int rowsAffected)
-	{
-		DataReader = dataReader;
-		CommandText = commandText;
-		StatementType = statementType;
-		RowsAffected = rowsAffected;
-	}
+		public FbDataReader DataReader { get; private set; } = dataReader;
+		public string CommandText { get; private set; } = commandText;
+		public SqlStatementType StatementType { get; private set; } = statementType;
+		public int RowsAffected { get; private set; } = rowsAffected;
 }

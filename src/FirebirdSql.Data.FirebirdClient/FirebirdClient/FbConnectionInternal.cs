@@ -30,14 +30,13 @@ using FirebirdSql.Data.Schema;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal class FbConnectionInternal
-{
+internal class FbConnectionInternal(ConnectionString options) {
 	#region Fields
 
 	private DatabaseBase _db;
 	private FbTransaction _activeTransaction;
-	private HashSet<IFbPreparedCommand> _preparedCommands;
-	private ConnectionString _connectionStringOptions;
+	private readonly HashSet<IFbPreparedCommand> _preparedCommands = new HashSet<IFbPreparedCommand>();
+	private ConnectionString _connectionStringOptions = options;
 	private FbConnection _owningConnection;
 	private FbEnlistmentNotification _enlistmentNotification;
 
@@ -83,22 +82,14 @@ internal class FbConnectionInternal
 
 	public bool CancelDisabled { get; private set; }
 
-	#endregion
+		#endregion
+		#region Constructors
 
-	#region Constructors
+		#endregion
 
-	public FbConnectionInternal(ConnectionString options)
-	{
-		_preparedCommands = new HashSet<IFbPreparedCommand>();
+		#region Create and Drop database methods
 
-		_connectionStringOptions = options;
-	}
-
-	#endregion
-
-	#region Create and Drop database methods
-
-	public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite)
+		public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite)
 	{
 		var db = ClientFactory.CreateDatabase(_connectionStringOptions);
 
@@ -108,8 +99,8 @@ internal class FbConnectionInternal
 		{
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
-		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, new byte[] { (byte)_connectionStringOptions.Dialect, 0, 0, 0 });
+		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
 		if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
 		{
 			dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
@@ -155,8 +146,8 @@ internal class FbConnectionInternal
 		{
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
-		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, new byte[] { (byte)_connectionStringOptions.Dialect, 0, 0, 0 });
+		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)_connectionStringOptions.Dialect, 0, 0, 0]);
 		if (!string.IsNullOrEmpty(_connectionStringOptions.UserID))
 		{
 			dpb.Append(IscCodes.isc_dpb_user_name, _connectionStringOptions.UserID);
@@ -624,8 +615,8 @@ internal class FbConnectionInternal
 		{
 			dpb.Append(IscCodes.isc_dpb_utf8_filename, 0);
 		}
-		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
-		dpb.Append(IscCodes.isc_dpb_sql_dialect, new byte[] { (byte)options.Dialect, 0, 0, 0 });
+		dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, [120, 10, 0, 0]);
+		dpb.Append(IscCodes.isc_dpb_sql_dialect, [(byte)options.Dialect, 0, 0, 0]);
 		dpb.Append(IscCodes.isc_dpb_lc_ctype, options.Charset);
 		if (options.DbCachePages > 0)
 		{

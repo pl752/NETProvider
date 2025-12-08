@@ -39,16 +39,12 @@ public class FbServiceTraceConfiguration : FbTraceConfiguration
 
 	public string BuildConfiguration(FbTraceVersion version)
 	{
-		switch (version)
-		{
-			case FbTraceVersion.Version1:
-				return BuildConfiguration1();
-			case FbTraceVersion.Version2:
-				return BuildConfiguration2();
-			default:
-				throw new ArgumentOutOfRangeException(nameof(version));
+				return version switch {
+						FbTraceVersion.Version1 => BuildConfiguration1(),
+						FbTraceVersion.Version2 => BuildConfiguration2(),
+						_ => throw new ArgumentOutOfRangeException(nameof(version)),
+				};
 		}
-	}
 	string BuildConfiguration1()
 	{
 		var sb = new StringBuilder();

@@ -23,20 +23,15 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version16;
 
-internal class GdsBatch : BatchBase
+internal class GdsBatch(GdsStatement statement) : BatchBase
 {
-	protected GdsStatement _statement;
+	protected GdsStatement _statement = statement;
 
 	public override StatementBase Statement => _statement;
 
 	public GdsDatabase Database => (GdsDatabase)_statement.Database;
 
-	public GdsBatch(GdsStatement statement)
-	{
-		_statement = statement;
-	}
-
-	public override ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller)
+		public override ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller)
 	{
 		// this may throw error, so it needs to be before any writing
 		var parametersData = GetParametersData(count, descriptorFiller);
@@ -175,7 +170,7 @@ internal class GdsBatch : BatchBase
 		return ValueTask2.CompletedTask;
 	}
 
-	protected ExecuteResultItem[] BuildResult(BatchCompletionStateResponse response)
+	protected static ExecuteResultItem[] BuildResult(BatchCompletionStateResponse response)
 	{
 		var detailedErrors = response.DetailedErrors.ToDictionary(x => x.Item1, x => x.Item2);
 		var additionalErrorsPerMessage = response.AdditionalErrorsPerMessage.ToHashSet();

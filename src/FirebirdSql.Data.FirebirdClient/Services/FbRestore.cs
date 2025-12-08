@@ -24,7 +24,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbRestore : FbService
+public sealed class FbRestore(string connectionString = null) : FbService(connectionString)
 {
 	private int? _pageSize;
 	public int? PageSize
@@ -39,8 +39,8 @@ public sealed class FbRestore : FbService
 		}
 	}
 
-	public FbBackupFileCollection BackupFiles { get; }
-	public bool Verbose { get; set; }
+		public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
+		public bool Verbose { get; set; }
 	public int? VerboseInterval { get; set; }
 	public int? PageBuffers { get; set; }
 	public bool ReadOnly { get; set; }
@@ -48,13 +48,7 @@ public sealed class FbRestore : FbService
 	public FbRestoreFlags Options { get; set; }
 	public FbBackupRestoreStatistics? Statistics { get; set; }
 
-	public FbRestore(string connectionString = null)
-		: base(connectionString)
-	{
-		BackupFiles = new FbBackupFileCollection();
-	}
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

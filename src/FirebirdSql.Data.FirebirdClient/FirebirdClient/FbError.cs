@@ -24,10 +24,10 @@ public sealed class FbError
 {
 	#region Fields
 
-	private byte _classError;
-	private int _lineNumber;
-	private string _message;
-	private int _number;
+	private readonly byte _classError;
+	private readonly int _lineNumber;
+	private readonly string _message;
+	private readonly int _number;
 
 	#endregion
 

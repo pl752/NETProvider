@@ -24,7 +24,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNBackup : FbService
+public sealed class FbNBackup(string connectionString = null) : FbService(connectionString)
 {
 	private int _level;
 	public int Level
@@ -41,11 +41,7 @@ public sealed class FbNBackup : FbService
 	public bool DirectIO { get; set; }
 	public FbNBackupFlags Options { get; set; }
 
-	public FbNBackup(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

@@ -125,10 +125,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	{
 		get
 		{
-			if (_batchParameters == null)
-			{
-				_batchParameters = new FbBatchParameterCollection();
-			}
+			_batchParameters ??= new FbBatchParameterCollection();
 			return _batchParameters;
 		}
 	}
@@ -348,7 +345,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		_connection.CancelCommand();
 	}
 
-	public FbParameter CreateParameter()
+	public static FbParameter CreateParameter()
 	{
 		return new FbParameter();
 	}
@@ -390,16 +387,16 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		{
 			try
 			{
-				await PrepareAsync(false, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await PrepareAsync(false, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}
@@ -448,23 +445,23 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		{
 			try
 			{
-				result = await ExecuteCommandAsync(false, explicitCancellation.CancellationToken).ConfigureAwait(false);
+				result = await ExecuteCommandAsync(false, ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 
 				//if (_statement.StatementType == DbStatementType.StoredProcedure)
 				//{
 				//	await SetOutputParametersAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
 				//}
 
-				await CommitImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await CommitImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 			}
 			catch (IscException ex)
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw FbException.Create(ex);
 			}
 			catch
 			{
-				await RollbackImplicitTransactionAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				await RollbackImplicitTransactionAsync(ExplicitCancellation.ExplicitCancel.CancellationToken).ConfigureAwait(false);
 				throw;
 			}
 		}

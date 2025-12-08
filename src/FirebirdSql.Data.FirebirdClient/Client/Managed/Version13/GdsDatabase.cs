@@ -24,13 +24,9 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class GdsDatabase : Version12.GdsDatabase
+internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(connection)
 {
-	public GdsDatabase(GdsConnection connection)
-		: base(connection)
-	{ }
-
-	public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
 	{
 		try
 		{
@@ -51,7 +47,7 @@ internal class GdsDatabase : Version12.GdsDatabase
 				var genericResponse = (GenericResponse)response;
 				ProcessAttachResponse(genericResponse);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					AuthBlock.SendWireCryptToBuffer();
 					Xdr.Flush();
@@ -100,7 +96,7 @@ internal class GdsDatabase : Version12.GdsDatabase
 				var genericResponse = (GenericResponse)response;
 				await ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					await AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
 					await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -183,7 +179,7 @@ internal class GdsDatabase : Version12.GdsDatabase
 				var genericResponse = (GenericResponse)response;
 				ProcessCreateResponse(genericResponse);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					AuthBlock.SendWireCryptToBuffer();
 					Xdr.Flush();
@@ -223,7 +219,7 @@ internal class GdsDatabase : Version12.GdsDatabase
 				var genericResponse = (GenericResponse)response;
 				await ProcessCreateResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					await AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
 					await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);

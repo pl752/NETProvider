@@ -19,13 +19,9 @@ using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
-internal sealed class BatchParameterBuffer : DatabaseParameterBufferBase
+internal sealed class BatchParameterBuffer(Encoding encoding) : DatabaseParameterBufferBase(IscCodes.Batch.VERSION1, encoding)
 {
-	public BatchParameterBuffer(Encoding encoding)
-		: base(IscCodes.Batch.VERSION1, encoding)
-	{ }
-
-	public override void Append(int type, byte value)
+		public override void Append(int type, byte value)
 	{
 		WriteByte(type);
 		Write(1);

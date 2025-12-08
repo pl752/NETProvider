@@ -25,16 +25,12 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbNRestore : FbService
+public sealed class FbNRestore(string connectionString = null) : FbService(connectionString)
 {
 	public IEnumerable<string> BackupFiles { get; set; }
 	public bool DirectIO { get; set; }
 
-	public FbNRestore(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

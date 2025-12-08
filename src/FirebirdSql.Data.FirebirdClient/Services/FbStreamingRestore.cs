@@ -28,7 +28,7 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbStreamingRestore : FbService
+public class FbStreamingRestore(string connectionString = null) : FbService(connectionString)
 {
 	private int? _pageSize;
 	public int? PageSize
@@ -51,11 +51,7 @@ public class FbStreamingRestore : FbService
 	public string SkipData { get; set; }
 	public FbRestoreFlags Options { get; set; }
 
-	public FbStreamingRestore(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void Execute()
+		public void Execute()
 	{
 		EnsureDatabase();
 

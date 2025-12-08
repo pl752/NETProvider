@@ -30,7 +30,7 @@ internal sealed class FesServiceManager : ServiceManagerBase
 
 	private readonly IFbClient _fbClient;
 	private readonly Version _fbClientVersion;
-	private IntPtr[] _statusVector;
+	private readonly IntPtr[] _statusVector;
 
 	#endregion
 

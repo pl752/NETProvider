@@ -30,7 +30,7 @@ public sealed class FbErrorCollection : ICollection<FbError>
 {
 	#region Fields
 
-	private List<FbError> _errors;
+	private readonly List<FbError> _errors;
 
 	#endregion
 

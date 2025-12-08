@@ -66,7 +66,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 	#region Fields
 
 	private bool _disposed;
-	private bool _shouldDisposeSelectCommand;
+	private readonly bool _shouldDisposeSelectCommand;
 
 	#endregion
 
@@ -179,11 +179,9 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	protected override void OnRowUpdating(RowUpdatingEventArgs value)
 	{
-		EventHandler<FbRowUpdatingEventArgs> handler = null;
+				EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>)Events[EventRowUpdating];
 
-		handler = (EventHandler<FbRowUpdatingEventArgs>)base.Events[EventRowUpdating];
-
-		if ((null != handler) &&
+				if ((null != handler) &&
 			(value is FbRowUpdatingEventArgs) &&
 			(value != null))
 		{
@@ -193,11 +191,9 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	protected override void OnRowUpdated(RowUpdatedEventArgs value)
 	{
-		EventHandler<FbRowUpdatedEventArgs> handler = null;
+				EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>)Events[EventRowUpdated];
 
-		handler = (EventHandler<FbRowUpdatedEventArgs>)base.Events[EventRowUpdated];
-
-		if ((handler != null) &&
+				if ((handler != null) &&
 			(value is FbRowUpdatedEventArgs) &&
 			(value != null))
 		{
@@ -219,13 +215,11 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 		var statementType = StatementType.Insert;
 		ICollection<IDbConnection> connections = new List<IDbConnection>();
 		RowUpdatingEventArgs updatingArgs = null;
-		Exception updateException = null;
-
-		foreach (var row in dataRows)
+				foreach (var row in dataRows)
 		{
-			updateException = null;
+						Exception updateException = null;
 
-			if (row.RowState == DataRowState.Detached ||
+						if (row.RowState == DataRowState.Detached ||
 				row.RowState == DataRowState.Unchanged)
 			{
 				continue;
@@ -334,7 +328,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 					var rowsAffected = command.ExecuteNonQuery();
 					if (rowsAffected == 0)
 					{
-						throw new DBConcurrencyException(new DBConcurrencyException().Message, null, new DataRow[] { row });
+						throw new DBConcurrencyException(new DBConcurrencyException().Message, null, [row]);
 					}
 
 					updated++;
@@ -423,7 +417,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 					// If the update result is an exception throw it
 					if (!ContinueUpdateOnError && updateException != null)
 					{
-						CloseConnections(connections);
+												CloseConnections(connections);
 						throw updateException;
 					}
 
@@ -439,13 +433,13 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 				// If the update result is an exception throw it
 				if (!ContinueUpdateOnError && updateException != null)
 				{
-					CloseConnections(connections);
+										CloseConnections(connections);
 					throw updateException;
 				}
 			}
 		}
 
-		CloseConnections(connections);
+				CloseConnections(connections);
 
 		return updated;
 	}
@@ -454,7 +448,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	#region Private Methods
 
-	private string CreateExceptionMessage(StatementType statementType)
+	private static string CreateExceptionMessage(StatementType statementType)
 	{
 		var sb = new System.Text.StringBuilder();
 
@@ -494,20 +488,19 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 			if ((parameter.Direction == ParameterDirection.Input || parameter.Direction == ParameterDirection.InputOutput) &&
 				!string.IsNullOrEmpty(parameter.SourceColumn))
 			{
-				DataColumn column = null;
 
-				/* Get the DataColumnMapping that matches the given
-				 * column name
-				 */
-				var columnMapping = tableMapping.GetColumnMappingBySchemaAction(
+								/* Get the DataColumnMapping that matches the given
+								 * column name
+								 */
+								var columnMapping = tableMapping.GetColumnMappingBySchemaAction(
 					parameter.SourceColumn,
 					MissingMappingAction);
 
 				if (columnMapping != null)
 				{
-					column = columnMapping.GetDataColumnBySchemaAction(row.Table, null, MissingSchemaAction);
+										DataColumn column = columnMapping.GetDataColumnBySchemaAction(row.Table, null, MissingSchemaAction);
 
-					if (column != null)
+										if (column != null)
 					{
 						var dataRowVersion = DataRowVersion.Default;
 
@@ -538,7 +531,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 		}
 	}
 
-	private void CloseConnections(ICollection<IDbConnection> connections)
+	private static void CloseConnections(ICollection<IDbConnection> connections)
 	{
 		foreach (var c in connections)
 		{
@@ -547,7 +540,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 		connections.Clear();
 	}
 
-	private bool IsNull(object value)
+	private static bool IsNull(object value)
 	{
 		return FirebirdSql.Data.Common.TypeHelper.IsDBNull(value);
 	}

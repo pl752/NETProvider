@@ -23,13 +23,9 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class GdsServiceManager : Version12.GdsServiceManager
+internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServiceManager(connection)
 {
-	public GdsServiceManager(GdsConnection connection)
-		: base(connection)
-	{ }
-
-	public override bool UseUtf8ParameterBuffer => true;
+		public override bool UseUtf8ParameterBuffer => true;
 
 	public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
 	{
@@ -52,7 +48,7 @@ internal class GdsServiceManager : Version12.GdsServiceManager
 				var genericResponse = (GenericResponse)response;
 				base.ProcessAttachResponse(genericResponse);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					Database.AuthBlock.SendWireCryptToBuffer();
 					Database.Xdr.Flush();
@@ -98,7 +94,7 @@ internal class GdsServiceManager : Version12.GdsServiceManager
 				var genericResponse = (GenericResponse)response;
 				await base.ProcessAttachResponseAsync(genericResponse, cancellationToken).ConfigureAwait(false);
 
-				if (genericResponse.Data.Any())
+				if (genericResponse.Data.Length != 0)
 				{
 					await Database.AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
 					await Database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);

@@ -26,23 +26,23 @@ internal abstract class StatementBase
 {
 	#region Protected Static Fields
 
-	protected static readonly byte[] DescribePlanInfoItems = new byte[]
-	{
+	protected static readonly byte[] DescribePlanInfoItems =
+	[
 			IscCodes.isc_info_sql_get_plan,
-	};
+	];
 
-	protected static readonly byte[] DescribeExplaindPlanInfoItems = new byte[]
-	{
+	protected static readonly byte[] DescribeExplaindPlanInfoItems =
+	[
 			IscCodes.isc_info_sql_explain_plan,
-	};
+	];
 
-	protected static readonly byte[] RowsAffectedInfoItems = new byte[]
-	{
+	protected static readonly byte[] RowsAffectedInfoItems =
+	[
 			IscCodes.isc_info_sql_records,
-	};
+	];
 
-	protected static readonly byte[] DescribeInfoAndBindInfoItems = new byte[]
-	{
+	protected static readonly byte[] DescribeInfoAndBindInfoItems =
+	[
 			IscCodes.isc_info_sql_select,
 			IscCodes.isc_info_sql_describe_vars,
 			IscCodes.isc_info_sql_sqlda_seq,
@@ -68,12 +68,12 @@ internal abstract class StatementBase
 			// IscCodes.isc_info_sql_owner,
 			IscCodes.isc_info_sql_alias,
 			IscCodes.isc_info_sql_describe_end,
-	};
+	];
 
-	protected static readonly byte[] StatementTypeInfoItems = new byte[]
-	{
+	protected static readonly byte[] StatementTypeInfoItems =
+	[
 			IscCodes.isc_info_sql_stmt_type,
-	};
+	];
 
 	#endregion
 
@@ -293,24 +293,23 @@ internal abstract class StatementBase
 		return ProcessRecordsAffectedBuffer(buffer);
 	}
 
-	protected int ProcessRecordsAffectedBuffer(byte[] buffer)
+	protected static int ProcessRecordsAffectedBuffer(byte[] buffer)
 	{
 		var insertCount = 0;
 		var updateCount = 0;
 		var deleteCount = 0;
-		var selectCount = 0;
-		var pos = 0;
+				var pos = 0;
 
-		int type;
-		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				int type;
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
 			var length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 			pos += 2;
 			switch (type)
 			{
 				case IscCodes.isc_info_sql_records:
-					int t;
-					while ((t = buffer[pos++]) != IscCodes.isc_info_end)
+										int t;
+										while ((t = buffer[pos++]) != IscCodes.isc_info_end)
 					{
 						var l = (int)IscHelper.VaxInteger(buffer, pos, 2);
 						pos += 2;
@@ -326,8 +325,8 @@ internal abstract class StatementBase
 								deleteCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_select_count:
-								selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
-								break;
+																int selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
+																break;
 						}
 						pos += l;
 					}
@@ -352,17 +351,15 @@ internal abstract class StatementBase
 		return ProcessStatementTypeInfoBuffer(buffer);
 	}
 
-	protected DbStatementType ProcessStatementTypeInfoBuffer(byte[] buffer)
+	protected static DbStatementType ProcessStatementTypeInfoBuffer(byte[] buffer)
 	{
 		var stmtType = DbStatementType.None;
 		var pos = 0;
-		var length = 0;
-		var type = 0;
-
-		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+				int type;
+				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-			length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-			pos += 2;
+						int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+						pos += 2;
 			switch (type)
 			{
 				case IscCodes.isc_info_sql_stmt_type:

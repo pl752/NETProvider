@@ -66,7 +66,7 @@ internal class GdsStatement : Version11.GdsStatement
 
 				numberOfResponses--;
 				var executeResponse = (GenericResponse)_database.ReadResponse();
-				ProcessExecuteResponse(executeResponse);
+								ProcessExecuteResponse(executeResponse);
 			}
 			finally
 			{

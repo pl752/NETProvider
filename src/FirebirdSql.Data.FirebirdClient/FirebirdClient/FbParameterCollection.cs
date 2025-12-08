@@ -34,7 +34,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 {
 	#region Fields
 
-	private List<FbParameter> _parameters;
+	private readonly List<FbParameter> _parameters;
 	private bool? _hasParameterWithNonAsciiName;
 
 	#endregion
@@ -242,7 +242,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 			throw new ArgumentException("The parameter does not exist in the collection.");
 		}
 
-		ReleaseParameter(value);
+				ReleaseParameter(value);
 	}
 
 	public override void Remove(object value)
@@ -261,7 +261,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 		var parameter = this[index];
 		_parameters.RemoveAt(index);
-		ReleaseParameter(parameter);
+				ReleaseParameter(parameter);
 	}
 
 	public override void RemoveAt(string parameterName)
@@ -285,7 +285,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 		_parameters.Clear();
 		foreach (var parameter in parameters)
 		{
-			ReleaseParameter(parameter);
+						ReleaseParameter(parameter);
 		}
 	}
 
@@ -355,11 +355,8 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 	private void EnsureFbParameterAddOrInsert(FbParameter value)
 	{
-		if (value == null)
-		{
-			throw new ArgumentNullException();
-		}
-		if (value.Parent != null)
+				ArgumentNullException.ThrowIfNull(value);
+				if (value.Parent != null)
 		{
 			throw new ArgumentException($"The {nameof(FbParameter)} specified in the value parameter is already added to this or another {nameof(FbParameterCollection)}.");
 		}
@@ -381,7 +378,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 		parameter.Parent = this;
 	}
 
-	private void ReleaseParameter(FbParameter parameter)
+	private static void ReleaseParameter(FbParameter parameter)
 	{
 		parameter.Parent = null;
 	}

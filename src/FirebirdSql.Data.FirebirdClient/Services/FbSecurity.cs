@@ -24,13 +24,9 @@ using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Services;
 
-public sealed class FbSecurity : FbService
+public sealed class FbSecurity(string connectionString = null) : FbService(connectionString)
 {
-	public FbSecurity(string connectionString = null)
-		: base(connectionString)
-	{ }
-
-	public void AddUser(FbUserData user)
+		public void AddUser(FbUserData user)
 	{
 		if (string.IsNullOrEmpty(user.UserName))
 			throw new InvalidOperationException("Invalid user name.");
@@ -257,7 +253,7 @@ public sealed class FbSecurity : FbService
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				startSpb.Append2(IscCodes.isc_spb_sec_username, userName);
 				StartTask(startSpb);
-				var info = Query(new byte[] { IscCodes.isc_info_svc_get_users }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+				var info = Query([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 				return ((FbUserData[])info.FirstOrDefault())?.FirstOrDefault();
 			}
 			finally
@@ -281,7 +277,7 @@ public sealed class FbSecurity : FbService
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				startSpb.Append2(IscCodes.isc_spb_sec_username, userName);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-				var info = await QueryAsync(new byte[] { IscCodes.isc_info_svc_get_users }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+				var info = await QueryAsync([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 				return ((FbUserData[])info.FirstOrDefault())?.FirstOrDefault();
 			}
 			finally
@@ -305,7 +301,7 @@ public sealed class FbSecurity : FbService
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				StartTask(startSpb);
-				var info = Query(new byte[] { IscCodes.isc_info_svc_get_users }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+				var info = Query([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 				return (FbUserData[])info.FirstOrDefault();
 			}
 			finally
@@ -328,7 +324,7 @@ public sealed class FbSecurity : FbService
 				var startSpb = new ServiceParameterBuffer2(Service.ParameterBufferEncoding);
 				startSpb.Append(IscCodes.isc_action_svc_display_user);
 				await StartTaskAsync(startSpb, cancellationToken).ConfigureAwait(false);
-				var info = await QueryAsync(new byte[] { IscCodes.isc_info_svc_get_users }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+				var info = await QueryAsync([IscCodes.isc_info_svc_get_users], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 				return (FbUserData[])info.FirstOrDefault();
 			}
 			finally
@@ -349,7 +345,7 @@ public sealed class FbSecurity : FbService
 			try
 			{
 				Open();
-				var info = Query(new byte[] { IscCodes.isc_info_svc_user_dbpath }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
+				var info = Query([IscCodes.isc_info_svc_user_dbpath], new ServiceParameterBuffer2(Service.ParameterBufferEncoding));
 				return (string)info.FirstOrDefault();
 			}
 			finally
@@ -369,7 +365,7 @@ public sealed class FbSecurity : FbService
 			try
 			{
 				await OpenAsync(cancellationToken).ConfigureAwait(false);
-				var info = await QueryAsync(new byte[] { IscCodes.isc_info_svc_user_dbpath }, new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
+				var info = await QueryAsync([IscCodes.isc_info_svc_user_dbpath], new ServiceParameterBuffer2(Service.ParameterBufferEncoding), cancellationToken).ConfigureAwait(false);
 				return (string)info.FirstOrDefault();
 			}
 			finally

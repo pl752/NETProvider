@@ -22,28 +22,21 @@ namespace FirebirdSql.Data.Client.Managed;
 
 internal static class ProtocolsSupported
 {
-	internal class Protocol
-	{
-		public int Version { get; }
-		public int MaxPType { get; }
-
-		public Protocol(int version, int maxPType)
-		{
-			Version = version;
-			MaxPType = maxPType;
+	internal class Protocol(int version, int maxPType) {
+				public int Version { get; } = version;
+				public int MaxPType { get; } = maxPType;
 		}
-	}
 
 	public static ICollection<Protocol> Get(bool compression)
 	{
-		return new[]
-		{
+		return
+		[
 				new Protocol(IscCodes.PROTOCOL_VERSION10, IscCodes.ptype_batch_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION11, IscCodes.ptype_lazy_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION12, IscCodes.ptype_lazy_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION13, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
 				new Protocol(IscCodes.PROTOCOL_VERSION15, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
 				new Protocol(IscCodes.PROTOCOL_VERSION16, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
-			};
+			];
 	}
 }

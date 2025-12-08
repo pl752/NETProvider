@@ -20,14 +20,8 @@ using System.ComponentModel;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbRemoteEventCountsEventArgs : EventArgs
+public sealed class FbRemoteEventCountsEventArgs(string name, int counts) : EventArgs
 {
-	public string Name { get; }
-	public int Counts { get; }
-
-	public FbRemoteEventCountsEventArgs(string name, int counts)
-	{
-		Name = name;
-		Counts = counts;
-	}
+		public string Name { get; } = name;
+		public int Counts { get; } = counts;
 }

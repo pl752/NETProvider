@@ -62,10 +62,7 @@ namespace FirebirdSql.Data.Client.Native
 						var er = statusVector[i++];
 						if (er != IntPtr.Zero)
 						{
-							if (exception == null)
-							{
-								exception = IscException.ForBuilding();
-							}
+							exception ??= IscException.ForBuilding();
 							exception.Errors.Add(new IscError(arg.AsInt(), er.AsInt()));
 						}
 						break;
