@@ -95,7 +95,7 @@ abstract class SrpClientBase
 		return (B, b);
 	}
 
-	public byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b)
+	public static byte[] GetServerSessionKey(string user, string password, byte[] salt, BigInteger A, BigInteger B, BigInteger b)
 	{
 		var u = GetScramble(A, B);
 		var v = BigInteger.ModPow(g, GetUserHash(user, password, salt), N);
@@ -105,12 +105,12 @@ abstract class SrpClientBase
 		return ComputeSHA1Hash(BigIntegerToByteArray(sessionSecret));
 	}
 
-	public byte[] GetSalt()
+	public static byte[] GetSalt()
 	{
 		return GetRandomBytes(SRP_SALT_SIZE);
 	}
 
-	private BigInteger GetSecret()
+	private static BigInteger GetSecret()
 	{
 		return new BigInteger(GetRandomBytes(SRP_KEY_SIZE / 8).Concat(new byte[] { 0 }).ToArray());
 	}
@@ -146,26 +146,28 @@ abstract class SrpClientBase
 
 	private static BigInteger BigIntegerFromByteArray(byte[] b)
 	{
-		return new BigInteger(b.Reverse().Concat(new byte[] { 0 }).ToArray());
+		Span<byte> bytes = [0, ..b];
+		bytes.Reverse();
+		return new BigInteger(bytes);
 	}
 
 	private static byte[] BigIntegerToByteArray(BigInteger n)
 	{
-		return n.ToByteArray().Reverse().SkipWhile((e, i) => i == 0 && e == 0).ToArray();
+		Span<byte> bytes = stackalloc byte[n.GetByteCount()];
+		n.TryWriteBytes(bytes, out _);
+		bytes.Reverse();
+		if (bytes[0] == 0) return bytes[1..].ToArray();
+		return bytes.ToArray();
 	}
 
-	private static byte[] ComputeSHA1Hash(params byte[][] ba)
-	{
-		using (var hash = SHA1.Create())
-		{
-			return hash.ComputeHash(ba.SelectMany(x => x).ToArray());
+	private static byte[] ComputeSHA1Hash(params byte[][] ba) {
+				return SHA1.HashData([.. ba.SelectMany(x => x)]);
 		}
-	}
 
-	private static byte[] Pad(BigInteger n)
+		private static byte[] Pad(BigInteger n)
 	{
 		var bn = BigIntegerToByteArray(n);
-		return bn.SkipWhile((_, i) => i < bn.Length - SRP_KEY_SIZE).ToArray();
+		return [.. bn.SkipWhile((_, i) => i < bn.Length - SRP_KEY_SIZE)];
 	}
 
 	private static BigInteger GetScramble(BigInteger x, BigInteger y)

@@ -63,7 +63,8 @@ internal abstract class ParameterBuffer
 		{
 			value = IPAddress.NetworkToHostOrder(value);
 		}
-		var buffer = BitConverter.GetBytes(value);
+		Span<byte> buffer = stackalloc byte[2];
+		BitConverter.TryWriteBytes(buffer, value);
 		Write(buffer);
 	}
 
@@ -73,7 +74,8 @@ internal abstract class ParameterBuffer
 		{
 			value = IPAddress.NetworkToHostOrder(value);
 		}
-		var buffer = BitConverter.GetBytes(value);
+		Span<byte> buffer = stackalloc byte[4];
+		BitConverter.TryWriteBytes(buffer, value);
 		Write(buffer);
 	}
 
@@ -83,13 +85,18 @@ internal abstract class ParameterBuffer
 		{
 			value = IPAddress.NetworkToHostOrder(value);
 		}
-		var buffer = BitConverter.GetBytes(value);
+		Span<byte> buffer = stackalloc byte[8];
+		BitConverter.TryWriteBytes(buffer, value);
 		Write(buffer);
 	}
 
 	protected void Write(byte[] buffer)
 	{
 		Write(buffer, 0, buffer.Length);
+	}
+
+	protected void Write(ReadOnlySpan<byte> buffer) {
+		_data.AddRange(buffer);
 	}
 
 	protected void Write(byte[] buffer, int offset, int count)
