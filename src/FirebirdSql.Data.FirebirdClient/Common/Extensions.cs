@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
 
 namespace FirebirdSql.Data.Common;
 
@@ -67,6 +68,15 @@ internal static class Extensions
 	public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new HashSet<T>(source);
 #endif
 
+	public static IEnumerable<char>	RunesToChars(this IEnumerable<Rune> s) {
+		char[] chars = new char[2];
+		foreach (var rune in s) {
+			int n = rune.EncodeToUtf16(chars);
+			yield return chars[0];
+			if(n > 1) yield return chars[1];
+		}
+	}
+
 	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
 	{
 		ArgumentNullException.ThrowIfNull(s);
@@ -86,7 +96,7 @@ internal static class Extensions
 		}
 
 #else
-		return s.EnumerateRunes().Select(r =>
+				return s.EnumerateRunes().Select(r =>
 		{
 			var result = new char[r.Utf16SequenceLength];
 			r.EncodeToUtf16(result);
