@@ -1587,17 +1587,8 @@ internal class GdsStatement : StatementBase
 				else
 				{
 					var s = xdr.ReadString(innerCharset, field.Length);
-					var runes = s.EnumerateRunesEx().ToList();
-					if ((field.Length % field.Charset.BytesPerCharacter) == 0 &&
-						runes.Count > field.CharCount)
-					{
-						return new string([.. runes.Take(field.CharCount).SelectMany(x => x)]);
+					return TruncateStringByRuneCount(s, field);
 					}
-					else
-					{
-						return s;
-					}
-				}
 
 			case DbDataType.VarChar:
 				if (field.Charset.IsOctetsCharset)
@@ -1685,17 +1676,8 @@ internal class GdsStatement : StatementBase
 				else
 				{
 					var s = await xdr.ReadStringAsync(innerCharset, field.Length, cancellationToken).ConfigureAwait(false);
-					var runes = s.EnumerateRunesEx().ToList();
-					if ((field.Length % field.Charset.BytesPerCharacter) == 0 &&
-						runes.Count > field.CharCount)
-					{
-						return new string([.. runes.Take(field.CharCount).SelectMany(x => x)]);
+					return TruncateStringByRuneCount(s, field);
 					}
-					else
-					{
-						return s;
-					}
-				}
 
 			case DbDataType.VarChar:
 				if (field.Charset.IsOctetsCharset)
@@ -1849,6 +1831,65 @@ internal class GdsStatement : StatementBase
 			throw IscException.ForIOException(ex);
 		}
 		return row;
+	}
+
+	private static string TruncateStringByRuneCount(string s, DbField field)
+	{
+		if ((field.Length % field.Charset.BytesPerCharacter) != 0)
+		{
+			return s;
+		}
+
+		var runeCount = CountRunes(s.AsSpan());
+		if (runeCount <= field.CharCount)
+		{
+			return s;
+		}
+
+		return TruncateStringToRuneCount(s.AsSpan(), field.CharCount);
+	}
+
+	private static int CountRunes(ReadOnlySpan<char> text)
+	{
+		var count = 0;
+		var i = 0;
+		while (i < text.Length)
+		{
+			if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+			{
+				i += 2;
+			}
+			else
+			{
+				i++;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	private static string TruncateStringToRuneCount(ReadOnlySpan<char> text, int maxRuneCount)
+	{
+		var count = 0;
+		var i = 0;
+		while (i < text.Length && count < maxRuneCount)
+		{
+			var nextI = i;
+			if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+			{
+				nextI += 2;
+			}
+			else
+			{
+				nextI++;
+			}
+			count++;
+			if (count <= maxRuneCount)
+			{
+				i = nextI;
+			}
+		}
+		return text[..i].ToString();
 	}
 
 	#endregion
