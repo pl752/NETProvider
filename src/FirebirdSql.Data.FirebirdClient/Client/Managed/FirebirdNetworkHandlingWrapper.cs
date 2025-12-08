@@ -44,7 +44,7 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 	Org.BouncyCastle.Crypto.Engines.RC4Engine _decryptor;
 	Org.BouncyCastle.Crypto.Engines.RC4Engine _encryptor;
 
-	public bool IOFailed { get; set; }
+		public bool IOFailed { get; set; }
 
 	public int Read(byte[] buffer, int offset, int count)
 	{
@@ -156,12 +156,12 @@ sealed class FirebirdNetworkHandlingWrapper(IDataProvider dataProvider) : IDataP
 
 	public void Write(byte[] buffer, int offset, int count)
 	{
-		for (var i = offset; i < count; i++)
+		for (int i = 0; i < count; i++)
 			_outputBuffer.Enqueue(buffer[offset + i]);
 	}
 	public ValueTask WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 	{
-		for (var i = offset; i < count; i++)
+		for (int i = 0; i < count; i++)
 			_outputBuffer.Enqueue(buffer[offset + i]);
 		return ValueTask2.CompletedTask;
 	}
