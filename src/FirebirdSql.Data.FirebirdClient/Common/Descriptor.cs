@@ -78,7 +78,7 @@ internal sealed class Descriptor
 		_version = IscCodes.SQLDA_VERSION1;
 		_count = n;
 		_actualCount = n;
-		_fields = new DbField[n];
+		_fields = n > 0 ? new DbField[n] : Array.Empty<DbField>();
 
 		for (var i = 0; i < n; i++)
 		{
@@ -101,7 +101,7 @@ internal sealed class Descriptor
 	internal sealed class BlrData(byte[] data, int length) {
 				public byte[] Data { get; } = data;
 				public int Length { get; } = length;
-	}
+		}
 	public BlrData ToBlr()
 	{
 		using (var blr = new MemoryStream(256))

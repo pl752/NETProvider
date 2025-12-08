@@ -315,7 +315,7 @@ internal class GdsStatement : StatementBase
 			}
 
 			var executeResponse = (GenericResponse)_database.ReadResponse();
-			ProcessExecuteResponse(executeResponse);
+						ProcessExecuteResponse(executeResponse);
 
 			if (DoRecordsAffected)
 			{
@@ -654,7 +654,7 @@ internal class GdsStatement : StatementBase
 			return;
 
 		DoFreePacket(option);
-		ProcessFreeResponse(_database.ReadResponse());
+				ProcessFreeResponse(_database.ReadResponse());
 	}
 	protected override async ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
 	{
@@ -1200,7 +1200,7 @@ internal class GdsStatement : StatementBase
 				var field = _parameters[i];
 				try
 				{
-					WriteRawParameter(xdr, field);
+										WriteRawParameter(xdr, field);
 					xdr.Write(field.NullFlag);
 				}
 				catch (IOException ex)
@@ -1263,25 +1263,25 @@ internal class GdsStatement : StatementBase
 						if (byteCount > field.Length)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
-					}
+						}
 						Span<byte> stack = byteCount <= 512 ? stackalloc byte[byteCount] : Span<byte>.Empty;
 						if (!stack.IsEmpty)
 						{
 							encoding.GetBytes(svalue.AsSpan(), stack);
 							xdr.WriteOpaque(stack, field.Length);
 						}
-					else
-					{
+						else
+						{
 							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 							try
-						{
+							{
 								var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 								xdr.WriteOpaque(rented.AsSpan(0, written), field.Length);
-						}
+							}
 							finally
 							{
 								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
-					}
+							}
 						}
 					}
 					break;
@@ -1305,9 +1305,9 @@ internal class GdsStatement : StatementBase
 						{
 							encoding.GetBytes(svalue.AsSpan(), stack);
 							xdr.WriteBuffer(stack);
-					}
-					else
-					{
+						}
+						else
+						{
 							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 							try
 							{
@@ -1315,7 +1315,7 @@ internal class GdsStatement : StatementBase
 								xdr.WriteBuffer(rented.AsSpan(0, written));
 							}
 							finally
-						{
+							{
 								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
 							}
 						}
@@ -1437,16 +1437,16 @@ internal class GdsStatement : StatementBase
 						if (byteCount > field.Length)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
-					}
+						}
 						{
 							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 							try
-					{
+							{
 								var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 								await xdr.WriteOpaqueAsync(rented.AsMemory(0, written), written, cancellationToken).ConfigureAwait(false);
 							}
 							finally
-						{
+							{
 								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
 							}
 						}
@@ -1470,12 +1470,12 @@ internal class GdsStatement : StatementBase
 						{
 							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
 							try
-					{
+							{
 								var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
 								await xdr.WriteBufferAsync(rented.AsMemory(0, written), cancellationToken).ConfigureAwait(false);
 							}
 							finally
-						{
+							{
 								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
 							}
 						}
@@ -1588,7 +1588,7 @@ internal class GdsStatement : StatementBase
 				{
 					var s = xdr.ReadString(innerCharset, field.Length);
 					return TruncateStringByRuneCount(s, field);
-					}
+				}
 
 			case DbDataType.VarChar:
 				if (field.Charset.IsOctetsCharset)
@@ -1677,7 +1677,7 @@ internal class GdsStatement : StatementBase
 				{
 					var s = await xdr.ReadStringAsync(innerCharset, field.Length, cancellationToken).ConfigureAwait(false);
 					return TruncateStringByRuneCount(s, field);
-					}
+				}
 
 			case DbDataType.VarChar:
 				if (field.Charset.IsOctetsCharset)
@@ -1776,7 +1776,7 @@ internal class GdsStatement : StatementBase
 
 	protected virtual DbValue[] ReadRow()
 	{
-		var row = new DbValue[_fields.Count];
+		var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 		try
 		{
 			for (var i = 0; i < _fields.Count; i++)
@@ -1805,7 +1805,7 @@ internal class GdsStatement : StatementBase
 	}
 	protected virtual async ValueTask<DbValue[]> ReadRowAsync(CancellationToken cancellationToken = default)
 	{
-		var row = new DbValue[_fields.Count];
+		var row = _fields.Count > 0 ? new DbValue[_fields.Count] : [];
 		try
 		{
 			for (var i = 0; i < _fields.Count; i++)
