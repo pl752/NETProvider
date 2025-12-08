@@ -22,7 +22,12 @@ using System.Runtime.InteropServices;
 
 namespace FirebirdSql.Data.Client.Managed.Sspi;
 
-internal sealed class SspiHelper : IDisposable
+/// <summary>
+/// Creates SSPIHelper with given security package and remote principal and gets client credentials
+/// </summary>
+/// <param name="securityPackage">Name of security package (e.g. NTLM, Kerberos, ...)</param>
+/// <param name="remotePrincipal">SPN of server (may be necessary for Kerberos</param>
+internal sealed partial class SspiHelper(string securityPackage, string remotePrincipal) : IDisposable
 {
 	public string Name { get; } = "Win_Sspi";
 
@@ -38,51 +43,30 @@ internal sealed class SspiHelper : IDisposable
 	#region Structures used in native Win API calls
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SecHandle
-	{
-		public IntPtr LowPart;
-		public IntPtr HighPart;
+	public struct SecHandle(int? dummy = null) {
+		public IntPtr LowPart = IntPtr.Zero;
+		public IntPtr HighPart = IntPtr.Zero;
 
-		public SecHandle(int? dummy = null)
-		{
-			LowPart = IntPtr.Zero;
-			HighPart = IntPtr.Zero;
-		}
-
-		public bool IsInvalid
+				public readonly bool IsInvalid
 		{
 			get { return LowPart == IntPtr.Zero && HighPart == IntPtr.Zero; }
 		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SecInteger
-	{
-		public uint LowPart;
-		public int HighPart;
-
-		public SecInteger(int? dummy = null)
-		{
-			LowPart = 0;
-			HighPart = 0;
-		}
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	private struct SecBuffer : IDisposable
-	{
-		private int cbBuffer;
-		private int bufferType;
-		private IntPtr pvBuffer;
-
-		public SecBuffer(int bufferSize)
-		{
-			cbBuffer = bufferSize;
-			bufferType = (int)SecBufferType.SECBUFFER_TOKEN;
-			pvBuffer = Marshal.AllocHGlobal(bufferSize);
+	public struct SecInteger(int? dummy = null) {
+		public uint LowPart = 0;
+		public int HighPart = 0;
 		}
 
-		public SecBuffer(byte[] secBufferBytes)
+		[StructLayout(LayoutKind.Sequential)]
+	private struct SecBuffer(int bufferSize) : IDisposable
+	{
+		private readonly int cbBuffer = bufferSize;
+		private readonly int bufferType = (int)SecBufferType.SECBUFFER_TOKEN;
+		private IntPtr pvBuffer = Marshal.AllocHGlobal(bufferSize);
+
+				public SecBuffer(byte[] secBufferBytes)
 			: this(secBufferBytes.Length)
 		{
 			Marshal.Copy(secBufferBytes, 0, pvBuffer, cbBuffer);
@@ -103,7 +87,7 @@ internal sealed class SspiHelper : IDisposable
 			}
 		}
 
-		public byte[] GetBytes()
+		public readonly byte[] GetBytes()
 		{
 			byte[] buffer = null;
 			if (cbBuffer > 0)
@@ -151,7 +135,7 @@ internal sealed class SspiHelper : IDisposable
 			}
 		}
 
-		public byte[] GetSecBufferBytes()
+		public readonly byte[] GetSecBufferBytes()
 		{
 			if (pBuffers == IntPtr.Zero)
 				throw new ObjectDisposedException(nameof(SecBufferDesc));
@@ -206,8 +190,8 @@ internal sealed class SspiHelper : IDisposable
 
 	#region Prototypes of native Win API functions
 
-	[DllImport("secur32")]
-	static extern int AcquireCredentialsHandle(
+	[LibraryImport("secur32", StringMarshalling = StringMarshalling.Utf8)]
+	private static partial int AcquireCredentialsHandle(
 		string pszPrincipal, //SEC_CHAR*
 		string pszPackage, //SEC_CHAR* //"Kerberos","NTLM","Negotiative"
 		int fCredentialUse,
@@ -219,8 +203,8 @@ internal sealed class SspiHelper : IDisposable
 		out SecInteger ptsExpiry //PTimeStamp //TimeStamp ref
 	);
 
-	[DllImport("secur32", SetLastError = true)]
-	static extern int InitializeSecurityContext(
+	[LibraryImport("secur32", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+	private static partial int InitializeSecurityContext(
 		ref SecHandle phCredential,//PCredHandle
 		IntPtr phContext, //PCtxtHandle
 		string pszTargetName,
@@ -237,8 +221,8 @@ internal sealed class SspiHelper : IDisposable
 
 	// 2 signatures of this API function needed because different usage
 
-	[DllImport("secur32", SetLastError = true)]
-	static extern int InitializeSecurityContext(
+	[LibraryImport("secur32", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+	private static partial int InitializeSecurityContext(
 		ref SecHandle phCredential,//PCredHandle
 		ref SecHandle phContext, //PCtxtHandle
 		string pszTargetName,
@@ -253,11 +237,11 @@ internal sealed class SspiHelper : IDisposable
 		out SecInteger ptsExpiry //PTimeStamp
 	);
 
-	[DllImport("secur32")]
-	static extern int FreeCredentialsHandle(ref SecHandle phCredential); //PCredHandle
+	[LibraryImport("secur32")]
+	private static partial int FreeCredentialsHandle(ref SecHandle phCredential); //PCredHandle
 
-	[DllImport("secur32")]
-	static extern int DeleteSecurityContext(ref SecHandle phContext); //PCtxtHandle
+	[LibraryImport("secur32")]
+	private static partial int DeleteSecurityContext(ref SecHandle phContext); //PCtxtHandle
 
 	#endregion
 
@@ -267,8 +251,8 @@ internal sealed class SspiHelper : IDisposable
 	private SecHandle _clientContext;
 	private bool _disposed;
 
-	private string _securityPackage;
-	private string _remotePrincipal;
+	private readonly string _securityPackage = securityPackage;
+	private readonly string _remotePrincipal = remotePrincipal;
 
 	#endregion
 
@@ -289,26 +273,15 @@ internal sealed class SspiHelper : IDisposable
 		: this(securityPackage, null)
 	{ }
 
-	/// <summary>
-	/// Creates SSPIHelper with given security package and remote principal and gets client credentials
-	/// </summary>
-	/// <param name="securityPackage">Name of security package (e.g. NTLM, Kerberos, ...)</param>
-	/// <param name="remotePrincipal">SPN of server (may be necessary for Kerberos</param>
-	public SspiHelper(string securityPackage, string remotePrincipal)
-	{
-		_securityPackage = securityPackage;
-		_remotePrincipal = remotePrincipal;
-	}
+		#endregion
 
-	#endregion
+		#region Methods
 
-	#region Methods
-
-	/// <summary>
-	/// Creates client security context and returns "client token"
-	/// </summary>
-	/// <returns>Client authentication data to be sent to server</returns>
-	public byte[] InitializeClientSecurity()
+		/// <summary>
+		/// Creates client security context and returns "client token"
+		/// </summary>
+		/// <returns>Client authentication data to be sent to server</returns>
+		public byte[] InitializeClientSecurity()
 	{
 		EnsureDisposed();
 		CloseClientContext();
