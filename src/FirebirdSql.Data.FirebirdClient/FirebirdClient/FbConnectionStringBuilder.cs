@@ -341,48 +341,52 @@ public class FbConnectionStringBuilder : DbConnectionStringBuilder
 		var key = GetKey(keyword);
 		if (!TryGetValue(key, out var value))
 			return defaultValue;
-				return value switch {
-						FbServerType fbServerType => fbServerType,
-						string s when Enum.TryParse<FbServerType>(s, true, out var enumResult) => enumResult,
-						_ => Common.ConnectionString.GetServerType(key, base.TryGetValue, defaultValue),
-				};
-		}
+		return value switch
+		{
+			FbServerType fbServerType => fbServerType,
+			string s when Enum.TryParse<FbServerType>(s, true, out var enumResult) => enumResult,
+			_ => Common.ConnectionString.GetServerType(key, base.TryGetValue, defaultValue),
+		};
+	}
 
 	private IsolationLevel GetIsolationLevel(string keyword, IsolationLevel defaultValue)
 	{
 		var key = GetKey(keyword);
 		if (!TryGetValue(key, out var value))
 			return defaultValue;
-				return value switch {
-						IsolationLevel isolationLevel => isolationLevel,
-						string s when Enum.TryParse<IsolationLevel>(s, true, out var enumResult) => enumResult,
-						_ => Common.ConnectionString.GetIsolationLevel(key, base.TryGetValue, defaultValue),
-				};
-		}
+		return value switch
+		{
+			IsolationLevel isolationLevel => isolationLevel,
+			string s when Enum.TryParse<IsolationLevel>(s, true, out var enumResult) => enumResult,
+			_ => Common.ConnectionString.GetIsolationLevel(key, base.TryGetValue, defaultValue),
+		};
+	}
 
 	private FbWireCrypt GetWireCrypt(string keyword, FbWireCrypt defaultValue)
 	{
 		var key = GetKey(keyword);
 		if (!TryGetValue(key, out var value))
 			return defaultValue;
-				return value switch {
-						FbWireCrypt fbWireCrypt => fbWireCrypt,
-						string s when Enum.TryParse<FbWireCrypt>(s, true, out var enumResult) => enumResult,
-						_ => Common.ConnectionString.GetWireCrypt(key, base.TryGetValue, defaultValue),
-				};
-		}
+		return value switch
+		{
+			FbWireCrypt fbWireCrypt => fbWireCrypt,
+			string s when Enum.TryParse<FbWireCrypt>(s, true, out var enumResult) => enumResult,
+			_ => Common.ConnectionString.GetWireCrypt(key, base.TryGetValue, defaultValue),
+		};
+	}
 
 	private byte[] GetBytes(string keyword, byte[] defaultValue)
 	{
 		var key = GetKey(keyword);
 		if (!TryGetValue(key, out var value))
 			return defaultValue;
-				return value switch {
-						byte[] bytes => bytes,
-						string s => Convert.FromBase64String(s),
-						_ => defaultValue,
-				};
-		}
+		return value switch
+		{
+			byte[] bytes => bytes,
+			string s => Convert.FromBase64String(s),
+			_ => defaultValue,
+		};
+	}
 
 	private void SetValue<T>(string keyword, T value)
 	{

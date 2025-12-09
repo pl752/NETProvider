@@ -33,23 +33,25 @@ internal sealed class IscError
 	{
 		get
 		{
-						return Type switch {
-								IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_sql_state => _strParam,
-								IscCodes.isc_arg_number => ErrorCode.ToString(CultureInfo.InvariantCulture),
-								_ => string.Empty,
-						};
-				}
+			return Type switch
+			{
+				IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_sql_state => _strParam,
+				IscCodes.isc_arg_number => ErrorCode.ToString(CultureInfo.InvariantCulture),
+				_ => string.Empty,
+			};
+		}
 	}
 
 	public bool IsArgument
 	{
 		get
 		{
-						return Type switch {
-								IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_number => true,
-								_ => false,
-						};
-				}
+			return Type switch
+			{
+				IscCodes.isc_arg_interpreted or IscCodes.isc_arg_string or IscCodes.isc_arg_cstring or IscCodes.isc_arg_number => true,
+				_ => false,
+			};
+		}
 	}
 
 	public bool IsWarning

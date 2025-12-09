@@ -23,9 +23,10 @@ using System.Text;
 
 namespace FirebirdSql.Data.Isql;
 
-class SqlStringParser(string targetString) {
-		readonly string _source = targetString;
-		readonly int _sourceLength = targetString.Length;
+class SqlStringParser(string targetString)
+{
+	readonly string _source = targetString;
+	readonly int _sourceLength = targetString.Length;
 	string[] _tokens = [" "];
 
 	public string[] Tokens
@@ -33,25 +34,25 @@ class SqlStringParser(string targetString) {
 		get { return _tokens; }
 		set
 		{
-						ArgumentNullException.ThrowIfNull(value);
-						foreach (var item in value)
+			ArgumentNullException.ThrowIfNull(value);
+			foreach (var item in value)
 			{
-								ArgumentNullException.ThrowIfNull(value);
-								if (string.IsNullOrEmpty(item))
+				ArgumentNullException.ThrowIfNull(value);
+				if (string.IsNullOrEmpty(item))
 					throw new ArgumentException();
 			}
 			_tokens = value;
 		}
 	}
 
-		public IEnumerable<FbStatement> Parse()
+	public IEnumerable<FbStatement> Parse()
 	{
 		var lastYield = 0;
 		var index = 0;
 		var rawResult = new StringBuilder();
 		while (true)
 		{
-			Continue:
+		Continue:
 			{ }
 			if (index >= _sourceLength)
 			{
@@ -106,12 +107,12 @@ class SqlStringParser(string targetString) {
 				yield break;
 			}
 			yield return new FbStatement(parsed, rawResult.ToString());
-						rawResult.Clear();
+			rawResult.Clear();
 		}
 		else
 		{
 			yield return new FbStatement(_source[lastYield..index], rawResult.ToString());
-						rawResult.Clear();
+			rawResult.Clear();
 		}
 	}
 

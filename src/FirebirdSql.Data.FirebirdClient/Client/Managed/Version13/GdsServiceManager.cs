@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class GdsServiceManager(GdsConnection connection) : Version12.GdsServiceManager(connection)
 {
-		public override bool UseUtf8ParameterBuffer => true;
+	public override bool UseUtf8ParameterBuffer => true;
 
 	public override void Attach(ServiceParameterBufferBase spb, string dataSource, int port, string service, byte[] cryptKey)
 	{

@@ -28,15 +28,16 @@ sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider
 {
 	readonly Stream _stream = stream;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public int Read(byte[] buffer, int offset, int count)
 	{
 		return _stream.Read(buffer, offset, count);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int Read(Span<byte> buffer, int offset, int count) {
-		return _stream.Read(buffer[offset..(offset+count)]);
+	public int Read(Span<byte> buffer, int offset, int count)
+	{
+		return _stream.Read(buffer[offset..(offset + count)]);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,13 +47,14 @@ sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
-    {
-        return _stream.ReadAsync(buffer.Slice(offset, count), cancellationToken);
-    }
+	public ValueTask<int> ReadAsync(Memory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
+	{
+		return _stream.ReadAsync(buffer.Slice(offset, count), cancellationToken);
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public void Write(ReadOnlySpan<byte> buffer) {
+	public void Write(ReadOnlySpan<byte> buffer)
+	{
 		_stream.Write(buffer);
 	}
 
@@ -68,10 +70,10 @@ sealed class DataProviderStreamWrapper(Stream stream) : IDataProvider
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
-    {
-        return _stream.WriteAsync(buffer.Slice(offset, count), cancellationToken);
-    }
+	public ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, int offset, int count, CancellationToken cancellationToken = default)
+	{
+		return _stream.WriteAsync(buffer.Slice(offset, count), cancellationToken);
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Flush()

@@ -31,8 +31,8 @@ public class FbScript
 {
 	public event EventHandler<UnknownStatementEventArgs> UnknownStatement;
 
-		readonly SqlStringParser _parser;
-		readonly FbStatementCollection _results;
+	readonly SqlStringParser _parser;
+	readonly FbStatementCollection _results;
 
 	/// <summary>
 	/// Returns a FbStatementCollection containing all the SQL statements (without comments) present on the file.
@@ -53,9 +53,9 @@ public class FbScript
 
 	public FbScript(string script)
 	{
-				ArgumentNullException.ThrowIfNull(script);
+		ArgumentNullException.ThrowIfNull(script);
 
-				_results = new FbStatementCollection();
+		_results = new FbStatementCollection();
 		_parser = new SqlStringParser(script);
 		_parser.Tokens = [";"];
 	}

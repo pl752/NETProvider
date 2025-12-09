@@ -73,9 +73,9 @@ public sealed class FbParameter : DbParameter, ICloneable
 		}
 		set
 		{
-						ArgumentOutOfRangeException.ThrowIfNegative(value);
+			ArgumentOutOfRangeException.ThrowIfNegative(value);
 
-						_size = value;
+			_size = value;
 
 			// Hack for Clob parameters
 			if (value == 2147483647 &&

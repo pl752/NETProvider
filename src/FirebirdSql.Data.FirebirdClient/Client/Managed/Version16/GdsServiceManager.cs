@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Client.Managed.Version16;
 
 internal class GdsServiceManager(GdsConnection connection) : Version15.GdsServiceManager(connection)
 {
-		protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection)
+	protected override Version10.GdsDatabase CreateDatabase(GdsConnection connection)
 	{
 		return new GdsDatabase(connection);
 	}

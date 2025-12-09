@@ -31,7 +31,7 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 
 	public GdsDatabase Database => (GdsDatabase)_statement.Database;
 
-		public override ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller)
+	public override ExecuteResultItem[] Execute(int count, IDescriptorFiller descriptorFiller)
 	{
 		// this may throw error, so it needs to be before any writing
 		var parametersData = GetParametersData(count, descriptorFiller);
@@ -141,7 +141,8 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 	public override int ComputeBatchSize(int count, IDescriptorFiller descriptorFiller)
 	{
 		var total = 0;
-		for(var i = 0; i < count; i++) {
+		for (var i = 0; i < count; i++)
+		{
 			var item = _statement.GetParameterData(descriptorFiller, i);
 			total += item.Length;
 		}
@@ -150,7 +151,8 @@ internal class GdsBatch(GdsStatement statement) : BatchBase
 	public override async ValueTask<int> ComputeBatchSizeAsync(int count, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
 	{
 		var total = 0;
-		for(var i = 0; i < count; i++) {
+		for (var i = 0; i < count; i++)
+		{
 			var item = await _statement.GetParameterDataAsync(descriptorFiller, i, cancellationToken).ConfigureAwait(false);
 			total += item.Length;
 		}

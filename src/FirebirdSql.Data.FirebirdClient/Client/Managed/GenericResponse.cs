@@ -22,8 +22,8 @@ namespace FirebirdSql.Data.Client.Managed;
 
 internal sealed class GenericResponse(int objectHandle, long blobId, ReadOnlyMemory<byte> data, IscException exception) : IResponse
 {
-		public int ObjectHandle { get; } = objectHandle;
-		public long BlobId { get; } = blobId;
-		public ReadOnlyMemory<byte> Data { get; } = data;
-		public IscException Exception { get; } = exception;
+	public int ObjectHandle { get; } = objectHandle;
+	public long BlobId { get; } = blobId;
+	public ReadOnlyMemory<byte> Data { get; } = data;
+	public IscException Exception { get; } = exception;
 }

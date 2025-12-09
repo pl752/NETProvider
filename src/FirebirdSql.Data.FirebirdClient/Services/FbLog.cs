@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbLog(string connectionString = null) : FbService(connectionString)
 {
-		public void Execute()
+	public void Execute()
 	{
 		try
 		{

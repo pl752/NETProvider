@@ -25,7 +25,7 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbConfiguration(string connectionString = null) : FbService(connectionString)
 {
-		public void SetSqlDialect(int sqlDialect)
+	public void SetSqlDialect(int sqlDialect)
 	{
 		EnsureDatabase();
 

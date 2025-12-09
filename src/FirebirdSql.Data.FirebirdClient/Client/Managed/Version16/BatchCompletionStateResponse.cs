@@ -21,9 +21,9 @@ namespace FirebirdSql.Data.Client.Managed.Version16;
 
 internal class BatchCompletionStateResponse(short statementHandle, int processedMessages, int[] updatedRecordsPerMessage, (int, IscException)[] detailedErrors, int[] errorsPerMessage) : IResponse
 {
-		public short StatementHandle { get; } = statementHandle;
-		public int ProcessedMessages { get; } = processedMessages;
-		public int[] UpdatedRecordsPerMessage { get; } = updatedRecordsPerMessage;
-		public (int, IscException)[] DetailedErrors { get; } = detailedErrors;
-		public int[] AdditionalErrorsPerMessage { get; } = errorsPerMessage;
+	public short StatementHandle { get; } = statementHandle;
+	public int ProcessedMessages { get; } = processedMessages;
+	public int[] UpdatedRecordsPerMessage { get; } = updatedRecordsPerMessage;
+	public (int, IscException)[] DetailedErrors { get; } = detailedErrors;
+	public int[] AdditionalErrorsPerMessage { get; } = errorsPerMessage;
 }

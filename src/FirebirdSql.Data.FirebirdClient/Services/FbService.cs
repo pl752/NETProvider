@@ -262,198 +262,220 @@ public abstract class FbService
 	{
 		var pos = 0;
 		var truncated = false;
-				var buffer = QueryService(items, spb);
+		var buffer = QueryService(items, spb);
 
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						if (type == IscCodes.isc_info_truncated) {
-								buffer = QueryService(items, spb);
-								pos = 0;
-								truncated = true;
-								continue;
-						}
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		{
+			if (type == IscCodes.isc_info_truncated)
+			{
+				buffer = QueryService(items, spb);
+				pos = 0;
+				truncated = true;
+				continue;
+			}
 
-						switch (type) {
-								case IscCodes.isc_info_svc_version:
-								case IscCodes.isc_info_svc_get_license_mask:
-								case IscCodes.isc_info_svc_capabilities:
-								case IscCodes.isc_info_svc_get_licensed_users: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4));
-												pos += length;
-												truncated = false;
-												break;
-										}
+			switch (type)
+			{
+				case IscCodes.isc_info_svc_version:
+				case IscCodes.isc_info_svc_get_license_mask:
+				case IscCodes.isc_info_svc_capabilities:
+				case IscCodes.isc_info_svc_get_licensed_users:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4));
+						pos += length;
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_server_version:
-								case IscCodes.isc_info_svc_implementation:
-								case IscCodes.isc_info_svc_get_env:
-								case IscCodes.isc_info_svc_get_env_lock:
-								case IscCodes.isc_info_svc_get_env_msg:
-								case IscCodes.isc_info_svc_user_dbpath:
-								case IscCodes.isc_info_svc_line: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length));
-												pos += length;
-												truncated = false;
-												break;
-										}
-								case IscCodes.isc_info_svc_to_eof: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												var block = new byte[length];
-												Array.Copy(buffer, pos, block, 0, length);
-												queryResponseAction(truncated, block);
-												pos += length;
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_server_version:
+				case IscCodes.isc_info_svc_implementation:
+				case IscCodes.isc_info_svc_get_env:
+				case IscCodes.isc_info_svc_get_env_lock:
+				case IscCodes.isc_info_svc_get_env_msg:
+				case IscCodes.isc_info_svc_user_dbpath:
+				case IscCodes.isc_info_svc_line:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length));
+						pos += length;
+						truncated = false;
+						break;
+					}
+				case IscCodes.isc_info_svc_to_eof:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						var block = new byte[length];
+						Array.Copy(buffer, pos, block, 0, length);
+						queryResponseAction(truncated, block);
+						pos += length;
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_svr_db_info: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset));
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_svr_db_info:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset));
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_get_users: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset));
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_get_users:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset));
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_get_config: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset));
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_get_config:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset));
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_stdin: {
-												var length = GetLength(buffer, 4, ref pos);
-												queryResponseAction(truncated, length);
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_stdin:
+					{
+						var length = GetLength(buffer, 4, ref pos);
+						queryResponseAction(truncated, length);
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_data_not_ready: {
-												queryResponseAction(truncated, typeof(void));
-												truncated = false;
-												break;
-										}
-						}
-				}
+				case IscCodes.isc_info_data_not_ready:
+					{
+						queryResponseAction(truncated, typeof(void));
+						truncated = false;
+						break;
+					}
+			}
 		}
+	}
 	private protected async Task QueryAsync(byte[] items, ServiceParameterBufferBase spb, Func<bool, object, Task> queryResponseAction, CancellationToken cancellationToken = default)
 	{
 		var pos = 0;
 		var truncated = false;
-				var buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
+		var buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
 
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						if (type == IscCodes.isc_info_truncated) {
-								buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
-								pos = 0;
-								truncated = true;
-								continue;
-						}
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		{
+			if (type == IscCodes.isc_info_truncated)
+			{
+				buffer = await QueryServiceAsync(items, spb, cancellationToken).ConfigureAwait(false);
+				pos = 0;
+				truncated = true;
+				continue;
+			}
 
-						switch (type) {
-								case IscCodes.isc_info_svc_version:
-								case IscCodes.isc_info_svc_get_license_mask:
-								case IscCodes.isc_info_svc_capabilities:
-								case IscCodes.isc_info_svc_get_licensed_users: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												await queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
-												pos += length;
-												truncated = false;
-												break;
-										}
+			switch (type)
+			{
+				case IscCodes.isc_info_svc_version:
+				case IscCodes.isc_info_svc_get_license_mask:
+				case IscCodes.isc_info_svc_capabilities:
+				case IscCodes.isc_info_svc_get_licensed_users:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						await queryResponseAction(truncated, (int)IscHelper.VaxInteger(buffer, pos, 4)).ConfigureAwait(false);
+						pos += length;
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_server_version:
-								case IscCodes.isc_info_svc_implementation:
-								case IscCodes.isc_info_svc_get_env:
-								case IscCodes.isc_info_svc_get_env_lock:
-								case IscCodes.isc_info_svc_get_env_msg:
-								case IscCodes.isc_info_svc_user_dbpath:
-								case IscCodes.isc_info_svc_line: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												await queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length)).ConfigureAwait(false);
-												pos += length;
-												truncated = false;
-												break;
-										}
-								case IscCodes.isc_info_svc_to_eof: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												var block = new byte[length];
-												Array.Copy(buffer, pos, block, 0, length);
-												await queryResponseAction(truncated, block).ConfigureAwait(false);
-												pos += length;
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_server_version:
+				case IscCodes.isc_info_svc_implementation:
+				case IscCodes.isc_info_svc_get_env:
+				case IscCodes.isc_info_svc_get_env_lock:
+				case IscCodes.isc_info_svc_get_env_msg:
+				case IscCodes.isc_info_svc_user_dbpath:
+				case IscCodes.isc_info_svc_line:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						await queryResponseAction(truncated, Service.Charset.GetString(buffer, pos, length)).ConfigureAwait(false);
+						pos += length;
+						truncated = false;
+						break;
+					}
+				case IscCodes.isc_info_svc_to_eof:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						var block = new byte[length];
+						Array.Copy(buffer, pos, block, 0, length);
+						await queryResponseAction(truncated, block).ConfigureAwait(false);
+						pos += length;
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_svr_db_info: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												await queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_svr_db_info:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						await queryResponseAction(truncated, ParseDatabasesInfo(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_get_users: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												await queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_get_users:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						await queryResponseAction(truncated, ParseUserData(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_get_config: {
-												var length = GetLength(buffer, 2, ref pos);
-												if (length == 0)
-														continue;
-												await queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_get_config:
+					{
+						var length = GetLength(buffer, 2, ref pos);
+						if (length == 0)
+							continue;
+						await queryResponseAction(truncated, ParseServerConfig(buffer, ref pos, Service.Charset)).ConfigureAwait(false);
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_svc_stdin: {
-												var length = GetLength(buffer, 4, ref pos);
-												await queryResponseAction(truncated, length).ConfigureAwait(false);
-												truncated = false;
-												break;
-										}
+				case IscCodes.isc_info_svc_stdin:
+					{
+						var length = GetLength(buffer, 4, ref pos);
+						await queryResponseAction(truncated, length).ConfigureAwait(false);
+						truncated = false;
+						break;
+					}
 
-								case IscCodes.isc_info_data_not_ready: {
-												await queryResponseAction(truncated, typeof(void)).ConfigureAwait(false);
-												truncated = false;
-												break;
-										}
-						}
-				}
+				case IscCodes.isc_info_data_not_ready:
+					{
+						await queryResponseAction(truncated, typeof(void)).ConfigureAwait(false);
+						truncated = false;
+						break;
+					}
+			}
 		}
+	}
 
 	private protected void ProcessServiceOutput(ServiceParameterBufferBase spb)
 	{
@@ -619,30 +641,32 @@ public abstract class FbService
 	private static FbDatabasesInfo ParseDatabasesInfo(byte[] buffer, ref int pos, Charset charset)
 	{
 		var dbInfo = new FbDatabasesInfo();
-				pos = 1;
+		pos = 1;
 
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						switch (type) {
-								case IscCodes.isc_spb_num_att:
-										dbInfo.ConnectionCount = (int)IscHelper.VaxInteger(buffer, pos, 4);
-										pos += 4;
-										break;
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		{
+			switch (type)
+			{
+				case IscCodes.isc_spb_num_att:
+					dbInfo.ConnectionCount = (int)IscHelper.VaxInteger(buffer, pos, 4);
+					pos += 4;
+					break;
 
-								case IscCodes.isc_spb_num_db:
-										pos += 4;
-										break;
+				case IscCodes.isc_spb_num_db:
+					pos += 4;
+					break;
 
-								case IscCodes.isc_spb_dbname:
-										int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-										pos += 2;
-										dbInfo.AddDatabase(charset.GetString(buffer, pos, length));
-										pos += length;
-										break;
-						}
-				}
+				case IscCodes.isc_spb_dbname:
+					int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+					pos += 2;
+					dbInfo.AddDatabase(charset.GetString(buffer, pos, length));
+					pos += length;
+					break;
+			}
+		}
 
-				pos--;
+		pos--;
 
 		return dbInfo;
 	}
@@ -651,55 +675,58 @@ public abstract class FbService
 	{
 		var users = new List<FbUserData>();
 		FbUserData currentUser = null;
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end) {
-						int length;
-						switch (type) {
-								case IscCodes.isc_spb_sec_username: {
-												length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-												pos += 2;
-												currentUser = new FbUserData();
-												currentUser.UserName = charset.GetString(buffer, pos, length);
-												pos += length;
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		{
+			int length;
+			switch (type)
+			{
+				case IscCodes.isc_spb_sec_username:
+					{
+						length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+						pos += 2;
+						currentUser = new FbUserData();
+						currentUser.UserName = charset.GetString(buffer, pos, length);
+						pos += length;
 
-												users.Add(currentUser);
-										}
-										break;
+						users.Add(currentUser);
+					}
+					break;
 
-								case IscCodes.isc_spb_sec_firstname:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-										pos += 2;
-										currentUser.FirstName = charset.GetString(buffer, pos, length);
-										pos += length;
-										break;
+				case IscCodes.isc_spb_sec_firstname:
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+					pos += 2;
+					currentUser.FirstName = charset.GetString(buffer, pos, length);
+					pos += length;
+					break;
 
-								case IscCodes.isc_spb_sec_middlename:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-										pos += 2;
-										currentUser.MiddleName = charset.GetString(buffer, pos, length);
-										pos += length;
-										break;
+				case IscCodes.isc_spb_sec_middlename:
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+					pos += 2;
+					currentUser.MiddleName = charset.GetString(buffer, pos, length);
+					pos += length;
+					break;
 
-								case IscCodes.isc_spb_sec_lastname:
-										length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-										pos += 2;
-										currentUser.LastName = charset.GetString(buffer, pos, length);
-										pos += length;
-										break;
+				case IscCodes.isc_spb_sec_lastname:
+					length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+					pos += 2;
+					currentUser.LastName = charset.GetString(buffer, pos, length);
+					pos += length;
+					break;
 
-								case IscCodes.isc_spb_sec_userid:
-										currentUser.UserID = (int)IscHelper.VaxInteger(buffer, pos, 4);
-										pos += 4;
-										break;
+				case IscCodes.isc_spb_sec_userid:
+					currentUser.UserID = (int)IscHelper.VaxInteger(buffer, pos, 4);
+					pos += 4;
+					break;
 
-								case IscCodes.isc_spb_sec_groupid:
-										currentUser.GroupID = (int)IscHelper.VaxInteger(buffer, pos, 4);
-										pos += 4;
-										break;
-						}
-				}
+				case IscCodes.isc_spb_sec_groupid:
+					currentUser.GroupID = (int)IscHelper.VaxInteger(buffer, pos, 4);
+					pos += 4;
+					break;
+			}
+		}
 
-				pos--;
+		pos--;
 
 		return users.ToArray();
 	}

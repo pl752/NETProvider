@@ -38,7 +38,7 @@ public sealed class FbRemoteEvent(string connectionString) : IDisposable
 	public string this[int index] => _revent != null ? _revent.Events[index] : throw new InvalidOperationException();
 	public int RemoteEventId => _revent != null ? _revent.RemoteId : throw new InvalidOperationException();
 
-		public void Open()
+	public void Open()
 	{
 		if (_revent != null)
 			throw new InvalidOperationException($"{nameof(FbRemoteEvent)} already open.");

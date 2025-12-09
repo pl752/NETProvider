@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbSecurity(string connectionString = null) : FbService(connectionString)
 {
-		public void AddUser(FbUserData user)
+	public void AddUser(FbUserData user)
 	{
 		if (string.IsNullOrEmpty(user.UserName))
 			throw new InvalidOperationException("Invalid user name.");

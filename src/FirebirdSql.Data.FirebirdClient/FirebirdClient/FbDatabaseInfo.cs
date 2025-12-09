@@ -26,16 +26,17 @@ using FirebirdSql.Data.Types;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbDatabaseInfo(FbConnection connection = null) {
-		#region Properties
+public sealed class FbDatabaseInfo(FbConnection connection = null)
+{
+	#region Properties
 
-		public FbConnection Connection { get; set; } = connection;
+	public FbConnection Connection { get; set; } = connection;
 
-		#endregion
+	#endregion
 
-		#region Methods
+	#region Methods
 
-		public string GetIscVersion()
+	public string GetIscVersion()
 	{
 		return GetValue<string>(IscCodes.isc_info_isc_version);
 	}
@@ -476,14 +477,14 @@ public sealed class FbDatabaseInfo(FbConnection connection = null) {
 		return GetValueAsync<int>(IscCodes.fb_info_statement_timeout_att, cancellationToken);
 	}
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 
-		#region Private Methods
+	#region Private Methods
 
-		private T GetValue<T>(byte item)
+	private T GetValue<T>(byte item)
 	{
 		FbConnection.EnsureOpen(Connection);
 

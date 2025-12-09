@@ -50,7 +50,7 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 			spName = spName.ToUpperInvariant();
 		}
 
-				command.Parameters.Clear();
+		command.Parameters.Clear();
 
 		var dataTypes = command.Connection.GetSchema("DataTypes").DefaultView;
 
@@ -205,16 +205,16 @@ public sealed class FbCommandBuilder : DbCommandBuilder
 
 	public override string QuoteIdentifier(string unquotedIdentifier)
 	{
-				ArgumentNullException.ThrowIfNull(unquotedIdentifier);
+		ArgumentNullException.ThrowIfNull(unquotedIdentifier);
 
-				return string.Format("{0}{1}{2}", QuotePrefix, unquotedIdentifier, QuoteSuffix);
+		return string.Format("{0}{1}{2}", QuotePrefix, unquotedIdentifier, QuoteSuffix);
 	}
 
 	public override string UnquoteIdentifier(string quotedIdentifier)
 	{
-				ArgumentNullException.ThrowIfNull(quotedIdentifier);
+		ArgumentNullException.ThrowIfNull(quotedIdentifier);
 
-				var unquotedIdentifier = quotedIdentifier.Trim();
+		var unquotedIdentifier = quotedIdentifier.Trim();
 
 		if (unquotedIdentifier.StartsWith(QuotePrefix))
 		{

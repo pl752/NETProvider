@@ -8,7 +8,7 @@
  *  at connectedsw.com on Dec 9, 2004.  It is placed in
  *  the Public Domain and may be used as you see fit.
  */
- 
+
 using System;
 using System.Text;
 
@@ -28,9 +28,9 @@ internal class BinaryEncoding : Encoding
 
 	static void Validate(object data, int dataLength, int index, int count)
 	{
-				ArgumentNullException.ThrowIfNull(data);
+		ArgumentNullException.ThrowIfNull(data);
 
-				if (index < 0 || count < 0 || dataLength - index < count)
+		if (index < 0 || count < 0 || dataLength - index < count)
 		{
 			throw new ArgumentOutOfRangeException();
 		}

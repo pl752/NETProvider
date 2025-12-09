@@ -28,7 +28,8 @@ using WireCryptOption = FirebirdSql.Data.Client.Managed.Version13.WireCryptOptio
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt) {
+sealed class AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt)
+{
 	Srp256Client _srp256 = new Srp256Client();
 	SrpClient _srp = new SrpClient();
 	SspiHelper _sspi = new SspiHelper();
@@ -322,10 +323,12 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		_sspi = null;
 	}
 
-	static void WriteMultiPartHelper(MemoryStream stream, byte code, byte[] data) {
+	static void WriteMultiPartHelper(MemoryStream stream, byte code, byte[] data)
+	{
 		const int MaxLength = 255 - 1;
 		var part = 0;
-		for (var i = 0; i < data.Length; i += MaxLength) {
+		for (var i = 0; i < data.Length; i += MaxLength)
+		{
 			stream.WriteByte(code);
 			var length = Math.Min(data.Length - i, MaxLength);
 			stream.WriteByte((byte)(length + 1));

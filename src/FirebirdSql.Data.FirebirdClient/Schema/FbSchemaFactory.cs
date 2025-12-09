@@ -82,13 +82,14 @@ internal sealed class FbSchemaFactory
 			throw new InvalidOperationException("Incorrect restriction definition.");
 		}
 
-				return collection[0]["PopulationMechanism"].ToString() switch {
-						"PrepareCollection" => PrepareCollection(connection, collectionName, restrictions),
-						"DataTable" => ds.Tables[collection[0]["PopulationString"].ToString()].Copy(),
-						"SQLCommand" => SqlCommandSchema(connection, collectionName, restrictions),
-						_ => throw new NotSupportedException("Unsupported population mechanism"),
-				};
-		}
+		return collection[0]["PopulationMechanism"].ToString() switch
+		{
+			"PrepareCollection" => PrepareCollection(connection, collectionName, restrictions),
+			"DataTable" => ds.Tables[collection[0]["PopulationString"].ToString()].Copy(),
+			"SQLCommand" => SqlCommandSchema(connection, collectionName, restrictions),
+			_ => throw new NotSupportedException("Unsupported population mechanism"),
+		};
+	}
 	public static Task<DataTable> GetSchemaAsync(FbConnection connection, string collectionName, string[] restrictions, CancellationToken cancellationToken = default)
 	{
 		var filter = string.Format("CollectionName = '{0}'", collectionName);
@@ -126,13 +127,14 @@ internal sealed class FbSchemaFactory
 			throw new InvalidOperationException("Incorrect restriction definition.");
 		}
 
-				return collection[0]["PopulationMechanism"].ToString() switch {
-						"PrepareCollection" => PrepareCollectionAsync(connection, collectionName, restrictions, cancellationToken),
-						"DataTable" => Task.FromResult(ds.Tables[collection[0]["PopulationString"].ToString()].Copy()),
-						"SQLCommand" => SqlCommandSchemaAsync(connection, collectionName, restrictions, cancellationToken),
-						_ => throw new NotSupportedException("Unsupported population mechanism"),
-				};
-		}
+		return collection[0]["PopulationMechanism"].ToString() switch
+		{
+			"PrepareCollection" => PrepareCollectionAsync(connection, collectionName, restrictions, cancellationToken),
+			"DataTable" => Task.FromResult(ds.Tables[collection[0]["PopulationString"].ToString()].Copy()),
+			"SQLCommand" => SqlCommandSchemaAsync(connection, collectionName, restrictions, cancellationToken),
+			_ => throw new NotSupportedException("Unsupported population mechanism"),
+		};
+	}
 
 	#endregion
 

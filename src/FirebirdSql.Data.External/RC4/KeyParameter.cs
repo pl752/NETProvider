@@ -14,7 +14,7 @@ namespace Org.BouncyCastle.Crypto.Parameters
 		{
 						ArgumentNullException.ThrowIfNull(key);
 
-						this.key = (byte[]) key.Clone();
+			this.key = (byte[])key.Clone();
 		}
 
 		public KeyParameter(
@@ -34,7 +34,7 @@ namespace Org.BouncyCastle.Crypto.Parameters
 
 		public byte[] GetKey()
         {
-			return (byte[]) key.Clone();
+			return (byte[])key.Clone();
         }
     }
 

@@ -179,11 +179,11 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	protected override void OnRowUpdating(RowUpdatingEventArgs value)
 	{
-				EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>)Events[EventRowUpdating];
+		EventHandler<FbRowUpdatingEventArgs> handler = (EventHandler<FbRowUpdatingEventArgs>)Events[EventRowUpdating];
 
-				if ((null != handler) &&
-			(value is FbRowUpdatingEventArgs) &&
-			(value != null))
+		if ((null != handler) &&
+	(value is FbRowUpdatingEventArgs) &&
+	(value != null))
 		{
 			handler(this, (FbRowUpdatingEventArgs)value);
 		}
@@ -191,11 +191,11 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 
 	protected override void OnRowUpdated(RowUpdatedEventArgs value)
 	{
-				EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>)Events[EventRowUpdated];
+		EventHandler<FbRowUpdatedEventArgs> handler = (EventHandler<FbRowUpdatedEventArgs>)Events[EventRowUpdated];
 
-				if ((handler != null) &&
-			(value is FbRowUpdatedEventArgs) &&
-			(value != null))
+		if ((handler != null) &&
+	(value is FbRowUpdatedEventArgs) &&
+	(value != null))
 		{
 			handler(this, (FbRowUpdatedEventArgs)value);
 		}
@@ -215,12 +215,12 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 		var statementType = StatementType.Insert;
 		ICollection<IDbConnection> connections = new List<IDbConnection>();
 		RowUpdatingEventArgs updatingArgs = null;
-				foreach (var row in dataRows)
+		foreach (var row in dataRows)
 		{
-						Exception updateException = null;
+			Exception updateException = null;
 
-						if (row.RowState == DataRowState.Detached ||
-				row.RowState == DataRowState.Unchanged)
+			if (row.RowState == DataRowState.Detached ||
+	row.RowState == DataRowState.Unchanged)
 			{
 				continue;
 			}
@@ -417,7 +417,7 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 					// If the update result is an exception throw it
 					if (!ContinueUpdateOnError && updateException != null)
 					{
-												CloseConnections(connections);
+						CloseConnections(connections);
 						throw updateException;
 					}
 
@@ -433,13 +433,13 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 				// If the update result is an exception throw it
 				if (!ContinueUpdateOnError && updateException != null)
 				{
-										CloseConnections(connections);
+					CloseConnections(connections);
 					throw updateException;
 				}
 			}
 		}
 
-				CloseConnections(connections);
+		CloseConnections(connections);
 
 		return updated;
 	}
@@ -489,18 +489,18 @@ public sealed class FbDataAdapter : DbDataAdapter, ICloneable
 				!string.IsNullOrEmpty(parameter.SourceColumn))
 			{
 
-								/* Get the DataColumnMapping that matches the given
-								 * column name
-								 */
-								var columnMapping = tableMapping.GetColumnMappingBySchemaAction(
-					parameter.SourceColumn,
-					MissingMappingAction);
+				/* Get the DataColumnMapping that matches the given
+				 * column name
+				 */
+				var columnMapping = tableMapping.GetColumnMappingBySchemaAction(
+	parameter.SourceColumn,
+	MissingMappingAction);
 
 				if (columnMapping != null)
 				{
-										DataColumn column = columnMapping.GetDataColumnBySchemaAction(row.Table, null, MissingSchemaAction);
+					DataColumn column = columnMapping.GetDataColumnBySchemaAction(row.Table, null, MissingSchemaAction);
 
-										if (column != null)
+					if (column != null)
 					{
 						var dataRowVersion = DataRowVersion.Default;
 

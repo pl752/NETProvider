@@ -21,8 +21,8 @@ namespace FirebirdSql.Data.Isql;
 
 public class UnknownStatementEventArgs(FbStatement statement) : EventArgs
 {
-		public FbStatement Statement { get; private set; } = statement;
-		public bool Handled { get; set; } = false;
-		public bool Ignore { get; set; } = false;
-		public SqlStatementType NewStatementType { get; set; }
+	public FbStatement Statement { get; private set; } = statement;
+	public bool Handled { get; set; } = false;
+	public bool Ignore { get; set; } = false;
+	public SqlStatementType NewStatementType { get; set; }
 }

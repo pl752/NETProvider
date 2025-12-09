@@ -24,15 +24,16 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.Client.Managed.Version10;
 
-internal class GdsEventManager(int handle, string ipAddress, int portNumber, int timeout) {
+internal class GdsEventManager(int handle, string ipAddress, int portNumber, int timeout)
+{
 	bool _closing = false;
-		readonly int _handle = handle;
-		readonly string _ipAddress = ipAddress;
-		readonly int _portNumber = portNumber;
-		readonly int _timeout = timeout;
+	readonly int _handle = handle;
+	readonly string _ipAddress = ipAddress;
+	readonly int _portNumber = portNumber;
+	readonly int _timeout = timeout;
 	GdsDatabase _database;
 
-		public void Open()
+	public void Open()
 	{
 		var connection = new GdsConnection(_ipAddress, _portNumber, _timeout);
 		connection.Connect();

@@ -30,7 +30,7 @@ public sealed class FbNRestore(string connectionString = null) : FbService(conne
 	public IEnumerable<string> BackupFiles { get; set; }
 	public bool DirectIO { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

@@ -30,11 +30,12 @@ sealed class FbConnectionPoolManager : IDisposable
 {
 	internal static FbConnectionPoolManager Instance { get; private set; }
 
-	sealed class Item(long created, FbConnectionInternal connection) {
-				public long Created { get; private set; } = created;
-				public FbConnectionInternal Connection { get; private set; } = connection;
+	sealed class Item(long created, FbConnectionInternal connection)
+	{
+		public long Created { get; private set; } = created;
+		public FbConnectionInternal Connection { get; private set; } = connection;
 
-				public void Release()
+		public void Release()
 		{
 			Connection.Disconnect();
 		}
@@ -43,12 +44,12 @@ sealed class FbConnectionPoolManager : IDisposable
 	sealed class Pool(ConnectionString connectionString) : IDisposable
 	{
 		bool _disposed;
-				readonly object _syncRoot = new object();
-				readonly ConnectionString _connectionString = connectionString;
+		readonly object _syncRoot = new object();
+		readonly ConnectionString _connectionString = connectionString;
 		Stack<Item> _available = new Stack<Item>();
-				readonly List<FbConnectionInternal> _busy = new List<FbConnectionInternal>();
+		readonly List<FbConnectionInternal> _busy = new List<FbConnectionInternal>();
 
-				public void Dispose()
+		public void Dispose()
 		{
 			lock (_syncRoot)
 			{
@@ -155,8 +156,8 @@ sealed class FbConnectionPoolManager : IDisposable
 	}
 
 	int _disposed;
-		readonly ConcurrentDictionary<string, Pool> _pools;
-		readonly Timer _cleanupTimer;
+	readonly ConcurrentDictionary<string, Pool> _pools;
+	readonly Timer _cleanupTimer;
 
 	static FbConnectionPoolManager()
 	{

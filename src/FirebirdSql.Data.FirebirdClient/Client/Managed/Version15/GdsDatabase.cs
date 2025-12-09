@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Client.Managed.Version15;
 
 internal class GdsDatabase(GdsConnection connection) : Version13.GdsDatabase(connection)
 {
-		protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
+	protected internal override IResponse ProcessCryptCallbackResponseIfNeeded(IResponse response, byte[] cryptKey)
 	{
 		while (response is CryptKeyCallbackResponse cryptKeyCallbackResponse)
 		{

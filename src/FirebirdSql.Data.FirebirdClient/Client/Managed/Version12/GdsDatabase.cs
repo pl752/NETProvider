@@ -27,7 +27,7 @@ internal class GdsDatabase(GdsConnection connection) : Version11.GdsDatabase(con
 {
 	public override bool UseUtf8ParameterBuffer => true;
 
-		public override StatementBase CreateStatement()
+	public override StatementBase CreateStatement()
 	{
 		return new GdsStatement(this);
 	}

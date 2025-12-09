@@ -26,7 +26,7 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class GdsDatabase(GdsConnection connection) : Version12.GdsDatabase(connection)
 {
-		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+	public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
 	{
 		try
 		{

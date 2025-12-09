@@ -51,7 +51,7 @@ public class FbStreamingRestore(string connectionString = null) : FbService(conn
 	public string SkipData { get; set; }
 	public FbRestoreFlags Options { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

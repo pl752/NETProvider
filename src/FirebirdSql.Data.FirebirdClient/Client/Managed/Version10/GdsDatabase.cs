@@ -71,14 +71,14 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 		get { return _connection.AuthBlock; }
 	}
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 
-		#region Attach/Detach Methods
+	#region Attach/Detach Methods
 
-		public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
+	public override void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey)
 	{
 		try
 		{

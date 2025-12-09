@@ -29,7 +29,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 {
 	private readonly Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)> _deferredPackets = new Queue<(Action<IResponse>, Func<IResponse, CancellationToken, ValueTask>)>();
 
-		public override StatementBase CreateStatement()
+	public override StatementBase CreateStatement()
 	{
 		return new GdsStatement(this);
 	}
@@ -120,10 +120,10 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 		}
 		return response;
 	}
-		protected async ValueTask<IResponse> ProcessTrustedAuthResponseAsync(SspiHelper sspiHelper, IResponse response, CancellationToken cancellationToken = default)
+	protected async ValueTask<IResponse> ProcessTrustedAuthResponseAsync(SspiHelper sspiHelper, IResponse response, CancellationToken cancellationToken = default)
+	{
+		while (response is AuthResponse authResponse)
 		{
-			while (response is AuthResponse authResponse)
-			{
 			var authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
 			await Xdr.WriteAsync(IscCodes.op_trusted_auth, cancellationToken).ConfigureAwait(false);
 			await Xdr.WriteBufferAsync(authData, cancellationToken).ConfigureAwait(false);

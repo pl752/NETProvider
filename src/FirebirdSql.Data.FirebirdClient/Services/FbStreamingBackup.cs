@@ -32,7 +32,7 @@ public sealed class FbStreamingBackup(string connectionString = null) : FbServic
 	public FbBackupFlags Options { get; set; }
 	public Stream OutputStream { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

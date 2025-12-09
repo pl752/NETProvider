@@ -214,8 +214,8 @@ internal sealed class FesArray : ArrayBase
 
 	protected override Array DecodeSlice(byte[] slice)
 	{
-				var slicePosition = 0;
-				var systemType = GetSystemType();
+		var slicePosition = 0;
+		var systemType = GetSystemType();
 		var charset = _database.Charset;
 		var lengths = new int[Descriptor.Dimensions];
 		var lowerBounds = new int[Descriptor.Dimensions];
@@ -231,14 +231,14 @@ internal sealed class FesArray : ArrayBase
 			}
 		}
 
-				Array sliceData = Array.CreateInstance(systemType, lengths, lowerBounds);
+		Array sliceData = Array.CreateInstance(systemType, lengths, lowerBounds);
 
-				var tempData = Array.CreateInstance(systemType, sliceData.Length);
+		var tempData = Array.CreateInstance(systemType, sliceData.Length);
 
-				int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
-				DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, 0, Descriptor.Scale);
+		int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
+		DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, 0, Descriptor.Scale);
 
-				int itemLength = Descriptor.Length;
+		int itemLength = Descriptor.Length;
 
 		for (var i = 0; i < tempData.Length; i++)
 		{
@@ -366,8 +366,8 @@ internal sealed class FesArray : ArrayBase
 	}
 	protected override ValueTask<Array> DecodeSliceAsync(byte[] slice, CancellationToken cancellationToken = default)
 	{
-				var slicePosition = 0;
-				var systemType = GetSystemType();
+		var slicePosition = 0;
+		var systemType = GetSystemType();
 		var charset = _database.Charset;
 		var lengths = new int[Descriptor.Dimensions];
 		var lowerBounds = new int[Descriptor.Dimensions];
@@ -383,14 +383,14 @@ internal sealed class FesArray : ArrayBase
 			}
 		}
 
-				Array sliceData = Array.CreateInstance(systemType, lengths, lowerBounds);
+		Array sliceData = Array.CreateInstance(systemType, lengths, lowerBounds);
 
-				var tempData = Array.CreateInstance(systemType, sliceData.Length);
+		var tempData = Array.CreateInstance(systemType, sliceData.Length);
 
-				int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
-				DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, 0, Descriptor.Scale);
+		int type = TypeHelper.GetSqlTypeFromBlrType(Descriptor.DataType);
+		DbDataType dbType = TypeHelper.GetDbDataTypeFromBlrType(Descriptor.DataType, 0, Descriptor.Scale);
 
-				int itemLength = Descriptor.Length;
+		int itemLength = Descriptor.Length;
 
 		for (var i = 0; i < tempData.Length; i++)
 		{

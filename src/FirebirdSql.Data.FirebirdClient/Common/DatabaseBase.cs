@@ -23,22 +23,23 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class DatabaseBase(Charset charset, int packetSize, short dialect) {
+internal abstract class DatabaseBase(Charset charset, int packetSize, short dialect)
+{
 	public Action<IscException> WarningMessage { get; set; }
 
 	public abstract bool UseUtf8ParameterBuffer { get; }
 	public Encoding ParameterBufferEncoding => UseUtf8ParameterBuffer ? Encoding.UTF8 : Encoding2.Default;
 
 	public abstract int Handle { get; }
-		public Charset Charset { get; } = charset;
-		public int PacketSize { get; } = packetSize;
-		public short Dialect { get; } = dialect;
-		public int TransactionCount { get; set; }
+	public Charset Charset { get; } = charset;
+	public int PacketSize { get; } = packetSize;
+	public short Dialect { get; } = dialect;
+	public int TransactionCount { get; set; }
 	public string ServerVersion { get; protected set; }
 	public abstract bool HasRemoteEventSupport { get; }
 	public abstract bool ConnectionBroken { get; }
 
-		public abstract void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey);
+	public abstract void Attach(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey);
 	public abstract ValueTask AttachAsync(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey, CancellationToken cancellationToken = default);
 
 	public abstract void AttachWithTrustedAuth(DatabaseParameterBufferBase dpb, string database, byte[] cryptKey);

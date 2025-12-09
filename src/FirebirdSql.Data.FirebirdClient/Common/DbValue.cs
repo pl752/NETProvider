@@ -824,15 +824,16 @@ internal struct DbValue
 		var value = GetDecimal();
 		var numeric = TypeEncoder.EncodeDecimal(value, Field.NumericScale, Field.DataType);
 
-				return _field.SqlType switch {
-						IscCodes.SQL_SHORT => BitConverter.GetBytes((short)numeric),
-						IscCodes.SQL_LONG => BitConverter.GetBytes((int)numeric),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => BitConverter.GetBytes((long)numeric),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => BitConverter.GetBytes((double)numeric),
-						IscCodes.SQL_INT128 => Int128Helper.GetBytes((BigInteger)numeric),
-						_ => null,
-				};
-		}
+		return _field.SqlType switch
+		{
+			IscCodes.SQL_SHORT => BitConverter.GetBytes((short)numeric),
+			IscCodes.SQL_LONG => BitConverter.GetBytes((int)numeric),
+			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => BitConverter.GetBytes((long)numeric),
+			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => BitConverter.GetBytes((double)numeric),
+			IscCodes.SQL_INT128 => Int128Helper.GetBytes((BigInteger)numeric),
+			_ => null,
+		};
+	}
 
 	private readonly string GetClobData(long blobId)
 	{

@@ -28,15 +28,16 @@ internal static class TypeDecoder
 	{
 		var shift = scale < 0 ? -scale : scale;
 
-				return (type & ~1) switch {
-						IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift),
-						IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift),
-						IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift),
-						IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal)(double)value,
-						IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift),
-						_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
-				};
-		}
+		return (type & ~1) switch
+		{
+			IscCodes.SQL_SHORT => DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift),
+			IscCodes.SQL_LONG => DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift),
+			IscCodes.SQL_QUAD or IscCodes.SQL_INT64 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift),
+			IscCodes.SQL_DOUBLE or IscCodes.SQL_D_FLOAT => (decimal)(double)value,
+			IscCodes.SQL_INT128 => DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift),
+			_ => throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}"),
+		};
+	}
 
 	public static TimeSpan DecodeTime(int sqlTime)
 	{
@@ -84,7 +85,8 @@ internal static class TypeDecoder
 		return value[0] != 0;
 	}
 
-	public static bool DecodeBoolean(ReadOnlySpan<byte> value) {
+	public static bool DecodeBoolean(ReadOnlySpan<byte> value)
+	{
 		return value[0] != 0;
 	}
 

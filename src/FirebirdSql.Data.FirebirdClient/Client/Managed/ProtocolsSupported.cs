@@ -22,10 +22,11 @@ namespace FirebirdSql.Data.Client.Managed;
 
 internal static class ProtocolsSupported
 {
-	internal class Protocol(int version, int maxPType) {
-				public int Version { get; } = version;
-				public int MaxPType { get; } = maxPType;
-		}
+	internal class Protocol(int version, int maxPType)
+	{
+		public int Version { get; } = version;
+		public int MaxPType { get; } = maxPType;
+	}
 
 	public static ICollection<Protocol> Get(bool compression)
 	{

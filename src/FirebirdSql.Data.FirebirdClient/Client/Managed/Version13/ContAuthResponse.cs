@@ -21,8 +21,8 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class ContAuthResponse(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys) : IResponse
 {
-		public ReadOnlyMemory<byte> ServerData { get; } = serverData;
-		public string AcceptPluginName { get; } = acceptPluginName;
-		public bool IsAuthenticated { get; } = isAuthenticated;
-		public ReadOnlyMemory<byte> ServerKeys { get; } = serverKeys;
+	public ReadOnlyMemory<byte> ServerData { get; } = serverData;
+	public string AcceptPluginName { get; } = acceptPluginName;
+	public bool IsAuthenticated { get; } = isAuthenticated;
+	public ReadOnlyMemory<byte> ServerKeys { get; } = serverKeys;
 }

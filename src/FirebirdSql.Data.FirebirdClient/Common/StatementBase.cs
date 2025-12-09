@@ -298,18 +298,18 @@ internal abstract class StatementBase
 		var insertCount = 0;
 		var updateCount = 0;
 		var deleteCount = 0;
-				var pos = 0;
+		var pos = 0;
 
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
 			var length = (int)IscHelper.VaxInteger(buffer, pos, 2);
 			pos += 2;
 			switch (type)
 			{
 				case IscCodes.isc_info_sql_records:
-										int t;
-										while ((t = buffer[pos++]) != IscCodes.isc_info_end)
+					int t;
+					while ((t = buffer[pos++]) != IscCodes.isc_info_end)
 					{
 						var l = (int)IscHelper.VaxInteger(buffer, pos, 2);
 						pos += 2;
@@ -325,8 +325,8 @@ internal abstract class StatementBase
 								deleteCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_select_count:
-																int selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
-																break;
+								int selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
+								break;
 						}
 						pos += l;
 					}
@@ -355,11 +355,11 @@ internal abstract class StatementBase
 	{
 		var stmtType = DbStatementType.None;
 		var pos = 0;
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-						int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
-						pos += 2;
+			int length = (int)IscHelper.VaxInteger(buffer, pos, 2);
+			pos += 2;
 			switch (type)
 			{
 				case IscCodes.isc_info_sql_stmt_type:

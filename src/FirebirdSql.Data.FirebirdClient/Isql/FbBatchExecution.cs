@@ -37,10 +37,10 @@ public sealed class FbBatchExecution
 	/// </summary>
 	public event EventHandler<CommandExecutedEventArgs> CommandExecuted;
 
-		readonly FbStatementCollection _statements;
+	readonly FbStatementCollection _statements;
 	FbConnection _sqlConnection;
 	FbTransaction _sqlTransaction;
-		readonly FbConnectionStringBuilder _connectionString;
+	readonly FbConnectionStringBuilder _connectionString;
 	FbCommand _sqlCommand;
 
 	// control fields
@@ -283,7 +283,7 @@ public sealed class FbBatchExecution
 					case SqlStatementType.SetAutoDDL:
 						OnCommandExecuting(null, statement.StatementType);
 
-												SetAutoDdl(statement.CleanText, ref autoCommit);
+						SetAutoDdl(statement.CleanText, ref autoCommit);
 						_requiresNewConnection = false;
 
 						OnCommandExecuted(null, statement.Text, statement.StatementType, -1);
@@ -534,7 +534,7 @@ public sealed class FbBatchExecution
 					case SqlStatementType.SetAutoDDL:
 						OnCommandExecuting(null, statement.StatementType);
 
-												SetAutoDdl(statement.CleanText, ref autoCommit);
+						SetAutoDdl(statement.CleanText, ref autoCommit);
 						_requiresNewConnection = false;
 
 						OnCommandExecuted(null, statement.Text, statement.StatementType, -1);

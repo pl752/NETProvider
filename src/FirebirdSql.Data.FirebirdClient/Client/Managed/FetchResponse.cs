@@ -22,6 +22,6 @@ namespace FirebirdSql.Data.Client.Managed;
 
 internal class FetchResponse(int status, int count) : IResponse
 {
-		public int Status { get; } = status;
-		public int Count { get; } = count;
+	public int Status { get; } = status;
+	public int Count { get; } = count;
 }

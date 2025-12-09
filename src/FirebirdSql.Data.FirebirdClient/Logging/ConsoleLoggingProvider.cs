@@ -29,13 +29,13 @@ public class ConsoleLoggingProvider(FbLogLevel minimumLevel = FbLogLevel.Info) :
 {
 	readonly FbLogLevel _minimumLevel = minimumLevel;
 
-		public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
+	public IFbLogger CreateLogger(string name) => new ConsoleLogger(_minimumLevel);
 
 	sealed class ConsoleLogger(FbLogLevel minimumLevel) : IFbLogger
 	{
 		readonly FbLogLevel _minimumLevel = minimumLevel;
 
-				public bool IsEnabled(FbLogLevel level)
+		public bool IsEnabled(FbLogLevel level)
 		{
 			return level >= _minimumLevel;
 		}

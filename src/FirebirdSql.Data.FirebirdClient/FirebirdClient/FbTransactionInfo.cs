@@ -23,16 +23,17 @@ using FirebirdSql.Data.Common;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-public sealed class FbTransactionInfo(FbTransaction transaction = null) {
-		#region Properties
+public sealed class FbTransactionInfo(FbTransaction transaction = null)
+{
+	#region Properties
 
-		public FbTransaction Transaction { get; set; } = transaction;
+	public FbTransaction Transaction { get; set; } = transaction;
 
-		#endregion
+	#endregion
 
-		#region Methods
+	#region Methods
 
-		public long GetTransactionSnapshotNumber()
+	public long GetTransactionSnapshotNumber()
 	{
 		return GetValue<long>(IscCodes.fb_info_tra_snapshot_number);
 	}
@@ -41,14 +42,14 @@ public sealed class FbTransactionInfo(FbTransaction transaction = null) {
 		return GetValueAsync<long>(IscCodes.fb_info_tra_snapshot_number, cancellationToken);
 	}
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 
-		#region Private Methods
+	#region Private Methods
 
-		private T GetValue<T>(byte item)
+	private T GetValue<T>(byte item)
 	{
 		FbTransaction.EnsureActive(Transaction);
 

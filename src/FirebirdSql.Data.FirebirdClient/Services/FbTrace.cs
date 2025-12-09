@@ -25,12 +25,12 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbTrace(FbTraceVersion version = FbTraceVersion.Detect, string connectionString = null) : FbService(connectionString)
 {
-		readonly FbTraceVersion _version = version;
+	readonly FbTraceVersion _version = version;
 
-		public FbDatabaseTraceConfigurationCollection DatabasesConfigurations { get; } = new FbDatabaseTraceConfigurationCollection();
-		public FbServiceTraceConfiguration ServiceConfiguration { get; set; }
+	public FbDatabaseTraceConfigurationCollection DatabasesConfigurations { get; } = new FbDatabaseTraceConfigurationCollection();
+	public FbServiceTraceConfiguration ServiceConfiguration { get; set; }
 
-		public void Start(string sessionName)
+	public void Start(string sessionName)
 	{
 		var version = _version;
 		if (version == FbTraceVersion.Detect)

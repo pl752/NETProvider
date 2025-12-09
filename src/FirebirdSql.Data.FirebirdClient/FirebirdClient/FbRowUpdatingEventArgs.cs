@@ -35,8 +35,8 @@ public sealed class FbRowUpdatingEventArgs(
 		set { base.Command = value; }
 	}
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 }

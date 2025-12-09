@@ -221,9 +221,9 @@ public sealed class BlobStream : Stream
 
 	private static void ValidateBufferSize(byte[] buffer, int offset, int count)
 	{
-				ArgumentNullException.ThrowIfNull(buffer);
+		ArgumentNullException.ThrowIfNull(buffer);
 
-				if (buffer.Length < offset + count)
+		if (buffer.Length < offset + count)
 			throw new InvalidOperationException();
 	}
 }

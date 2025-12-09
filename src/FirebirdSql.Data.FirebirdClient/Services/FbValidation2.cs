@@ -31,7 +31,7 @@ public sealed class FbValidation2(string connectionString = null) : FbService(co
 	public string IndicesExclude { get; set; }
 	public int? LockTimeout { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

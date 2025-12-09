@@ -24,19 +24,20 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal class RemoteEvent(DatabaseBase database) {
+internal class RemoteEvent(DatabaseBase database)
+{
 	const int MaxEventNameLength = 255;
 	const int MaxEpbLength = 65535;
 
-		readonly List<string> _events = new List<string>();
-		readonly DatabaseBase _database = database;
+	readonly List<string> _events = new List<string>();
+	readonly DatabaseBase _database = database;
 	int[] _previousCounts;
 	int[] _currentCounts;
 	int _running;
 
-		public int LocalId { get; set; } = 0;
-		public int RemoteId { get; set; } = 0;
-		public Action<string, int> EventCountsCallback { get; set; }
+	public int LocalId { get; set; } = 0;
+	public int RemoteId { get; set; } = 0;
+	public Action<string, int> EventCountsCallback { get; set; }
 	public Action<Exception> EventErrorCallback { get; set; }
 
 	public List<string> Events
@@ -49,7 +50,7 @@ internal class RemoteEvent(DatabaseBase database) {
 		get { return _database; }
 	}
 
-		public void QueueEvents(ICollection<string> events)
+	public void QueueEvents(ICollection<string> events)
 	{
 		EnsureNotRunning();
 		EnsureEventsCollection(events);
@@ -143,8 +144,8 @@ internal class RemoteEvent(DatabaseBase database) {
 
 	void EnsureEventsCollection(ICollection<string> events)
 	{
-				ArgumentNullException.ThrowIfNull(events);
-				if (events.Count == 0)
+		ArgumentNullException.ThrowIfNull(events);
+		if (events.Count == 0)
 			throw new ArgumentOutOfRangeException(nameof(events), "Need to provide at least one event.");
 		if (events.Any(x => x.Length > MaxEventNameLength))
 			throw new ArgumentOutOfRangeException(nameof(events), $"Some events are longer than {MaxEventNameLength}.");

@@ -29,11 +29,11 @@ internal static class IscHelper
 		var info = new List<object>();
 
 		var pos = 0;
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-						int length = (int)VaxInteger(buffer, pos, 2);
-						pos += 2;
+			int length = (int)VaxInteger(buffer, pos, 2);
+			pos += 2;
 
 			switch (type)
 			{
@@ -191,11 +191,11 @@ internal static class IscHelper
 		var info = new List<object>();
 
 		var pos = 0;
-				int type;
-				while ((type = buffer[pos++]) != IscCodes.isc_info_end)
+		int type;
+		while ((type = buffer[pos++]) != IscCodes.isc_info_end)
 		{
-						int length = (int)VaxInteger(buffer, pos, 2);
-						pos += 2;
+			int length = (int)VaxInteger(buffer, pos, 2);
+			pos += 2;
 
 			switch (type)
 			{
@@ -229,11 +229,13 @@ internal static class IscHelper
 		return value;
 	}
 
-	public static long VaxInteger(ReadOnlySpan<byte> buffer, int index, int length) {
+	public static long VaxInteger(ReadOnlySpan<byte> buffer, int index, int length)
+	{
 		var value = 0L;
 		var shift = 0;
 		var i = index;
-		while(--length >= 0) {
+		while (--length >= 0)
+		{
 			value += (buffer[i++] & 0xffL) << shift;
 			shift += 8;
 		}

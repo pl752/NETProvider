@@ -315,7 +315,7 @@ internal class GdsStatement : StatementBase
 			}
 
 			var executeResponse = (GenericResponse)_database.ReadResponse();
-						ProcessExecuteResponse(executeResponse);
+			ProcessExecuteResponse(executeResponse);
 
 			if (DoRecordsAffected)
 			{
@@ -669,7 +669,7 @@ internal class GdsStatement : StatementBase
 			return;
 
 		DoFreePacket(option);
-				ProcessFreeResponse(_database.ReadResponse());
+		ProcessFreeResponse(_database.ReadResponse());
 	}
 	protected override async ValueTask FreeAsync(int option, CancellationToken cancellationToken = default)
 	{
@@ -1049,8 +1049,8 @@ internal class GdsStatement : StatementBase
 						throw IscException.ForErrorCode(IscCodes.isc_dsql_sqlda_err);
 				}
 			}
-			// just to get out of the loop
-			Break:
+		// just to get out of the loop
+		Break:
 			{ }
 		}
 		return rowDescs;
@@ -1185,135 +1185,143 @@ internal class GdsStatement : StatementBase
 
 					default:
 						throw IscException.ForErrorCode(IscCodes.isc_dsql_sqlda_err);
-								}
-						}
-				// just to get out of the loop
-				BreakSpan:
-						{ }
 				}
-				return rowDescs;
+			}
+		// just to get out of the loop
+		BreakSpan:
+			{ }
 		}
+		return rowDescs;
+	}
 
-	private ValueTask<Descriptor[]> ParseTruncSqlInfoAsync(byte[] info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) =>		
+	private ValueTask<Descriptor[]> ParseTruncSqlInfoAsync(byte[] info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) =>
 		ParseTruncSqlInfoSpanAsync(info.AsMemory(), items, rowDescs, cancellationToken);
 
-	private async ValueTask<Descriptor[]> ParseTruncSqlInfoSpanAsync(ReadOnlyMemory<byte> info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken) {
-				var currentPosition = 0;
-				var currentDescriptorIndex = -1;
-				var currentItemIndex = 0;
-				while(info.Span[currentPosition] != IscCodes.isc_info_end) {
-						byte item;
-						while((item = info.Span[currentPosition++]) != IscCodes.isc_info_sql_describe_end) {
-								switch(item) {
-										case IscCodes.isc_info_truncated:
-												currentItemIndex--;
+	private async ValueTask<Descriptor[]> ParseTruncSqlInfoSpanAsync(ReadOnlyMemory<byte> info, ReadOnlyMemory<byte> items, Descriptor[] rowDescs, CancellationToken cancellationToken)
+	{
+		var currentPosition = 0;
+		var currentDescriptorIndex = -1;
+		var currentItemIndex = 0;
+		while (info.Span[currentPosition] != IscCodes.isc_info_end)
+		{
+			byte item;
+			while ((item = info.Span[currentPosition++]) != IscCodes.isc_info_sql_describe_end)
+			{
+				switch (item)
+				{
+					case IscCodes.isc_info_truncated:
+						currentItemIndex--;
 
-												var newItems = new List<byte>(items.Length);
-												var part = 0;
-												var chock = 0;
-												for(var i = 0; i < items.Length; i++) {
-														if(items.Span[i] == IscCodes.isc_info_sql_describe_end) {
-																newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
-																newItems.Insert(chock + 1, 2);
+						var newItems = new List<byte>(items.Length);
+						var part = 0;
+						var chock = 0;
+						for (var i = 0; i < items.Length; i++)
+						{
+							if (items.Span[i] == IscCodes.isc_info_sql_describe_end)
+							{
+								newItems.Insert(chock, IscCodes.isc_info_sql_sqlda_start);
+								newItems.Insert(chock + 1, 2);
 
-																var processedItems = (rowDescs[part] != null ? rowDescs[part].Count : (short)0);
-																newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
-																newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
+								var processedItems = (rowDescs[part] != null ? rowDescs[part].Count : (short)0);
+								newItems.Insert(chock + 2, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) & 255));
+								newItems.Insert(chock + 3, (byte)((part == currentDescriptorIndex ? currentItemIndex : processedItems) >> 8));
 
-																part++;
-																chock = i + 4 + 1;
-														}
-														newItems.Add(items.Span[i]);
-												}
+								part++;
+								chock = i + 4 + 1;
+							}
+							newItems.Add(items.Span[i]);
+						}
 
-												var refreshed = await GetSqlInfoAsync([.. newItems], info.Length, cancellationToken).ConfigureAwait(false);
-												info = refreshed;
+						var refreshed = await GetSqlInfoAsync([.. newItems], info.Length, cancellationToken).ConfigureAwait(false);
+						info = refreshed;
 
-												currentPosition = 0;
-												currentDescriptorIndex = -1;
-												goto BreakAsync;
+						currentPosition = 0;
+						currentDescriptorIndex = -1;
+						goto BreakAsync;
 
-										case IscCodes.isc_info_sql_select:
-										case IscCodes.isc_info_sql_bind:
-												currentDescriptorIndex++;
+					case IscCodes.isc_info_sql_select:
+					case IscCodes.isc_info_sql_bind:
+						currentDescriptorIndex++;
 
-												if(info.Span[currentPosition] == IscCodes.isc_info_truncated)
-														break;
+						if (info.Span[currentPosition] == IscCodes.isc_info_truncated)
+							break;
 
-												currentPosition++;
-												var len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												if(rowDescs[currentDescriptorIndex] == null) {
-														var n = IscHelper.VaxInteger(info.Span, currentPosition, len);
-														rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
-														if(n == 0) {
-																currentPosition += len;
-																goto BreakAsync;
-														}
-												}
-												currentPosition += len;
-												break;
+						currentPosition++;
+						var len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						if (rowDescs[currentDescriptorIndex] == null)
+						{
+							var n = IscHelper.VaxInteger(info.Span, currentPosition, len);
+							rowDescs[currentDescriptorIndex] = new Descriptor((short)n);
+							if (n == 0)
+							{
+								currentPosition += len;
+								goto BreakAsync;
+							}
+						}
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_sqlda_seq:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												currentItemIndex = (int)IscHelper.VaxInteger(info.Span, currentPosition, len);
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_sqlda_seq:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						currentItemIndex = (int)IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_type:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_type:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].DataType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_sub_type:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_sub_type:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].SubType = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_scale:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_scale:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].NumericScale = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_length:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_length:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Length = (short)IscHelper.VaxInteger(info.Span, currentPosition, len);
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_field:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].Name = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_field:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Name = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_relation:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].Relation = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_relation:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Relation = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_owner:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].Owner = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
-												currentPosition += len;
-												break;
+					case IscCodes.isc_info_sql_owner:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Owner = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
+						currentPosition += len;
+						break;
 
-										case IscCodes.isc_info_sql_alias:
-												len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
-												currentPosition += 2;
-												rowDescs[currentDescriptorIndex][currentItemIndex - 1].Alias = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
+					case IscCodes.isc_info_sql_alias:
+						len = (int)IscHelper.VaxInteger(info.Span, currentPosition, 2);
+						currentPosition += 2;
+						rowDescs[currentDescriptorIndex][currentItemIndex - 1].Alias = _database.Charset.GetString(info.Span.Slice(currentPosition, len));
 						currentPosition += len;
 						break;
 
@@ -1321,8 +1329,8 @@ internal class GdsStatement : StatementBase
 						throw IscException.ForErrorCode(IscCodes.isc_dsql_sqlda_err);
 				}
 			}
-			// just to get out of the loop
-			BreakAsync:
+		// just to get out of the loop
+		BreakAsync:
 			{ }
 		}
 		return rowDescs;
@@ -1341,7 +1349,7 @@ internal class GdsStatement : StatementBase
 				var field = _parameters[i];
 				try
 				{
-										WriteRawParameter(xdr, field);
+					WriteRawParameter(xdr, field);
 					xdr.Write(field.NullFlag);
 				}
 				catch (IOException ex)

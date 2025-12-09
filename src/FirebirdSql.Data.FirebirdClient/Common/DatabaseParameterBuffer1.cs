@@ -21,7 +21,7 @@ namespace FirebirdSql.Data.Common;
 
 internal sealed class DatabaseParameterBuffer1(Encoding encoding) : DatabaseParameterBufferBase(IscCodes.isc_dpb_version1, encoding)
 {
-		public override void Append(int type, byte value)
+	public override void Append(int type, byte value)
 	{
 		WriteByte(type);
 		WriteByte(1);

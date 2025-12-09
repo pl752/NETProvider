@@ -27,7 +27,7 @@ public sealed class FbValidation(string connectionString = null) : FbService(con
 {
 	public FbValidationFlags Options { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

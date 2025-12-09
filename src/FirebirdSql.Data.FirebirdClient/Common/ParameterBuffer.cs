@@ -95,7 +95,8 @@ internal abstract class ParameterBuffer
 		Write(buffer, 0, buffer.Length);
 	}
 
-	protected void Write(ReadOnlySpan<byte> buffer) {
+	protected void Write(ReadOnlySpan<byte> buffer)
+	{
 		_data.AddRange(buffer);
 	}
 

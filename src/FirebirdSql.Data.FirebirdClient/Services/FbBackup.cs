@@ -26,15 +26,15 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbBackup(string connectionString = null) : FbService(connectionString)
 {
-		public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
-		public bool Verbose { get; set; }
+	public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
+	public bool Verbose { get; set; }
 	public int? VerboseInterval { get; set; }
 	public int Factor { get; set; }
 	public string SkipData { get; set; }
 	public FbBackupFlags Options { get; set; }
 	public FbBackupRestoreStatistics? Statistics { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

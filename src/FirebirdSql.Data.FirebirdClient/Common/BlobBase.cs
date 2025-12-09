@@ -22,7 +22,8 @@ using System.Threading.Tasks;
 
 namespace FirebirdSql.Data.Common;
 
-internal abstract class BlobBase(DatabaseBase db) {
+internal abstract class BlobBase(DatabaseBase db)
+{
 	private int _rblFlags;
 	private readonly Charset _charset = db.Charset;
 	private readonly int _segmentSize = db.PacketSize;
@@ -42,7 +43,7 @@ internal abstract class BlobBase(DatabaseBase db) {
 
 	public abstract DatabaseBase Database { get; }
 
-		public string ReadString()
+	public string ReadString()
 	{
 		var buffer = Read();
 		return _charset.GetString(buffer, 0, buffer.Length);

@@ -844,9 +844,9 @@ public sealed class FbDataReader : DbDataReader
 		CheckState();
 		CheckPosition();
 		CheckIndex(i);
-				var realLength = length;
+		var realLength = length;
 
-				if (buffer == null)
+		if (buffer == null)
 		{
 			if (IsDBNull(i))
 			{
@@ -869,15 +869,17 @@ public sealed class FbDataReader : DbDataReader
 			Array.Copy(byteArray, (int)dataIndex, buffer, bufferIndex, realLength);
 
 
-						int bytesRead;
-						if ((byteArray.Length - dataIndex) < length) {
-								bytesRead = byteArray.Length - (int)dataIndex;
-						}
-						else {
-								bytesRead = length;
-						}
+			int bytesRead;
+			if ((byteArray.Length - dataIndex) < length)
+			{
+				bytesRead = byteArray.Length - (int)dataIndex;
+			}
+			else
+			{
+				bytesRead = length;
+			}
 
-						return bytesRead;
+			return bytesRead;
 		}
 	}
 
@@ -907,9 +909,9 @@ public sealed class FbDataReader : DbDataReader
 		{
 
 			var charArray = GetFieldValue<string>(i).ToCharArray();
-						var realLength = length;
+			var realLength = length;
 
-						if (length > (charArray.Length - dataIndex))
+			if (length > (charArray.Length - dataIndex))
 			{
 				realLength = charArray.Length - (int)dataIndex;
 			}
@@ -918,15 +920,17 @@ public sealed class FbDataReader : DbDataReader
 				bufferIndex, realLength);
 
 
-						int charsRead;
-						if ((charArray.Length - dataIndex) < length) {
-								charsRead = charArray.Length - (int)dataIndex;
-						}
-						else {
-								charsRead = length;
-						}
+			int charsRead;
+			if ((charArray.Length - dataIndex) < length)
+			{
+				charsRead = charArray.Length - (int)dataIndex;
+			}
+			else
+			{
+				charsRead = length;
+			}
 
-						return charsRead;
+			return charsRead;
 		}
 	}
 
@@ -1067,8 +1071,8 @@ public sealed class FbDataReader : DbDataReader
 		{
 			var fieldName = _fields[i].Alias;
 			_columnsIndexesOrdinal.TryAdd(fieldName, i);
-						_columnsIndexesOrdinalCI.TryAdd(fieldName, i);
-				}
+			_columnsIndexesOrdinalCI.TryAdd(fieldName, i);
+		}
 	}
 
 	private int GetColumnIndex(string name)
@@ -1092,11 +1096,11 @@ public sealed class FbDataReader : DbDataReader
 		return IsExpression(r);
 	}
 
-		public static bool IsExpression(FbDataReader r) =>
-				/* [0] = COMPUTED_BLR
+	public static bool IsExpression(FbDataReader r) =>
+			/* [0] = COMPUTED_BLR
 * [1] = COMPUTED_SOURCE
 */
-				!r.IsDBNull(0) || !r.IsDBNull(1);
+			!r.IsDBNull(0) || !r.IsDBNull(1);
 
 	private static DataTable GetSchemaTableStructure()
 	{

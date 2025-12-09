@@ -160,7 +160,8 @@ abstract class SrpClientBase
 		return bytes.ToArray();
 	}
 
-	private static byte[] ComputeSHA1Hash(params byte[][] ba) {
+	private static byte[] ComputeSHA1Hash(params byte[][] ba)
+	{
 				return SHA1.HashData([.. ba.SelectMany(x => x)]);
 		}
 

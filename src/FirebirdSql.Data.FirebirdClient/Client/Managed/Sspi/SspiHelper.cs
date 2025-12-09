@@ -44,12 +44,13 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 	[StructLayout(LayoutKind.Sequential)]
 #pragma warning disable CS9113 // Параметр не прочитан.
-	public struct SecHandle(int? dummy = null) {
+	public struct SecHandle(int? dummy = null)
+	{
 #pragma warning restore CS9113 // Параметр не прочитан.
 		public IntPtr LowPart = IntPtr.Zero;
 		public IntPtr HighPart = IntPtr.Zero;
 
-				public readonly bool IsInvalid
+		public readonly bool IsInvalid
 		{
 			get { return LowPart == IntPtr.Zero && HighPart == IntPtr.Zero; }
 		}
@@ -57,21 +58,22 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 
 	[StructLayout(LayoutKind.Sequential)]
 #pragma warning disable CS9113 // Параметр не прочитан.
-	public struct SecInteger(int? dummy = null) {
+	public struct SecInteger(int? dummy = null)
+	{
 #pragma warning restore CS9113 // Параметр не прочитан.
 		public uint LowPart = 0;
 		public int HighPart = 0;
-		}
+	}
 
-		[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Sequential)]
 	private struct SecBuffer(int bufferSize) : IDisposable
 	{
 		private readonly int cbBuffer = bufferSize;
 		private readonly int bufferType = (int)SecBufferType.SECBUFFER_TOKEN;
 		private IntPtr pvBuffer = Marshal.AllocHGlobal(bufferSize);
 
-				public SecBuffer(byte[] secBufferBytes)
-			: this(secBufferBytes.Length)
+		public SecBuffer(byte[] secBufferBytes)
+	: this(secBufferBytes.Length)
 		{
 			Marshal.Copy(secBufferBytes, 0, pvBuffer, cbBuffer);
 		}
@@ -277,15 +279,15 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		: this(securityPackage, null)
 	{ }
 
-		#endregion
+	#endregion
 
-		#region Methods
+	#region Methods
 
-		/// <summary>
-		/// Creates client security context and returns "client token"
-		/// </summary>
-		/// <returns>Client authentication data to be sent to server</returns>
-		public byte[] InitializeClientSecurity()
+	/// <summary>
+	/// Creates client security context and returns "client token"
+	/// </summary>
+	/// <returns>Client authentication data to be sent to server</returns>
+	public byte[] InitializeClientSecurity()
 	{
 		EnsureDisposed();
 		CloseClientContext();
@@ -325,7 +327,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	/// <param name="serverToken">Authentication data received from server</param>
 	/// <returns>Client authentication data to be sent to server</returns>
 	public byte[] GetClientSecurityArray(byte[] serverToken)
-		{
+	{
 		EnsureDisposed();
 		if (_clientContext.IsInvalid)
 			throw new InvalidOperationException($"{nameof(InitializeClientSecurity)} not called");
@@ -361,7 +363,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		{
 			clientTokenBuf.Dispose();
 		}
-		}
+	}
 
 	public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken)
 	{

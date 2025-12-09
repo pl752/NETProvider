@@ -22,7 +22,8 @@ using FirebirdSql.Data.Types;
 namespace FirebirdSql.Data.Common;
 
 // based on Jaybird's implementation
-class DecimalCodec(int formatBitLength, int coefficientDigits) {
+class DecimalCodec(int formatBitLength, int coefficientDigits)
+{
 	class DecimalFormat
 	{
 		const int SignBits = 1;
@@ -84,7 +85,7 @@ class DecimalCodec(int formatBitLength, int coefficientDigits) {
 	readonly DecimalFormat _decimalFormat = new DecimalFormat(formatBitLength, coefficientDigits);
 	readonly DenselyPackedDecimalCodec _coefficientCoder = new DenselyPackedDecimalCodec(coefficientDigits);
 
-		public static DecimalCodec DecFloat16 { get; } = new DecimalCodec(64, 16);
+	public static DecimalCodec DecFloat16 { get; } = new DecimalCodec(64, 16);
 	public static DecimalCodec DecFloat34 { get; } = new DecimalCodec(128, 34);
 
 	// Parse an IEEE-754 decimal format to a FbDecFloat.

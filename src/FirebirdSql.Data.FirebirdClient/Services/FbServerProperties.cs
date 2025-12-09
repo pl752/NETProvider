@@ -28,7 +28,7 @@ namespace FirebirdSql.Data.Services;
 
 public sealed class FbServerProperties(string connectionString = null) : FbService(connectionString)
 {
-		public int GetVersion()
+	public int GetVersion()
 	{
 		return GetInt32(IscCodes.isc_info_svc_version);
 	}

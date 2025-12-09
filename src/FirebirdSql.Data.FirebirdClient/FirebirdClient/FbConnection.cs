@@ -40,16 +40,16 @@ public sealed class FbConnection : DbConnection, ICloneable
 
 	public static void ClearPool(FbConnection connection)
 	{
-				ArgumentNullException.ThrowIfNull(connection);
+		ArgumentNullException.ThrowIfNull(connection);
 
-				FbConnectionPoolManager.Instance.ClearPool(connection.ConnectionOptions);
+		FbConnectionPoolManager.Instance.ClearPool(connection.ConnectionOptions);
 	}
 
 	public static void ClearPool(string connectionString)
 	{
-				ArgumentNullException.ThrowIfNull(connectionString);
+		ArgumentNullException.ThrowIfNull(connectionString);
 
-				FbConnectionPoolManager.Instance.ClearPool(new ConnectionString(connectionString));
+		FbConnectionPoolManager.Instance.ClearPool(new ConnectionString(connectionString));
 	}
 
 	#endregion

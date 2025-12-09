@@ -30,7 +30,8 @@ using FirebirdSql.Data.Schema;
 
 namespace FirebirdSql.Data.FirebirdClient;
 
-internal class FbConnectionInternal(ConnectionString options) {
+internal class FbConnectionInternal(ConnectionString options)
+{
 	#region Fields
 
 	private DatabaseBase _db;
@@ -82,14 +83,14 @@ internal class FbConnectionInternal(ConnectionString options) {
 
 	public bool CancelDisabled { get; private set; }
 
-		#endregion
-		#region Constructors
+	#endregion
+	#region Constructors
 
-		#endregion
+	#endregion
 
-		#region Create and Drop database methods
+	#region Create and Drop database methods
 
-		public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite)
+	public void CreateDatabase(int pageSize, bool forcedWrites, bool overwrite)
 	{
 		var db = ClientFactory.CreateDatabase(_connectionStringOptions);
 

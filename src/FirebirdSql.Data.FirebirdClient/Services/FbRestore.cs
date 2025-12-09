@@ -39,8 +39,8 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 		}
 	}
 
-		public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
-		public bool Verbose { get; set; }
+	public FbBackupFileCollection BackupFiles { get; } = new FbBackupFileCollection();
+	public bool Verbose { get; set; }
 	public int? VerboseInterval { get; set; }
 	public int? PageBuffers { get; set; }
 	public bool ReadOnly { get; set; }
@@ -48,7 +48,7 @@ public sealed class FbRestore(string connectionString = null) : FbService(connec
 	public FbRestoreFlags Options { get; set; }
 	public FbBackupRestoreStatistics? Statistics { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

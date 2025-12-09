@@ -27,7 +27,7 @@ public sealed class FbStatistical(string connectionString = null) : FbService(co
 {
 	public FbStatisticalFlags Options { get; set; }
 
-		public void Execute()
+	public void Execute()
 	{
 		EnsureDatabase();
 

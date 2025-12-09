@@ -183,11 +183,12 @@ internal sealed class DbField
 			return false;
 		}
 
-				return DbDataType switch {
-						DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
-						_ => false,
-				};
-		}
+		return DbDataType switch
+		{
+			DbDataType.SmallInt or DbDataType.Integer or DbDataType.BigInt or DbDataType.Numeric or DbDataType.Decimal or DbDataType.Float or DbDataType.Double => true,
+			_ => false,
+		};
+	}
 
 	public bool IsDecimal()
 	{
@@ -196,11 +197,12 @@ internal sealed class DbField
 			return false;
 		}
 
-				return DbDataType switch {
-						DbDataType.Numeric or DbDataType.Decimal => true,
-						_ => false,
-				};
-		}
+		return DbDataType switch
+		{
+			DbDataType.Numeric or DbDataType.Decimal => true,
+			_ => false,
+		};
+	}
 
 	public bool IsLong()
 	{
@@ -209,11 +211,12 @@ internal sealed class DbField
 			return false;
 		}
 
-				return DbDataType switch {
-						DbDataType.Binary or DbDataType.Text => true,
-						_ => false,
-				};
-		}
+		return DbDataType switch
+		{
+			DbDataType.Binary or DbDataType.Text => true,
+			_ => false,
+		};
+	}
 
 	public bool IsCharacter()
 	{
@@ -222,11 +225,12 @@ internal sealed class DbField
 			return false;
 		}
 
-				return DbDataType switch {
-						DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
-						_ => false,
-				};
-		}
+		return DbDataType switch
+		{
+			DbDataType.Char or DbDataType.VarChar or DbDataType.Text => true,
+			_ => false,
+		};
+	}
 
 	public bool IsArray()
 	{
@@ -235,11 +239,12 @@ internal sealed class DbField
 			return false;
 		}
 
-				return DbDataType switch {
-						DbDataType.Array => true,
-						_ => false,
-				};
-		}
+		return DbDataType switch
+		{
+			DbDataType.Array => true,
+			_ => false,
+		};
+	}
 
 	public bool IsAliased()
 	{
@@ -298,7 +303,8 @@ internal sealed class DbField
 
 							var runes = s.EnumerateRunes().ToArray();
 							if ((Length % Charset.BytesPerCharacter) == 0 &&
-						runes.Length > CharCount) {
+						runes.Length > CharCount)
+							{
 								s = new string([.. runes.Take(CharCount).RunesToChars()]);
 							}
 

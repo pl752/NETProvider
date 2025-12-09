@@ -98,10 +98,11 @@ internal sealed class Descriptor
 		}
 	}
 
-	internal sealed class BlrData(byte[] data, int length) {
-				public byte[] Data { get; } = data;
-				public int Length { get; } = length;
-		}
+	internal sealed class BlrData(byte[] data, int length)
+	{
+		public byte[] Data { get; } = data;
+		public int Length { get; } = length;
+	}
 	public BlrData ToBlr()
 	{
 		using (var blr = new MemoryStream(256))

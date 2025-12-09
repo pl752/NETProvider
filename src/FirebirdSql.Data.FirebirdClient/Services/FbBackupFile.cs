@@ -19,7 +19,8 @@ using System;
 
 namespace FirebirdSql.Data.Services;
 
-public class FbBackupFile(string fileName, int? fileLength = null) {
-		public string BackupFile { get; set; } = fileName;
-		public int? BackupLength { get; set; } = fileLength;
+public class FbBackupFile(string fileName, int? fileLength = null)
+{
+	public string BackupFile { get; set; } = fileName;
+	public int? BackupLength { get; set; } = fileLength;
 }
