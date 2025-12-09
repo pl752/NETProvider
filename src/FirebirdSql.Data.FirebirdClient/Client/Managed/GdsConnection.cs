@@ -221,7 +221,7 @@ internal sealed class GdsConnection
 							break;
 						}
 
-						if (AuthBlock.ServerKeys.Any())
+						if (AuthBlock.ServerKeys.Length > 0)
 						{
 							AuthBlock.SendWireCryptToBuffer();
 							Xdr.Flush();
@@ -335,7 +335,7 @@ internal sealed class GdsConnection
 							break;
 						}
 
-						if (AuthBlock.ServerKeys.Any())
+						if (AuthBlock.ServerKeys.Length > 0)
 						{
 							await AuthBlock.SendWireCryptToBufferAsync(cancellationToken).ConfigureAwait(false);
 							await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);

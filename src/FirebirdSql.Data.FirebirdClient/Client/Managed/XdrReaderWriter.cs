@@ -34,7 +34,8 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	readonly Charset _charset;
 
 	byte[] _smallBuffer;
-    const int StackallocThreshold = 1024;
+	static readonly byte[] _emptyBuf = Array.Empty<byte>();
+	const int StackallocThreshold = 1024;
 
 	public XdrReaderWriter(IDataProvider dataProvider, Charset charset)
 	{
