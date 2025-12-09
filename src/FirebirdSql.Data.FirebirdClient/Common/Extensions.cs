@@ -69,8 +69,7 @@ internal static class Extensions
 
 	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
 	{
-		if (s == null)
-			throw new ArgumentNullException(nameof(s));
+		ArgumentNullException.ThrowIfNull(s);
 
 #if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
 		for (var i = 0; i < s.Length; i++)
