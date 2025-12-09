@@ -131,7 +131,6 @@ internal sealed class GdsBlob : BlobBase
 				Open();
 
 			var bufferLength = 20;
-			var buffer = new byte[bufferLength];
 
 			_database.Xdr.WriteBytes(bufOpInfoBlob);
 			_database.Xdr.Write(_blobHandle);
@@ -150,7 +149,7 @@ internal sealed class GdsBlob : BlobBase
 				responseLength = response.Data.Length;
 			}
 
-			Buffer.BlockCopy(response.Data, 0, buffer, 0, responseLength);
+			var buffer = response.Data.Span[..responseLength];
 
 			var length = IscHelper.VaxInteger(buffer, 1, 2);
 			var size = IscHelper.VaxInteger(buffer, 3, (int)length);
@@ -171,7 +170,6 @@ internal sealed class GdsBlob : BlobBase
 				await OpenAsync(cancellationToken).ConfigureAwait(false);
 
 			var bufferLength = 20;
-			var buffer = new byte[bufferLength];
 
 			await _database.Xdr.WriteBytesAsync(bufOpInfoBlob, 4, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
@@ -190,7 +188,7 @@ internal sealed class GdsBlob : BlobBase
 				responseLength = response.Data.Length;
 			}
 
-			Buffer.BlockCopy(response.Data, 0, buffer, 0, responseLength);
+			var buffer = response.Data.Span[..responseLength];
 
 			var length = IscHelper.VaxInteger(buffer, 1, 2);
 			var size = IscHelper.VaxInteger(buffer, 3, (int)length);
@@ -239,11 +237,11 @@ internal sealed class GdsBlob : BlobBase
 			var srcpos = 0;
 
 			while (srcpos < buffer.Length)
-			{
-				len = (int)IscHelper.VaxInteger(buffer, srcpos, 2);
+				{ 
+				len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 				srcpos += 2;
 
-				stream.Write(buffer, srcpos, len);
+				stream.Write(buffer.Span.Slice(srcpos, len));
 				srcpos += len;
 			}
 		}
@@ -288,11 +286,11 @@ internal sealed class GdsBlob : BlobBase
 			var srcpos = 0;
 
 			while (srcpos < buffer.Length)
-			{
-				len = (int)IscHelper.VaxInteger(buffer, srcpos, 2);
+				{
+				len = (int)IscHelper.VaxInteger(buffer.Span, srcpos, 2);
 				srcpos += 2;
 
-				stream.Write(buffer, srcpos, len);
+				stream.Write(buffer.Span.Slice(srcpos, len));
 				srcpos += len;
 			}
 		}
@@ -339,11 +337,11 @@ internal sealed class GdsBlob : BlobBase
 
 			var tmp = new byte[requested * 2];
 			while (posInInput < buffer.Length)
-			{
-				var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+				{
+				var len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 				posInInput += 2;
 
-				Array.Copy(buffer, posInInput, tmp, posInOutput, len);
+				buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
 				posInOutput += len;
 				posInInput += len;
 			}
@@ -395,11 +393,11 @@ internal sealed class GdsBlob : BlobBase
 
 			var tmp = new byte[requested * 2];
 			while (posInInput < buffer.Length)
-			{
-				var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+				{
+				var len = (int)IscHelper.VaxInteger(buffer.Span, posInInput, 2);
 				posInInput += 2;
 
-				Array.Copy(buffer, posInInput, tmp, posInOutput, len);
+				buffer.Span.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
 				posInOutput += len;
 				posInInput += len;
 			}

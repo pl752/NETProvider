@@ -24,10 +24,10 @@ internal sealed class GenericResponse : IResponse
 {
 	public int ObjectHandle { get; }
 	public long BlobId { get; }
-	public byte[] Data { get; }
+	public ReadOnlyMemory<byte> Data { get; }
 	public IscException Exception { get; }
 
-	public GenericResponse(int objectHandle, long blobId, byte[] data, IscException exception)
+	public GenericResponse(int objectHandle, long blobId, ReadOnlyMemory<byte> data, IscException exception)
 	{
 		ObjectHandle = objectHandle;
 		BlobId = blobId;

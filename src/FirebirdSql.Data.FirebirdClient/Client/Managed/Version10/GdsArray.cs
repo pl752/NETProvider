@@ -489,10 +489,16 @@ internal sealed class GdsArray : ArrayBase
 					using (var ms = new MemoryStream())
 					{
 						var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms));
-						for (var i = 0; i < elements; i++)
-						{
-							var buffer = await _database.Xdr.ReadOpaqueAsync(await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-							await xdr.WriteBufferAsync(buffer, buffer.Length, cancellationToken).ConfigureAwait(false);
+							for(var i = 0; i < elements; i++) {
+								var elen = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+								var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(elen);
+								try {
+									await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, elen), elen, cancellationToken).ConfigureAwait(false);
+									await xdr.WriteBufferAsync(rented.AsMemory(0, elen), cancellationToken).ConfigureAwait(false);
+								}
+								finally {
+									System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+								}
 						}
 						await xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 						return ms.ToArray();

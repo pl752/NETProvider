@@ -22,9 +22,9 @@ namespace FirebirdSql.Data.Client.Managed.Version11;
 
 internal class AuthResponse : IResponse
 {
-	public byte[] Data { get; }
+	public ReadOnlyMemory<byte> Data { get; }
 
-	public AuthResponse(byte[] data)
+	public AuthResponse(ReadOnlyMemory<byte> data)
 	{
 		Data = data;
 	}
