@@ -76,32 +76,4 @@ internal static class Extensions
 			if(n > 1) yield return chars[1];
 		}
 	}
-
-	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
-	{
-		ArgumentNullException.ThrowIfNull(s);
-
-#if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
-		for (var i = 0; i < s.Length; i++)
-		{
-			if (char.IsHighSurrogate(s[i]) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
-			{
-				yield return new[] { s[i], s[i + 1] };
-				i++;
-			}
-			else
-			{
-				yield return new[] { s[i] };
-			}
-		}
-
-#else
-				return s.EnumerateRunes().Select(r =>
-		{
-			var result = new char[r.Utf16SequenceLength];
-			r.EncodeToUtf16(result);
-			return result;
-		});
-#endif
-	}
 }
