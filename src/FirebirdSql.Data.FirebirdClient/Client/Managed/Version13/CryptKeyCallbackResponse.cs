@@ -20,7 +20,7 @@ using FirebirdSql.Data.Client.Managed;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class CryptKeyCallbackResponse(byte[] data) : IResponse
+internal class CryptKeyCallbackResponse(ReadOnlyMemory<byte> data) : IResponse
 {
-		public byte[] Data { get; } = data;
+		public ReadOnlyMemory<byte> Data { get; } = data;
 }

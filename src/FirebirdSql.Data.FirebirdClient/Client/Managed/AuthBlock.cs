@@ -38,10 +38,10 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		public string Password { get; } = password;
 		public WireCryptOption WireCrypt { get; } = wireCrypt;
 
-		public byte[] ServerData { get; private set; }
+		public ReadOnlyMemory<byte> ServerData { get; private set; }
 	public string AcceptPluginName { get; private set; }
 	public bool IsAuthenticated { get; private set; }
-	public byte[] ServerKeys { get; private set; }
+	public ReadOnlyMemory<byte> ServerKeys { get; private set; }
 
 	public byte[] PublicClientData { get; private set; }
 	public bool HasClientData => ClientData != null;
@@ -147,7 +147,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		Connection.Xdr.WriteBuffer(HasClientData ? ClientData : PublicClientData); // p_data
 		Connection.Xdr.Write(AcceptPluginName); // p_name
 		Connection.Xdr.Write(AcceptPluginName); // p_list
-		Connection.Xdr.WriteBuffer(ServerKeys); // p_keys
+		Connection.Xdr.WriteBuffer(ServerKeys.Span); // p_keys
 	}
 	public async ValueTask SendContAuthToBufferAsync(CancellationToken cancellationToken = default)
 	{
@@ -267,7 +267,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		}
 	}
 
-	public void Start(byte[] serverData, string acceptPluginName, bool isAuthenticated, byte[] serverKeys)
+	public void Start(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys)
 	{
 		ServerData = serverData;
 		AcceptPluginName = acceptPluginName;
@@ -280,7 +280,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 			PublicClientData = Encoding.UTF8.GetBytes(_srp256.PublicKeyHex);
 			if (hasServerData)
 			{
-				ClientData = Encoding.UTF8.GetBytes(_srp256.ClientProof(NormalizeLogin(User), Password, ServerData).ToHexString());
+				ClientData = Encoding.UTF8.GetBytes(_srp256.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
 			}
 			SessionKey = _srp256.SessionKey;
 			SessionKeyName = _srp256.SessionKeyName;
@@ -290,7 +290,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 			PublicClientData = Encoding.UTF8.GetBytes(_srp.PublicKeyHex);
 			if (hasServerData)
 			{
-				ClientData = Encoding.UTF8.GetBytes(_srp.ClientProof(NormalizeLogin(User), Password, ServerData).ToHexString());
+				ClientData = Encoding.UTF8.GetBytes(_srp.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
 			}
 			SessionKey = _srp.SessionKey;
 			SessionKeyName = _srp.SessionKeyName;
@@ -299,7 +299,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		{
 			if (hasServerData)
 			{
-				ClientData = _sspi.GetClientSecurity(ServerData);
+				ClientData = _sspi.GetClientSecurity(ServerData.Span);
 			}
 		}
 		else

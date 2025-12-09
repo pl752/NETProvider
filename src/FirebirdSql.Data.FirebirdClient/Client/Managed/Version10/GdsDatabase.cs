@@ -896,7 +896,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 				responseLength = response.Data.Length;
 			}
 
-			Buffer.BlockCopy(response.Data, 0, buffer, 0, responseLength);
+			response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 		}
 		catch (IOException ex)
 		{
@@ -924,7 +924,7 @@ internal class GdsDatabase(GdsConnection connection) : DatabaseBase(connection.C
 				responseLength = response.Data.Length;
 			}
 
-			Buffer.BlockCopy(response.Data, 0, buffer, 0, responseLength);
+			response.Data.Span.Slice(0, responseLength).CopyTo(buffer.AsSpan(0, responseLength));
 		}
 		catch (IOException ex)
 		{

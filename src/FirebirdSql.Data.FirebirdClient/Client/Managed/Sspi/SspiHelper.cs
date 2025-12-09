@@ -320,7 +320,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	/// </summary>
 	/// <param name="serverToken">Authentication data received from server</param>
 	/// <returns>Client authentication data to be sent to server</returns>
-	public byte[] GetClientSecurity(byte[] serverToken)
+	public byte[] GetClientSecurityArray(byte[] serverToken)
 	{
 		EnsureDisposed();
 		if (_clientContext.IsInvalid)
@@ -357,6 +357,13 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		{
 			clientTokenBuf.Dispose();
 		}
+	}
+
+	public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken)
+		{
+		// Bridge for span-based callers; small and called infrequently in auth flow.
+		var arr = serverToken.ToArray();
+		return GetClientSecurityArray(arr);
 	}
 
 	#endregion
