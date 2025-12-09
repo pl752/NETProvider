@@ -43,7 +43,9 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	#region Structures used in native Win API calls
 
 	[StructLayout(LayoutKind.Sequential)]
+#pragma warning disable CS9113 // Параметр не прочитан.
 	public struct SecHandle(int? dummy = null) {
+#pragma warning restore CS9113 // Параметр не прочитан.
 		public IntPtr LowPart = IntPtr.Zero;
 		public IntPtr HighPart = IntPtr.Zero;
 
@@ -54,7 +56,9 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
+#pragma warning disable CS9113 // Параметр не прочитан.
 	public struct SecInteger(int? dummy = null) {
+#pragma warning restore CS9113 // Параметр не прочитан.
 		public uint LowPart = 0;
 		public int HighPart = 0;
 		}
@@ -321,7 +325,7 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 	/// <param name="serverToken">Authentication data received from server</param>
 	/// <returns>Client authentication data to be sent to server</returns>
 	public byte[] GetClientSecurityArray(byte[] serverToken)
-	{
+		{
 		EnsureDisposed();
 		if (_clientContext.IsInvalid)
 			throw new InvalidOperationException($"{nameof(InitializeClientSecurity)} not called");
@@ -357,10 +361,10 @@ internal sealed partial class SspiHelper(string securityPackage, string remotePr
 		{
 			clientTokenBuf.Dispose();
 		}
-	}
+		}
 
 	public byte[] GetClientSecurity(ReadOnlySpan<byte> serverToken)
-		{
+	{
 		// Bridge for span-based callers; small and called infrequently in auth flow.
 		var arr = serverToken.ToArray();
 		return GetClientSecurityArray(arr);
