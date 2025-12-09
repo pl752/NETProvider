@@ -680,18 +680,9 @@ internal class GdsStatement : StatementBase
 		await ProcessFreeResponseAsync(await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
 	}
 
-	protected bool FreeNotNeeded(int option)
-	{
+	protected bool FreeNotNeeded(int option) =>
 		// does not seem to be possible or necessary to close an execute procedure statement
-		if (StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+		StatementType == DbStatementType.StoredProcedure && option == IscCodes.DSQL_close;
 
 	protected void DoFreePacket(int option)
 	{

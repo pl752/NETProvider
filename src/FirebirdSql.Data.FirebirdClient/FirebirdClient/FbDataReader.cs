@@ -1092,18 +1092,11 @@ public sealed class FbDataReader : DbDataReader
 		return IsExpression(r);
 	}
 
-	public static bool IsExpression(FbDataReader r)
-	{
-		/* [0] = COMPUTED_BLR
-		 * [1] = COMPUTED_SOURCE
-		 */
-		if (!r.IsDBNull(0) || !r.IsDBNull(1))
-		{
-			return true;
-		}
-
-		return false;
-	}
+		public static bool IsExpression(FbDataReader r) =>
+				/* [0] = COMPUTED_BLR
+* [1] = COMPUTED_SOURCE
+*/
+				!r.IsDBNull(0) || !r.IsDBNull(1);
 
 	private static DataTable GetSchemaTableStructure()
 	{
