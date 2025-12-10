@@ -332,7 +332,10 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	public float Int2Single(int sqlType)
 	{
 		Span<byte> bytes = stackalloc byte[4];
-		BitConverter.TryWriteBytes(bytes, sqlType);
+		if (!BitConverter.TryWriteBytes(bytes, sqlType))
+		{
+			throw new InvalidOperationException("Failed to write Single bytes.");
+		}
 		return BitConverter.ToSingle(bytes);
 	}
 
@@ -348,7 +351,10 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	public double Long2Double(long sqlType)
 	{
 		Span<byte> bytes = stackalloc byte[8];
-		BitConverter.TryWriteBytes(bytes, sqlType);
+		if (!BitConverter.TryWriteBytes(bytes, sqlType))
+		{
+			throw new InvalidOperationException("Failed to write Double bytes.");
+		}
 		return BitConverter.ToDouble(bytes);
 	}
 
@@ -1065,13 +1071,20 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	public void Write(float value)
 	{
 		Span<byte> buffer = stackalloc byte[4];
-		BitConverter.TryWriteBytes(buffer, value);
+		if (!BitConverter.TryWriteBytes(buffer, value))
+		{
+			throw new InvalidOperationException("Failed to write Single bytes.");
+		}
 		Write(BitConverter.ToInt32(buffer));
 	}
 	public ValueTask WriteAsync(float value, CancellationToken cancellationToken = default)
 	{
 		var rented = ArrayPool<byte>.Shared.Rent(4);
-		BitConverter.TryWriteBytes(rented, value);
+		if (!BitConverter.TryWriteBytes(rented, value))
+		{
+			ArrayPool<byte>.Shared.Return(rented);
+			throw new InvalidOperationException("Failed to write Single bytes.");
+		}
 		var intVal = BitConverter.ToInt32(rented, 0);
 		ArrayPool<byte>.Shared.Return(rented);
 		return WriteAsync(intVal, cancellationToken);
@@ -1080,13 +1093,20 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	public void Write(double value)
 	{
 		Span<byte> buffer = stackalloc byte[8];
-		BitConverter.TryWriteBytes(buffer, value);
+		if (!BitConverter.TryWriteBytes(buffer, value))
+		{
+			throw new InvalidOperationException("Failed to write Double bytes.");
+		}
 		Write(BitConverter.ToInt64(buffer));
 	}
 	public ValueTask WriteAsync(double value, CancellationToken cancellationToken = default)
 	{
 		var rented = ArrayPool<byte>.Shared.Rent(8);
-		BitConverter.TryWriteBytes(rented, value);
+		if (!BitConverter.TryWriteBytes(rented, value))
+		{
+			ArrayPool<byte>.Shared.Return(rented);
+			throw new InvalidOperationException("Failed to write Double bytes.");
+		}
 		var longVal = BitConverter.ToInt64(rented, 0);
 		ArrayPool<byte>.Shared.Return(rented);
 		return WriteAsync(longVal, cancellationToken);

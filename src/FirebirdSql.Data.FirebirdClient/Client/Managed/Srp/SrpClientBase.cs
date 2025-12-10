@@ -16,6 +16,7 @@
 //$Authors = Hajime Nakagami (nakagami@gmail.com), Jiri Cincura (jiri@cincura.net)
 
 using System;
+using System.Buffers;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -36,6 +37,7 @@ abstract class SrpClientBase
 
 	private const int SRP_KEY_SIZE = 128;
 	private const int SRP_SALT_SIZE = 32;
+	private const int STACKALLOC_LIMIT = 512;
 	private static readonly BigInteger N = BigInteger.Parse("00E67D2E994B2F900C3F41F08F5BB2627ED0D49EE1FE767A52EFCD565CD6E768812C3E1E9CE8F0A8BEA6CB13CD29DDEBF7A96D4A93B55D488DF099A15C89DCB0640738EB2CBDD9A8F7BAB561AB1B0DC1C6CDABF303264A08D1BCA932D1F1EE428B619D970F342ABA9A65793B8B2F041AE5364350C16F735F56ECBCA87BD57B29E7", NumberStyles.HexNumber);
 	private static readonly BigInteger g = new BigInteger(2);
 	private static readonly BigInteger k = BigInteger.Parse("1277432915985975349439481660349303019122249719989");
@@ -153,11 +155,34 @@ abstract class SrpClientBase
 
 	private static byte[] BigIntegerToByteArray(BigInteger n)
 	{
-		Span<byte> bytes = stackalloc byte[n.GetByteCount()];
-		n.TryWriteBytes(bytes, out _);
+		var byteCount = n.GetByteCount();
+		byte[] rented = null;
+		Span<byte> bytes = byteCount > STACKALLOC_LIMIT
+			? (rented = ArrayPool<byte>.Shared.Rent(byteCount)).AsSpan(0, byteCount)
+			: stackalloc byte[byteCount];
+		if (!n.TryWriteBytes(bytes, out _))
+		{
+			if (rented != null)
+			{
+				ArrayPool<byte>.Shared.Return(rented, clearArray: true);
+			}
+			throw new InvalidOperationException("Failed to write BigInteger bytes.");
+		}
 		bytes.Reverse();
-		if (bytes[0] == 0) return bytes[1..].ToArray();
-		return bytes.ToArray();
+		byte[] result;
+		if (bytes[0] == 0)
+		{
+			result = bytes[1..].ToArray();
+		}
+		else
+		{
+			result = bytes.ToArray();
+		}
+		if (rented != null)
+		{
+			ArrayPool<byte>.Shared.Return(rented, clearArray: true);
+		}
+		return result;
 	}
 
 	private static byte[] ComputeSHA1Hash(params byte[][] ba)

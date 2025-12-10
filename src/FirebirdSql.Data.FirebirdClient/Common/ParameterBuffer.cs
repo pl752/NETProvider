@@ -64,7 +64,10 @@ internal abstract class ParameterBuffer
 			value = IPAddress.NetworkToHostOrder(value);
 		}
 		Span<byte> buffer = stackalloc byte[2];
-		BitConverter.TryWriteBytes(buffer, value);
+		if (!BitConverter.TryWriteBytes(buffer, value))
+		{
+			throw new InvalidOperationException("Failed to write Int16 bytes.");
+		}
 		Write(buffer);
 	}
 
@@ -75,7 +78,10 @@ internal abstract class ParameterBuffer
 			value = IPAddress.NetworkToHostOrder(value);
 		}
 		Span<byte> buffer = stackalloc byte[4];
-		BitConverter.TryWriteBytes(buffer, value);
+		if (!BitConverter.TryWriteBytes(buffer, value))
+		{
+			throw new InvalidOperationException("Failed to write Int32 bytes.");
+		}
 		Write(buffer);
 	}
 
@@ -86,7 +92,10 @@ internal abstract class ParameterBuffer
 			value = IPAddress.NetworkToHostOrder(value);
 		}
 		Span<byte> buffer = stackalloc byte[8];
-		BitConverter.TryWriteBytes(buffer, value);
+		if (!BitConverter.TryWriteBytes(buffer, value))
+		{
+			throw new InvalidOperationException("Failed to write Int64 bytes.");
+		}
 		Write(buffer);
 	}
 

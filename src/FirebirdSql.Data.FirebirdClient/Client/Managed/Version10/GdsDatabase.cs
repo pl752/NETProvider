@@ -16,6 +16,7 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -31,8 +32,9 @@ internal class GdsDatabase : DatabaseBase
 	protected const int PartnerIdentification = 0;
 	protected const int AddressOfAstRoutine = 0;
 	protected const int ArgumentToAstRoutine = 0;
-	protected internal const int DatabaseObjectId = 0;
+protected internal const int DatabaseObjectId = 0;
 	protected internal const int Incarnation = 0;
+	const int StackallocThreshold = 512;
 
 	#region Fields
 
@@ -442,8 +444,15 @@ internal class GdsDatabase : DatabaseBase
 			var ipAddress = _connection.IPAddress.ToString();
 			respLen -= 4;
 
-			Span<byte> garbage2 = stackalloc byte[respLen];
+			byte[] rented = null;
+			Span<byte> garbage2 = respLen > StackallocThreshold
+				? (rented = ArrayPool<byte>.Shared.Rent(respLen)).AsSpan(0, respLen)
+				: stackalloc byte[respLen];
 			Xdr.ReadBytes(garbage2, respLen);
+			if (rented != null)
+			{
+				ArrayPool<byte>.Shared.Return(rented);
+			}
 
 			Xdr.ReadStatusVector();
 

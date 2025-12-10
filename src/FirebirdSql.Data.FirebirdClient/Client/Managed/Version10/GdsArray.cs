@@ -16,6 +16,7 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
+using System.Buffers;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -28,6 +29,7 @@ namespace FirebirdSql.Data.Client.Managed.Version10;
 internal sealed class GdsArray : ArrayBase
 {
 	const long ArrayHandle = 0;
+	const int StackallocThreshold = 512;
 
 	private static readonly byte[] zeroIntBuf = TypeEncoder.EncodeInt32(0);
 	private static readonly byte[] bufOpGetSlice = TypeEncoder.EncodeInt32(IscCodes.op_get_slice);
@@ -445,9 +447,16 @@ internal sealed class GdsArray : ArrayBase
 	private void SliceInner(XdrReaderWriter xdr)
 	{
 		int len = _database.Xdr.ReadInt32();
-		Span<byte> buffer = stackalloc byte[len];
+		byte[] rented = null;
+		Span<byte> buffer = len > StackallocThreshold
+			? (rented = ArrayPool<byte>.Shared.Rent(len)).AsSpan(0, len)
+			: stackalloc byte[len];
 		_database.Xdr.ReadOpaque(buffer, len);
 		xdr.WriteBuffer(buffer);
+		if (rented != null)
+		{
+			ArrayPool<byte>.Shared.Return(rented);
+		}
 	}
 
 	private async ValueTask<byte[]> ReceiveSliceResponseAsync(ArrayDesc desc, CancellationToken cancellationToken = default)

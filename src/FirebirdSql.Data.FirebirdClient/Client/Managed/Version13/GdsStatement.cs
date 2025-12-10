@@ -27,6 +27,8 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class GdsStatement : Version12.GdsStatement
 {
+	const int StackallocThreshold = 1024;
+
 	#region Constructors
 
 	public GdsStatement(GdsDatabase database)
@@ -52,18 +54,25 @@ internal class GdsStatement : Version12.GdsStatement
 			{
 				var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
 
-            var count = _parameters.Count;
-            var bytesLen = (int)Math.Ceiling(count / 8d);
-            Span<byte> buffer = stackalloc byte[bytesLen];
-            buffer.Clear();
-            for (var i = 0; i < count; i++)
-            {
-                if (_parameters[i].DbValue.IsDBNull())
-                {
-                    buffer[i / 8] |= (byte)(1 << (i % 8));
-                }
-            }
-            xdr.WriteOpaque(buffer);
+				var count = _parameters.Count;
+				var bytesLen = (int)Math.Ceiling(count / 8d);
+				byte[] rented = null;
+				Span<byte> buffer = bytesLen > StackallocThreshold
+					? (rented = ArrayPool<byte>.Shared.Rent(bytesLen)).AsSpan(0, bytesLen)
+					: stackalloc byte[bytesLen];
+				buffer.Clear();
+				for (var i = 0; i < count; i++)
+				{
+					if (_parameters[i].DbValue.IsDBNull())
+					{
+						buffer[i / 8] |= (byte)(1 << (i % 8));
+					}
+				}
+				xdr.WriteOpaque(buffer);
+				if (rented != null)
+				{
+					ArrayPool<byte>.Shared.Return(rented);
+				}
 
 				for (var i = 0; i < _parameters.Count; i++)
 				{
@@ -72,7 +81,7 @@ internal class GdsStatement : Version12.GdsStatement
 					{
 						continue;
 					}
-										WriteRawParameter(xdr, field);
+					WriteRawParameter(xdr, field);
 				}
 
 				xdr.Flush();
