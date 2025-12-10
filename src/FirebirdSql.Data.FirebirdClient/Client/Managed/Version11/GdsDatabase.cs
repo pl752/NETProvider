@@ -112,7 +112,7 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 	{
 		while (response is AuthResponse authResponse)
 		{
-			var authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
+			var authData = sspiHelper.GetClientSecurity(authResponse.Data);
 			Xdr.Write(IscCodes.op_trusted_auth);
 			Xdr.WriteBuffer(authData);
 			Xdr.Flush();
@@ -120,11 +120,11 @@ internal class GdsDatabase(GdsConnection connection) : Version10.GdsDatabase(con
 		}
 		return response;
 	}
-	protected async ValueTask<IResponse> ProcessTrustedAuthResponseAsync(SspiHelper sspiHelper, IResponse response, CancellationToken cancellationToken = default)
-	{
-		while (response is AuthResponse authResponse)
+		protected async ValueTask<IResponse> ProcessTrustedAuthResponseAsync(SspiHelper sspiHelper, IResponse response, CancellationToken cancellationToken = default)
 		{
-			var authData = sspiHelper.GetClientSecurity(authResponse.Data.Span);
+			while (response is AuthResponse authResponse)
+			{
+			var authData = sspiHelper.GetClientSecurity(authResponse.Data);
 			await Xdr.WriteAsync(IscCodes.op_trusted_auth, cancellationToken).ConfigureAwait(false);
 			await Xdr.WriteBufferAsync(authData, cancellationToken).ConfigureAwait(false);
 			await Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);

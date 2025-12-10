@@ -567,8 +567,8 @@ internal class GdsStatement : StatementBase
 
 	protected void ProcessPrepareResponse(GenericResponse response)
 	{
-		var info = response.Data.Span;
-		var descriptors = ParseSqlInfoSpan(info, DescribeInfoAndBindInfoItems, [null, null]);
+		var info = response.Data.AsSpan();
+		var descriptors = ParseSqlInfoSpan(info, DescribeInfoAndBindInfoItems, new Descriptor[] { null, null });
 		_fields = descriptors[0];
 		_parameters = descriptors[1];
 	}

@@ -28,21 +28,21 @@ using WireCryptOption = FirebirdSql.Data.Client.Managed.Version13.WireCryptOptio
 
 namespace FirebirdSql.Data.Client.Managed;
 
-sealed class AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt)
+sealed class AuthBlock
 {
-	Srp256Client _srp256 = new Srp256Client();
-	SrpClient _srp = new SrpClient();
-	SspiHelper _sspi = new SspiHelper();
+	Srp256Client _srp256;
+	SrpClient _srp;
+	SspiHelper _sspi;
 
-		public GdsConnection Connection { get; } = connection;
-		public string User { get; } = user;
-		public string Password { get; } = password;
-		public WireCryptOption WireCrypt { get; } = wireCrypt;
+	public GdsConnection Connection { get; }
+	public string User { get; }
+	public string Password { get; }
+	public WireCryptOption WireCrypt { get; }
 
-		public ReadOnlyMemory<byte> ServerData { get; private set; }
+	public byte[] ServerData { get; private set; }
 	public string AcceptPluginName { get; private set; }
 	public bool IsAuthenticated { get; private set; }
-	public ReadOnlyMemory<byte> ServerKeys { get; private set; }
+	public byte[] ServerKeys { get; private set; }
 
 	public byte[] PublicClientData { get; private set; }
 	public bool HasClientData => ClientData != null;
@@ -51,6 +51,18 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 	public string SessionKeyName { get; private set; }
 
 	public bool WireCryptInitialized { get; private set; }
+
+	public AuthBlock(GdsConnection connection, string user, string password, WireCryptOption wireCrypt)
+	{
+		_srp256 = new Srp256Client();
+		_srp = new SrpClient();
+		_sspi = new SspiHelper();
+
+		Connection = connection;
+		User = user;
+		Password = password;
+		WireCrypt = wireCrypt;
+	}
 
 		public byte[] UserIdentificationData()
 	{
@@ -148,7 +160,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		Connection.Xdr.WriteBuffer(HasClientData ? ClientData : PublicClientData); // p_data
 		Connection.Xdr.Write(AcceptPluginName); // p_name
 		Connection.Xdr.Write(AcceptPluginName); // p_list
-		Connection.Xdr.WriteBuffer(ServerKeys.Span); // p_keys
+		Connection.Xdr.WriteBuffer(ServerKeys); // p_keys
 	}
 	public async ValueTask SendContAuthToBufferAsync(CancellationToken cancellationToken = default)
 	{
@@ -268,7 +280,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		}
 	}
 
-	public void Start(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys)
+	public void Start(byte[] serverData, string acceptPluginName, bool isAuthenticated, byte[] serverKeys)
 	{
 		ServerData = serverData;
 		AcceptPluginName = acceptPluginName;
@@ -281,7 +293,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 			PublicClientData = Encoding.UTF8.GetBytes(_srp256.PublicKeyHex);
 			if (hasServerData)
 			{
-				ClientData = Encoding.UTF8.GetBytes(_srp256.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
+				ClientData = Encoding.UTF8.GetBytes(_srp256.ClientProof(NormalizeLogin(User), Password, ServerData).ToHexString());
 			}
 			SessionKey = _srp256.SessionKey;
 			SessionKeyName = _srp256.SessionKeyName;
@@ -291,7 +303,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 			PublicClientData = Encoding.UTF8.GetBytes(_srp.PublicKeyHex);
 			if (hasServerData)
 			{
-				ClientData = Encoding.UTF8.GetBytes(_srp.ClientProof(NormalizeLogin(User), Password, ServerData.ToArray()).ToHexString());
+				ClientData = Encoding.UTF8.GetBytes(_srp.ClientProof(NormalizeLogin(User), Password, ServerData).ToHexString());
 			}
 			SessionKey = _srp.SessionKey;
 			SessionKeyName = _srp.SessionKeyName;
@@ -300,7 +312,7 @@ sealed class AuthBlock(GdsConnection connection, string user, string password, W
 		{
 			if (hasServerData)
 			{
-				ClientData = _sspi.GetClientSecurity(ServerData.Span);
+				ClientData = _sspi.GetClientSecurity(ServerData);
 			}
 		}
 		else

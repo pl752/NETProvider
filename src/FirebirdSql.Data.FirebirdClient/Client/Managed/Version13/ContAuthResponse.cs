@@ -19,10 +19,18 @@ using System;
 
 namespace FirebirdSql.Data.Client.Managed.Version13;
 
-internal class ContAuthResponse(ReadOnlyMemory<byte> serverData, string acceptPluginName, bool isAuthenticated, ReadOnlyMemory<byte> serverKeys) : IResponse
+internal class ContAuthResponse : IResponse
 {
-	public ReadOnlyMemory<byte> ServerData { get; } = serverData;
-	public string AcceptPluginName { get; } = acceptPluginName;
-	public bool IsAuthenticated { get; } = isAuthenticated;
-	public ReadOnlyMemory<byte> ServerKeys { get; } = serverKeys;
+	public byte[] ServerData { get; }
+	public string AcceptPluginName { get; }
+	public bool IsAuthenticated { get; }
+	public byte[] ServerKeys { get; }
+
+	public ContAuthResponse(byte[] serverData, string acceptPluginName, bool isAuthenticated, byte[] serverKeys)
+	{
+		ServerData = serverData;
+		AcceptPluginName = acceptPluginName;
+		IsAuthenticated = isAuthenticated;
+		ServerKeys = serverKeys;
+	}
 }
