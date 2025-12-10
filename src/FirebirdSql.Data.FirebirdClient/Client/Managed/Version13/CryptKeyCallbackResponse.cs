@@ -22,9 +22,9 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 
 internal class CryptKeyCallbackResponse : IResponse
 {
-	public ReadOnlyMemory<byte> Data { get; }
+	public byte[] Data { get; }
 
-	public CryptKeyCallbackResponse(ReadOnlyMemory<byte> data)
+	public CryptKeyCallbackResponse(byte[] data)
 	{
 		Data = data;
 	}
