@@ -75,36 +75,41 @@ internal static class Extensions
 		{
 			int n = rune.EncodeToUtf16(chars);
 			yield return chars[0];
-			if (n > 1)
-				yield return chars[1];
+			if(n > 1) yield return chars[1];
 		}
 	}
 
-	public static IEnumerable<char[]> EnumerateRunesEx(this string s)
-	{
-		ArgumentNullException.ThrowIfNull(s);
-
-#if NETSTANDARD2_0 || NETSTANDARD2_1 || NET48
-		for (var i = 0; i < s.Length; i++)
-		{
-			if (char.IsHighSurrogate(s[i]) && i + 1 < s.Length && char.IsLowSurrogate(s[i + 1]))
-			{
-				yield return new[] { s[i], s[i + 1] };
+	public static int CountRunes(this ReadOnlySpan<char> text) {
+		var count = 0;
+		var i = 0;
+		while(i < text.Length) {
+			if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) {
+				i += 2;
+			}
+			else {
 				i++;
 			}
-			else
-			{
-				yield return new[] { s[i] };
+			count++;
+		}
+		return count;
+	}
+
+	public static ReadOnlySpan<char> TruncateStringToRuneCount(this ReadOnlySpan<char> text, int maxRuneCount) {
+		var count = 0;
+		var i = 0;
+		while(i < text.Length && count < maxRuneCount) {
+			var nextI = i;
+			if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) {
+				nextI += 2;
+			}
+			else {
+				nextI++;
+			}
+			count++;
+			if(count <= maxRuneCount) {
+				i = nextI;
 			}
 		}
-
-#else
-		return s.EnumerateRunes().Select(r =>
-{
-	var result = new char[r.Utf16SequenceLength];
-	r.EncodeToUtf16(result);
-	return result;
-});
-#endif
+		return text[..i];
 	}
 }

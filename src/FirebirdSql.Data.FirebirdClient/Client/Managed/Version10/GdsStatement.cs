@@ -1403,7 +1403,7 @@ internal class GdsStatement : StatementBase
 					else
 					{
 						var svalue = field.DbValue.GetString();
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount)
+						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
@@ -1443,7 +1443,7 @@ internal class GdsStatement : StatementBase
 					else
 					{
 						var svalue = field.DbValue.GetString();
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount)
+						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
@@ -1577,7 +1577,7 @@ internal class GdsStatement : StatementBase
 					else
 					{
 						var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount)
+						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
@@ -1610,7 +1610,7 @@ internal class GdsStatement : StatementBase
 					else
 					{
 						var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.EnumerateRunes().Count() > field.CharCount)
+						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
 						{
 							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
 						}
@@ -1989,56 +1989,13 @@ internal class GdsStatement : StatementBase
 			return s;
 		}
 
-		var runeCount = CountRunes(s.AsSpan());
+		var runeCount = s.CountRunes();
 		if (runeCount <= field.CharCount)
 		{
 			return s;
 		}
 
-		return TruncateStringToRuneCount(s.AsSpan(), field.CharCount);
-	}
-
-	private static int CountRunes(ReadOnlySpan<char> text)
-	{
-		var count = 0;
-		var i = 0;
-		while (i < text.Length)
-		{
-			if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
-			{
-				i += 2;
-			}
-			else
-			{
-				i++;
-			}
-			count++;
-		}
-		return count;
-	}
-
-	private static string TruncateStringToRuneCount(ReadOnlySpan<char> text, int maxRuneCount)
-	{
-		var count = 0;
-		var i = 0;
-		while (i < text.Length && count < maxRuneCount)
-		{
-			var nextI = i;
-			if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
-			{
-				nextI += 2;
-			}
-			else
-			{
-				nextI++;
-			}
-			count++;
-			if (count <= maxRuneCount)
-			{
-				i = nextI;
-			}
-		}
-		return text[..i].ToString();
+		return new string(s.TruncateStringToRuneCount(field.CharCount));
 	}
 
 	#endregion
