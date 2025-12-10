@@ -325,12 +325,12 @@ internal sealed class DbField
 						else
 						{
 							var s = Charset.GetString(buffer, 0, buffer.Length);
-
-							var runes = s.EnumerateRunes().ToList();
-							if ((Length % Charset.BytesPerCharacter) == 0 &&
-								runes.Count > CharCount)
-							{
-								s = new string([.. runes.Take(CharCount).RunesToChars()]);
+							if((Length % Charset.BytesPerCharacter) == 0)
+							{ 
+								var runes = s.CountRunes();
+								if(runes > CharCount) {
+									s = new string(s.TruncateStringToRuneCount(CharCount));
+								}
 							}
 
 							DbValue.SetValue(s);
