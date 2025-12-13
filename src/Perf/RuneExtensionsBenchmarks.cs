@@ -1,0 +1,178 @@
+﻿/*
+ *    The contents of this file are subject to the Initial
+ *    Developer's Public License Version 1.0 (the "License");
+ *    you may not use this file except in compliance with the
+ *    License. You may obtain a copy of the License at
+ *    https://github.com/FirebirdSQL/NETProvider/raw/master/license.txt.
+ *
+ *    Software distributed under the License is distributed on
+ *    an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either
+ *    express or implied. See the License for the specific
+ *    language governing rights and limitations under the License.
+ *
+ *    All Rights Reserved.
+ */
+
+//$Authors = Jiri Cincura (jiri@cincura.net)
+
+using System;
+using System.Linq;
+using System.Text;
+using BenchmarkDotNet.Attributes;
+using FirebirdSql.Data.Common;
+
+namespace Perf;
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsTruncationBenchmark
+{
+	public enum TextKind
+	{
+		Ascii,
+		MixedBmpAndSurrogates,
+		MostlySurrogates,
+	}
+
+	[Params(TextKind.Ascii, TextKind.MixedBmpAndSurrogates, TextKind.MostlySurrogates)]
+	public TextKind Kind { get; set; }
+
+	[Params(128, 1024)]
+	public int RuneLength { get; set; }
+
+	[Params(512)]
+	public int MaxRuneCount { get; set; }
+
+	string _text = string.Empty;
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = CreateText(Kind, RuneLength);
+	}
+
+	// Old truncation pattern: enumerate runes -> allocate char[] per rune -> LINQ SelectMany -> concat to string.
+	[Benchmark(Description = "old truncate via EnumerateRunesToChars")]
+	public string Old_EnumerateRunesToChars()
+	{
+		if (MaxRuneCount <= 0 || _text.Length == 0)
+			return string.Empty;
+
+		return string.Concat(_text.EnumerateRunesToChars().Take(MaxRuneCount).SelectMany(x => x));
+	}
+
+	// New approach: slice by rune count without allocating intermediates, then materialize only final string.
+	[Benchmark(Description = "new TruncateStringToRuneCount().ToString()")]
+	public string New_TruncateStringToRuneCount()
+	{
+		return _text.AsSpan().TruncateStringToRuneCount(MaxRuneCount).ToString();
+	}
+
+	static string CreateText(TextKind kind, int runeLength)
+	{
+		if (runeLength <= 0)
+			return string.Empty;
+
+		var sb = new StringBuilder(runeLength * 2);
+		for (var i = 0; i < runeLength; i++)
+		{
+			switch (kind)
+			{
+				case TextKind.Ascii:
+					sb.Append((char)('a' + (i % 26)));
+					break;
+				case TextKind.MixedBmpAndSurrogates:
+					switch (i & 3)
+					{
+						case 0: sb.Append('a'); break;
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append("\U0001F600"); break; // 😀
+						default: sb.Append('界'); break;
+					}
+					break;
+				case TextKind.MostlySurrogates:
+					if ((i & 7) == 0)
+						sb.Append('a');
+					else
+						sb.Append("\U0001F642"); // 🙂
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+			}
+		}
+		return sb.ToString();
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCountBenchmark
+{
+	public enum TextKind
+	{
+		Ascii,
+		MixedBmpAndSurrogates,
+		MostlySurrogates,
+	}
+
+	[Params(TextKind.Ascii, TextKind.MixedBmpAndSurrogates, TextKind.MostlySurrogates)]
+	public TextKind Kind { get; set; }
+
+	[Params(128, 8192)]
+	public int RuneLength { get; set; }
+
+	string _text = string.Empty;
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = CreateText(Kind, RuneLength);
+	}
+
+	[Benchmark(Description = "old Count() over EnumerateRunesToChars")]
+	public int Old_EnumerateRunesToChars_Count()
+	{
+		// Horrible old pattern: allocates char[] per rune, then LINQ Count enumerates them all.
+		return _text.EnumerateRunesToChars().Count();
+	}
+
+	[Benchmark(Description = "new CountRunes(span)")]
+	public int New_CountRunes()
+	{
+		return _text.AsSpan().CountRunes();
+	}
+
+	static string CreateText(TextKind kind, int runeLength)
+	{
+		if (runeLength <= 0)
+			return string.Empty;
+
+		var sb = new StringBuilder(runeLength * 2);
+		for (var i = 0; i < runeLength; i++)
+		{
+			switch (kind)
+			{
+				case TextKind.Ascii:
+					sb.Append((char)('a' + (i % 26)));
+					break;
+				case TextKind.MixedBmpAndSurrogates:
+					switch (i & 3)
+					{
+						case 0: sb.Append('a'); break;
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append("\U0001F600"); break; // 😀
+						default: sb.Append('界'); break;
+					}
+					break;
+				case TextKind.MostlySurrogates:
+					if ((i & 7) == 0)
+						sb.Append('a');
+					else
+						sb.Append("\U0001F642"); // 🙂
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+			}
+		}
+		return sb.ToString();
+	}
+}
+
