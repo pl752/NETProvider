@@ -17,6 +17,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using FirebirdSql.Data.Common;
@@ -176,3 +177,194 @@ public class RuneExtensionsCountBenchmark
 	}
 }
 
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCountImplementationBenchmark
+{
+	public enum TextKind
+	{
+		Ascii,
+		MixedBmpAndSurrogates,
+		MostlySurrogates,
+	}
+
+	[Params(TextKind.Ascii, TextKind.MixedBmpAndSurrogates, TextKind.MostlySurrogates)]
+	public TextKind Kind { get; set; }
+
+	[Params(128, 8192)]
+	public int RuneLength { get; set; }
+
+	string _text = string.Empty;
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = CreateText(Kind, RuneLength);
+	}
+
+	[Benchmark(Baseline = true, Description = "prev CountRunes(span)")]
+	public int Prev_CountRunes()
+	{
+		return PrevCountRunes(_text.AsSpan());
+	}
+
+	[Benchmark(Description = "new CountRunes(span)")]
+	public int New_CountRunes()
+	{
+		return _text.AsSpan().CountRunes();
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int PrevCountRunes(ReadOnlySpan<char> text)
+	{
+		var count = 0;
+		var i = 0;
+		while(i < text.Length)
+		{
+			if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+			{
+				i += 2;
+			}
+			else
+			{
+				i++;
+			}
+			count++;
+		}
+		return count;
+	}
+
+	static string CreateText(TextKind kind, int runeLength)
+	{
+		if (runeLength <= 0)
+			return string.Empty;
+
+		var sb = new StringBuilder(runeLength * 2);
+		for (var i = 0; i < runeLength; i++)
+		{
+			switch (kind)
+			{
+				case TextKind.Ascii:
+					sb.Append((char)('a' + (i % 26)));
+					break;
+				case TextKind.MixedBmpAndSurrogates:
+					switch (i & 3)
+					{
+						case 0: sb.Append('a'); break;
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append("\U0001F600"); break; // 😀
+						default: sb.Append('界'); break;
+					}
+					break;
+				case TextKind.MostlySurrogates:
+					if ((i & 7) == 0)
+						sb.Append('a');
+					else
+						sb.Append("\U0001F642"); // 🙂
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+			}
+		}
+		return sb.ToString();
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsTruncationImplementationBenchmark
+{
+	public enum TextKind
+	{
+		Ascii,
+		MixedBmpAndSurrogates,
+		MostlySurrogates,
+	}
+
+	[Params(TextKind.Ascii, TextKind.MixedBmpAndSurrogates, TextKind.MostlySurrogates)]
+	public TextKind Kind { get; set; }
+
+	[Params(128, 1024)]
+	public int RuneLength { get; set; }
+
+	[Params(512)]
+	public int MaxRuneCount { get; set; }
+
+	string _text = string.Empty;
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = CreateText(Kind, RuneLength);
+	}
+
+	[Benchmark(Baseline = true, Description = "prev TruncateStringToRuneCount().ToString()")]
+	public string Prev_TruncateStringToRuneCount()
+	{
+		return PrevTruncateStringToRuneCount(_text.AsSpan(), MaxRuneCount).ToString();
+	}
+
+	[Benchmark(Description = "new TruncateStringToRuneCount().ToString()")]
+	public string New_TruncateStringToRuneCount()
+	{
+		return _text.AsSpan().TruncateStringToRuneCount(MaxRuneCount).ToString();
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static ReadOnlySpan<char> PrevTruncateStringToRuneCount(ReadOnlySpan<char> text, int maxRuneCount)
+	{
+		var count = 0;
+		var i = 0;
+		while(i < text.Length && count < maxRuneCount)
+		{
+			var nextI = i;
+			if(char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+			{
+				nextI += 2;
+			}
+			else
+			{
+				nextI++;
+			}
+			count++;
+			if(count <= maxRuneCount)
+			{
+				i = nextI;
+			}
+		}
+		return text[..i];
+	}
+
+	static string CreateText(TextKind kind, int runeLength)
+	{
+		if (runeLength <= 0)
+			return string.Empty;
+
+		var sb = new StringBuilder(runeLength * 2);
+		for (var i = 0; i < runeLength; i++)
+		{
+			switch (kind)
+			{
+				case TextKind.Ascii:
+					sb.Append((char)('a' + (i % 26)));
+					break;
+				case TextKind.MixedBmpAndSurrogates:
+					switch (i & 3)
+					{
+						case 0: sb.Append('a'); break;
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append("\U0001F600"); break; // 😀
+						default: sb.Append('界'); break;
+					}
+					break;
+				case TextKind.MostlySurrogates:
+					if ((i & 7) == 0)
+						sb.Append('a');
+					else
+						sb.Append("\U0001F642"); // 🙂
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+			}
+		}
+		return sb.ToString();
+	}
+}
