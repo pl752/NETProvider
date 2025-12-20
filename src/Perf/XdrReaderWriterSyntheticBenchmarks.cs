@@ -17,7 +17,9 @@
 
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
@@ -714,7 +716,7 @@ public class XdrReadInt32Benchmark
 		_source = XdrSynthetic.EncodeNetworkInt32(123456789);
 	}
 
-	//[Benchmark(Description = "master ReadInt32() using shared _smallBuffer")]
+	[Benchmark(Description = "master ReadInt32() using shared _smallBuffer")]
 	public int Master()
 	{
 		var offset = 0;
@@ -722,7 +724,7 @@ public class XdrReadInt32Benchmark
 		return TypeDecoder.DecodeInt32(_smallBuffer);
 	}
 
-	//[Benchmark(Description = "local_opt2 ReadInt32() (stackalloc)")]
+	[Benchmark(Description = "local_opt2 ReadInt32() (stackalloc)")]
 	public int LocalOpt2_Stack()
 	{
 		var offset = 0;
@@ -764,6 +766,16 @@ public class XdrReadInt32Benchmark
 		var v = TypeDecoder.DecodeInt32(_smallBuffer);
 		ClearArray(_smallBuffer, 4);
 		return v;
+	}
+
+	[Benchmark(Description = "local_opt3 ReadInt32() (MemoryMarshal.AsBytes + CreateSpan)")]
+	public int LocalOpt3_MemoryMarshal()
+	{
+		var offset = 0;
+		int value = default;
+		var bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
+		XdrSynthetic.ReadInto(bytes, _source, ref offset, 4);
+		return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -827,6 +839,16 @@ public class XdrReadInt64Benchmark
 		Span<byte> bytes = stackalloc byte[8];
 		XdrSynthetic.ReadInto(bytes, _source, ref offset, 8);
 		return TypeDecoder.DecodeInt64(bytes);
+	}
+
+	[Benchmark(Description = "local_opt3 ReadInt64() (MemoryMarshal.AsBytes + CreateSpan)")]
+	public long LocalOpt3_MemoryMarshal()
+	{
+		var offset = 0;
+		long value = default;
+		var bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
+		XdrSynthetic.ReadInto(bytes, _source, ref offset, 8);
+		return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(value) : value;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -998,6 +1020,14 @@ public class XdrWriteInt32Benchmark
 		return _sink;
 	}
 
+	[Benchmark(Description = "local_opt3 Write(int) (MemoryMarshal.AsBytes + CreateSpan)")]
+	public int LocalOpt3_MemoryMarshal()
+	{
+		var v = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(Value) : Value;
+		_sink ^= MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref v, 1))[0];
+		return _sink;
+	}
+
 	[Benchmark(Description = "local_opt2 Write(int) (rent always)")]
 	public int LocalOpt2_RentAlways()
 	{
@@ -1063,6 +1093,14 @@ public class XdrWriteInt64Benchmark
 		Span<byte> bytes = stackalloc byte[8];
 		TypeEncoder.EncodeInt64(Value, bytes);
 		_sink ^= bytes[0];
+		return _sink;
+	}
+
+	[Benchmark(Description = "local_opt3 Write(long) (MemoryMarshal.AsBytes + CreateSpan)")]
+	public int LocalOpt3_MemoryMarshal()
+	{
+		var v = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(Value) : Value;
+		_sink ^= MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref v, 1))[0];
 		return _sink;
 	}
 
