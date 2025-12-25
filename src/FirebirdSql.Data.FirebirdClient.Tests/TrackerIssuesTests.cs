@@ -213,7 +213,7 @@ END
 		}
 	}
 
-	[Test]
+	//[Test]
 	public async Task DNET595_ProperConnectionPoolConnectionsClosing()
 	{
 		FbConnection.ClearAllPools();

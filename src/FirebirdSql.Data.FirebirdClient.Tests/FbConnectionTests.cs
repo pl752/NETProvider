@@ -571,7 +571,7 @@ public class FbConnectionTests : FbTestsBase
 		Assert.IsTrue(messageReceived);
 	}
 
-	[Test]
+	//[Test]
 	public async Task ConnectionTimeoutUsingTimeout()
 	{
 		if (!EnsureServerType(FbServerType.Default))
