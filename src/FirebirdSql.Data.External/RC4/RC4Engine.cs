@@ -79,20 +79,29 @@ namespace Org.BouncyCastle.Crypto.Engines
             //Check.DataLength(input, inOff, length, "input buffer too short");
             //Check.OutputLength(output, outOff, length, "output buffer too short");
 
-            for (int i = 0; i < length ; i++)
-            {
-                x = (x + 1) & 0xff;
-                y = (engineState[x] + y) & 0xff;
+			var state = engineState;
+			var x = this.x;
+			var y = this.y;
 
-                // swap
-                byte tmp = engineState[x];
-                engineState[x] = engineState[y];
-                engineState[y] = tmp;
+			var inPos = inOff;
+			var outPos = outOff;
 
-                // xor
-                output[i+outOff] = (byte)(input[i + inOff]
-                        ^ engineState[(engineState[x] + engineState[y]) & 0xff]);
-            }
+			for (int i = 0; i < length; i++)
+			{
+				x = (x + 1) & 0xff;
+
+				var sx = state[x];
+				y = (sx + y) & 0xff;
+
+				var sy = state[y];
+				state[x] = sy;
+				state[y] = sx;
+
+				output[outPos++] = (byte)(input[inPos++] ^ state[(sx + sy) & 0xff]);
+			}
+
+			this.x = x;
+			this.y = y;
         }
 
         public virtual void Reset()
