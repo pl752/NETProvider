@@ -230,6 +230,8 @@ public class RuneExtensionsCountImplementationBenchmark
 			throw new InvalidOperationException("CandidateCountRunes does not match CountRunes.");
 		if (Candidate2CountRunes(span) != expected)
 			throw new InvalidOperationException("Candidate2CountRunes does not match CountRunes.");
+		if (Candidate4CountRunes(span) != expected)
+			throw new InvalidOperationException("Candidate4CountRunes does not match CountRunes.");
 	}
 
 	[Benchmark(Baseline = true, Description = "prev CountRunes(span)")]
@@ -248,6 +250,12 @@ public class RuneExtensionsCountImplementationBenchmark
 	public int Candidate2_CountRunes()
 	{
 		return Candidate2CountRunes(_text.AsSpan());
+	}
+
+	[Benchmark(Description = "candidate4 CountRunes(IndexOfAnyInRange + Rune.DecodeFromUtf16)")]
+	public int Candidate4_CountRunes()
+	{
+		return Candidate4CountRunes(_text.AsSpan());
 	}
 
 	[Benchmark(Description = "new CountRunes(span)")]
@@ -345,6 +353,29 @@ public class RuneExtensionsCountImplementationBenchmark
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int Candidate4CountRunes(ReadOnlySpan<char> text)
+	{
+		var length = text.Length;
+		if (length == 0)
+			return 0;
+
+		var i = text.IndexOfAnyInRange('\uD800', '\uDBFF');
+		if (i < 0)
+			return length;
+
+		var count = i;
+		while (i < length)
+		{
+			_ = Rune.DecodeFromUtf16(text.Slice(i), out _, out var charsConsumed);
+			if (charsConsumed == 0)
+				charsConsumed = 1;
+			i += charsConsumed;
+			count++;
+		}
+		return count;
+	}
+
 	static string CreateText(TextKind kind, int runeLength)
 	{
 		if (runeLength <= 0)
@@ -425,6 +456,8 @@ public class RuneExtensionsTruncationImplementationBenchmark
 			throw new InvalidOperationException("CandidateTruncateToRuneCount does not match TruncateStringToRuneCount.");
 		if (!Candidate2TruncateToRuneCount(span, MaxRuneCount).SequenceEqual(expected))
 			throw new InvalidOperationException("Candidate2TruncateToRuneCount does not match TruncateStringToRuneCount.");
+		if (!Candidate4TruncateToRuneCount(span, MaxRuneCount).SequenceEqual(expected))
+			throw new InvalidOperationException("Candidate4TruncateToRuneCount does not match TruncateStringToRuneCount.");
 	}
 
 	[Benchmark(Baseline = true, Description = "prev TruncateStringToRuneCount().ToString()")]
@@ -443,6 +476,12 @@ public class RuneExtensionsTruncationImplementationBenchmark
 	public string Candidate2_TruncateToRuneCount()
 	{
 		return Candidate2TruncateToRuneCount(_text.AsSpan(), MaxRuneCount).ToString();
+	}
+
+	[Benchmark(Description = "candidate4 TruncateToRuneCount(IndexOfAnyInRange + Rune.DecodeFromUtf16).ToString()")]
+	public string Candidate4_TruncateToRuneCount()
+	{
+		return Candidate4TruncateToRuneCount(_text.AsSpan(), MaxRuneCount).ToString();
 	}
 
 	[Benchmark(Description = "new TruncateStringToRuneCount().ToString()")]
@@ -564,6 +603,34 @@ public class RuneExtensionsTruncationImplementationBenchmark
 			// Consume BMP chars up to the next high surrogate.
 			i += rel;
 			remaining -= rel;
+		}
+
+		return text[..i];
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static ReadOnlySpan<char> Candidate4TruncateToRuneCount(ReadOnlySpan<char> text, int maxRuneCount)
+	{
+		if (maxRuneCount <= 0 || text.IsEmpty)
+			return ReadOnlySpan<char>.Empty;
+
+		var length = text.Length;
+		if (maxRuneCount >= length)
+			return text;
+
+		var prefix = text[..maxRuneCount];
+		var i = prefix.IndexOfAnyInRange('\uD800', '\uDBFF');
+		if (i < 0)
+			return prefix;
+
+		var remaining = maxRuneCount - i;
+		while (i < length && remaining > 0)
+		{
+			_ = Rune.DecodeFromUtf16(text.Slice(i), out _, out var charsConsumed);
+			if (charsConsumed == 0)
+				charsConsumed = 1;
+			i += charsConsumed;
+			remaining--;
 		}
 
 		return text[..i];
@@ -822,6 +889,284 @@ public class RuneExtensionsCandidate2CountFixedLengthBenchmark
 }
 
 [Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCandidate4CountFixedLengthBenchmark
+{
+	[Params(256, 32768)]
+	public int Length { get; set; }
+
+	[ParamsSource(nameof(Cases))]
+	public RuneFixedLengthCase Case { get; set; }
+
+	string _text = string.Empty;
+
+	public IEnumerable<RuneFixedLengthCase> Cases() => RuneFixedLengthText.GetCases();
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = RuneFixedLengthText.Create(Length, Case);
+
+		var span = _text.AsSpan();
+		var expected = span.CountRunes();
+		if (Candidate4CountRunes(span) != expected)
+			throw new InvalidOperationException("Candidate4CountRunes does not match CountRunes.");
+	}
+
+	[Benchmark(Baseline = true, Description = "new CountRunes(span)")]
+	public int New_CountRunes()
+	{
+		return _text.AsSpan().CountRunes();
+	}
+
+	[Benchmark(Description = "candidate4 CountRunes(IndexOfAnyInRange + Rune.DecodeFromUtf16)")]
+	public int Candidate4_CountRunes()
+	{
+		return Candidate4CountRunes(_text.AsSpan());
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int Candidate4CountRunes(ReadOnlySpan<char> text)
+	{
+		var length = text.Length;
+		if (length == 0)
+			return 0;
+
+		var i = text.IndexOfAnyInRange('\uD800', '\uDBFF');
+		if (i < 0)
+			return length;
+
+		var count = i;
+		while (i < length)
+		{
+			_ = Rune.DecodeFromUtf16(text.Slice(i), out _, out var charsConsumed);
+			if (charsConsumed == 0)
+				charsConsumed = 1;
+			i += charsConsumed;
+			count++;
+		}
+		return count;
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCandidate3CountClusteredWindowBenchmark
+{
+	public enum TextKind
+	{
+		Ascii,
+		MixedBmpAndSurrogates,
+		MixedBmpAndSurrogates25,
+		MostlySurrogates,
+	}
+
+	[Params(TextKind.Ascii, TextKind.MixedBmpAndSurrogates, TextKind.MixedBmpAndSurrogates25, TextKind.MostlySurrogates)]
+	public TextKind Kind { get; set; }
+
+	[Params(128, 8192)]
+	public int RuneLength { get; set; }
+
+	[Params(128, 256, 512)]
+	public int Window { get; set; }
+
+	string _text = string.Empty;
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = CreateText(Kind, RuneLength);
+
+		var span = _text.AsSpan();
+		var expected = span.CountRunes();
+		if (Candidate3CountRunes(span, Window) != expected)
+			throw new InvalidOperationException("Candidate3CountRunes does not match CountRunes.");
+	}
+
+	[Benchmark(Baseline = true, Description = "new CountRunes(span)")]
+	public int New_CountRunes()
+	{
+		return _text.AsSpan().CountRunes();
+	}
+
+	[Benchmark(Description = "candidate3 CountRunes(clustered window)")]
+	public int Candidate3_CountRunes()
+	{
+		return Candidate3CountRunes(_text.AsSpan(), Window);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static bool IsHigh(char c) => (uint)(c - '\uD800') <= 0x3FF;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static bool IsLow(char c) => (uint)(c - '\uDC00') <= 0x3FF;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int Candidate3CountRunes(ReadOnlySpan<char> text, int window)
+	{
+		var length = text.Length;
+		if (length == 0)
+			return 0;
+
+		var i = 0;
+		var pairCount = 0;
+
+		while (true)
+		{
+			var rel = text.Slice(i).IndexOfAnyInRange('\uD800', '\uDBFF');
+			if (rel < 0)
+				return length - pairCount;
+
+			i += rel;
+
+			var end = Math.Min(length, i + window);
+			while (i < end)
+			{
+				var c = text[i];
+				if (IsHigh(c) && i + 1 < length && IsLow(text[i + 1]))
+				{
+					pairCount++;
+					i += 2;
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			if ((uint)i >= (uint)length)
+				return length - pairCount;
+		}
+	}
+
+	static string CreateText(TextKind kind, int runeLength)
+	{
+		if (runeLength <= 0)
+			return string.Empty;
+
+		var sb = new StringBuilder(runeLength * 2);
+		for (var i = 0; i < runeLength; i++)
+		{
+			switch (kind)
+			{
+				case TextKind.Ascii:
+					sb.Append((char)('a' + (i % 26)));
+					break;
+				case TextKind.MixedBmpAndSurrogates:
+					switch (i & 15)
+					{
+						case 0: sb.Append("\U0001F600"); break; // 😀 (~6.25% surrogate pairs)
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append('界'); break;
+						default: sb.Append('a'); break;
+					}
+					break;
+				case TextKind.MixedBmpAndSurrogates25:
+					switch (i & 3)
+					{
+						case 0: sb.Append('a'); break;
+						case 1: sb.Append('Ω'); break;
+						case 2: sb.Append("\U0001F600"); break; // 😀 (25% surrogate pairs)
+						default: sb.Append('界'); break;
+					}
+					break;
+				case TextKind.MostlySurrogates:
+					if ((i & 7) == 0)
+						sb.Append('a');
+					else
+						sb.Append("\U0001F642"); // 🙂
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+			}
+		}
+		return sb.ToString();
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCandidate3CountFixedLengthBenchmark
+{
+	[Params(256, 32768)]
+	public int Length { get; set; }
+
+	[ParamsSource(nameof(Cases))]
+	public RuneFixedLengthCase Case { get; set; }
+
+	[Params(128, 256, 512)]
+	public int Window { get; set; }
+
+	string _text = string.Empty;
+
+	public IEnumerable<RuneFixedLengthCase> Cases() => RuneFixedLengthText.GetCases();
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = RuneFixedLengthText.Create(Length, Case);
+
+		var span = _text.AsSpan();
+		var expected = span.CountRunes();
+		if (Candidate3CountRunes(span, Window) != expected)
+			throw new InvalidOperationException("Candidate3CountRunes does not match CountRunes.");
+	}
+
+	[Benchmark(Baseline = true, Description = "new CountRunes(span)")]
+	public int New_CountRunes()
+	{
+		return _text.AsSpan().CountRunes();
+	}
+
+	[Benchmark(Description = "candidate3 CountRunes(clustered window)")]
+	public int Candidate3_CountRunes()
+	{
+		return Candidate3CountRunes(_text.AsSpan(), Window);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static bool IsHigh(char c) => (uint)(c - '\uD800') <= 0x3FF;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static bool IsLow(char c) => (uint)(c - '\uDC00') <= 0x3FF;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static int Candidate3CountRunes(ReadOnlySpan<char> text, int window)
+	{
+		var length = text.Length;
+		if (length == 0)
+			return 0;
+
+		var i = 0;
+		var pairCount = 0;
+
+		while (true)
+		{
+			var rel = text.Slice(i).IndexOfAnyInRange('\uD800', '\uDBFF');
+			if (rel < 0)
+				return length - pairCount;
+
+			i += rel;
+
+			var end = Math.Min(length, i + window);
+			while (i < end)
+			{
+				var c = text[i];
+				if (IsHigh(c) && i + 1 < length && IsLow(text[i + 1]))
+				{
+					pairCount++;
+					i += 2;
+				}
+				else
+				{
+					i++;
+				}
+			}
+
+			if ((uint)i >= (uint)length)
+				return length - pairCount;
+		}
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
 public class RuneExtensionsCandidate2TruncationFixedLengthBenchmark
 {
 	[Params(256, 32768)]
@@ -901,6 +1246,73 @@ public class RuneExtensionsCandidate2TruncationFixedLengthBenchmark
 			// Consume BMP chars up to the next high surrogate.
 			i += rel;
 			remaining -= rel;
+		}
+
+		return text[..i];
+	}
+}
+
+[Config(typeof(InProcessMemoryConfig))]
+public class RuneExtensionsCandidate4TruncationFixedLengthBenchmark
+{
+	[Params(256, 32768)]
+	public int Length { get; set; }
+
+	[ParamsSource(nameof(Cases))]
+	public RuneFixedLengthCase Case { get; set; }
+
+	string _text = string.Empty;
+	int _maxRunes;
+
+	public IEnumerable<RuneFixedLengthCase> Cases() => RuneFixedLengthText.GetCases();
+
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_text = RuneFixedLengthText.Create(Length, Case);
+		_maxRunes = Math.Max(0, Length - 1);
+
+		var span = _text.AsSpan();
+		var expected = span.TruncateStringToRuneCount(_maxRunes);
+		if (!Candidate4TruncateToRuneCount(span, _maxRunes).SequenceEqual(expected))
+			throw new InvalidOperationException("Candidate4TruncateToRuneCount does not match TruncateStringToRuneCount.");
+	}
+
+	[Benchmark(Baseline = true, Description = "new TruncateStringToRuneCount(span).Length")]
+	public int New_TruncateStringToRuneCount_Length()
+	{
+		return _text.AsSpan().TruncateStringToRuneCount(_maxRunes).Length;
+	}
+
+	[Benchmark(Description = "candidate4 TruncateToRuneCount(span).Length")]
+	public int Candidate4_TruncateToRuneCount_Length()
+	{
+		return Candidate4TruncateToRuneCount(_text.AsSpan(), _maxRunes).Length;
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static ReadOnlySpan<char> Candidate4TruncateToRuneCount(ReadOnlySpan<char> text, int maxRuneCount)
+	{
+		if (maxRuneCount <= 0 || text.IsEmpty)
+			return ReadOnlySpan<char>.Empty;
+
+		var length = text.Length;
+		if (maxRuneCount >= length)
+			return text;
+
+		var prefix = text[..maxRuneCount];
+		var i = prefix.IndexOfAnyInRange('\uD800', '\uDBFF');
+		if (i < 0)
+			return prefix;
+
+		var remaining = maxRuneCount - i;
+		while (i < length && remaining > 0)
+		{
+			_ = Rune.DecodeFromUtf16(text.Slice(i), out _, out var charsConsumed);
+			if (charsConsumed == 0)
+				charsConsumed = 1;
+			i += charsConsumed;
+			remaining--;
 		}
 
 		return text[..i];
