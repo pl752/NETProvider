@@ -221,5 +221,83 @@ internal class GdsStatement : Version12.GdsStatement
 		return row;
 	}
 
+	protected override DbValueStorage[] ReadRowStorage()
+	{
+		var row = RentRowStorage();
+		try
+		{
+			if (_fields.Count > 0)
+			{
+				var len = (int)Math.Ceiling(_fields.Count / 8d);
+				var rented = ArrayPool<byte>.Shared.Rent(len);
+				try
+				{
+					_database.Xdr.ReadOpaque(rented.AsSpan(0, len), len);
+					for (var i = 0; i < _fields.Count; i++)
+					{
+						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
+						if (isNull)
+						{
+							row[i] = default;
+						}
+						else
+						{
+							row[i] = ReadRawValueStorage(_database.Xdr, _fields[i]);
+						}
+					}
+				}
+				finally
+				{
+					ArrayPool<byte>.Shared.Return(rented);
+				}
+			}
+		}
+		catch (IOException ex)
+		{
+			ReturnRowStorage(row);
+			throw IscException.ForIOException(ex);
+		}
+		return row;
+	}
+
+	protected override async ValueTask<DbValueStorage[]> ReadRowStorageAsync(CancellationToken cancellationToken = default)
+	{
+		var row = RentRowStorage();
+		try
+		{
+			if (_fields.Count > 0)
+			{
+				var len = (int)Math.Ceiling(_fields.Count / 8d);
+				var rented = ArrayPool<byte>.Shared.Rent(len);
+				try
+				{
+					await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
+					for (var i = 0; i < _fields.Count; i++)
+					{
+						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
+						if (isNull)
+						{
+							row[i] = default;
+						}
+						else
+						{
+							row[i] = await ReadRawValueStorageAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+						}
+					}
+				}
+				finally
+				{
+					ArrayPool<byte>.Shared.Return(rented);
+				}
+			}
+		}
+		catch (IOException ex)
+		{
+			ReturnRowStorage(row);
+			throw IscException.ForIOException(ex);
+		}
+		return row;
+	}
+
 	#endregion
 }

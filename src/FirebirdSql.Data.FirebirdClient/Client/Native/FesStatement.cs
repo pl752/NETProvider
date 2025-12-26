@@ -38,6 +38,7 @@ internal sealed class FesStatement : StatementBase
 	private bool _allRowsFetched;
 	private IntPtr[] _statusVector;
 	private IntPtr _fetchSqlDa;
+	private DbValue[] _reusableRow;
 
 	#endregion
 
@@ -413,8 +414,9 @@ internal sealed class FesStatement : StatementBase
 			for (var i = 0; i < values.Length; i++)
 			{
 				var d = descriptor[i];
-				var value = d.DbValue.GetValue();
-				values[i] = new DbValue(this, d, value);
+				var dbValue = new DbValue(this, d, null);
+				dbValue.ImportStorage(d.DbValue.ExportStorage());
+				values[i] = dbValue;
 			}
 
 			OutputParameters.Enqueue(values);
@@ -485,8 +487,9 @@ internal sealed class FesStatement : StatementBase
 			for (var i = 0; i < values.Length; i++)
 			{
 				var d = descriptor[i];
-				var value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
-				values[i] = new DbValue(this, d, value);
+				var dbValue = new DbValue(this, d, null);
+				dbValue.ImportStorage(d.DbValue.ExportStorage());
+				values[i] = dbValue;
 			}
 
 			OutputParameters.Enqueue(values);
@@ -569,85 +572,34 @@ internal sealed class FesStatement : StatementBase
 
 			_database.ProcessStatusVector(_statusVector);
 
-			var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : Array.Empty<DbValue>();
-			for (var i = 0; i < row.Length; i++)
+			var count = _fields.ActualCount;
+			if (count <= 0)
 			{
-				var d = _fields[i];
-				var value = d.DbValue.GetValue();
-				row[i] = new DbValue(this, d, value);
+				return Array.Empty<DbValue>();
 			}
-			return row;
-		}
-	}
-	public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
-	{
-		EnsureNotDeallocated();
 
-		if (StatementType == DbStatementType.StoredProcedure && !_allRowsFetched)
-		{
-			_allRowsFetched = true;
-			return GetOutputParameters();
-		}
-		else if (StatementType == DbStatementType.Insert && _allRowsFetched)
-		{
-			return null;
-		}
-		else if (StatementType != DbStatementType.Select && StatementType != DbStatementType.SelectForUpdate)
-		{
-			return null;
-		}
-
-		if (_allRowsFetched)
-		{
-			return null;
-		}
-
-		_fields.ResetValues();
-
-		if (_fetchSqlDa == IntPtr.Zero)
-		{
-			_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
-		}
-
-		ClearStatusVector();
-
-		var status = _database.FbClient.isc_dsql_fetch(_statusVector, ref _handle, IscCodes.SQLDA_VERSION1, _fetchSqlDa);
-		if (status == new IntPtr(100))
-		{
-			_allRowsFetched = true;
-
-			XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
-
-			return null;
-		}
-		else
-		{
-			var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
-
-			if (_fields.Count == rowDesc.Count)
+			if (_reusableRow == null || _reusableRow.Length != count)
 			{
-				for (var i = 0; i < _fields.Count; i++)
+				_reusableRow = new DbValue[count];
+				for (var i = 0; i < count; i++)
 				{
-					if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
-					{
-						rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
-					}
+					_reusableRow[i] = new DbValue(this, _fields[i], null);
 				}
 			}
 
-			_fields = rowDesc;
-
-			_database.ProcessStatusVector(_statusVector);
-
-			var row = _fields.ActualCount > 0 ? new DbValue[_fields.ActualCount] : Array.Empty<DbValue>();
-			for (var i = 0; i < row.Length; i++)
+			for (var i = 0; i < count; i++)
 			{
 				var d = _fields[i];
-				var value = await d.DbValue.GetValueAsync(cancellationToken).ConfigureAwait(false);
-				row[i] = new DbValue(this, d, value);
+				_reusableRow[i].Reset(this, d);
+				_reusableRow[i].ImportStorage(d.DbValue.ExportStorage());
 			}
-			return row;
+
+			return _reusableRow;
 		}
+	}
+	public override ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
+	{
+		return new ValueTask<DbValue[]>(Fetch());
 	}
 
 	#endregion
@@ -778,6 +730,7 @@ internal sealed class FesStatement : StatementBase
 	{
 		Clear();
 
+		_reusableRow = null;
 		_parameters = null;
 		_fields = null;
 	}

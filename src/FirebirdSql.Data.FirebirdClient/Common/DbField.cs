@@ -443,11 +443,11 @@ internal sealed class DbField
 					}
 
 				case IscCodes.SQL_DEC16:
-					DbValue.SetValue(DecimalCodec.DecFloat16.ParseBytes(buffer));
+					DbValue.SetDec16LittleEndian(buffer);
 					break;
 
 				case IscCodes.SQL_DEC34:
-					DbValue.SetValue(DecimalCodec.DecFloat34.ParseBytes(buffer));
+					DbValue.SetDec34LittleEndian(buffer);
 					break;
 
 				case IscCodes.SQL_INT128:
@@ -457,7 +457,7 @@ internal sealed class DbField
 					}
 					else
 					{
-						DbValue.SetValue(Int128Helper.GetInt128(buffer));
+						DbValue.SetInt128LittleEndian(buffer);
 					}
 					break;
 
@@ -539,7 +539,10 @@ internal sealed class DbField
 					break;
 
 				case DbDataType.Int128:
-					DbValue.SetValue((BigInteger)0);
+					{
+						Span<byte> bytes = stackalloc byte[16];
+						DbValue.SetInt128BigEndian(bytes);
+					}
 					break;
 
 				default:

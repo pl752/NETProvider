@@ -599,45 +599,100 @@ public sealed class FbDataReader : DbDataReader
 		CheckPosition();
 		CheckIndex(i);
 
-		var type = typeof(T);
-		type = Nullable.GetUnderlyingType(type) ?? type;
+		var requestedType = typeof(T);
+		var underlyingType = Nullable.GetUnderlyingType(requestedType);
+		var type = underlyingType ?? requestedType;
 		try
 		{
 			if (type == typeof(bool))
 			{
-				return (T)(object)_row[i].GetBoolean();
+				var value = _row[i].GetBoolean();
+				if (underlyingType != null)
+				{
+					bool? nullable = value;
+					return Unsafe.As<bool?, T>(ref nullable);
+				}
+				return Unsafe.As<bool, T>(ref value);
 			}
 			else if (type == typeof(byte))
 			{
-				return (T)(object)_row[i].GetByte();
+				var value = _row[i].GetByte();
+				if (underlyingType != null)
+				{
+					byte? nullable = value;
+					return Unsafe.As<byte?, T>(ref nullable);
+				}
+				return Unsafe.As<byte, T>(ref value);
 			}
 			else if (type == typeof(char))
 			{
-				return (T)(object)_row[i].GetChar();
+				var value = _row[i].GetChar();
+				if (underlyingType != null)
+				{
+					char? nullable = value;
+					return Unsafe.As<char?, T>(ref nullable);
+				}
+				return Unsafe.As<char, T>(ref value);
 			}
 			else if (type == typeof(Guid))
 			{
-				return (T)(object)_row[i].GetGuid();
+				var value = _row[i].GetGuid();
+				if (underlyingType != null)
+				{
+					Guid? nullable = value;
+					return Unsafe.As<Guid?, T>(ref nullable);
+				}
+				return Unsafe.As<Guid, T>(ref value);
 			}
 			else if (type == typeof(short))
 			{
-				return (T)(object)_row[i].GetInt16();
+				var value = _row[i].GetInt16();
+				if (underlyingType != null)
+				{
+					short? nullable = value;
+					return Unsafe.As<short?, T>(ref nullable);
+				}
+				return Unsafe.As<short, T>(ref value);
 			}
 			else if (type == typeof(int))
 			{
-				return (T)(object)_row[i].GetInt32();
+				var value = _row[i].GetInt32();
+				if (underlyingType != null)
+				{
+					int? nullable = value;
+					return Unsafe.As<int?, T>(ref nullable);
+				}
+				return Unsafe.As<int, T>(ref value);
 			}
 			else if (type == typeof(long))
 			{
-				return (T)(object)_row[i].GetInt64();
+				var value = _row[i].GetInt64();
+				if (underlyingType != null)
+				{
+					long? nullable = value;
+					return Unsafe.As<long?, T>(ref nullable);
+				}
+				return Unsafe.As<long, T>(ref value);
 			}
 			else if (type == typeof(float))
 			{
-				return (T)(object)_row[i].GetFloat();
+				var value = _row[i].GetFloat();
+				if (underlyingType != null)
+				{
+					float? nullable = value;
+					return Unsafe.As<float?, T>(ref nullable);
+				}
+				return Unsafe.As<float, T>(ref value);
 			}
 			else if (type == typeof(double))
 			{
-				return (T)(object)_row[i].GetDouble();
+				var value = _row[i].GetDouble();
+				if (underlyingType != null)
+				{
+					double? nullable = value;
+					return Unsafe.As<double?, T>(ref nullable);
+				}
+				return Unsafe.As<double, T>(ref value);
 			}
 			else if (type == typeof(string))
 			{
@@ -645,15 +700,33 @@ public sealed class FbDataReader : DbDataReader
 			}
 			else if (type == typeof(decimal))
 			{
-				return (T)(object)_row[i].GetDecimal();
+				var value = _row[i].GetDecimal();
+				if (underlyingType != null)
+				{
+					decimal? nullable = value;
+					return Unsafe.As<decimal?, T>(ref nullable);
+				}
+				return Unsafe.As<decimal, T>(ref value);
 			}
 			else if (type == typeof(DateTime))
 			{
-				return (T)(object)_row[i].GetDateTime();
+				var value = _row[i].GetDateTime();
+				if (underlyingType != null)
+				{
+					DateTime? nullable = value;
+					return Unsafe.As<DateTime?, T>(ref nullable);
+				}
+				return Unsafe.As<DateTime, T>(ref value);
 			}
 			else if (type == typeof(TimeSpan))
 			{
-				return (T)(object)_row[i].GetTimeSpan();
+				var value = _row[i].GetTimeSpan();
+				if (underlyingType != null)
+				{
+					TimeSpan? nullable = value;
+					return Unsafe.As<TimeSpan?, T>(ref nullable);
+				}
+				return Unsafe.As<TimeSpan, T>(ref value);
 			}
 			else if (type == typeof(byte[]))
 			{
@@ -661,27 +734,63 @@ public sealed class FbDataReader : DbDataReader
 			}
 			else if (type == typeof(FbDecFloat))
 			{
-				return (T)(object)_row[i].GetDecFloat();
+				var value = _row[i].GetDecFloat();
+				if (underlyingType != null)
+				{
+					FbDecFloat? nullable = value;
+					return Unsafe.As<FbDecFloat?, T>(ref nullable);
+				}
+				return Unsafe.As<FbDecFloat, T>(ref value);
 			}
 			else if (type == typeof(BigInteger))
 			{
-				return (T)(object)_row[i].GetInt128();
+				var value = _row[i].GetInt128();
+				if (underlyingType != null)
+				{
+					BigInteger? nullable = value;
+					return Unsafe.As<BigInteger?, T>(ref nullable);
+				}
+				return Unsafe.As<BigInteger, T>(ref value);
 			}
 			else if (type == typeof(FbZonedDateTime))
 			{
-				return (T)(object)_row[i].GetZonedDateTime();
+				var value = _row[i].GetZonedDateTime();
+				if (underlyingType != null)
+				{
+					FbZonedDateTime? nullable = value;
+					return Unsafe.As<FbZonedDateTime?, T>(ref nullable);
+				}
+				return Unsafe.As<FbZonedDateTime, T>(ref value);
 			}
 			else if (type == typeof(FbZonedTime))
 			{
-				return (T)(object)_row[i].GetZonedTime();
+				var value = _row[i].GetZonedTime();
+				if (underlyingType != null)
+				{
+					FbZonedTime? nullable = value;
+					return Unsafe.As<FbZonedTime?, T>(ref nullable);
+				}
+				return Unsafe.As<FbZonedTime, T>(ref value);
 			}
 			else if (type == typeof(DateOnly))
 			{
-				return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
+				var value = DateOnly.FromDateTime(_row[i].GetDateTime());
+				if (underlyingType != null)
+				{
+					DateOnly? nullable = value;
+					return Unsafe.As<DateOnly?, T>(ref nullable);
+				}
+				return Unsafe.As<DateOnly, T>(ref value);
 			}
 			else if (type == typeof(TimeOnly))
 			{
-				return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				var value = TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				if (underlyingType != null)
+				{
+					TimeOnly? nullable = value;
+					return Unsafe.As<TimeOnly?, T>(ref nullable);
+				}
+				return Unsafe.As<TimeOnly, T>(ref value);
 			}
 			else
 			{
@@ -700,45 +809,100 @@ public sealed class FbDataReader : DbDataReader
 		CheckPosition();
 		CheckIndex(i);
 
-		var type = typeof(T);
-		type = Nullable.GetUnderlyingType(type) ?? type;
+		var requestedType = typeof(T);
+		var underlyingType = Nullable.GetUnderlyingType(requestedType);
+		var type = underlyingType ?? requestedType;
 		try
 		{
 			if (type == typeof(bool))
 			{
-				return (T)(object)_row[i].GetBoolean();
+				var value = _row[i].GetBoolean();
+				if (underlyingType != null)
+				{
+					bool? nullable = value;
+					return Unsafe.As<bool?, T>(ref nullable);
+				}
+				return Unsafe.As<bool, T>(ref value);
 			}
 			else if (type == typeof(byte))
 			{
-				return (T)(object)_row[i].GetByte();
+				var value = _row[i].GetByte();
+				if (underlyingType != null)
+				{
+					byte? nullable = value;
+					return Unsafe.As<byte?, T>(ref nullable);
+				}
+				return Unsafe.As<byte, T>(ref value);
 			}
 			else if (type == typeof(char))
 			{
-				return (T)(object)_row[i].GetChar();
+				var value = _row[i].GetChar();
+				if (underlyingType != null)
+				{
+					char? nullable = value;
+					return Unsafe.As<char?, T>(ref nullable);
+				}
+				return Unsafe.As<char, T>(ref value);
 			}
 			else if (type == typeof(Guid))
 			{
-				return (T)(object)_row[i].GetGuid();
+				var value = _row[i].GetGuid();
+				if (underlyingType != null)
+				{
+					Guid? nullable = value;
+					return Unsafe.As<Guid?, T>(ref nullable);
+				}
+				return Unsafe.As<Guid, T>(ref value);
 			}
 			else if (type == typeof(short))
 			{
-				return (T)(object)_row[i].GetInt16();
+				var value = _row[i].GetInt16();
+				if (underlyingType != null)
+				{
+					short? nullable = value;
+					return Unsafe.As<short?, T>(ref nullable);
+				}
+				return Unsafe.As<short, T>(ref value);
 			}
 			else if (type == typeof(int))
 			{
-				return (T)(object)_row[i].GetInt32();
+				var value = _row[i].GetInt32();
+				if (underlyingType != null)
+				{
+					int? nullable = value;
+					return Unsafe.As<int?, T>(ref nullable);
+				}
+				return Unsafe.As<int, T>(ref value);
 			}
 			else if (type == typeof(long))
 			{
-				return (T)(object)_row[i].GetInt64();
+				var value = _row[i].GetInt64();
+				if (underlyingType != null)
+				{
+					long? nullable = value;
+					return Unsafe.As<long?, T>(ref nullable);
+				}
+				return Unsafe.As<long, T>(ref value);
 			}
 			else if (type == typeof(float))
 			{
-				return (T)(object)_row[i].GetFloat();
+				var value = _row[i].GetFloat();
+				if (underlyingType != null)
+				{
+					float? nullable = value;
+					return Unsafe.As<float?, T>(ref nullable);
+				}
+				return Unsafe.As<float, T>(ref value);
 			}
 			else if (type == typeof(double))
 			{
-				return (T)(object)_row[i].GetDouble();
+				var value = _row[i].GetDouble();
+				if (underlyingType != null)
+				{
+					double? nullable = value;
+					return Unsafe.As<double?, T>(ref nullable);
+				}
+				return Unsafe.As<double, T>(ref value);
 			}
 			else if (type == typeof(string))
 			{
@@ -746,15 +910,33 @@ public sealed class FbDataReader : DbDataReader
 			}
 			else if (type == typeof(decimal))
 			{
-				return (T)(object)_row[i].GetDecimal();
+				var value = _row[i].GetDecimal();
+				if (underlyingType != null)
+				{
+					decimal? nullable = value;
+					return Unsafe.As<decimal?, T>(ref nullable);
+				}
+				return Unsafe.As<decimal, T>(ref value);
 			}
 			else if (type == typeof(DateTime))
 			{
-				return (T)(object)_row[i].GetDateTime();
+				var value = _row[i].GetDateTime();
+				if (underlyingType != null)
+				{
+					DateTime? nullable = value;
+					return Unsafe.As<DateTime?, T>(ref nullable);
+				}
+				return Unsafe.As<DateTime, T>(ref value);
 			}
 			else if (type == typeof(TimeSpan))
 			{
-				return (T)(object)_row[i].GetTimeSpan();
+				var value = _row[i].GetTimeSpan();
+				if (underlyingType != null)
+				{
+					TimeSpan? nullable = value;
+					return Unsafe.As<TimeSpan?, T>(ref nullable);
+				}
+				return Unsafe.As<TimeSpan, T>(ref value);
 			}
 			else if (type == typeof(byte[]))
 			{
@@ -762,27 +944,63 @@ public sealed class FbDataReader : DbDataReader
 			}
 			else if (type == typeof(FbDecFloat))
 			{
-				return (T)(object)_row[i].GetDecFloat();
+				var value = _row[i].GetDecFloat();
+				if (underlyingType != null)
+				{
+					FbDecFloat? nullable = value;
+					return Unsafe.As<FbDecFloat?, T>(ref nullable);
+				}
+				return Unsafe.As<FbDecFloat, T>(ref value);
 			}
 			else if (type == typeof(BigInteger))
 			{
-				return (T)(object)_row[i].GetInt128();
+				var value = _row[i].GetInt128();
+				if (underlyingType != null)
+				{
+					BigInteger? nullable = value;
+					return Unsafe.As<BigInteger?, T>(ref nullable);
+				}
+				return Unsafe.As<BigInteger, T>(ref value);
 			}
 			else if (type == typeof(FbZonedDateTime))
 			{
-				return (T)(object)_row[i].GetZonedDateTime();
+				var value = _row[i].GetZonedDateTime();
+				if (underlyingType != null)
+				{
+					FbZonedDateTime? nullable = value;
+					return Unsafe.As<FbZonedDateTime?, T>(ref nullable);
+				}
+				return Unsafe.As<FbZonedDateTime, T>(ref value);
 			}
 			else if (type == typeof(FbZonedTime))
 			{
-				return (T)(object)_row[i].GetZonedTime();
+				var value = _row[i].GetZonedTime();
+				if (underlyingType != null)
+				{
+					FbZonedTime? nullable = value;
+					return Unsafe.As<FbZonedTime?, T>(ref nullable);
+				}
+				return Unsafe.As<FbZonedTime, T>(ref value);
 			}
 			else if (type == typeof(DateOnly))
 			{
-				return (T)(object)DateOnly.FromDateTime(_row[i].GetDateTime());
+				var value = DateOnly.FromDateTime(_row[i].GetDateTime());
+				if (underlyingType != null)
+				{
+					DateOnly? nullable = value;
+					return Unsafe.As<DateOnly?, T>(ref nullable);
+				}
+				return Unsafe.As<DateOnly, T>(ref value);
 			}
 			else if (type == typeof(TimeOnly))
 			{
-				return (T)(object)TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				var value = TimeOnly.FromTimeSpan(_row[i].GetTimeSpan());
+				if (underlyingType != null)
+				{
+					TimeOnly? nullable = value;
+					return Unsafe.As<TimeOnly?, T>(ref nullable);
+				}
+				return Unsafe.As<TimeOnly, T>(ref value);
 			}
 			else
 			{

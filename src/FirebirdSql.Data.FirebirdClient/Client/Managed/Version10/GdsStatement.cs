@@ -16,10 +16,12 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using FirebirdSql.Data.Common;
@@ -37,7 +39,10 @@ internal class GdsStatement : StatementBase
 	protected Descriptor _parameters;
 	protected Descriptor _fields;
 	protected bool _allRowsFetched;
-	private Queue<DbValue[]> _rows;
+	private Queue<DbValueStorage[]> _rows;
+	private Stack<DbValueStorage[]> _rowStoragePool;
+	private DbValue[] _reusableRow;
+	private readonly byte[] _fixedBytes = new byte[16];
 	private int _fetchSize;
 
 	#endregion
@@ -111,7 +116,8 @@ internal class GdsStatement : StatementBase
 	{
 		_handle = IscCodes.INVALID_OBJECT;
 		_fetchSize = 200;
-		_rows = new Queue<DbValue[]>();
+		_rows = new Queue<DbValueStorage[]>();
+		_rowStoragePool = new Stack<DbValueStorage[]>();
 		OutputParameters = new Queue<DbValue[]>();
 
 		_database = database;
@@ -134,6 +140,8 @@ internal class GdsStatement : StatementBase
 			Release();
 			Clear();
 			_rows = null;
+			_rowStoragePool = null;
+			_reusableRow = null;
 			OutputParameters = null;
 			_database = null;
 			_fields = null;
@@ -153,6 +161,8 @@ internal class GdsStatement : StatementBase
 			await ReleaseAsync(cancellationToken).ConfigureAwait(false);
 			Clear();
 			_rows = null;
+			_rowStoragePool = null;
+			_reusableRow = null;
 			OutputParameters = null;
 			_database = null;
 			_fields = null;
@@ -419,7 +429,7 @@ internal class GdsStatement : StatementBase
 						{
 							if (fetchResponse.Count > 0 && fetchResponse.Status == 0)
 							{
-								_rows.Enqueue(ReadRow());
+								_rows.Enqueue(ReadRowStorage());
 							}
 							else if (fetchResponse.Status == 100)
 							{
@@ -449,13 +459,9 @@ internal class GdsStatement : StatementBase
 
 		if (_rows != null && _rows.Count > 0)
 		{
-			return _rows.Dequeue();
+			return MaterializeRow(_rows.Dequeue());
 		}
-		else
-		{
-			_rows.Clear();
-			return null;
-		}
+		return null;
 	}
 	public override async ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default)
 	{
@@ -500,7 +506,7 @@ internal class GdsStatement : StatementBase
 						{
 							if (fetchResponse.Count > 0 && fetchResponse.Status == 0)
 							{
-								_rows.Enqueue(await ReadRowAsync(cancellationToken).ConfigureAwait(false));
+								_rows.Enqueue(await ReadRowStorageAsync(cancellationToken).ConfigureAwait(false));
 							}
 							else if (fetchResponse.Status == 100)
 							{
@@ -530,13 +536,9 @@ internal class GdsStatement : StatementBase
 
 		if (_rows != null && _rows.Count > 0)
 		{
-			return _rows.Dequeue();
+			return MaterializeRow(_rows.Dequeue());
 		}
-		else
-		{
-			_rows.Clear();
-			return null;
-		}
+		return null;
 	}
 
 	#endregion
@@ -1903,11 +1905,226 @@ internal class GdsStatement : StatementBase
 		}
 	}
 
+	protected DbValueStorage ReadRawValueStorage(IXdrReader xdr, DbField field)
+	{
+		var innerCharset = !_database.Charset.IsNoneCharset ? _database.Charset : field.Charset;
+
+		switch (field.DbDataType)
+		{
+			case DbDataType.Char:
+				if (field.Charset.IsOctetsCharset)
+				{
+					return DbValueStorage.FromBytes(xdr.ReadOpaque(field.Length));
+				}
+				else
+				{
+					var s = xdr.ReadString(innerCharset, field.Length);
+					return DbValueStorage.FromString(TruncateStringByRuneCount(s, field));
+				}
+
+			case DbDataType.VarChar:
+				if (field.Charset.IsOctetsCharset)
+				{
+					return DbValueStorage.FromBytes(xdr.ReadBuffer());
+				}
+				else
+				{
+					return DbValueStorage.FromString(xdr.ReadString(innerCharset));
+				}
+
+			case DbDataType.SmallInt:
+				return DbValueStorage.FromInt16(xdr.ReadInt16());
+
+			case DbDataType.Integer:
+				return DbValueStorage.FromInt32(xdr.ReadInt32());
+
+			case DbDataType.Array:
+			case DbDataType.Binary:
+			case DbDataType.Text:
+			case DbDataType.BigInt:
+				return DbValueStorage.FromInt64(xdr.ReadInt64());
+
+			case DbDataType.Decimal:
+			case DbDataType.Numeric:
+				return DbValueStorage.FromDecimal(xdr.ReadDecimal(field.DataType, field.NumericScale));
+
+			case DbDataType.Float:
+				return DbValueStorage.FromSingle(xdr.ReadSingle());
+
+			case DbDataType.Guid:
+				return DbValueStorage.FromGuid(xdr.ReadGuid(field.SqlType));
+
+			case DbDataType.Double:
+				return DbValueStorage.FromDouble(xdr.ReadDouble());
+
+			case DbDataType.Date:
+				return DbValueStorage.FromDateTime(xdr.ReadDate());
+
+			case DbDataType.Time:
+				return DbValueStorage.FromTimeSpan(xdr.ReadTime());
+
+			case DbDataType.TimeStamp:
+				return DbValueStorage.FromDateTime(xdr.ReadDateTime());
+
+			case DbDataType.Boolean:
+				return DbValueStorage.FromBoolean(xdr.ReadBoolean());
+
+			case DbDataType.TimeStampTZ:
+				return DbValueStorage.FromZonedDateTime(xdr.ReadZonedDateTime(false));
+
+			case DbDataType.TimeStampTZEx:
+				return DbValueStorage.FromZonedDateTime(xdr.ReadZonedDateTime(true));
+
+			case DbDataType.TimeTZ:
+				return DbValueStorage.FromZonedTime(xdr.ReadZonedTime(false));
+
+			case DbDataType.TimeTZEx:
+				return DbValueStorage.FromZonedTime(xdr.ReadZonedTime(true));
+
+			case DbDataType.Dec16:
+				{
+					var storage = new DbValueStorage { Kind = DbValueKind.Dec16, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					xdr.ReadBytes(dst, 8);
+					return storage;
+				}
+
+			case DbDataType.Dec34:
+				{
+					var storage = new DbValueStorage { Kind = DbValueKind.Dec34, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					xdr.ReadBytes(dst, 16);
+					return storage;
+				}
+
+			case DbDataType.Int128:
+				{
+					var storage = new DbValueStorage { Kind = DbValueKind.Int128, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					xdr.ReadBytes(dst, 16);
+					return storage;
+				}
+
+			default:
+				throw TypeHelper.InvalidDataType((int)field.DbDataType);
+		}
+	}
+	protected async ValueTask<DbValueStorage> ReadRawValueStorageAsync(IXdrReader xdr, DbField field, CancellationToken cancellationToken = default)
+	{
+		var innerCharset = !_database.Charset.IsNoneCharset ? _database.Charset : field.Charset;
+
+		switch (field.DbDataType)
+		{
+			case DbDataType.Char:
+				if (field.Charset.IsOctetsCharset)
+				{
+					return DbValueStorage.FromBytes(await xdr.ReadOpaqueAsync(field.Length, cancellationToken).ConfigureAwait(false));
+				}
+				else
+				{
+					var s = await xdr.ReadStringAsync(innerCharset, field.Length, cancellationToken).ConfigureAwait(false);
+					return DbValueStorage.FromString(TruncateStringByRuneCount(s, field));
+				}
+
+			case DbDataType.VarChar:
+				if (field.Charset.IsOctetsCharset)
+				{
+					return DbValueStorage.FromBytes(await xdr.ReadBufferAsync(cancellationToken).ConfigureAwait(false));
+				}
+				else
+				{
+					return DbValueStorage.FromString(await xdr.ReadStringAsync(innerCharset, cancellationToken).ConfigureAwait(false));
+				}
+
+			case DbDataType.SmallInt:
+				return DbValueStorage.FromInt16(await xdr.ReadInt16Async(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Integer:
+				return DbValueStorage.FromInt32(await xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Array:
+			case DbDataType.Binary:
+			case DbDataType.Text:
+			case DbDataType.BigInt:
+				return DbValueStorage.FromInt64(await xdr.ReadInt64Async(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Decimal:
+			case DbDataType.Numeric:
+				return DbValueStorage.FromDecimal(await xdr.ReadDecimalAsync(field.DataType, field.NumericScale, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Float:
+				return DbValueStorage.FromSingle(await xdr.ReadSingleAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Guid:
+				return DbValueStorage.FromGuid(await xdr.ReadGuidAsync(field.SqlType, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Double:
+				return DbValueStorage.FromDouble(await xdr.ReadDoubleAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Date:
+				return DbValueStorage.FromDateTime(await xdr.ReadDateAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Time:
+				return DbValueStorage.FromTimeSpan(await xdr.ReadTimeAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.TimeStamp:
+				return DbValueStorage.FromDateTime(await xdr.ReadDateTimeAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Boolean:
+				return DbValueStorage.FromBoolean(await xdr.ReadBooleanAsync(cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.TimeStampTZ:
+				return DbValueStorage.FromZonedDateTime(await xdr.ReadZonedDateTimeAsync(false, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.TimeStampTZEx:
+				return DbValueStorage.FromZonedDateTime(await xdr.ReadZonedDateTimeAsync(true, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.TimeTZ:
+				return DbValueStorage.FromZonedTime(await xdr.ReadZonedTimeAsync(false, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.TimeTZEx:
+				return DbValueStorage.FromZonedTime(await xdr.ReadZonedTimeAsync(true, cancellationToken).ConfigureAwait(false));
+
+			case DbDataType.Dec16:
+				{
+					await xdr.ReadBytesAsync(_fixedBytes, 8, cancellationToken).ConfigureAwait(false);
+					var storage = new DbValueStorage { Kind = DbValueKind.Dec16, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					_fixedBytes.AsSpan(0, 8).CopyTo(dst);
+					return storage;
+				}
+
+			case DbDataType.Dec34:
+				{
+					await xdr.ReadBytesAsync(_fixedBytes, 16, cancellationToken).ConfigureAwait(false);
+					var storage = new DbValueStorage { Kind = DbValueKind.Dec34, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					_fixedBytes.CopyTo(dst);
+					return storage;
+				}
+
+			case DbDataType.Int128:
+				{
+					await xdr.ReadBytesAsync(_fixedBytes, 16, cancellationToken).ConfigureAwait(false);
+					var storage = new DbValueStorage { Kind = DbValueKind.Int128, Object = null };
+					var dst = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref storage.Data, 1));
+					_fixedBytes.CopyTo(dst);
+					return storage;
+				}
+
+			default:
+				throw TypeHelper.InvalidDataType((int)field.DbDataType);
+		}
+	}
+
 	protected void Clear()
 	{
 		if (_rows != null && _rows.Count > 0)
 		{
-			_rows.Clear();
+			while (_rows.Count > 0)
+			{
+				ReturnRowStorage(_rows.Dequeue());
+			}
 		}
 		if (OutputParameters != null && OutputParameters.Count > 0)
 		{
@@ -1921,8 +2138,127 @@ internal class GdsStatement : StatementBase
 	{
 		Clear();
 
+		_reusableRow = null;
+		_rowStoragePool?.Clear();
+
 		_parameters = null;
 		_fields = null;
+	}
+
+	void EnsureReusableRow()
+	{
+		if (_fields == null || _fields.Count == 0)
+		{
+			_reusableRow = Array.Empty<DbValue>();
+			return;
+		}
+
+		if (_reusableRow != null && _reusableRow.Length == _fields.Count)
+		{
+			return;
+		}
+
+		_reusableRow = new DbValue[_fields.Count];
+		for (var i = 0; i < _fields.Count; i++)
+		{
+			_reusableRow[i] = new DbValue(this, _fields[i], null);
+		}
+	}
+
+	protected DbValueStorage[] RentRowStorage()
+	{
+		if (_fields == null || _fields.Count == 0)
+		{
+			return Array.Empty<DbValueStorage>();
+		}
+
+		return _rowStoragePool.Count != 0 ? _rowStoragePool.Pop() : new DbValueStorage[_fields.Count];
+	}
+
+	protected void ReturnRowStorage(DbValueStorage[] row)
+	{
+		if (row == null || row.Length == 0 || _rowStoragePool == null)
+			return;
+
+		for (var i = 0; i < row.Length; i++)
+		{
+			row[i].Object = null;
+		}
+		_rowStoragePool.Push(row);
+	}
+
+	DbValue[] MaterializeRow(DbValueStorage[] rowValues)
+	{
+		EnsureReusableRow();
+
+		for (var i = 0; i < _reusableRow.Length; i++)
+		{
+			_reusableRow[i].ImportStorage(rowValues[i]);
+		}
+
+		ReturnRowStorage(rowValues);
+		return _reusableRow;
+	}
+
+	protected virtual DbValueStorage[] ReadRowStorage()
+	{
+		var row = RentRowStorage();
+		try
+		{
+			for (var i = 0; i < _fields.Count; i++)
+			{
+				var value = ReadRawValueStorage(_database.Xdr, _fields[i]);
+				var sqlInd = _database.Xdr.ReadInt32();
+				if (sqlInd == -1)
+				{
+					row[i] = default;
+				}
+				else if (sqlInd == 0)
+				{
+					row[i] = value;
+				}
+				else
+				{
+					throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
+				}
+			}
+		}
+		catch (IOException ex)
+		{
+			ReturnRowStorage(row);
+			throw IscException.ForIOException(ex);
+		}
+		return row;
+	}
+	protected virtual async ValueTask<DbValueStorage[]> ReadRowStorageAsync(CancellationToken cancellationToken = default)
+	{
+		var row = RentRowStorage();
+		try
+		{
+			for (var i = 0; i < _fields.Count; i++)
+			{
+				var value = await ReadRawValueStorageAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+				var sqlInd = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+				if (sqlInd == -1)
+				{
+					row[i] = default;
+				}
+				else if (sqlInd == 0)
+				{
+					row[i] = value;
+				}
+				else
+				{
+					throw IscException.ForStrParam($"Invalid {nameof(sqlInd)} value: {sqlInd}.");
+				}
+			}
+		}
+		catch (IOException ex)
+		{
+			ReturnRowStorage(row);
+			throw IscException.ForIOException(ex);
+		}
+		return row;
 	}
 
 	protected virtual DbValue[] ReadRow()

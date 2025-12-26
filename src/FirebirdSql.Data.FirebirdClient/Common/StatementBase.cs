@@ -233,6 +233,34 @@ internal abstract class StatementBase
 	public abstract DbValue[] Fetch();
 	public abstract ValueTask<DbValue[]> FetchAsync(CancellationToken cancellationToken = default);
 
+	public DbValue[] FetchAllocated()
+	{
+		var row = Fetch();
+		return row == null ? null : CloneRow(row);
+	}
+	public async ValueTask<DbValue[]> FetchAllocatedAsync(CancellationToken cancellationToken = default)
+	{
+		var row = await FetchAsync(cancellationToken).ConfigureAwait(false);
+		return row == null ? null : CloneRow(row);
+	}
+
+	DbValue[] CloneRow(DbValue[] row)
+	{
+		if (row.Length == 0)
+		{
+			return Array.Empty<DbValue>();
+		}
+
+		var result = new DbValue[row.Length];
+		for (var i = 0; i < row.Length; i++)
+		{
+			var value = new DbValue(this, row[i].Field, null);
+			value.ImportStorage(row[i].ExportStorage());
+			result[i] = value;
+		}
+		return result;
+	}
+
 	public abstract BlobBase CreateBlob();
 	public abstract BlobBase CreateBlob(long handle);
 

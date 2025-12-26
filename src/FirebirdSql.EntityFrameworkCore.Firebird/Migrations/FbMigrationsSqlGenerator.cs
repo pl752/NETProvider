@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.EntityFrameworkCore.Firebird.Infrastructure.Internal;
@@ -35,6 +36,9 @@ namespace FirebirdSql.EntityFrameworkCore.Firebird.Migrations;
 
 public class FbMigrationsSqlGenerator : MigrationsSqlGenerator
 {
+	static readonly FieldInfo MigrationCommandRelationalCommandField
+		= typeof(MigrationCommand).GetField("_relationalCommand", BindingFlags.Instance | BindingFlags.NonPublic);
+
 	readonly IFbMigrationSqlGeneratorBehavior _behavior;
 	readonly IFbOptions _options;
 
@@ -44,6 +48,81 @@ public class FbMigrationsSqlGenerator : MigrationsSqlGenerator
 		_behavior = behavior;
 		_options = options;
 	}
+
+	public override IReadOnlyList<MigrationCommand> Generate(IReadOnlyList<MigrationOperation> operations, IModel model, MigrationsSqlGenerationOptions options = MigrationsSqlGenerationOptions.Default)
+	{
+		var commands = base.Generate(operations, model, options);
+		return NormalizeLineEndingsInGeneratedCommands(commands);
+	}
+
+	IReadOnlyList<MigrationCommand> NormalizeLineEndingsInGeneratedCommands(IReadOnlyList<MigrationCommand> commands)
+	{
+		List<MigrationCommand> normalizedCommands = null;
+
+		for (var i = 0; i < commands.Count; i++)
+		{
+			var command = commands[i];
+			var normalizedCommandText = NormalizeLineEndings(command.CommandText);
+
+			if (normalizedCommands == null)
+			{
+				if (ReferenceEquals(normalizedCommandText, command.CommandText))
+				{
+					continue;
+				}
+
+				normalizedCommands = new List<MigrationCommand>(commands.Count);
+				for (var j = 0; j < i; j++)
+				{
+					normalizedCommands.Add(commands[j]);
+				}
+			}
+
+			normalizedCommands.Add(
+				ReferenceEquals(normalizedCommandText, command.CommandText)
+					? command
+					: CreateMigrationCommand(normalizedCommandText, command));
+		}
+
+		return normalizedCommands ?? commands;
+	}
+
+	string NormalizeLineEndings(string sql)
+	{
+		if (sql.IndexOf('\r') < 0)
+		{
+			return sql;
+		}
+
+		var endsWithNewLine = sql.EndsWith(Environment.NewLine, StringComparison.Ordinal);
+		var sqlBody = endsWithNewLine ? sql.Substring(0, sql.Length - Environment.NewLine.Length) : sql;
+
+		sqlBody = sqlBody.ReplaceLineEndings("\n");
+
+		return endsWithNewLine ? sqlBody + Environment.NewLine : sqlBody;
+	}
+
+	MigrationCommand CreateMigrationCommand(string sql, MigrationCommand originalCommand)
+	{
+		var builder = Dependencies.CommandBuilderFactory.Create();
+		builder.Append(sql);
+
+		foreach (var parameter in GetRelationalParameters(originalCommand))
+		{
+			builder.AddParameter(parameter);
+		}
+
+		return new MigrationCommand(
+			builder.Build(),
+			Dependencies.CurrentContext.Context,
+			Dependencies.Logger,
+			originalCommand.TransactionSuppressed);
+	}
+
+	static IReadOnlyList<IRelationalParameter> GetRelationalParameters(MigrationCommand command)
+		=> MigrationCommandRelationalCommandField?.GetValue(command) is IRelationalCommandTemplate template
+			? template.Parameters
+			: Array.Empty<IRelationalParameter>();
 
 	protected override void Generate(MigrationOperation operation, IModel model, MigrationCommandListBuilder builder)
 	{
