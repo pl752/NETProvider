@@ -23,4 +23,13 @@
 	<ItemGroup Condition="$(Configuration.EndsWith('NuGet'))">
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="8.5.4" />
 	</ItemGroup>
+
+	<ItemGroup Condition="$(Configuration.EndsWith('NuGet'))">
+		<!-- Benchmarks that depend on internal APIs are only available with ProjectReference + InternalsVisibleTo. -->
+		<Compile Remove="AuthBlockBenchmarks.cs" />
+		<Compile Remove="FirebirdNetworkHandlingWrapperBenchmarks.cs" />
+		<Compile Remove="RC4EngineBenchmarks.cs" />
+		<Compile Remove="RuneExtensionsBenchmarks.cs" />
+		<Compile Remove="XdrReaderWriterSyntheticBenchmarks.cs" />
+	</ItemGroup>
 </Project>

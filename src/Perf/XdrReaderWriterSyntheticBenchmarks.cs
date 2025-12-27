@@ -22,38 +22,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Diagnosers;
-using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Toolchains.CsProj;
-using BenchmarkDotNet.Toolchains.InProcess.NoEmit;
 using FirebirdSql.Data.Common;
 
 namespace Perf;
-
-sealed class InProcessMemoryConfig : ManualConfig
-{
-	public InProcessMemoryConfig()
-	{
-		AddDiagnoser(MemoryDiagnoser.Default);
-		AddJob(Job.Default
-			.WithToolchain(CsProjCoreToolchain.NetCoreApp80));
-		AddJob(Job.Default
-			.WithToolchain(CsProjCoreToolchain.NetCoreApp10_0));
-		/*AddJob(Job.Default
-			.WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
-			.WithId("AVX2 off")
-			.WithEnvironmentVariables(
-				new EnvironmentVariable("DOTNET_EnableAVX2", "0"),
-				new EnvironmentVariable("COMPlus_EnableAVX2", "0")));
-		AddJob(Job.Default
-			.WithToolchain(CsProjCoreToolchain.NetCoreApp10_0)
-			.WithId("No HW intrinsics")
-			.WithEnvironmentVariables(
-				new EnvironmentVariable("DOTNET_EnableHWIntrinsic", "0"),
-				new EnvironmentVariable("COMPlus_EnableHWIntrinsic", "0")));*/
-	}
-}
 
 static class XdrSynthetic
 {
