@@ -1086,35 +1086,27 @@ public sealed class FbDataReader : DbDataReader
 			}
 			else
 			{
-				return GetFieldValue<string>(i).ToCharArray().Length;
+				return _row[i].GetString().Length;
 			}
 		}
 		else
 		{
+			if (dataIndex > int.MaxValue)
+				throw new ArgumentOutOfRangeException(nameof(dataIndex));
+			if (dataIndex < 0)
+				throw new ArgumentOutOfRangeException(nameof(dataIndex));
 
-			var charArray = GetFieldValue<string>(i).ToCharArray();
+			var s = _row[i].GetString();
+			if (dataIndex >= s.Length)
+				return 0;
 
-			var charsRead = 0;
-			var realLength = length;
-
-			if (length > (charArray.Length - dataIndex))
+			var available = s.Length - (int)dataIndex;
+			var realLength = Math.Min(length, available);
+			if (realLength > 0)
 			{
-				realLength = charArray.Length - (int)dataIndex;
+				s.CopyTo((int)dataIndex, buffer, bufferIndex, realLength);
 			}
-
-			Array.Copy(charArray, (int)dataIndex, buffer,
-				bufferIndex, realLength);
-
-			if ((charArray.Length - dataIndex) < length)
-			{
-				charsRead = charArray.Length - (int)dataIndex;
-			}
-			else
-			{
-				charsRead = length;
-			}
-
-			return charsRead;
+			return realLength;
 		}
 	}
 
