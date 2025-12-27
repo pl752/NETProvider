@@ -38,6 +38,8 @@ internal class GdsStatement : StatementBase
 	private GdsTransaction _transaction;
 	protected Descriptor _parameters;
 	protected Descriptor _fields;
+	private Descriptor.BlrData _parametersBlr;
+	private Descriptor.BlrData _fieldsBlr;
 	protected bool _allRowsFetched;
 	private Queue<DbValueStorage[]> _rows;
 	private Stack<DbValueStorage[]> _rowStoragePool;
@@ -84,7 +86,11 @@ internal class GdsStatement : StatementBase
 	public override Descriptor Parameters
 	{
 		get { return _parameters; }
-		set { _parameters = value; }
+		set
+		{
+			_parameters = value;
+			_parametersBlr = _parameters?.ToBlr();
+		}
 	}
 
 	public override Descriptor Fields
@@ -102,6 +108,9 @@ internal class GdsStatement : StatementBase
 	{
 		get { return _handle; }
 	}
+
+	internal Descriptor.BlrData ParametersBlr => GetParametersBlr();
+	internal Descriptor.BlrData FieldsBlr => GetFieldsBlr();
 
 	#endregion
 
@@ -143,10 +152,12 @@ internal class GdsStatement : StatementBase
 			_rowStoragePool = null;
 			_reusableRow = null;
 			OutputParameters = null;
-			_database = null;
-			_fields = null;
-			_parameters = null;
-			_transaction = null;
+				_database = null;
+				_fields = null;
+				_parameters = null;
+				_fieldsBlr = null;
+				_parametersBlr = null;
+				_transaction = null;
 			_allRowsFetched = false;
 			_handle = 0;
 			_fetchSize = 0;
@@ -164,10 +175,12 @@ internal class GdsStatement : StatementBase
 			_rowStoragePool = null;
 			_reusableRow = null;
 			OutputParameters = null;
-			_database = null;
-			_fields = null;
-			_parameters = null;
-			_transaction = null;
+				_database = null;
+				_fields = null;
+				_parameters = null;
+				_fieldsBlr = null;
+				_parametersBlr = null;
+				_transaction = null;
 			_allRowsFetched = false;
 			_handle = 0;
 			_fetchSize = 0;
@@ -410,7 +423,7 @@ internal class GdsStatement : StatementBase
 			{
 				_database.Xdr.WriteBytes(bufOpFetch);
 				_database.Xdr.Write(_handle);
-				_database.Xdr.WriteBuffer(_fields.ToBlr().Data);
+					_database.Xdr.WriteBuffer(GetFieldsBlr().Data);
 				_database.Xdr.WriteBytes(zeroIntBuf); // p_sqldata_message_number
 				_database.Xdr.Write(_fetchSize); // p_sqldata_messages
 				_database.Xdr.Flush();
@@ -487,7 +500,7 @@ internal class GdsStatement : StatementBase
 			{
 				await _database.Xdr.WriteBytesAsync(bufOpFetch, 4, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
-				await _database.Xdr.WriteBufferAsync(_fields.ToBlr().Data, cancellationToken).ConfigureAwait(false);
+					await _database.Xdr.WriteBufferAsync(GetFieldsBlr().Data, cancellationToken).ConfigureAwait(false);
 				await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false); // p_sqldata_message_number
 				await _database.Xdr.WriteAsync(_fetchSize, cancellationToken).ConfigureAwait(false); // p_sqldata_messages
 				await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -573,6 +586,8 @@ internal class GdsStatement : StatementBase
 		var descriptors = ParseSqlInfoSpan(info, DescribeInfoAndBindInfoItems, new Descriptor[] { null, null });
 		_fields = descriptors[0];
 		_parameters = descriptors[1];
+		_fieldsBlr = _fields?.ToBlr();
+		_parametersBlr = _parameters?.ToBlr();
 	}
 
 	protected async ValueTask ProcessPrepareResponseAsync(GenericResponse response, CancellationToken cancellationToken = default)
@@ -581,6 +596,8 @@ internal class GdsStatement : StatementBase
 		var descriptors = await ParseSqlInfoSpanAsync(info, DescribeInfoAndBindInfoItems.AsMemory(), new Descriptor[] { null, null }, cancellationToken).ConfigureAwait(false);
 		_fields = descriptors[0];
 		_parameters = descriptors[1];
+		_fieldsBlr = _fields?.ToBlr();
+		_parametersBlr = _parameters?.ToBlr();
 	}
 
 	// Span-based parsing to avoid intermediate arrays when possible
@@ -704,11 +721,13 @@ internal class GdsStatement : StatementBase
 			_database.Xdr.Write(option);
 			_database.Xdr.Flush();
 
-			if (option == IscCodes.DSQL_drop)
-			{
-				_parameters = null;
-				_fields = null;
-			}
+				if (option == IscCodes.DSQL_drop)
+				{
+					_parameters = null;
+					_fields = null;
+					_parametersBlr = null;
+					_fieldsBlr = null;
+				}
 
 			Clear();
 		}
@@ -727,11 +746,13 @@ internal class GdsStatement : StatementBase
 			await _database.Xdr.WriteAsync(option, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
-			if (option == IscCodes.DSQL_drop)
-			{
-				_parameters = null;
-				_fields = null;
-			}
+				if (option == IscCodes.DSQL_drop)
+				{
+					_parameters = null;
+					_fields = null;
+					_parametersBlr = null;
+					_fieldsBlr = null;
+				}
 
 			Clear();
 		}
@@ -815,7 +836,7 @@ internal class GdsStatement : StatementBase
 
 		if (_parameters != null)
 		{
-			_database.Xdr.WriteBuffer(_parameters.ToBlr().Data);
+				_database.Xdr.WriteBuffer(GetParametersBlr().Data);
 			_database.Xdr.WriteBytes(bzero); // Message number
 			_database.Xdr.WriteBytes(bone); // Number of messages
 			_database.Xdr.WriteBytes(parametersData, parametersData.Length);
@@ -829,7 +850,7 @@ internal class GdsStatement : StatementBase
 
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-			_database.Xdr.WriteBuffer(_fields?.ToBlr().Data);
+				_database.Xdr.WriteBuffer(_fields != null ? GetFieldsBlr().Data : null);
 			_database.Xdr.WriteBytes(bzero);
 		}
 	}
@@ -852,7 +873,7 @@ internal class GdsStatement : StatementBase
 
 		if (_parameters != null)
 		{
-			await _database.Xdr.WriteBufferAsync(_parameters.ToBlr().Data, cancellationToken).ConfigureAwait(false);
+				await _database.Xdr.WriteBufferAsync(GetParametersBlr().Data, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false); // Message number
 			await _database.Xdr.WriteBytesAsync(oneIntBuf, 4, cancellationToken).ConfigureAwait(false); // Number of messages
 			await _database.Xdr.WriteBytesAsync(parametersData, parametersData.Length, cancellationToken).ConfigureAwait(false);
@@ -866,7 +887,7 @@ internal class GdsStatement : StatementBase
 
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-			await _database.Xdr.WriteBufferAsync(_fields?.ToBlr().Data, cancellationToken).ConfigureAwait(false);
+				await _database.Xdr.WriteBufferAsync(_fields != null ? GetFieldsBlr().Data : null, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false); // Output message number
 		}
 	}
@@ -2143,6 +2164,38 @@ internal class GdsStatement : StatementBase
 
 		_parameters = null;
 		_fields = null;
+		_parametersBlr = null;
+		_fieldsBlr = null;
+	}
+
+	private Descriptor.BlrData GetParametersBlr()
+	{
+		if (_parameters == null)
+		{
+			return null;
+		}
+
+		if (_parametersBlr == null)
+		{
+			_parametersBlr = _parameters.ToBlr();
+		}
+
+		return _parametersBlr;
+	}
+
+	private Descriptor.BlrData GetFieldsBlr()
+	{
+		if (_fields == null)
+		{
+			return null;
+		}
+
+		if (_fieldsBlr == null)
+		{
+			_fieldsBlr = _fields.ToBlr();
+		}
+
+		return _fieldsBlr;
 	}
 
 	void EnsureReusableRow()
