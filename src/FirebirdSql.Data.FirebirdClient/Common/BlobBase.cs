@@ -139,20 +139,10 @@ internal abstract class BlobBase
 
 			var length = count;
 			var offset = index;
-			var chunk = length >= _segmentSize ? _segmentSize : length;
-
-			var tmpBuffer = new byte[chunk];
-
 			while (length > 0)
 			{
-				if (chunk > length)
-				{
-					chunk = length;
-					tmpBuffer = new byte[chunk];
-				}
-
-				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-				PutSegment(tmpBuffer);
+				var chunk = length >= _segmentSize ? _segmentSize : length;
+				PutSegment(buffer, offset, chunk);
 
 				offset += chunk;
 				length -= chunk;
@@ -176,20 +166,10 @@ internal abstract class BlobBase
 
 			var length = count;
 			var offset = index;
-			var chunk = length >= _segmentSize ? _segmentSize : length;
-
-			var tmpBuffer = new byte[chunk];
-
 			while (length > 0)
 			{
-				if (chunk > length)
-				{
-					chunk = length;
-					tmpBuffer = new byte[chunk];
-				}
-
-				Array.Copy(buffer, offset, tmpBuffer, 0, chunk);
-				await PutSegmentAsync(tmpBuffer, cancellationToken).ConfigureAwait(false);
+				var chunk = length >= _segmentSize ? _segmentSize : length;
+				await PutSegmentAsync(buffer, offset, chunk, cancellationToken).ConfigureAwait(false);
 
 				offset += chunk;
 				length -= chunk;
@@ -223,6 +203,9 @@ internal abstract class BlobBase
 
 	public abstract void PutSegment(byte[] buffer);
 	public abstract ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default);
+
+	public abstract void PutSegment(byte[] buffer, int offset, int count);
+	public abstract ValueTask PutSegmentAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
 
 	public abstract void Seek(int offset, int seekMode);
 	public abstract ValueTask SeekAsync(int offset, int seekMode, CancellationToken cancellationToken = default);

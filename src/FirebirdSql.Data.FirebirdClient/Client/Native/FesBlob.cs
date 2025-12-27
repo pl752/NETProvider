@@ -31,6 +31,7 @@ internal sealed class FesBlob : BlobBase
 	private readonly FesDatabase _database;
 	private readonly IntPtr[] _statusVector;
 	private BlobHandle _blobHandle;
+	private byte[] _segmentBuffer;
 
 	#endregion
 
@@ -211,7 +212,12 @@ internal sealed class FesBlob : BlobBase
 
 		ClearStatusVector();
 
-		var tmp = new byte[requested];
+		var tmp = _segmentBuffer;
+		if (tmp == null || tmp.Length < requested)
+		{
+			tmp = new byte[requested];
+			_segmentBuffer = tmp;
+		}
 
 		var status = _database.FbClient.isc_get_segment(
 			_statusVector,
@@ -248,7 +254,12 @@ internal sealed class FesBlob : BlobBase
 
 		ClearStatusVector();
 
-		var tmp = new byte[requested];
+		var tmp = _segmentBuffer;
+		if (tmp == null || tmp.Length < requested)
+		{
+			tmp = new byte[requested];
+			_segmentBuffer = tmp;
+		}
 
 		var status = _database.FbClient.isc_get_segment(
 			_statusVector,
@@ -375,28 +386,45 @@ internal sealed class FesBlob : BlobBase
 
 	public override void PutSegment(byte[] buffer)
 	{
-		ClearStatusVector();
-
-		_database.FbClient.isc_put_segment(
-			_statusVector,
-			ref _blobHandle,
-			(short)buffer.Length,
-			buffer);
-
-		_database.ProcessStatusVector(_statusVector);
+		PutSegment(buffer, 0, buffer.Length);
 	}
 	public override ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
 	{
+		PutSegment(buffer, 0, buffer.Length);
+		return ValueTask.CompletedTask;
+	}
+
+	public override void PutSegment(byte[] buffer, int offset, int count)
+	{
+		if (count == 0)
+			return;
+
 		ClearStatusVector();
+
+		var actualBuffer = buffer;
+		if (offset != 0)
+		{
+			var tmp = _segmentBuffer;
+			if (tmp == null || tmp.Length < count)
+			{
+				tmp = new byte[count];
+				_segmentBuffer = tmp;
+			}
+			Buffer.BlockCopy(buffer, offset, tmp, 0, count);
+			actualBuffer = tmp;
+		}
 
 		_database.FbClient.isc_put_segment(
 			_statusVector,
 			ref _blobHandle,
-			(short)buffer.Length,
-			buffer);
+			(short)count,
+			actualBuffer);
 
 		_database.ProcessStatusVector(_statusVector);
-
+	}
+	public override ValueTask PutSegmentAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
+	{
+		PutSegment(buffer, offset, count);
 		return ValueTask.CompletedTask;
 	}
 
@@ -413,6 +441,9 @@ internal sealed class FesBlob : BlobBase
 			ref resultingPosition);
 
 		_database.ProcessStatusVector(_statusVector);
+		_position = resultingPosition;
+		RblRemoveValue(IscCodes.RBL_eof_pending);
+		RblRemoveValue(IscCodes.RBL_segment);
 	}
 	public override ValueTask SeekAsync(int position, int seekOperation, CancellationToken cancellationToken = default)
 	{
@@ -427,6 +458,9 @@ internal sealed class FesBlob : BlobBase
 			ref resultingPosition);
 
 		_database.ProcessStatusVector(_statusVector);
+		_position = resultingPosition;
+		RblRemoveValue(IscCodes.RBL_eof_pending);
+		RblRemoveValue(IscCodes.RBL_segment);
 
 		return ValueTask.CompletedTask;
 	}

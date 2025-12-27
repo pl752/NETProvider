@@ -415,11 +415,20 @@ internal sealed class GdsBlob : BlobBase
 
 	public override void PutSegment(byte[] buffer)
 	{
+		PutSegment(buffer, 0, buffer.Length);
+	}
+	public override async ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
+	{
+		await PutSegmentAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+	}
+
+	public override void PutSegment(byte[] buffer, int offset, int count)
+	{
 		try
 		{
 			_database.Xdr.WriteBytes(bufOpBatchSegments);
 			_database.Xdr.Write(_blobHandle);
-			_database.Xdr.WriteBlobBuffer(buffer);
+			_database.Xdr.WriteBlobBuffer(buffer.AsSpan(offset, count));
 			_database.Xdr.Flush();
 
 			_database.ReadResponse();
@@ -429,13 +438,13 @@ internal sealed class GdsBlob : BlobBase
 			throw IscException.ForIOException(ex);
 		}
 	}
-	public override async ValueTask PutSegmentAsync(byte[] buffer, CancellationToken cancellationToken = default)
+	public override async ValueTask PutSegmentAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			await _database.Xdr.WriteBytesAsync(bufOpBatchSegments, 4, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBlobBufferAsync(buffer, cancellationToken).ConfigureAwait(false);
+			await _database.Xdr.WriteBlobBufferAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
 
 			await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
@@ -459,6 +468,8 @@ internal sealed class GdsBlob : BlobBase
 			var response = (GenericResponse)_database.ReadResponse();
 
 			_position = response.ObjectHandle;
+			RblRemoveValue(IscCodes.RBL_eof_pending);
+			RblRemoveValue(IscCodes.RBL_segment);
 		}
 		catch (IOException ex)
 		{
@@ -478,6 +489,8 @@ internal sealed class GdsBlob : BlobBase
 			var response = (GenericResponse)await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
 
 			_position = response.ObjectHandle;
+			RblRemoveValue(IscCodes.RBL_eof_pending);
+			RblRemoveValue(IscCodes.RBL_segment);
 		}
 		catch (IOException ex)
 		{
