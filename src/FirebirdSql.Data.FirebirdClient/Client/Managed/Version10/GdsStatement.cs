@@ -439,30 +439,29 @@ internal class GdsStatement : StatementBase
 				var operation = _database.ReadOperation();
 				if (operation == IscCodes.op_fetch_response)
 				{
-					var hasOperation = true;
 					while (!_allRowsFetched)
 					{
-						var response = hasOperation
-							? _database.ReadResponse(operation)
-							: _database.ReadResponse();
-						hasOperation = false;
-						if (response is FetchResponse fetchResponse)
+						var status = _database.Xdr.ReadInt32();
+						var count = _database.Xdr.ReadInt32();
+
+						if (count > 0 && status == 0)
 						{
-							if (fetchResponse.Count > 0 && fetchResponse.Status == 0)
-							{
-								_rows.Enqueue(ReadRowStorage());
-							}
-							else if (fetchResponse.Status == 100)
-							{
-								_allRowsFetched = true;
-							}
-							else
-							{
-								break;
-							}
+							_rows.Enqueue(ReadRowStorage());
+						}
+						else if (status == 100)
+						{
+							_allRowsFetched = true;
+							break;
 						}
 						else
 						{
+							break;
+						}
+
+						operation = _database.ReadOperation();
+						if (operation != IscCodes.op_fetch_response)
+						{
+							_database.ReadResponse(operation);
 							break;
 						}
 					}
@@ -516,30 +515,29 @@ internal class GdsStatement : StatementBase
 				var operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
 				if (operation == IscCodes.op_fetch_response)
 				{
-					var hasOperation = true;
 					while (!_allRowsFetched)
 					{
-						var response = hasOperation
-							? await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false)
-							: await _database.ReadResponseAsync(cancellationToken).ConfigureAwait(false);
-						hasOperation = false;
-						if (response is FetchResponse fetchResponse)
+						var status = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+						var count = await _database.Xdr.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+
+						if (count > 0 && status == 0)
 						{
-							if (fetchResponse.Count > 0 && fetchResponse.Status == 0)
-							{
-								_rows.Enqueue(await ReadRowStorageAsync(cancellationToken).ConfigureAwait(false));
-							}
-							else if (fetchResponse.Status == 100)
-							{
-								_allRowsFetched = true;
-							}
-							else
-							{
-								break;
-							}
+							_rows.Enqueue(await ReadRowStorageAsync(cancellationToken).ConfigureAwait(false));
+						}
+						else if (status == 100)
+						{
+							_allRowsFetched = true;
+							break;
 						}
 						else
 						{
+							break;
+						}
+
+						operation = await _database.ReadOperationAsync(cancellationToken).ConfigureAwait(false);
+						if (operation != IscCodes.op_fetch_response)
+						{
+							await _database.ReadResponseAsync(operation, cancellationToken).ConfigureAwait(false);
 							break;
 						}
 					}
@@ -678,7 +676,7 @@ internal class GdsStatement : StatementBase
 	{
 		Debug.Assert(response.Data.Length > 0);
 
-		return response.Data.ToArray();
+		return response.Data;
 	}
 
 	protected static ValueTask<byte[]> ProcessInfoSqlResponseAsync(GenericResponse response, CancellationToken cancellationToken = default)
