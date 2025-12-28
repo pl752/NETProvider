@@ -33,6 +33,7 @@ internal sealed class GdsBlob : BlobBase
 	private static readonly byte[] bufOpGetSegment = TypeEncoder.EncodeInt32(IscCodes.op_get_segment);
 	private static readonly byte[] bufOpBatchSegments = TypeEncoder.EncodeInt32(IscCodes.op_batch_segments);
 	private static readonly byte[] bufOpSeekBlob = TypeEncoder.EncodeInt32(IscCodes.op_seek_blob);
+	private static readonly byte[] infoBlobTotalLengthItems = [IscCodes.isc_info_blob_total_length];
 
 	#region Fields
 
@@ -135,7 +136,7 @@ internal sealed class GdsBlob : BlobBase
 			_database.Xdr.WriteBytes(bufOpInfoBlob);
 			_database.Xdr.Write(_blobHandle);
 			_database.Xdr.WriteBytes(zeroIntBuf);
-			_database.Xdr.WriteBuffer([IscCodes.isc_info_blob_total_length], 1);
+			_database.Xdr.WriteBuffer(infoBlobTotalLengthItems, 1);
 			_database.Xdr.Write(bufferLength);
 
 			_database.Xdr.Flush();
@@ -174,7 +175,7 @@ internal sealed class GdsBlob : BlobBase
 			await _database.Xdr.WriteBytesAsync(bufOpInfoBlob, 4, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteAsync(_blobHandle, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBufferAsync([IscCodes.isc_info_blob_total_length], 1, cancellationToken).ConfigureAwait(false);
+			await _database.Xdr.WriteBufferAsync(infoBlobTotalLengthItems, 1, cancellationToken).ConfigureAwait(false);
 			await _database.Xdr.WriteAsync(bufferLength, cancellationToken).ConfigureAwait(false);
 
 			await _database.Xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -324,32 +325,37 @@ internal sealed class GdsBlob : BlobBase
 				RblAddValue(IscCodes.RBL_eof_pending);
 			}
 
-			var buffer = response.Data.AsSpan();
+				var buffer = response.Data.AsSpan();
 
-			if (buffer.Length == 0)
-			{
-				//previous segment was last, this has no data
-				return Array.Empty<byte>();
-			}
+				if (buffer.Length == 0)
+				{
+					//previous segment was last, this has no data
+					return Array.Empty<byte>();
+				}
 
-			var posInInput = 0;
-			var posInOutput = 0;
+				var posInInput = 0;
+				var totalLength = 0;
 
-			var tmp = new byte[requested * 2];
-			while (posInInput < buffer.Length)
-			{
-				var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
-				posInInput += 2;
+				while (posInInput < buffer.Length)
+				{
+					var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+					posInInput += 2 + len;
+					totalLength = checked(totalLength + len);
+				}
 
-				buffer.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
-				posInOutput += len;
-				posInInput += len;
-			}
+				var actualBuffer = GC.AllocateUninitializedArray<byte>(totalLength);
+				posInInput = 0;
+				var posInOutput = 0;
+				while (posInInput < buffer.Length)
+				{
+					var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+					posInInput += 2;
+					buffer.Slice(posInInput, len).CopyTo(actualBuffer.AsSpan(posInOutput, len));
+					posInOutput += len;
+					posInInput += len;
+				}
 
-			var actualBuffer = new byte[posInOutput];
-			Array.Copy(tmp, actualBuffer, posInOutput);
-
-			return actualBuffer;
+				return actualBuffer;
 		}
 		catch (IOException ex)
 		{
@@ -380,32 +386,37 @@ internal sealed class GdsBlob : BlobBase
 				RblAddValue(IscCodes.RBL_eof_pending);
 			}
 
-			var buffer = response.Data.AsSpan();
+				var buffer = response.Data.AsSpan();
 
-			if (buffer.Length == 0)
-			{
-				// previous segment was last, this has no data
-				return Array.Empty<byte>();
-			}
+				if (buffer.Length == 0)
+				{
+					// previous segment was last, this has no data
+					return Array.Empty<byte>();
+				}
 
-			var posInInput = 0;
-			var posInOutput = 0;
+				var posInInput = 0;
+				var totalLength = 0;
 
-			var tmp = new byte[requested * 2];
-			while (posInInput < buffer.Length)
-			{
-				var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
-				posInInput += 2;
+				while (posInInput < buffer.Length)
+				{
+					var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+					posInInput += 2 + len;
+					totalLength = checked(totalLength + len);
+				}
 
-				buffer.Slice(posInInput, len).CopyTo(tmp.AsSpan(posInOutput, len));
-				posInOutput += len;
-				posInInput += len;
-			}
+				var actualBuffer = GC.AllocateUninitializedArray<byte>(totalLength);
+				posInInput = 0;
+				var posInOutput = 0;
+				while (posInInput < buffer.Length)
+				{
+					var len = (int)IscHelper.VaxInteger(buffer, posInInput, 2);
+					posInInput += 2;
+					buffer.Slice(posInInput, len).CopyTo(actualBuffer.AsSpan(posInOutput, len));
+					posInOutput += len;
+					posInInput += len;
+				}
 
-			var actualBuffer = new byte[posInOutput];
-			Array.Copy(tmp, actualBuffer, posInOutput);
-
-			return actualBuffer;
+				return actualBuffer;
 		}
 		catch (IOException ex)
 		{

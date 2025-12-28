@@ -26,12 +26,15 @@ namespace FirebirdSql.Data.Client.Native;
 
 internal sealed class FesBlob : BlobBase
 {
+	private static readonly byte[] InfoBlobTotalLengthItems = [IscCodes.isc_info_blob_total_length];
+
 	#region Fields
 
 	private readonly FesDatabase _database;
 	private readonly IntPtr[] _statusVector;
 	private BlobHandle _blobHandle;
 	private byte[] _segmentBuffer;
+	private byte[] _blobInfoBuffer;
 
 	#endregion
 
@@ -165,13 +168,19 @@ internal sealed class FesBlob : BlobBase
 	{
 		ClearStatusVector();
 
-		var buffer = new byte[20];
+		var buffer = _blobInfoBuffer;
+		if (buffer == null || buffer.Length < 20)
+		{
+			buffer = new byte[20];
+			_blobInfoBuffer = buffer;
+		}
+		Array.Clear(buffer, 0, buffer.Length);
 
 		_database.FbClient.isc_blob_info(
 			_statusVector,
 			ref _blobHandle,
 			1,
-			new byte[] { IscCodes.isc_info_blob_total_length },
+			InfoBlobTotalLengthItems,
 			(short)buffer.Length,
 			buffer);
 
@@ -185,24 +194,7 @@ internal sealed class FesBlob : BlobBase
 
 	public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default)
 	{
-		ClearStatusVector();
-
-		var buffer = new byte[20];
-
-		_database.FbClient.isc_blob_info(
-			_statusVector,
-			ref _blobHandle,
-			1,
-			new byte[] { IscCodes.isc_info_blob_total_length },
-			(short)buffer.Length,
-			buffer);
-
-		_database.ProcessStatusVector(_statusVector);
-
-		var length = IscHelper.VaxInteger(buffer, 1, 2);
-		var size = IscHelper.VaxInteger(buffer, 3, (int)length);
-
-		return ValueTask.FromResult((int)size);
+		return ValueTask.FromResult(GetLength());
 	}
 
 	public override void GetSegment(Stream stream)
