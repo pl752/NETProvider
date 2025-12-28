@@ -210,6 +210,7 @@ end";
 		builder.Port = FbTestsSetup.Port;
 		builder.Charset = FbTestsSetup.Charset;
 		builder.Pooling = FbTestsSetup.Pooling;
+		builder.ClientLibrary = @"C:\Firebird-3.0.10.33601-0_x64_pdb\fbclient.dll";
 		builder.ServerType = serverType;
 		builder.Compression = compression;
 		builder.WireCrypt = wireCrypt;
