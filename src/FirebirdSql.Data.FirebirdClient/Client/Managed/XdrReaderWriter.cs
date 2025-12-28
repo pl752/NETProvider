@@ -816,21 +816,13 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	public void WriteTyped(int type, ReadOnlySpan<byte> buffer)
 	{
-		int length;
 		Span<byte> typeByte = stackalloc byte[1];
-		if (buffer == null)
+		var length = buffer.Length + 1;
+		Write(length);
+		typeByte[0] = (byte)type;
+		_dataProvider.Write(typeByte);
+		if (!buffer.IsEmpty)
 		{
-			Write(1);
-			typeByte[0] = (byte)type;
-			_dataProvider.Write(typeByte);
-			length = 1;
-		}
-		else
-		{
-			length = buffer.Length + 1;
-			Write(length);
-			typeByte[0] = (byte)type;
-			_dataProvider.Write(typeByte);
 			_dataProvider.Write(buffer);
 		}
 		WritePad((4 - length) & 3);
