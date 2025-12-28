@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +44,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	private BatchBase _batch;
 	//private FbDataReader _activeReader;
 	private IReadOnlyList<string> _namedParameters;
+	private readonly ConditionalWeakTable<FbParameterCollection, NamedParameterIndexMapCacheEntry> _namedParameterIndexMapCache = new();
 	private string _commandText;
 	private bool _disposed;
 	private bool _implicitTransaction;
@@ -922,14 +924,21 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		if (!HasParameters)
 			return;
 
+		var batchParameters = _batchParameters[batchIndex];
+		int[] namedParameterIndexMap = null;
+		if (_namedParameters.Count > 0)
+		{
+			namedParameterIndexMap = GetOrBuildNamedParameterIndexMap(batchParameters);
+		}
+
 		for (var i = 0; i < descriptor.Count; i++)
 		{
 			var parameter = descriptor[i];
 			var index = i;
 
-			if (_namedParameters.Count > 0)
+			if (namedParameterIndexMap != null)
 			{
-				index = _batchParameters[batchIndex].IndexOf(_namedParameters[i], i);
+				index = namedParameterIndexMap[i];
 				if (index == -1)
 				{
 					throw FbException.Create($"Must declare the variable '{_namedParameters[i]}'.");
@@ -938,7 +947,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 			if (index != -1)
 			{
-				var commandParameter = _batchParameters[batchIndex][index];
+				var commandParameter = batchParameters[index];
 				if (commandParameter.InternalValue == DBNull.Value || commandParameter.InternalValue == null)
 				{
 					parameter.NullFlag = -1;
@@ -1018,14 +1027,21 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 		if (!HasParameters)
 			return;
 
+		var batchParameters = _batchParameters[batchIndex];
+		int[] namedParameterIndexMap = null;
+		if (_namedParameters.Count > 0)
+		{
+			namedParameterIndexMap = GetOrBuildNamedParameterIndexMap(batchParameters);
+		}
+
 		for (var i = 0; i < descriptor.Count; i++)
 		{
 			var batchParameter = descriptor[i];
 			var index = i;
 
-			if (_namedParameters.Count > 0)
+			if (namedParameterIndexMap != null)
 			{
-				index = _batchParameters[batchIndex].IndexOf(_namedParameters[i], i);
+				index = namedParameterIndexMap[i];
 				if (index == -1)
 				{
 					throw FbException.Create($"Must declare the variable '{_namedParameters[i]}'.");
@@ -1034,7 +1050,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 			if (index != -1)
 			{
-				var commandParameter = _batchParameters[batchIndex][index];
+				var commandParameter = batchParameters[index];
 				if (commandParameter.InternalValue == DBNull.Value || commandParameter.InternalValue == null)
 				{
 					batchParameter.NullFlag = -1;
@@ -1113,6 +1129,35 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	#endregion
 
 	#region Private Methods
+
+	private sealed class NamedParameterIndexMapCacheEntry
+	{
+		public int[] Map;
+		public int ParametersVersion;
+		public IReadOnlyList<string> NamedParameters;
+	}
+
+	private int[] GetOrBuildNamedParameterIndexMap(FbParameterCollection parameters)
+	{
+		var entry = _namedParameterIndexMapCache.GetOrCreateValue(parameters);
+		if (entry.Map == null
+			|| entry.ParametersVersion != parameters.Version
+			|| !ReferenceEquals(entry.NamedParameters, _namedParameters)
+			|| entry.Map.Length < _namedParameters.Count)
+		{
+			var map = new int[_namedParameters.Count];
+			for (var i = 0; i < _namedParameters.Count; i++)
+			{
+				map[i] = parameters.IndexOf(_namedParameters[i], i);
+			}
+
+			entry.Map = map;
+			entry.ParametersVersion = parameters.Version;
+			entry.NamedParameters = _namedParameters;
+		}
+
+		return entry.Map;
+	}
 
 	private void Prepare(bool returnsSet)
 	{

@@ -36,6 +36,7 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 	private List<FbParameter> _parameters;
 	private bool? _hasParameterWithNonAsciiName;
+	private int _version;
 
 	#endregion
 
@@ -54,7 +55,11 @@ public sealed class FbParameterCollection : DbParameterCollection
 	public new FbParameter this[int index]
 	{
 		get { return _parameters[index]; }
-		set { _parameters[index] = value; }
+		set
+		{
+			_parameters[index] = value;
+			ParameterNameChanged();
+		}
 	}
 
 	#endregion
@@ -99,6 +104,8 @@ public sealed class FbParameterCollection : DbParameterCollection
 			return _hasParameterWithNonAsciiName ?? (bool)(_hasParameterWithNonAsciiName = _parameters.Any(x => x.IsUnicodeParameterName));
 		}
 	}
+
+	internal int Version => _version;
 
 	#endregion
 
@@ -324,6 +331,10 @@ public sealed class FbParameterCollection : DbParameterCollection
 
 	internal void ParameterNameChanged()
 	{
+		unchecked
+		{
+			_version++;
+		}
 		_hasParameterWithNonAsciiName = null;
 	}
 

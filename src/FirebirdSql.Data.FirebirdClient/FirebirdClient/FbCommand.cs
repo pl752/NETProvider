@@ -42,6 +42,10 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	private StatementBase _statement;
 	private FbDataReader _activeReader;
 	private IReadOnlyList<string> _namedParameters;
+	private int[] _namedParameterIndexMap;
+	private int _namedParameterIndexMapParametersVersion;
+	private IReadOnlyList<string> _namedParameterIndexMapNamedParameters;
+	private FbParameterCollection _namedParameterIndexMapParameters;
 	private string _commandText;
 	private bool _disposed;
 	private bool _designTimeVisible;
@@ -1112,14 +1116,20 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		if (!HasParameters)
 			return;
 
+		int[] namedParameterIndexMap = null;
+		if (_namedParameters.Count > 0)
+		{
+			namedParameterIndexMap = GetOrBuildNamedParameterIndexMap();
+		}
+
 		for (var i = 0; i < descriptor.Count; i++)
 		{
 			var parameter = descriptor[i];
 			var index = i;
 
-			if (_namedParameters.Count > 0)
+			if (namedParameterIndexMap != null)
 			{
-				index = _parameters.IndexOf(_namedParameters[i], i);
+				index = namedParameterIndexMap[i];
 				if (index == -1)
 				{
 					throw FbException.Create($"Must declare the variable '{_namedParameters[i]}'.");
@@ -1208,14 +1218,20 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 		if (!HasParameters)
 			return;
 
+		int[] namedParameterIndexMap = null;
+		if (_namedParameters.Count > 0)
+		{
+			namedParameterIndexMap = GetOrBuildNamedParameterIndexMap();
+		}
+
 		for (var i = 0; i < descriptor.Count; i++)
 		{
 			var statementParameter = descriptor[i];
 			var index = i;
 
-			if (_namedParameters.Count > 0)
+			if (namedParameterIndexMap != null)
 			{
-				index = _parameters.IndexOf(_namedParameters[i], i);
+				index = namedParameterIndexMap[i];
 				if (index == -1)
 				{
 					throw FbException.Create($"Must declare the variable '{_namedParameters[i]}'.");
@@ -1302,6 +1318,30 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	#endregion
 
 	#region Private Methods
+
+	private int[] GetOrBuildNamedParameterIndexMap()
+	{
+		var parameters = _parameters;
+		if (_namedParameterIndexMap == null
+			|| _namedParameterIndexMapParametersVersion != parameters.Version
+			|| !ReferenceEquals(_namedParameterIndexMapNamedParameters, _namedParameters)
+			|| !ReferenceEquals(_namedParameterIndexMapParameters, parameters)
+			|| _namedParameterIndexMap.Length < _namedParameters.Count)
+		{
+			var map = new int[_namedParameters.Count];
+			for (var i = 0; i < _namedParameters.Count; i++)
+			{
+				map[i] = parameters.IndexOf(_namedParameters[i], i);
+			}
+
+			_namedParameterIndexMap = map;
+			_namedParameterIndexMapParametersVersion = parameters.Version;
+			_namedParameterIndexMapNamedParameters = _namedParameters;
+			_namedParameterIndexMapParameters = parameters;
+		}
+
+		return _namedParameterIndexMap;
+	}
 
 	private void Prepare(bool returnsSet)
 	{
