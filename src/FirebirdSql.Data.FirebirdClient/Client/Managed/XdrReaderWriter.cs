@@ -771,17 +771,9 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 			throw new IOException("Blob buffer too big.");
 		await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);
 		await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);  //bizarre but true! three copies of the length
-		var rented = ArrayPool<byte>.Shared.Rent(2);
-		try
-		{
-			rented[0] = (byte)((length >> 0) & 0xff);
-			rented[1] = (byte)((length >> 8) & 0xff);
-			await _dataProvider.WriteAsync(rented, 0, 2, cancellationToken).ConfigureAwait(false);
-		}
-		finally
-		{
-			ArrayPool<byte>.Shared.Return(rented);
-		}
+		_smallBuffer[0] = (byte)((length >> 0) & 0xff);
+		_smallBuffer[1] = (byte)((length >> 8) & 0xff);
+		_dataProvider.Write(_smallBuffer.AsSpan(0, 2));
 		await _dataProvider.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
 		await WritePadAsync((4 - length + 2) & 3, cancellationToken).ConfigureAwait(false);
 	}
@@ -793,10 +785,9 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
             throw new IOException("Blob buffer too big.");
         await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);
         await WriteAsync(length + 2, cancellationToken).ConfigureAwait(false);  // three copies of the length
-        Span<byte> lengthBytes = stackalloc byte[2];
-        lengthBytes[0] = (byte)((length >> 0) & 0xff);
-        lengthBytes[1] = (byte)((length >> 8) & 0xff);
-        _dataProvider.Write(lengthBytes);
+        _smallBuffer[0] = (byte)((length >> 0) & 0xff);
+        _smallBuffer[1] = (byte)((length >> 8) & 0xff);
+        _dataProvider.Write(_smallBuffer.AsSpan(0, 2));
         await _dataProvider.WriteAsync(buffer, 0, length, cancellationToken).ConfigureAwait(false);
         await WritePadAsync((4 - length + 2) & 3, cancellationToken).ConfigureAwait(false);
     }
@@ -850,32 +841,16 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 		if (buffer == null)
 		{
 			await WriteAsync(1, cancellationToken).ConfigureAwait(false);
-			var rented = ArrayPool<byte>.Shared.Rent(1);
-			try
-			{
-				rented[0] = (byte)type;
-				await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(rented);
-			}
+			_smallBuffer[0] = (byte)type;
+			_dataProvider.Write(_smallBuffer.AsSpan(0, 1));
 			length = 1;
 		}
 		else
 		{
 			length = buffer.Length + 1;
 			await WriteAsync(length, cancellationToken).ConfigureAwait(false);
-			var rented = ArrayPool<byte>.Shared.Rent(1);
-			try
-			{
-				rented[0] = (byte)type;
-				await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(rented);
-			}
+			_smallBuffer[0] = (byte)type;
+			_dataProvider.Write(_smallBuffer.AsSpan(0, 1));
 			await _dataProvider.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
 		}
 		await WritePadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
@@ -887,33 +862,17 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 		if (buffer.Length == 0)
 		{
 			await WriteAsync(1, cancellationToken).ConfigureAwait(false);
-			var rented = ArrayPool<byte>.Shared.Rent(1);
-			try
-			{
-				rented[0] = (byte)type;
-				await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(rented);
-			}
+			_smallBuffer[0] = (byte)type;
+			_dataProvider.Write(_smallBuffer.AsSpan(0, 1));
 			length = 1;
 		}
 		else
 		{
 			length = buffer.Length + 1;
 			await WriteAsync(length, cancellationToken).ConfigureAwait(false);
-			var rented = ArrayPool<byte>.Shared.Rent(1);
-			try
-			{
-				rented[0] = (byte)type;
-				await _dataProvider.WriteAsync(rented, 0, 1, cancellationToken).ConfigureAwait(false);
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(rented);
-			}
-        await _dataProvider.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+			_smallBuffer[0] = (byte)type;
+			_dataProvider.Write(_smallBuffer.AsSpan(0, 1));
+			await _dataProvider.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
 		}
 		await WritePadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 	}
@@ -984,11 +943,8 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	}
 	public ValueTask WriteAsync(int value, CancellationToken cancellationToken = default)
 	{
-		var rented = ArrayPool<byte>.Shared.Rent(4);
-		Span<byte> span = rented;
-		TypeEncoder.EncodeInt32(value, span);
-		var task = _dataProvider.WriteAsync(rented, 0, 4, cancellationToken);
-		return ReturnAfter(task, rented);
+		Write(value);
+		return ValueTask.CompletedTask;
 	}
 
 	public void Write(long value)
@@ -999,11 +955,8 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	}
 	public ValueTask WriteAsync(long value, CancellationToken cancellationToken = default)
 	{
-		var rented = ArrayPool<byte>.Shared.Rent(8);
-		Span<byte> span = rented;
-		TypeEncoder.EncodeInt64(value, span);
-		var task = _dataProvider.WriteAsync(rented, 0, 8, cancellationToken);
-		return ReturnAfter(task, rented);
+		Write(value);
+		return ValueTask.CompletedTask;
 	}
 
 	public void Write(float value)
@@ -1080,10 +1033,8 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	}
 	public ValueTask WriteAsync(bool value, CancellationToken cancellationToken = default)
 	{
-		var rented = ArrayPool<byte>.Shared.Rent(1);
-		TypeEncoder.EncodeBoolean(value, rented.AsSpan());
-		var task = WriteOpaqueAsync(rented, 1, cancellationToken);
-		return ReturnAfter(task, rented);
+		Write(value);
+		return ValueTask.CompletedTask;
 	}
 
 	public void Write(DateTime value)
@@ -1091,10 +1042,10 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 		WriteDate(value);
 		WriteTime(TypeHelper.DateTimeTimeToTimeSpan(value));
 	}
-	public async ValueTask WriteAsync(DateTime value, CancellationToken cancellationToken = default)
+	public ValueTask WriteAsync(DateTime value, CancellationToken cancellationToken = default)
 	{
-		await WriteDateAsync(value, cancellationToken).ConfigureAwait(false);
-		await WriteTimeAsync(TypeHelper.DateTimeTimeToTimeSpan(value), cancellationToken).ConfigureAwait(false);
+		Write(value);
+		return ValueTask.CompletedTask;
 	}
 
 	public void Write(Guid value, int sqlType)
@@ -1112,19 +1063,8 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 	}
 	public ValueTask WriteAsync(Guid value, int sqlType, CancellationToken cancellationToken = default)
 	{
-		var rented = ArrayPool<byte>.Shared.Rent(16);
-		Span<byte> span = rented;
-		TypeEncoder.EncodeGuid(value, span);
-		if (sqlType == IscCodes.SQL_VARYING)
-		{
-			var task = WriteBufferAsync(rented, 16, cancellationToken);
-			return ReturnAfter(task, rented);
-		}
-		else
-		{
-			var task = WriteOpaqueAsync(rented, 16, cancellationToken);
-			return ReturnAfter(task, rented);
-		}
+		Write(value, sqlType);
+		return ValueTask.CompletedTask;
 	}
 
 	public void Write(FbDecFloat value, int size)

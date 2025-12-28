@@ -45,6 +45,8 @@ internal class GdsStatement : StatementBase
 	private Stack<DbValueStorage[]> _rowStoragePool;
 	private DbValue[] _reusableRow;
 	private readonly byte[] _fixedBytes = new byte[16];
+	private PooledWriteBuffer _parametersWriteBuffer;
+	private XdrReaderWriter _parametersXdr;
 	private int _fetchSize;
 
 	#endregion
@@ -148,6 +150,9 @@ internal class GdsStatement : StatementBase
 			_disposed = true;
 			Release();
 			Clear();
+			_parametersXdr = null;
+			_parametersWriteBuffer?.Dispose();
+			_parametersWriteBuffer = null;
 			_rows = null;
 			_rowStoragePool = null;
 			_reusableRow = null;
@@ -171,6 +176,9 @@ internal class GdsStatement : StatementBase
 			_disposed = true;
 			await ReleaseAsync(cancellationToken).ConfigureAwait(false);
 			Clear();
+			_parametersXdr = null;
+			_parametersWriteBuffer?.Dispose();
+			_parametersWriteBuffer = null;
 			_rows = null;
 			_rowStoragePool = null;
 			_reusableRow = null;
@@ -820,7 +828,8 @@ internal class GdsStatement : StatementBase
 		ReadOnlySpan<byte> bzero = zeroIntBuf;
 		ReadOnlySpan<byte> bone = oneIntBuf;
 		// this may throw error, so it needs to be before any writing
-		var parametersData = GetParameterData(descriptorFiller, 0);
+		descriptorFiller.Fill(_parameters, 0);
+		var parametersData = EncodeCurrentParameters();
 
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
@@ -839,7 +848,7 @@ internal class GdsStatement : StatementBase
 				_database.Xdr.WriteBuffer(GetParametersBlr().Data);
 			_database.Xdr.WriteBytes(bzero); // Message number
 			_database.Xdr.WriteBytes(bone); // Number of messages
-			_database.Xdr.WriteBytes(parametersData, parametersData.Length);
+			_database.Xdr.WriteBytes(parametersData);
 		}
 		else
 		{
@@ -857,38 +866,39 @@ internal class GdsStatement : StatementBase
 	protected virtual async ValueTask SendExecuteToBufferAsync(int timeout, IDescriptorFiller descriptorFiller, CancellationToken cancellationToken = default)
 	{
 		// this may throw error, so it needs to be before any writing
-		var parametersData = await GetParameterDataAsync(descriptorFiller, 0, cancellationToken).ConfigureAwait(false);
+		await descriptorFiller.FillAsync(_parameters, 0, cancellationToken).ConfigureAwait(false);
+		var parametersData = EncodeCurrentParameters();
 
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-			await _database.Xdr.WriteBytesAsync(bufOpEx2, 4, cancellationToken).ConfigureAwait(false);
+			_database.Xdr.WriteBytes(bufOpEx2);
 		}
 		else
 		{
-			await _database.Xdr.WriteBytesAsync(bufOpEx1, 4, cancellationToken).ConfigureAwait(false);
+			_database.Xdr.WriteBytes(bufOpEx1);
 		}
 
-		await _database.Xdr.WriteAsync(_handle, cancellationToken).ConfigureAwait(false);
-		await _database.Xdr.WriteAsync(_transaction.Handle, cancellationToken).ConfigureAwait(false);
+		_database.Xdr.Write(_handle);
+		_database.Xdr.Write(_transaction.Handle);
 
 		if (_parameters != null)
 		{
-				await _database.Xdr.WriteBufferAsync(GetParametersBlr().Data, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false); // Message number
-			await _database.Xdr.WriteBytesAsync(oneIntBuf, 4, cancellationToken).ConfigureAwait(false); // Number of messages
-			await _database.Xdr.WriteBytesAsync(parametersData, parametersData.Length, cancellationToken).ConfigureAwait(false);
+				_database.Xdr.WriteBuffer(GetParametersBlr().Data);
+			_database.Xdr.WriteBytes(zeroIntBuf); // Message number
+			_database.Xdr.WriteBytes(oneIntBuf); // Number of messages
+			_database.Xdr.WriteBytes(parametersData);
 		}
 		else
 		{
-			await _database.Xdr.WriteBufferAsync(null, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false);
+			_database.Xdr.WriteBuffer(null);
+			_database.Xdr.WriteBytes(zeroIntBuf);
+			_database.Xdr.WriteBytes(zeroIntBuf);
 		}
 
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-				await _database.Xdr.WriteBufferAsync(_fields != null ? GetFieldsBlr().Data : null, cancellationToken).ConfigureAwait(false);
-			await _database.Xdr.WriteBytesAsync(zeroIntBuf, 4, cancellationToken).ConfigureAwait(false); // Output message number
+				_database.Xdr.WriteBuffer(_fields != null ? GetFieldsBlr().Data : null);
+			_database.Xdr.WriteBytes(zeroIntBuf); // Output message number
 		}
 	}
 
@@ -1361,55 +1371,37 @@ internal class GdsStatement : StatementBase
 		return rowDescs;
 	}
 
-	protected virtual byte[] WriteParameters()
+	protected virtual void WriteParametersTo(IXdrWriter xdr)
 	{
 		if (_parameters == null)
-			return null;
+			return;
 
-		using (var ms = new MemoryStream(256))
+		for (var i = 0; i < _parameters.Count; i++)
 		{
-			var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-			for (var i = 0; i < _parameters.Count; i++)
+			var field = _parameters[i];
+			try
 			{
-				var field = _parameters[i];
-				try
-				{
-					WriteRawParameter(xdr, field);
-					xdr.Write(field.NullFlag);
-				}
-				catch (IOException ex)
-				{
-					throw IscException.ForIOException(ex);
-				}
+				WriteRawParameter(xdr, field);
+				xdr.Write(field.NullFlag);
 			}
-			xdr.Flush();
-			return ms.ToArray();
+			catch (IOException ex)
+			{
+				throw IscException.ForIOException(ex);
+			}
 		}
 	}
-	protected virtual async ValueTask<byte[]> WriteParametersAsync(CancellationToken cancellationToken = default)
+
+	internal ReadOnlySpan<byte> EncodeCurrentParameters()
 	{
 		if (_parameters == null)
-			return null;
+			return ReadOnlySpan<byte>.Empty;
 
-		using (var ms = new MemoryStream(256))
-		{
-			var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-			for (var i = 0; i < _parameters.Count; i++)
-			{
-				var field = _parameters[i];
-				try
-				{
-					await WriteRawParameterAsync(xdr, field, cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.NullFlag, cancellationToken).ConfigureAwait(false);
-				}
-				catch (IOException ex)
-				{
-					throw IscException.ForIOException(ex);
-				}
-			}
-			await xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-			return ms.ToArray();
-		}
+		_parametersWriteBuffer ??= new PooledWriteBuffer(256);
+		_parametersXdr ??= new XdrReaderWriter(_parametersWriteBuffer, _database.Charset);
+		_parametersWriteBuffer.Reset();
+		WriteParametersTo(_parametersXdr);
+		_parametersXdr.Flush();
+		return _parametersWriteBuffer.WrittenSpan;
 	}
 
 	protected static void WriteRawParameter(IXdrWriter xdr, DbField field)
@@ -1586,167 +1578,6 @@ internal class GdsStatement : StatementBase
 			}
 		}
 	}
-	protected static async ValueTask WriteRawParameterAsync(IXdrWriter xdr, DbField field, CancellationToken cancellationToken = default)
-	{
-		if (field.DbDataType != DbDataType.Null)
-		{
-			field.FixNull();
-
-			switch (field.DbDataType)
-			{
-				case DbDataType.Char:
-					if (field.Charset.IsOctetsCharset)
-					{
-						await xdr.WriteOpaqueAsync(await field.DbValue.GetBinaryAsync(cancellationToken).ConfigureAwait(false), field.Length, cancellationToken).ConfigureAwait(false);
-					}
-					else
-					{
-						var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
-						{
-							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
-						}
-						var encoding = field.Charset.Encoding;
-						var byteCount = encoding.GetByteCount(svalue);
-						if (byteCount > field.Length)
-						{
-							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
-						}
-						{
-							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
-							try
-							{
-								var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
-								await xdr.WriteOpaqueAsync(rented.AsMemory(0, written), written, cancellationToken).ConfigureAwait(false);
-							}
-							finally
-							{
-								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
-							}
-						}
-					}
-					break;
-
-				case DbDataType.VarChar:
-					if (field.Charset.IsOctetsCharset)
-					{
-						await xdr.WriteBufferAsync(await field.DbValue.GetBinaryAsync(cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
-					}
-					else
-					{
-						var svalue = await field.DbValue.GetStringAsync(cancellationToken).ConfigureAwait(false);
-						if ((field.Length % field.Charset.BytesPerCharacter) == 0 && svalue.CountRunes() > field.CharCount)
-						{
-							throw IscException.ForErrorCodes([IscCodes.isc_arith_except, IscCodes.isc_string_truncation]);
-						}
-						var encoding = field.Charset.Encoding;
-						var byteCount = encoding.GetByteCount(svalue);
-						{
-							var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(byteCount);
-							try
-							{
-								var written = encoding.GetBytes(svalue, 0, svalue.Length, rented, 0);
-								await xdr.WriteBufferAsync(rented.AsMemory(0, written), cancellationToken).ConfigureAwait(false);
-							}
-							finally
-							{
-								System.Buffers.ArrayPool<byte>.Shared.Return(rented);
-							}
-						}
-					}
-					break;
-
-				case DbDataType.SmallInt:
-					await xdr.WriteAsync(field.DbValue.GetInt16(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Integer:
-					await xdr.WriteAsync(field.DbValue.GetInt32(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.BigInt:
-				case DbDataType.Array:
-				case DbDataType.Binary:
-				case DbDataType.Text:
-					await xdr.WriteAsync(field.DbValue.GetInt64(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Decimal:
-				case DbDataType.Numeric:
-					await xdr.WriteAsync(field.DbValue.GetDecimal(), field.DataType, field.NumericScale, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Float:
-					await xdr.WriteAsync(field.DbValue.GetFloat(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Guid:
-					await xdr.WriteAsync(field.DbValue.GetGuid(), field.SqlType, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Double:
-					await xdr.WriteAsync(field.DbValue.GetDouble(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Date:
-					await xdr.WriteAsync(field.DbValue.GetDate(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Time:
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.TimeStamp:
-					await xdr.WriteAsync(field.DbValue.GetDate(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Boolean:
-					await xdr.WriteAsync(field.DbValue.GetBoolean(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.TimeStampTZ:
-					await xdr.WriteAsync(field.DbValue.GetDate(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.TimeStampTZEx:
-					await xdr.WriteAsync(field.DbValue.GetDate(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync((short)0, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.TimeTZ:
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.TimeTZEx:
-					await xdr.WriteAsync(field.DbValue.GetTime(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync(field.DbValue.GetTimeZoneId(), cancellationToken).ConfigureAwait(false);
-					await xdr.WriteAsync((short)0, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Dec16:
-					await xdr.WriteAsync(field.DbValue.GetDecFloat(), 16, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Dec34:
-					await xdr.WriteAsync(field.DbValue.GetDecFloat(), 34, cancellationToken).ConfigureAwait(false);
-					break;
-
-				case DbDataType.Int128:
-					await xdr.WriteAsync(field.DbValue.GetInt128(), cancellationToken).ConfigureAwait(false);
-					break;
-
-				default:
-					throw IscException.ForStrParam($"Unknown SQL data type: {field.DataType}.");
-			}
-		}
-	}
-
 	protected object ReadRawValue(IXdrReader xdr, DbField field)
 	{
 		var innerCharset = !_database.Charset.IsNoneCharset ? _database.Charset : field.Charset;
@@ -2392,17 +2223,6 @@ internal class GdsStatement : StatementBase
 	#endregion
 
 	#region Protected Internal Methods
-
-	protected internal byte[] GetParameterData(IDescriptorFiller descriptorFiller, int index)
-	{
-		descriptorFiller.Fill(_parameters, index);
-		return WriteParameters();
-	}
-	protected internal async ValueTask<byte[]> GetParameterDataAsync(IDescriptorFiller descriptorFiller, int index, CancellationToken cancellationToken = default)
-	{
-		await descriptorFiller.FillAsync(_parameters, index, cancellationToken).ConfigureAwait(false);
-		return WriteParameters();
-	}
 
 	#endregion
 }

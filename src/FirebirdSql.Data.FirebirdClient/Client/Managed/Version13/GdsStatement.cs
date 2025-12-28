@@ -43,104 +43,46 @@ internal class GdsStatement : Version12.GdsStatement
 
 	#region Overriden Methods
 
-	protected override byte[] WriteParameters()
+	protected override void WriteParametersTo(IXdrWriter xdr)
 	{
 		if (_parameters == null)
-			return null;
+			return;
 
-		using (var ms = new MemoryStream(256))
+		try
 		{
-			try
+			var count = _parameters.Count;
+			var bytesLen = (int)Math.Ceiling(count / 8d);
+			byte[] rented = null;
+			Span<byte> buffer = bytesLen > STACKALLOC_LIMIT
+				? (rented = ArrayPool<byte>.Shared.Rent(bytesLen)).AsSpan(0, bytesLen)
+				: stackalloc byte[bytesLen];
+			buffer.Clear();
+			for (var i = 0; i < count; i++)
 			{
-				var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-
-				var count = _parameters.Count;
-				var bytesLen = (int)Math.Ceiling(count / 8d);
-				byte[] rented = null;
-				Span<byte> buffer = bytesLen > STACKALLOC_LIMIT
-					? (rented = ArrayPool<byte>.Shared.Rent(bytesLen)).AsSpan(0, bytesLen)
-					: stackalloc byte[bytesLen];
-				buffer.Clear();
-				for (var i = 0; i < count; i++)
+				if (_parameters[i].DbValue.IsDBNull())
 				{
-					if (_parameters[i].DbValue.IsDBNull())
-					{
-						buffer[i / 8] |= (byte)(1 << (i % 8));
-					}
+					buffer[i / 8] |= (byte)(1 << (i % 8));
 				}
-				xdr.WriteOpaque(buffer);
-				if (rented != null)
-				{
-					ArrayPool<byte>.Shared.Return(rented);
-				}
-
-				for (var i = 0; i < _parameters.Count; i++)
-				{
-					var field = _parameters[i];
-					if (field.DbValue.IsDBNull())
-					{
-						continue;
-					}
-					WriteRawParameter(xdr, field);
-				}
-
-				xdr.Flush();
-				return ms.ToArray();
 			}
-			catch (IOException ex)
+			xdr.WriteOpaque(buffer);
+			if (rented != null)
 			{
-				throw IscException.ForIOException(ex);
+				ArrayPool<byte>.Shared.Return(rented);
+			}
+
+			for (var i = 0; i < _parameters.Count; i++)
+			{
+				var field = _parameters[i];
+				if (field.DbValue.IsDBNull())
+				{
+					continue;
+				}
+				WriteRawParameter(xdr, field);
 			}
 		}
-	}
-	protected override async ValueTask<byte[]> WriteParametersAsync(CancellationToken cancellationToken = default)
-	{
-		if (_parameters == null)
-			return null;
-
-		using (var ms = new MemoryStream(256))
+		catch (IOException ex)
 		{
-			try
-			{
-				var xdr = new XdrReaderWriter(new DataProviderStreamWrapper(ms), _database.Charset);
-
-            var count = _parameters.Count;
-            var len = (int)Math.Ceiling(count / 8d);
-            var buffer = ArrayPool<byte>.Shared.Rent(len);
-            Array.Clear(buffer, 0, len);
-            for (var i = 0; i < count; i++)
-            {
-                if (_parameters[i].DbValue.IsDBNull())
-                {
-                    buffer[i / 8] |= (byte)(1 << (i % 8));
-                }
-            }
-            try
-            {
-                await xdr.WriteOpaqueAsync(buffer, len, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
-            }
-
-				for (var i = 0; i < _parameters.Count; i++)
-				{
-					var field = _parameters[i];
-					if (field.DbValue.IsDBNull())
-					{
-						continue;
-					}
-					await WriteRawParameterAsync(xdr, field, cancellationToken).ConfigureAwait(false);
-				}
-
-				await xdr.FlushAsync(cancellationToken).ConfigureAwait(false);
-				return ms.ToArray();
-			}
-			catch (IOException ex)
-			{
-				throw IscException.ForIOException(ex);
-			}
+			throw IscException.ForIOException(ex);
 		}
 	}
 
