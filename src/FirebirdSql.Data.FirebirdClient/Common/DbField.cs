@@ -39,6 +39,8 @@ internal sealed class DbField
 	private DbValue _dbValue;
 	private Charset _charset;
 	private ArrayBase _arrayHandle;
+	private DbDataType _dbDataType;
+	private bool _dbDataTypeCached;
 
 	#endregion
 
@@ -46,7 +48,15 @@ internal sealed class DbField
 
 	public DbDataType DbDataType
 	{
-		get { return TypeHelper.GetDbDataTypeFromSqlType(SqlType, SubType, NumericScale, Length, Charset); }
+		get
+		{
+			if (!_dbDataTypeCached)
+			{
+				_dbDataType = TypeHelper.GetDbDataTypeFromSqlType(SqlType, SubType, NumericScale, Length, Charset);
+				_dbDataTypeCached = true;
+			}
+			return _dbDataType;
+		}
 	}
 
 	public int SqlType
@@ -57,13 +67,21 @@ internal sealed class DbField
 	public short DataType
 	{
 		get { return _dataType; }
-		set { _dataType = value; }
+		set
+		{
+			_dataType = value;
+			_dbDataTypeCached = false;
+		}
 	}
 
 	public short NumericScale
 	{
 		get { return _numericScale; }
-		set { _numericScale = value; }
+		set
+		{
+			_numericScale = value;
+			_dbDataTypeCached = false;
+		}
 	}
 
 	public short SubType
@@ -72,6 +90,7 @@ internal sealed class DbField
 		set
 		{
 			_subType = value;
+			_dbDataTypeCached = false;
 			if (IsCharacter())
 			{
 				// Bits 0-7 of sqlsubtype is charset_id (127 is a special value -
@@ -91,6 +110,7 @@ internal sealed class DbField
 		set
 		{
 			_length = value;
+			_dbDataTypeCached = false;
 			if (IsCharacter())
 			{
 				_charCount = _length / _charset.BytesPerCharacter;

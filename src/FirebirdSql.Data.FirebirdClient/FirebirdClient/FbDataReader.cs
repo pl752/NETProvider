@@ -51,7 +51,7 @@ public sealed class FbDataReader : DbDataReader
 	private bool _eof;
 	private bool _isClosed;
 	private int _position;
-	private int _recordsAffected;
+	private int _recordsAffected = -1;
 	private Dictionary<string, int> _columnsIndexesOrdinal;
 	private Dictionary<string, int> _columnsIndexesOrdinalCI;
 
