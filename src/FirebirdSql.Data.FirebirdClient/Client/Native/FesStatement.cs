@@ -38,6 +38,14 @@ internal sealed class FesStatement : StatementBase
 	private bool _allRowsFetched;
 	private IntPtr[] _statusVector;
 	private IntPtr _fetchSqlDa;
+	private IntPtr[] _fetchSqldataPointers;
+	private IntPtr[] _fetchSqlindPointers;
+	private IntPtr _inSqlDa;
+	private IntPtr[] _inSqldataPointers;
+	private IntPtr[] _inSqlindPointers;
+	private IntPtr _outSqlDa;
+	private IntPtr[] _outSqldataPointers;
+	private IntPtr[] _outSqlindPointers;
 	private DbValue[] _reusableRow;
 
 	#endregion
@@ -231,12 +239,28 @@ internal sealed class FesStatement : StatementBase
 	public override void Release()
 	{
 		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 
 		base.Release();
 	}
 	public override ValueTask ReleaseAsync(CancellationToken cancellationToken = default)
 	{
 		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 
 		return base.ReleaseAsync(cancellationToken);
 	}
@@ -244,12 +268,28 @@ internal sealed class FesStatement : StatementBase
 	public override void Close()
 	{
 		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 
 		base.Close();
 	}
 	public override ValueTask CloseAsync(CancellationToken cancellationToken = default)
 	{
 		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 
 		return base.CloseAsync(cancellationToken);
 	}
@@ -387,12 +427,32 @@ internal sealed class FesStatement : StatementBase
 
 		if (_parameters != null)
 		{
-			inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+			if (_inSqlDa == IntPtr.Zero)
+			{
+				_inSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+				_inSqldataPointers = new IntPtr[_parameters.Count];
+				_inSqlindPointers = new IntPtr[_parameters.Count];
+				XsqldaValueReader.FillValuePointers(_inSqlDa, _parameters.Count, _inSqldataPointers, _inSqlindPointers);
+			}
+			else
+			{
+				XsqldaValueWriter.WriteValues(_parameters, _inSqldataPointers, _inSqlindPointers);
+			}
+
+			inSqlda = _inSqlDa;
 		}
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-			Fields.ResetValues();
-			outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+			if (_outSqlDa == IntPtr.Zero)
+			{
+				Fields.ResetValues();
+				_outSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+				_outSqldataPointers = new IntPtr[_fields.Count];
+				_outSqlindPointers = new IntPtr[_fields.Count];
+				XsqldaValueReader.FillValuePointers(_outSqlDa, _fields.Count, _outSqldataPointers, _outSqlindPointers);
+			}
+
+			outSqlda = _outSqlDa;
 		}
 
 		var trHandle = _transaction.HandlePtr;
@@ -407,23 +467,18 @@ internal sealed class FesStatement : StatementBase
 
 		if (outSqlda != IntPtr.Zero)
 		{
-			var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
-
-			var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : Array.Empty<DbValue>();
-
+			var count = _fields.ActualCount;
+			var values = count > 0 ? new DbValue[count] : Array.Empty<DbValue>();
 			for (var i = 0; i < values.Length; i++)
 			{
-				var d = descriptor[i];
-				var dbValue = new DbValue(this, d, null);
-				dbValue.ImportStorage(d.DbValue.ExportStorage());
-				values[i] = dbValue;
+				values[i] = new DbValue(this, _fields[i], null);
 			}
-
+			if (values.Length > 0)
+			{
+				XsqldaValueReader.ReadRowValues(this, _fields, _outSqldataPointers, _outSqlindPointers, values);
+			}
 			OutputParameters.Enqueue(values);
 		}
-
-		XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
-		XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
 
 		_database.ProcessStatusVector(_statusVector);
 
@@ -460,12 +515,32 @@ internal sealed class FesStatement : StatementBase
 
 		if (_parameters != null)
 		{
-			inSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+			if (_inSqlDa == IntPtr.Zero)
+			{
+				_inSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _parameters);
+				_inSqldataPointers = new IntPtr[_parameters.Count];
+				_inSqlindPointers = new IntPtr[_parameters.Count];
+				XsqldaValueReader.FillValuePointers(_inSqlDa, _parameters.Count, _inSqldataPointers, _inSqlindPointers);
+			}
+			else
+			{
+				XsqldaValueWriter.WriteValues(_parameters, _inSqldataPointers, _inSqlindPointers);
+			}
+
+			inSqlda = _inSqlDa;
 		}
 		if (StatementType == DbStatementType.StoredProcedure)
 		{
-			Fields.ResetValues();
-			outSqlda = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+			if (_outSqlDa == IntPtr.Zero)
+			{
+				Fields.ResetValues();
+				_outSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+				_outSqldataPointers = new IntPtr[_fields.Count];
+				_outSqlindPointers = new IntPtr[_fields.Count];
+				XsqldaValueReader.FillValuePointers(_outSqlDa, _fields.Count, _outSqldataPointers, _outSqlindPointers);
+			}
+
+			outSqlda = _outSqlDa;
 		}
 
 		var trHandle = _transaction.HandlePtr;
@@ -480,23 +555,18 @@ internal sealed class FesStatement : StatementBase
 
 		if (outSqlda != IntPtr.Zero)
 		{
-			var descriptor = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, outSqlda, true);
-
-			var values = descriptor.Count > 0 ? new DbValue[descriptor.Count] : Array.Empty<DbValue>();
-
+			var count = _fields.ActualCount;
+			var values = count > 0 ? new DbValue[count] : Array.Empty<DbValue>();
 			for (var i = 0; i < values.Length; i++)
 			{
-				var d = descriptor[i];
-				var dbValue = new DbValue(this, d, null);
-				dbValue.ImportStorage(d.DbValue.ExportStorage());
-				values[i] = dbValue;
+				values[i] = new DbValue(this, _fields[i], null);
 			}
-
+			if (values.Length > 0)
+			{
+				XsqldaValueReader.ReadRowValues(this, _fields, _outSqldataPointers, _outSqlindPointers, values);
+			}
 			OutputParameters.Enqueue(values);
 		}
-
-		XsqldaMarshaler.CleanUpNativeData(ref inSqlda);
-		XsqldaMarshaler.CleanUpNativeData(ref outSqlda);
 
 		_database.ProcessStatusVector(_statusVector);
 
@@ -535,11 +605,12 @@ internal sealed class FesStatement : StatementBase
 			return null;
 		}
 
-		_fields.ResetValues();
-
 		if (_fetchSqlDa == IntPtr.Zero)
 		{
 			_fetchSqlDa = XsqldaMarshaler.MarshalManagedToNative(_database.Charset, _fields);
+			_fetchSqldataPointers = new IntPtr[_fields.Count];
+			_fetchSqlindPointers = new IntPtr[_fields.Count];
+			XsqldaValueReader.FillValuePointers(_fetchSqlDa, _fields.Count, _fetchSqldataPointers, _fetchSqlindPointers);
 		}
 
 		ClearStatusVector();
@@ -550,26 +621,13 @@ internal sealed class FesStatement : StatementBase
 			_allRowsFetched = true;
 
 			XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+			_fetchSqldataPointers = null;
+			_fetchSqlindPointers = null;
 
 			return null;
 		}
 		else
 		{
-			var rowDesc = XsqldaMarshaler.MarshalNativeToManaged(_database.Charset, _fetchSqlDa, true);
-
-			if (_fields.Count == rowDesc.Count)
-			{
-				for (var i = 0; i < _fields.Count; i++)
-				{
-					if (_fields[i].IsArray() && _fields[i].ArrayHandle != null)
-					{
-						rowDesc[i].ArrayHandle = _fields[i].ArrayHandle;
-					}
-				}
-			}
-
-			_fields = rowDesc;
-
 			_database.ProcessStatusVector(_statusVector);
 
 			var count = _fields.ActualCount;
@@ -587,12 +645,7 @@ internal sealed class FesStatement : StatementBase
 				}
 			}
 
-			for (var i = 0; i < count; i++)
-			{
-				var d = _fields[i];
-				_reusableRow[i].Reset(this, d);
-				_reusableRow[i].ImportStorage(d.DbValue.ExportStorage());
-			}
+			XsqldaValueReader.ReadRowValues(this, _fields, _fetchSqldataPointers, _fetchSqlindPointers, _reusableRow);
 
 			return _reusableRow;
 		}
@@ -669,6 +722,15 @@ internal sealed class FesStatement : StatementBase
 		{
 			Transaction.Update -= TransactionUpdate;
 		}
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 		Clear();
 		State = StatementState.Closed;
 		TransactionUpdate = null;
@@ -730,6 +792,15 @@ internal sealed class FesStatement : StatementBase
 	{
 		Clear();
 
+		XsqldaMarshaler.CleanUpNativeData(ref _fetchSqlDa);
+		_fetchSqldataPointers = null;
+		_fetchSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _inSqlDa);
+		_inSqldataPointers = null;
+		_inSqlindPointers = null;
+		XsqldaMarshaler.CleanUpNativeData(ref _outSqlDa);
+		_outSqldataPointers = null;
+		_outSqlindPointers = null;
 		_reusableRow = null;
 		_parameters = null;
 		_fields = null;

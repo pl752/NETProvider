@@ -199,7 +199,7 @@ internal static class XsqldaMarshaler
 		}
 	}
 
-	private static int ComputeLength(int n)
+	internal static int ComputeLength(int n)
 	{
 		var length = (SizeOfXSQLDA + n * SizeOfXSQLVAR);
 		if (IntPtr.Size == 8)
