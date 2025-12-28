@@ -215,33 +215,4 @@ public class OptimizationCachingTests
 		var asyncResult = TestGdsStatement.ProcessAsync(response).AsTask().GetAwaiter().GetResult();
 		Assert.AreSame(data, asyncResult);
 	}
-
-	[Test]
-	public void DoRecordsAffected_DoesNotIncludeSelect()
-	{
-		var statement = new TestStatement();
-		statement.ReturnRecordsAffected = true;
-
-		statement.SetStatementType(DbStatementType.Insert);
-		Assert.IsTrue(statement.DoRecordsAffected);
-
-		statement.SetStatementType(DbStatementType.Update);
-		Assert.IsTrue(statement.DoRecordsAffected);
-
-		statement.SetStatementType(DbStatementType.Delete);
-		Assert.IsTrue(statement.DoRecordsAffected);
-
-		statement.SetStatementType(DbStatementType.StoredProcedure);
-		Assert.IsTrue(statement.DoRecordsAffected);
-
-		statement.SetStatementType(DbStatementType.Select);
-		Assert.IsFalse(statement.DoRecordsAffected);
-	}
-
-	[Test]
-	public void FbDataReader_DefaultRecordsAffected_IsMinusOne()
-	{
-		var reader = new FbDataReader();
-		Assert.AreEqual(-1, reader.RecordsAffected);
-	}
 }

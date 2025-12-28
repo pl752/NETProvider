@@ -326,7 +326,6 @@ internal abstract class StatementBase
 		var insertCount = 0;
 		var updateCount = 0;
 		var deleteCount = 0;
-		var selectCount = 0;
 		var pos = 0;
 
 		int type;
@@ -354,7 +353,6 @@ internal abstract class StatementBase
 								deleteCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 							case IscCodes.isc_info_req_select_count:
-								selectCount = (int)IscHelper.VaxInteger(buffer, pos, l);
 								break;
 						}
 						pos += l;
