@@ -16,6 +16,7 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
+using System.Buffers.Binary;
 using System.Net;
 using System.Numerics;
 using FirebirdSql.Data.Types;
@@ -121,20 +122,20 @@ internal static class TypeDecoder
 
 	public static int DecodeInt32(byte[] value)
 	{
-		return IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value, 0));
+		return BinaryPrimitives.ReadInt32BigEndian(value);
 	}
 
 	public static int DecodeInt32(Span<byte> value) {
-		return IPAddress.HostToNetworkOrder(BitConverter.ToInt32(value));
+		return BinaryPrimitives.ReadInt32BigEndian(value);
 	}
 
 	public static long DecodeInt64(byte[] value)
 	{
-		return IPAddress.HostToNetworkOrder(BitConverter.ToInt64(value, 0));
+		return BinaryPrimitives.ReadInt64BigEndian(value);
 	}
 
 	public static long DecodeInt64(Span<byte> value) {
-		return IPAddress.HostToNetworkOrder(BitConverter.ToInt64(value));
+		return BinaryPrimitives.ReadInt64BigEndian(value);
 	}
 
 	public static FbDecFloat DecodeDec16(byte[] value)

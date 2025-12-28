@@ -16,7 +16,7 @@
 //$Authors = Carlos Guzman Alvarez, Jiri Cincura (jiri@cincura.net)
 
 using System;
-using System.Globalization;
+using System.Buffers.Binary;
 using System.Net;
 using System.Numerics;
 using FirebirdSql.Data.Types;
@@ -64,11 +64,7 @@ internal static class TypeEncoder
 
 	public static int EncodeDate(DateTime d)
 	{
-		var calendar = new GregorianCalendar();
-		var day = calendar.GetDayOfMonth(d);
-		var month = calendar.GetMonth(d);
-		var year = calendar.GetYear(d);
-		return EncodeDateImpl(year, month, day);
+		return EncodeDateImpl(d.Year, d.Month, d.Day);
 	}
 	public static int EncodeDate(DateOnly d)
 	{
@@ -150,28 +146,26 @@ internal static class TypeEncoder
 
 	public static byte[] EncodeInt32(int value)
 	{
-		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
+		var result = new byte[4];
+		EncodeInt32(value, result);
+		return result;
 	}
 
 	public static void EncodeInt32(int value, Span<byte> destination)
 	{
-		if (!BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value)))
-		{
-			throw new InvalidOperationException("Failed to write Int32 bytes.");
-		}
+		BinaryPrimitives.WriteInt32BigEndian(destination, value);
 	}
 
 	public static byte[] EncodeInt64(long value)
 	{
-		return BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
+		var result = new byte[8];
+		EncodeInt64(value, result);
+		return result;
 	}
 
 	public static void EncodeInt64(long value, Span<byte> destination)
 	{
-		if (!BitConverter.TryWriteBytes(destination, IPAddress.NetworkToHostOrder(value)))
-		{
-			throw new InvalidOperationException("Failed to write Int64 bytes.");
-		}
+		BinaryPrimitives.WriteInt64BigEndian(destination, value);
 	}
 
 	public static byte[] EncodeDec16(FbDecFloat value)
