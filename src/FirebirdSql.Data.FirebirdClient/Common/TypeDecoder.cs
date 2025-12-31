@@ -25,28 +25,55 @@ namespace FirebirdSql.Data.Common;
 
 internal static class TypeDecoder
 {
-	public static decimal DecodeDecimal(object value, int scale, int type)
+	public static decimal DecodeDecimal(short value, int scale, int type)
 	{
 		var shift = scale < 0 ? -scale : scale;
+		return DecimalShiftHelper.ShiftDecimalLeft(value, shift);
+	}
 
+	public static decimal DecodeDecimal(int value, int scale, int type)
+	{
+		var shift = scale < 0 ? -scale : scale;
+		return DecimalShiftHelper.ShiftDecimalLeft(value, shift);
+	}
+
+	public static decimal DecodeDecimal(long value, int scale, int type)
+	{
+		var shift = scale < 0 ? -scale : scale;
+		return DecimalShiftHelper.ShiftDecimalLeft(value, shift);
+	}
+
+	public static decimal DecodeDecimal(double value, int scale, int type)
+	{
+		return (decimal)value;
+	}
+
+	public static decimal DecodeDecimal(BigInteger value, int scale, int type)
+	{
+		var shift = scale < 0 ? -scale : scale;
+		return DecimalShiftHelper.ShiftDecimalLeft((decimal)value, shift);
+	}
+
+	public static decimal DecodeDecimal(object value, int scale, int type)
+	{
 		switch (type & ~1)
 		{
 			case IscCodes.SQL_SHORT:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(short)value, shift);
+				return DecodeDecimal((short)value, scale, type);
 
 			case IscCodes.SQL_LONG:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(int)value, shift);
+				return DecodeDecimal((int)value, scale, type);
 
 			case IscCodes.SQL_QUAD:
 			case IscCodes.SQL_INT64:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(long)value, shift);
+				return DecodeDecimal((long)value, scale, type);
 
 			case IscCodes.SQL_DOUBLE:
 			case IscCodes.SQL_D_FLOAT:
-				return (decimal)(double)value;
+				return DecodeDecimal((double)value, scale, type);
 
 			case IscCodes.SQL_INT128:
-				return DecimalShiftHelper.ShiftDecimalLeft((decimal)(BigInteger)value, shift);
+				return DecodeDecimal((BigInteger)value, scale, type);
 
 			default:
 				throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");

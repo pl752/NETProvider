@@ -285,27 +285,24 @@ internal sealed class FesArray : ArrayBase
 				case DbDataType.Decimal:
 				case DbDataType.Numeric:
 					{
-						object evalue = null;
-
 						switch (type)
 						{
 							case IscCodes.SQL_SHORT:
-								evalue = BitConverter.ToInt16(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt16(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
 
 							case IscCodes.SQL_LONG:
-								evalue = BitConverter.ToInt32(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt32(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
 
 							case IscCodes.SQL_QUAD:
 							case IscCodes.SQL_INT64:
-								evalue = BitConverter.ToInt64(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt64(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
+
+							default:
+								throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
 						}
-
-						var dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
-
-						tempData.SetValue(dvalue, i);
 					}
 					break;
 
@@ -440,27 +437,24 @@ internal sealed class FesArray : ArrayBase
 				case DbDataType.Decimal:
 				case DbDataType.Numeric:
 					{
-						object evalue = null;
-
 						switch (type)
 						{
 							case IscCodes.SQL_SHORT:
-								evalue = BitConverter.ToInt16(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt16(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
 
 							case IscCodes.SQL_LONG:
-								evalue = BitConverter.ToInt32(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt32(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
 
 							case IscCodes.SQL_QUAD:
 							case IscCodes.SQL_INT64:
-								evalue = BitConverter.ToInt64(slice, slicePosition);
+								tempData.SetValue(TypeDecoder.DecodeDecimal(BitConverter.ToInt64(slice, slicePosition), Descriptor.Scale, type), i);
 								break;
+
+							default:
+								throw new ArgumentOutOfRangeException(nameof(type), $"{nameof(type)}={type}");
 						}
-
-						var dvalue = TypeDecoder.DecodeDecimal(evalue, Descriptor.Scale, type);
-
-						tempData.SetValue(dvalue, i);
 					}
 					break;
 
