@@ -19,11 +19,15 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using FirebirdSql.Data.FirebirdClient;
 
 namespace FirebirdSql.Data.Common;
 
 internal static class ExplicitCancellation
 {
+	static readonly Action<object> FbCommandCancelCallback = static state => ((FbCommand)state).Cancel();
+	static readonly Action<object> FbBatchCommandCancelCallback = static state => ((FbBatchCommand)state).Cancel();
+
 	public static ExplicitCancel Enter(CancellationToken cancellationToken, Action explicitCancel)
 	{
 		if (cancellationToken.IsCancellationRequested)
@@ -32,6 +36,30 @@ internal static class ExplicitCancellation
 			throw new OperationCanceledException(cancellationToken);
 		}
 		var ctr = cancellationToken.Register(explicitCancel);
+		return new ExplicitCancel(ctr);
+	}
+
+	public static ExplicitCancel Enter(CancellationToken cancellationToken, FbCommand command)
+	{
+		ArgumentNullException.ThrowIfNull(command);
+		if (cancellationToken.IsCancellationRequested)
+		{
+			command.Cancel();
+			throw new OperationCanceledException(cancellationToken);
+		}
+		var ctr = cancellationToken.Register(FbCommandCancelCallback, command);
+		return new ExplicitCancel(ctr);
+	}
+
+	public static ExplicitCancel Enter(CancellationToken cancellationToken, FbBatchCommand command)
+	{
+		ArgumentNullException.ThrowIfNull(command);
+		if (cancellationToken.IsCancellationRequested)
+		{
+			command.Cancel();
+			throw new OperationCanceledException(cancellationToken);
+		}
+		var ctr = cancellationToken.Register(FbBatchCommandCancelCallback, command);
 		return new ExplicitCancel(ctr);
 	}
 

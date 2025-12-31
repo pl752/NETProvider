@@ -462,7 +462,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -484,7 +484,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{
@@ -507,7 +507,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -544,7 +544,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{
@@ -586,7 +586,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -612,7 +612,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{
@@ -641,7 +641,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -688,7 +688,7 @@ public sealed class FbCommand : DbCommand, IFbPreparedCommand, IDescriptorFiller
 
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{

@@ -227,7 +227,7 @@ public sealed class FbDataReader : DbDataReader
 		}
 		else
 		{
-			using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command.Cancel))
+			using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, _command))
 			{
 				_row = _command.Fetch();
 				if (_row != null)
@@ -257,7 +257,7 @@ public sealed class FbDataReader : DbDataReader
 		}
 		else
 		{
-			using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command.Cancel))
+			using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command))
 			{
 				_row = await _command.FetchAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
 				if (_row != null)

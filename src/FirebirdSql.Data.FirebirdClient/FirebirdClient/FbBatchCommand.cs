@@ -361,7 +361,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -383,7 +383,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	{
 		CheckCommand();
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{
@@ -408,7 +408,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 		FbBatchNonQueryResult result;
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 		{
 			try
 			{
@@ -441,7 +441,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 
 		FbBatchNonQueryResult result;
 
-		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+		using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 		{
 			try
 			{
@@ -477,7 +477,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	//{
 	//	CheckCommand();
 
-	//	using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, Cancel))
+	//	using (var explicitCancellation = ExplicitCancellation.Enter(CancellationToken.None, this))
 	//	{
 	//		try
 	//		{
@@ -503,7 +503,7 @@ public sealed class FbBatchCommand : IFbPreparedCommand, IDescriptorFiller, IDis
 	//{
 	//	CheckCommand();
 
-	//	using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, Cancel))
+	//	using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, this))
 	//	{
 	//		try
 	//		{
