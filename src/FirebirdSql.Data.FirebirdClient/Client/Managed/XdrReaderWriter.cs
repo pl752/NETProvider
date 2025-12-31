@@ -138,7 +138,7 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	public byte[] ReadOpaque(int length)
 	{
-		var buffer = length > 0 ? new byte[length] : Array.Empty<byte>();
+		var buffer = length > 0 ? GC.AllocateUninitializedArray<byte>(length) : Array.Empty<byte>();
 		ReadBytes(buffer, length);
 		ReadPad((4 - length) & 3);
 		return buffer;
@@ -152,7 +152,7 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	public async ValueTask<byte[]> ReadOpaqueAsync(int length, CancellationToken cancellationToken = default)
 	{
-		var buffer = length > 0 ? new byte[length] : Array.Empty<byte>();
+		var buffer = length > 0 ? GC.AllocateUninitializedArray<byte>(length) : Array.Empty<byte>();
 		await ReadBytesAsync(buffer, length, cancellationToken).ConfigureAwait(false);
 		await ReadPadAsync((4 - length) & 3, cancellationToken).ConfigureAwait(false);
 		return buffer;
