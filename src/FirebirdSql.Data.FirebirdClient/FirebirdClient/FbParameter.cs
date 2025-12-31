@@ -237,9 +237,13 @@ public sealed class FbParameter : DbParameter, ICloneable
 			switch (_value)
 			{
 				case string svalue:
-					return svalue.Substring(0, Math.Min(Size, svalue.Length));
+					if (!HasSize || _size >= svalue.Length)
+						return svalue;
+					return svalue.Substring(0, _size);
 				case byte[] bvalue:
-					var result = new byte[Math.Min(Size, bvalue.Length)];
+					if (!HasSize || _size >= bvalue.Length)
+						return bvalue;
+					var result = new byte[_size];
 					Array.Copy(bvalue, result, result.Length);
 					return result;
 				default:
