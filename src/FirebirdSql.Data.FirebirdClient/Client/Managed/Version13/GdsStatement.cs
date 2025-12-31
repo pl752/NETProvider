@@ -28,6 +28,7 @@ namespace FirebirdSql.Data.Client.Managed.Version13;
 internal class GdsStatement : Version12.GdsStatement
 {
 	const int STACKALLOC_LIMIT = 1024;
+	byte[] _nullBitmapBuffer;
 
 	#region Constructors
 
@@ -43,6 +44,15 @@ internal class GdsStatement : Version12.GdsStatement
 
 	#region Overriden Methods
 
+	byte[] EnsureNullBitmapBuffer(int length)
+	{
+		if (_nullBitmapBuffer == null || _nullBitmapBuffer.Length < length)
+		{
+			_nullBitmapBuffer = new byte[length];
+		}
+		return _nullBitmapBuffer;
+	}
+
 	protected override void WriteParametersTo(IXdrWriter xdr)
 	{
 		if (_parameters == null)
@@ -51,7 +61,7 @@ internal class GdsStatement : Version12.GdsStatement
 		try
 		{
 			var count = _parameters.Count;
-			var bytesLen = (int)Math.Ceiling(count / 8d);
+			var bytesLen = (count + 7) / 8;
 			byte[] rented = null;
 			Span<byte> buffer = bytesLen > STACKALLOC_LIMIT
 				? (rented = ArrayPool<byte>.Shared.Rent(bytesLen)).AsSpan(0, bytesLen)
@@ -93,28 +103,24 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				var len = (int)Math.Ceiling(_fields.Count / 8d);
-				var rented = ArrayPool<byte>.Shared.Rent(len);
-				try
+				var len = (_fields.Count + 7) / 8;
+				Span<byte> nullBitmap = len > STACKALLOC_LIMIT
+					? EnsureNullBitmapBuffer(len).AsSpan(0, len)
+					: stackalloc byte[len];
+
+				_database.Xdr.ReadOpaque(nullBitmap, len);
+				for (var i = 0; i < _fields.Count; i++)
 				{
-					_database.Xdr.ReadOpaque(rented.AsSpan(0, len), len);
-					for (var i = 0; i < _fields.Count; i++)
+					var isNull = (nullBitmap[i / 8] & (1 << (i % 8))) != 0;
+					if (isNull)
 					{
-						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-						if (isNull)
-						{
-							row[i] = new DbValue(this, _fields[i], null);
-						}
-						else
-						{
-							var value = ReadRawValue(_database.Xdr, _fields[i]);
-							row[i] = new DbValue(this, _fields[i], value);
-						}
+						row[i] = new DbValue(this, _fields[i], null);
 					}
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(rented);
+					else
+					{
+						var value = ReadRawValue(_database.Xdr, _fields[i]);
+						row[i] = new DbValue(this, _fields[i], value);
+					}
 				}
 			}
 		}
@@ -131,28 +137,22 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				var len = (int)Math.Ceiling(_fields.Count / 8d);
-				var rented = ArrayPool<byte>.Shared.Rent(len);
-				try
+				var len = (_fields.Count + 7) / 8;
+				var nullBitmap = EnsureNullBitmapBuffer(len);
+
+				await _database.Xdr.ReadOpaqueAsync(nullBitmap.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
+				for (var i = 0; i < _fields.Count; i++)
 				{
-					await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
-					for (var i = 0; i < _fields.Count; i++)
+					var isNull = (nullBitmap[i / 8] & (1 << (i % 8))) != 0;
+					if (isNull)
 					{
-						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-						if (isNull)
-						{
-							row[i] = new DbValue(this, _fields[i], null);
-						}
-						else
-						{
-							var value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
-							row[i] = new DbValue(this, _fields[i], value);
-						}
+						row[i] = new DbValue(this, _fields[i], null);
 					}
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(rented);
+					else
+					{
+						var value = await ReadRawValueAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+						row[i] = new DbValue(this, _fields[i], value);
+					}
 				}
 			}
 		}
@@ -170,27 +170,23 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				var len = (int)Math.Ceiling(_fields.Count / 8d);
-				var rented = ArrayPool<byte>.Shared.Rent(len);
-				try
+				var len = (_fields.Count + 7) / 8;
+				Span<byte> nullBitmap = len > STACKALLOC_LIMIT
+					? EnsureNullBitmapBuffer(len).AsSpan(0, len)
+					: stackalloc byte[len];
+
+				_database.Xdr.ReadOpaque(nullBitmap, len);
+				for (var i = 0; i < _fields.Count; i++)
 				{
-					_database.Xdr.ReadOpaque(rented.AsSpan(0, len), len);
-					for (var i = 0; i < _fields.Count; i++)
+					var isNull = (nullBitmap[i / 8] & (1 << (i % 8))) != 0;
+					if (isNull)
 					{
-						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-						if (isNull)
-						{
-							row[i] = default;
-						}
-						else
-						{
-							row[i] = ReadRawValueStorage(_database.Xdr, _fields[i]);
-						}
+						row[i] = default;
 					}
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(rented);
+					else
+					{
+						row[i] = ReadRawValueStorage(_database.Xdr, _fields[i]);
+					}
 				}
 			}
 		}
@@ -209,27 +205,21 @@ internal class GdsStatement : Version12.GdsStatement
 		{
 			if (_fields.Count > 0)
 			{
-				var len = (int)Math.Ceiling(_fields.Count / 8d);
-				var rented = ArrayPool<byte>.Shared.Rent(len);
-				try
+				var len = (_fields.Count + 7) / 8;
+				var nullBitmap = EnsureNullBitmapBuffer(len);
+
+				await _database.Xdr.ReadOpaqueAsync(nullBitmap.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
+				for (var i = 0; i < _fields.Count; i++)
 				{
-					await _database.Xdr.ReadOpaqueAsync(rented.AsMemory(0, len), len, cancellationToken).ConfigureAwait(false);
-					for (var i = 0; i < _fields.Count; i++)
+					var isNull = (nullBitmap[i / 8] & (1 << (i % 8))) != 0;
+					if (isNull)
 					{
-						var isNull = (rented[i / 8] & (1 << (i % 8))) != 0;
-						if (isNull)
-						{
-							row[i] = default;
-						}
-						else
-						{
-							row[i] = await ReadRawValueStorageAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
-						}
+						row[i] = default;
 					}
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(rented);
+					else
+					{
+						row[i] = await ReadRawValueStorageAsync(_database.Xdr, _fields[i], cancellationToken).ConfigureAwait(false);
+					}
 				}
 			}
 		}
