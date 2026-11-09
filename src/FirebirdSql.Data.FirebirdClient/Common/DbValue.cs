@@ -546,6 +546,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Byte => (byte)_data.Lo,
+			DbValueKind.Boolean => Convert.ToByte(_data.Lo != 0),
 			DbValueKind.Int16 => Convert.ToByte(unchecked((short)_data.Lo)),
 			DbValueKind.Int32 => Convert.ToByte(unchecked((int)_data.Lo)),
 			DbValueKind.Int64 => Convert.ToByte(unchecked((long)_data.Lo)),
@@ -568,6 +569,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Int16 => unchecked((short)_data.Lo),
+			DbValueKind.Boolean => Convert.ToInt16(_data.Lo != 0),
 			DbValueKind.Byte => Convert.ToInt16((byte)_data.Lo),
 			DbValueKind.Int32 => Convert.ToInt16(unchecked((int)_data.Lo)),
 			DbValueKind.Int64 => Convert.ToInt16(unchecked((long)_data.Lo)),
@@ -590,6 +592,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Int32 => unchecked((int)_data.Lo),
+			DbValueKind.Boolean => Convert.ToInt32(_data.Lo != 0),
 			DbValueKind.Int16 => Convert.ToInt32(unchecked((short)_data.Lo)),
 			DbValueKind.Byte => Convert.ToInt32((byte)_data.Lo),
 			DbValueKind.Int64 => Convert.ToInt32(unchecked((long)_data.Lo)),
@@ -612,6 +615,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Int64 => unchecked((long)_data.Lo),
+			DbValueKind.Boolean => Convert.ToInt64(_data.Lo != 0),
 			DbValueKind.Int32 => Convert.ToInt64(unchecked((int)_data.Lo)),
 			DbValueKind.Int16 => Convert.ToInt64(unchecked((short)_data.Lo)),
 			DbValueKind.Byte => Convert.ToInt64((byte)_data.Lo),
@@ -634,6 +638,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Decimal => MemoryMarshal.Read<decimal>(_data.AsBytes()),
+			DbValueKind.Boolean => Convert.ToDecimal(_data.Lo != 0),
 			DbValueKind.Int16 => Convert.ToDecimal(unchecked((short)_data.Lo)),
 			DbValueKind.Int32 => Convert.ToDecimal(unchecked((int)_data.Lo)),
 			DbValueKind.Int64 => Convert.ToDecimal(unchecked((long)_data.Lo)),
@@ -651,6 +656,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Single => BitConverter.Int32BitsToSingle(unchecked((int)_data.Lo)),
+			DbValueKind.Boolean => Convert.ToSingle(_data.Lo != 0),
 			DbValueKind.Double => Convert.ToSingle(BitConverter.Int64BitsToDouble(unchecked((long)_data.Lo))),
 			DbValueKind.Decimal => Convert.ToSingle(GetDecimal()),
 			DbValueKind.Int16 => Convert.ToSingle(unchecked((short)_data.Lo)),
@@ -680,6 +686,7 @@ internal sealed class DbValue
 		return _kind switch
 		{
 			DbValueKind.Double => BitConverter.Int64BitsToDouble(unchecked((long)_data.Lo)),
+			DbValueKind.Boolean => Convert.ToDouble(_data.Lo != 0),
 			DbValueKind.Single => Convert.ToDouble(BitConverter.Int32BitsToSingle(unchecked((int)_data.Lo))),
 			DbValueKind.Decimal => Convert.ToDouble(GetDecimal()),
 			DbValueKind.Int16 => Convert.ToDouble(unchecked((short)_data.Lo)),

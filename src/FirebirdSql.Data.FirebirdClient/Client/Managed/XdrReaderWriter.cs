@@ -443,13 +443,12 @@ sealed class XdrReaderWriter : IXdrReader, IXdrWriter
 
 	public FbDecFloat ReadDec16()
 	{
-		ReadBytes(_smallBuffer, 8);
-		return TypeDecoder.DecodeDec16(_smallBuffer);
+		// The decimal codec requires exactly 8 bytes and mutates its input.
+		return TypeDecoder.DecodeDec16(ReadOpaque(8));
 	}
 	public async ValueTask<FbDecFloat> ReadDec16Async(CancellationToken cancellationToken = default)
 	{
-		await ReadBytesAsync(_smallBuffer, 8, cancellationToken).ConfigureAwait(false);
-		return TypeDecoder.DecodeDec16(_smallBuffer);
+		return TypeDecoder.DecodeDec16(await ReadOpaqueAsync(8, cancellationToken).ConfigureAwait(false));
 	}
 
 	public FbDecFloat ReadDec34()

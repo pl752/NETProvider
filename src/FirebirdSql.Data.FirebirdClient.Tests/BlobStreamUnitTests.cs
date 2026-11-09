@@ -11,6 +11,25 @@ namespace FirebirdSql.Data.FirebirdClient.Tests;
 [TestFixture]
 public sealed class BlobStreamUnitTests
 {
+	[TestCase(0)]
+	[TestCase(1)]
+	[TestCase(8)]
+	[TestCase(9)]
+	[TestCase(65537)]
+	public async Task ReadAll_SyncAndAsync_PreserveDataWithoutLengthRequest(int length)
+	{
+		var data = CreateTestData(length);
+		var db = new FakeDatabase(packetSize: 8);
+		var synchronous = new FakeBlob(db, data);
+		CollectionAssert.AreEqual(data, synchronous.Read());
+		Assert.AreEqual(0, synchronous.LengthRequests);
+		Assert.IsFalse(synchronous.IsOpen);
+		var asynchronous = new FakeBlob(db, data);
+		CollectionAssert.AreEqual(data, await asynchronous.ReadAsync());
+		Assert.AreEqual(0, asynchronous.LengthRequests);
+		Assert.IsFalse(asynchronous.IsOpen);
+	}
+
 	[Test]
 	public void Read_HonorsCountAndDoesNotOverwrite()
 	{
@@ -106,6 +125,7 @@ public sealed class BlobStreamUnitTests
 
 	private sealed class FakeBlob : BlobBase
 	{
+		public int LengthRequests { get; private set; }
 		private readonly DatabaseBase _database;
 		private readonly byte[] _data;
 		private int _readPosition;
@@ -137,8 +157,12 @@ public sealed class BlobStreamUnitTests
 			return ValueTask.CompletedTask;
 		}
 
-		public override int GetLength() => _data.Length;
-		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(_data.Length);
+		public override int GetLength()
+		{
+			LengthRequests++;
+			return _data.Length;
+		}
+		public override ValueTask<int> GetLengthAsync(CancellationToken cancellationToken = default) => ValueTask.FromResult(GetLength());
 
 		public override byte[] GetSegment()
 		{

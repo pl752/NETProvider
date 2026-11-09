@@ -42,8 +42,6 @@ public sealed class FbDataReader : DbDataReader
 
 	#region Fields
 
-	private static readonly Action<object> FbCommandCancelCallback = static state => ((FbCommand)state).Cancel();
-
 	private DataTable _schemaTable;
 	private FbCommand _command;
 	private FbConnection _connection;
@@ -56,41 +54,8 @@ public sealed class FbDataReader : DbDataReader
 	private int _recordsAffected;
 	private Dictionary<string, int> _columnsIndexesOrdinal;
 	private Dictionary<string, int> _columnsIndexesOrdinalCI;
-	private CancellationToken _readCancellationToken;
-	private CancellationTokenRegistration _readCancellationRegistration;
 
 	#endregion
-
-	private void EnsureReadCancellationRegistration(CancellationToken cancellationToken)
-	{
-		if (!cancellationToken.CanBeCanceled)
-		{
-			ClearReadCancellationRegistration();
-			return;
-		}
-
-		if (cancellationToken.IsCancellationRequested)
-		{
-			_command.Cancel();
-			throw new OperationCanceledException(cancellationToken);
-		}
-
-		if (cancellationToken.Equals(_readCancellationToken))
-		{
-			return;
-		}
-
-		ClearReadCancellationRegistration();
-		_readCancellationToken = cancellationToken;
-		_readCancellationRegistration = cancellationToken.Register(FbCommandCancelCallback, _command);
-	}
-
-	private void ClearReadCancellationRegistration()
-	{
-		_readCancellationRegistration.Dispose();
-		_readCancellationRegistration = default;
-		_readCancellationToken = default;
-	}
 
 	#region DbDataReader Indexers
 
@@ -181,7 +146,6 @@ public sealed class FbDataReader : DbDataReader
 		if (!IsClosed)
 		{
 			_isClosed = true;
-			ClearReadCancellationRegistration();
 			if (_command != null && !_command.IsDisposed)
 			{
 				if (_command.CommandType == CommandType.StoredProcedure)
@@ -211,7 +175,6 @@ public sealed class FbDataReader : DbDataReader
 		if (!IsClosed)
 		{
 			_isClosed = true;
-			ClearReadCancellationRegistration();
 			if (_command != null && !_command.IsDisposed)
 			{
 				if (_command.CommandType == CommandType.StoredProcedure)
@@ -294,17 +257,19 @@ public sealed class FbDataReader : DbDataReader
 		}
 		else
 		{
-			EnsureReadCancellationRegistration(cancellationToken);
-			_row = await _command.FetchAsync(CancellationToken.None).ConfigureAwait(false);
-			if (_row != null)
+			using (var explicitCancellation = ExplicitCancellation.Enter(cancellationToken, _command))
 			{
-				_position++;
-				return true;
-			}
-			else
-			{
-				_eof = true;
-				return false;
+				_row = await _command.FetchAsync(explicitCancellation.CancellationToken).ConfigureAwait(false);
+				if (_row != null)
+				{
+					_position++;
+					return true;
+				}
+				else
+				{
+					_eof = true;
+					return false;
+				}
 			}
 		}
 	}

@@ -57,8 +57,17 @@ public sealed class FbParameterCollection : DbParameterCollection
 		get { return _parameters[index]; }
 		set
 		{
+			var previous = _parameters[index];
+			if (ReferenceEquals(previous, value))
+				return;
+			if (value == null)
+				throw new ArgumentNullException(nameof(value));
+			if (value.Parent != null)
+				throw new ArgumentException("The parameter already belongs to a collection.", nameof(value));
+
+			ReleaseParameter(previous);
 			_parameters[index] = value;
-			ParameterNameChanged();
+			AttachParameter(value);
 		}
 	}
 

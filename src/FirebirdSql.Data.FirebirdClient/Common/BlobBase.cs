@@ -62,22 +62,12 @@ internal abstract class BlobBase
 
 	public byte[] Read()
 	{
+		using var output = new MemoryStream();
 		try
 		{
 			Open();
-
-			var length = GetLength();
-			if (length == 0)
-			{
-				Close();
-				return Array.Empty<byte>();
-			}
-			if (length < 0)
-				throw new IOException($"Invalid blob length: {length}.");
-
-			var result = GC.AllocateUninitializedArray<byte>(length);
-			var output = new FixedLengthStream(result);
-
+			// Discover the size while reading: GetLength adds a network round trip
+			// for every BLOB, including tiny text values.
 			while (!EOF)
 			{
 				GetSegment(output);
@@ -85,12 +75,7 @@ internal abstract class BlobBase
 
 			Close();
 
-			if (output.Written == length)
-				return result;
-
-			var trimmed = new byte[output.Written];
-			Buffer.BlockCopy(result, 0, trimmed, 0, output.Written);
-			return trimmed;
+			return output.ToArray();
 		}
 		catch
 		{
@@ -101,21 +86,10 @@ internal abstract class BlobBase
 	}
 	public async ValueTask<byte[]> ReadAsync(CancellationToken cancellationToken = default)
 	{
+		using var output = new MemoryStream();
 		try
 		{
 			await OpenAsync(cancellationToken).ConfigureAwait(false);
-
-			var length = await GetLengthAsync(cancellationToken).ConfigureAwait(false);
-			if (length == 0)
-			{
-				await CloseAsync(cancellationToken).ConfigureAwait(false);
-				return Array.Empty<byte>();
-			}
-			if (length < 0)
-				throw new IOException($"Invalid blob length: {length}.");
-
-			var result = GC.AllocateUninitializedArray<byte>(length);
-			var output = new FixedLengthStream(result);
 
 			while (!EOF)
 			{
@@ -124,12 +98,7 @@ internal abstract class BlobBase
 
 			await CloseAsync(cancellationToken).ConfigureAwait(false);
 
-			if (output.Written == length)
-				return result;
-
-			var trimmed = new byte[output.Written];
-			Buffer.BlockCopy(result, 0, trimmed, 0, output.Written);
-			return trimmed;
+			return output.ToArray();
 		}
 		catch
 		{
@@ -241,49 +210,6 @@ internal abstract class BlobBase
 
 	public abstract void Cancel();
 	public abstract ValueTask CancelAsync(CancellationToken cancellationToken = default);
-
-	private sealed class FixedLengthStream : Stream
-	{
-		private readonly byte[] _buffer;
-		private int _position;
-
-		public int Written => _position;
-
-		public FixedLengthStream(byte[] buffer)
-		{
-			_buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-			_position = 0;
-		}
-
-		public override void Write(ReadOnlySpan<byte> buffer)
-		{
-			if (buffer.IsEmpty)
-				return;
-
-			if (_position > _buffer.Length - buffer.Length)
-				throw new IOException("Blob length mismatch.");
-
-			buffer.CopyTo(_buffer.AsSpan(_position));
-			_position += buffer.Length;
-		}
-
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-			Write(buffer.AsSpan(offset, count));
-		}
-
-		public override void Flush()
-		{ }
-
-		public override bool CanRead => false;
-		public override bool CanSeek => false;
-		public override bool CanWrite => true;
-		public override long Length => _buffer.Length;
-		public override long Position { get => _position; set => throw new NotSupportedException(); }
-		public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-		public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-		public override void SetLength(long value) => throw new NotSupportedException();
-	}
 
 	protected void RblAddValue(int rblValue)
 	{
